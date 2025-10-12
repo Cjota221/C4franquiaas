@@ -1,36 +1,53 @@
-import { NextResponse } from 'next/server';
-import { syncProdutos } from '../../../lib/syncProdutos'; // Importa nossa função de sincronização direta
+import axios from 'axios';
+// Usamos o atalho @/ que aponta para a raiz do projeto, é mais seguro
+import { supabase } from '@/lib/supabaseClient';
 
-// Esta função lida com requisições POST para /api/sync-produtos
-export async function POST(req: Request) {
+// Define um "molde" para o produto que vem da API
+interface ProdutoDaAPI {
+  id: string | number;
+  nome: string;
+  preco: number;
+  estoque: number;
+  imagem: string;
+}
+
+export async function syncProdutos() {
   try {
-    // Chama a função de sincronização que criamos na lib
-    const resultado = await syncProdutos();
-
-    // Se a sincronização falhar, retorna um erro
-    if (!resultado.sucesso) {
-      return NextResponse.json({ 
-        message: 'Falha na sincronização', 
-        error: resultado.erro 
-      }, { status: 500 });
-    }
-
-    // Se for bem-sucedida, retorna uma mensagem de sucesso
-    return NextResponse.json({ 
-      message: 'Sincronização concluída com sucesso!', 
-      total: resultado.total 
+    const response = await axios.get("https://api.facilzap.app.br/produtos", {
+      headers: { 
+        Authorization: `Bearer ${process.env.FACILZAP_TOKEN}` 
+      },
     });
 
-  } catch (error: any) {
-    // Captura qualquer outro erro inesperado
-    return NextResponse.json({ 
-      message: 'Erro interno no servidor', 
-      error: error.message 
-    }, { status: 500 });
+    const produtosDaAPI: ProdutoDaAPI[] = response.data;
+
+    if (!produtosDaAPI || produtosDaAPI.length === 0) {
+      return { sucesso: true, total: 0, message: "Nenhum produto encontrado na API." };
+    }
+
+    const produtosParaSalvar = produtosDaAPI.map((produto) => ({
+      id_externo: produto.id,
+      nome: produto.nome,
+      preco_base: produto.preco,
+      estoque: produto.estoque,
+      imagem: produto.imagem,
+      ativo: true,
+      atualizado_em: new Date(),
+    }));
+
+    const { error } = await supabase
+      .from('produtos')
+      .upsert(produtosParaSalvar, { onConflict: 'id_externo' });
+
+    if (error) throw error;
+
+    console.log(`${produtosParaSalvar.length} produtos sincronizados com sucesso.`);
+    return { sucesso: true, total: produtosParaSalvar.length };
+    
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Erro desconhecido";
+    console.error("Erro detalhado na sincronização:", errorMessage);
+    return { sucesso: false, erro: errorMessage };
   }
 }
 
-// Para conveniência, podemos fazer a rota GET chamar a POST
-export async function GET(req: Request) {
-    return POST(req);
-}
