@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../../../lib/supabaseClient'; // CORREÇÃO: Ajustado o caminho relativo
+import { supabase } from '@/lib/supabaseClient'; // CORREÇÃO: Usando o alias de caminho do projeto
 import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
 // ESTRUTURA CORRIGIDA: Reflete a tabela final do Supabase
@@ -120,12 +120,12 @@ export default function ProdutosPage() {
                 produtos.map((produto) => (
                   <tr key={produto.id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-4">
-                      <img 
-                        src={produto.imagem || 'https://placehold.co/100x100/EEE/31343C?text=Sem+Foto'}
-                        alt={produto.nome}
-                        className="h-16 w-16 object-cover rounded-md bg-gray-100"
-                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/EEE/31343C?text=Erro' }}
-                      />
+                          <img
+                            src={produto.imagem || 'https://placehold.co/100x100/EEE/31343C?text=Sem+Foto'}
+                            alt={produto.nome}
+                            className="h-16 w-16 object-cover rounded-md bg-gray-100"
+                            onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/EEE/31343C?text=Erro' }}
+                          />
                     </td>
                     <td className="p-4 font-medium text-gray-800">{produto.nome}</td>
                     <td className="p-4 text-gray-600">{produto.estoque}</td>
