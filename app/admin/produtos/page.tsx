@@ -1,95 +1,149 @@
-// Garante que este componente só será usado no lado do cliente
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { RefreshCw, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../../../lib/supabaseClient'; // CORREÇÃO: Ajustado o caminho relativo
+import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
-// Dados de exemplo dos produtos (virão do Supabase no futuro)
-const mockProdutos = [
-  { id: 1, nome: 'Plano Bronze C4', preco_base: 99.90, estoque: 50, ativo: true, imagem: 'https://placehold.co/64x64/DB1472/FFF?text=C4' },
-  { id: 2, nome: 'Plano Prata C4', preco_base: 149.90, estoque: 30, ativo: true, imagem: 'https://placehold.co/64x64/DB1472/FFF?text=C4' },
-  { id: 3, nome: 'Plano Ouro C4', preco_base: 249.90, estoque: 15, ativo: false, imagem: 'https://placehold.co/64x64/DB1472/FFF?text=C4' },
-  { id: 4, nome: 'Consultoria VIP', preco_base: 499.00, estoque: 5, ativo: true, imagem: 'https://placehold.co/64x64/DB1472/FFF?text=C4' },
-];
+// ESTRUTURA CORRIGIDA: Reflete a tabela final do Supabase
+type Produto = {
+  id: number;
+  nome: string;
+  estoque: number;
+  preco_base: number | null;
+  ativo: boolean;
+  imagem: string | null; // Corrigido para uma única imagem
+};
 
-// Componente da página de Produtos
+type StatusMessage = {
+  type: 'success' | 'error' | 'loading';
+  text: string;
+};
+
 export default function ProdutosPage() {
-  // Estado para gerenciar os produtos e o loading da sincronização
-  const [produtos, setProdutos] = useState(mockProdutos);
-  const [loading, setLoading] = useState(false);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [status, setStatus] = useState<StatusMessage | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Função para simular a sincronização de produtos
-  const handleSync = () => {
-    setLoading(true);
-    console.log("Iniciando sincronização...");
-    // Simula uma chamada de API
-    setTimeout(() => {
-      alert(`Sincronização concluída! ${mockProdutos.length} produtos atualizados.`);
-      setLoading(false);
-      console.log("Sincronização finalizada.");
-    }, 2000); // Espera 2 segundos
-  };
+  // Função para buscar os produtos do nosso banco (Supabase)
+  async function fetchProdutosDoBanco() {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('produtos')
+      .select('*');
 
-  // Função para mudar o status de um produto
-  const toggleAtivo = (id: number) => {
-    setProdutos(produtos.map(p => 
-      p.id === id ? { ...p, ativo: !p.ativo } : p
-    ));
-  };
+    if (error) {
+      console.error('Erro ao buscar produtos do Supabase:', error);
+      setStatus({ type: 'error', text: 'Não foi possível carregar os produtos.' });
+    } else {
+      setProdutos(data || []);
+    }
+    setIsLoading(false);
+  }
+
+  // Busca os produtos ao carregar a página
+  useEffect(() => {
+    fetchProdutosDoBanco();
+  }, []);
+
+  // Função chamada pelo botão "Sincronizar"
+  async function handleSincronizacao() {
+    setStatus({ type: 'loading', text: 'Sincronizando... Isso pode levar um momento.' });
+    
+    try {
+      const response = await fetch('/api/sync-produtos', {
+        method: 'POST',
+      });
+      
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Ocorreu um erro desconhecido na API.');
+      }
+
+      setStatus({ type: 'success', text: result.message || 'Produtos sincronizados com sucesso!' });
+      await fetchProdutosDoBanco(); // Atualiza a lista na tela
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor.';
+      setStatus({ type: 'error', text: `Falha na sincronização: ${errorMessage}` });
+    }
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Cabeçalho com título e botão de ação */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="p-8 font-sans">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-4xl font-bold text-[#333]">Gerenciamento de Produtos</h1>
-          <p className="text-lg text-gray-500 mt-1">Sincronize e gerencie os produtos disponíveis para as franquias.</p>
+          <h1 className="text-3xl font-bold text-gray-800">Catálogo de Produtos</h1>
+          <p className="text-gray-500 mt-1">Gerencie e sincronize os produtos da sua loja.</p>
         </div>
         <button
-          onClick={handleSync}
-          disabled={loading}
-          className="flex items-center gap-2 bg-[#F8B81F] text-[#333] font-bold py-3 px-6 rounded-lg shadow-md hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-wait"
+          onClick={handleSincronizacao}
+          disabled={status?.type === 'loading'}
+          className="flex items-center gap-2 px-4 py-2 font-semibold text-white bg-pink-600 rounded-lg shadow-md hover:bg-pink-700 disabled:bg-pink-300 transition-colors"
         >
-          <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-          {loading ? 'Sincronizando...' : 'Sincronizar Produtos'}
+          <RefreshCw className={`h-5 w-5 ${status?.type === 'loading' ? 'animate-spin' : ''}`} />
+          {status?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
         </button>
-      </header>
+      </div>
+      
+      {/* Mensagem de Status */}
+      {status && (
+        <div className={`p-4 mb-6 rounded-lg flex items-center gap-3 text-white ${
+          status.type === 'success' ? 'bg-green-500' :
+          status.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+        }`}>
+          {status.type === 'success' && <CheckCircle className="h-5 w-5" />}
+          {status.type === 'error' && <AlertCircle className="h-5 w-5" />}
+          {status.type === 'loading' && <RefreshCw className="h-5 w-5 animate-spin" />}
+          <span className="font-medium">{status.text}</span>
+        </div>
+      )}
 
-      {/* Tabela de produtos */}
-      <div className="bg-white p-6 rounded-2xl shadow-lg">
+      {/* Tabela de Produtos */}
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="p-4">Produto</th>
-                <th className="p-4">Preço Base</th>
-                <th className="p-4">Estoque</th>
-                <th className="p-4 text-center">Status</th>
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr className="text-gray-600">
+                <th className="p-4 font-semibold">Imagem</th>
+                <th className="p-4 font-semibold">Nome do Produto</th>
+                <th className="p-4 font-semibold">Estoque</th>
+                <th className="p-4 font-semibold">Preço Base</th>
+                <th className="p-4 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
-              {produtos.map((produto) => (
-                <tr key={produto.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 flex items-center gap-4">
-                    <img src={produto.imagem} alt={produto.nome} className="w-12 h-12 rounded-lg object-cover" />
-                    <span className="font-semibold">{produto.nome}</span>
-                  </td>
-                  <td className="p-4">R$ {produto.preco_base.toFixed(2)}</td>
-                  <td className="p-4">{produto.estoque}</td>
-                  <td className="p-4 text-center">
-                    {/* Switch para ativar/desativar */}
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={produto.ativo}
-                        onChange={() => toggleAtivo(produto.id)}
-                        className="sr-only peer" 
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-8 text-center text-gray-500">Carregando...</td></tr>
+              ) : produtos.length > 0 ? (
+                produtos.map((produto) => (
+                  <tr key={produto.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="p-4">
+                      <img 
+                        src={produto.imagem || 'https://placehold.co/100x100/EEE/31343C?text=Sem+Foto'}
+                        alt={produto.nome}
+                        className="h-16 w-16 object-cover rounded-md bg-gray-100"
+                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/EEE/31343C?text=Erro' }}
                       />
-                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#DB1472]"></div>
-                    </label>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-4 font-medium text-gray-800">{produto.nome}</td>
+                    <td className="p-4 text-gray-600">{produto.estoque}</td>
+                    <td className="p-4 text-gray-600">
+                      {produto.preco_base ? `R$ ${produto.preco_base.toFixed(2)}` : 'N/A'}
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        produto.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {produto.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan={5} className="p-8 text-center text-gray-500">Nenhum produto encontrado. Sincronize para carregar.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
