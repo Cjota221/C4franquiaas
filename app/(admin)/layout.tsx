@@ -1,38 +1,50 @@
-// Garante que este componente só será usado no lado do cliente
+/**
+ * Layout principal para a área administrativa.
+ * Inclui uma barra lateral de navegação e uma área de conteúdo.
+ */
 "use client";
 
 import React from 'react';
-import Sidebar from '@/components/Sidebar'; // Importa a nossa barra lateral
-import { useRouter } from 'next/navigation'; // Importa o hook de navegação do App Router
 
-// Tipagem para os "children", que são as páginas que este layout vai renderizar
-type AdminLayoutProps = {
-  children: React.ReactNode;
-};
-
-// Componente principal do Layout
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const router = useRouter();
-
-  // Função de logout que agora usa o router
-  const handleLogout = () => {
-    alert('Saindo do sistema...');
-    // No futuro, aqui chamaremos a função de logout do Supabase
-    router.push('/login'); // Redireciona para a tela de login
-  };
-  
-  // O componente renderiza a estrutura da página
+function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-[#FFF5FA]">
-      {/* A Sidebar agora não controla mais o estado, apenas o logout */}
-      <Sidebar onLogout={handleLogout} />
-      
+    <div className="flex h-screen bg-gray-100 font-sans">
+      {/* Barra Lateral de Navegação */}
+      <aside className="w-64 bg-white shadow-md flex flex-col">
+        <div className="p-6">
+          <h2 className="text-2xl font-bold text-[#DB1472]">C4 Franquias</h2>
+          <p className="text-sm text-gray-500 mt-1">Painel Admin</p>
+        </div>
+        <nav className="mt-6 flex-1">
+          <a href="/admin/dashboard" className="block px-6 py-3 text-gray-700 bg-gray-200 font-bold">
+            Dashboard
+          </a>
+          <a href="/admin/produtos" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
+            Produtos
+          </a>
+          <a href="/admin/franquias" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
+            Franquias
+          </a>
+          <a href="/admin/vendas" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
+            Vendas
+          </a>
+           <a href="/admin/comissoes" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
+            Comissões
+          </a>
+        </nav>
+        <div className="p-6">
+           <a href="/admin/configuracoes" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
+            Configurações
+          </a>
+        </div>
+      </aside>
+
       {/* Área de Conteúdo Principal */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {/* O 'children' é onde o Next.js vai colocar o conteúdo 
-            das páginas (dashboard, produtos, etc.) */}
+      <main className="flex-1 flex flex-col p-8 overflow-y-auto">
         {children}
       </main>
     </div>
   );
 }
+
+export default AdminLayout;
