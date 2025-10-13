@@ -74,9 +74,10 @@ export async function POST() {
 
     return NextResponse.json({ message: 'Sincronização concluída com sucesso!' });
 
-  } catch (err: any) {
+  } catch (err: unknown) { // CORREÇÃO: Trocado 'any' por 'unknown'
     console.error('Erro na API de sincronização:', err);
-    return NextResponse.json({ error: err.message || 'Ocorreu um erro no servidor.' }, { status: 500 });
+    // CORREÇÃO: Adicionado tratamento seguro para o erro
+    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro no servidor.';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
