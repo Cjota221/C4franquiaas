@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient'; // CORREÇÃO: Usando o alias de caminho do projeto
-import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+import { RefreshCw, AlertCircle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const ITENS_POR_PAGINA = 20;
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ESTRUTURA CORRIGIDA: Reflete a tabela final do Supabase
 type Produto = {
@@ -23,51 +29,50 @@ export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [status, setStatus] = useState<StatusMessage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [totalProdutos, setTotalProdutos] = useState(0);
 
-  // Função para buscar os produtos do nosso banco (Supabase)
-  async function fetchProdutosDoBanco() {
+  async function fetchProdutosDoBanco(pagina: number) {
     setIsLoading(true);
-    const { data, error } = await supabase
+    
+    const from = (pagina - 1) * ITENS_POR_PAGINA;
+    const to = from + ITENS_POR_PAGINA - 1;
+
+    const { data, error, count } = await supabase
       .from('produtos')
-      .select('*');
+      .select('*', { count: 'exact' })
+      .range(from, to)
+      .order('nome', { ascending: true });
 
     if (error) {
-      console.error('Erro ao buscar produtos do Supabase:', error);
       setStatus({ type: 'error', text: 'Não foi possível carregar os produtos.' });
     } else {
       setProdutos(data || []);
+      setTotalProdutos(count || 0);
     }
     setIsLoading(false);
   }
 
-  // Busca os produtos ao carregar a página
   useEffect(() => {
-    fetchProdutosDoBanco();
-  }, []);
+    fetchProdutosDoBanco(paginaAtual);
+  }, [paginaAtual]);
 
-  // Função chamada pelo botão "Sincronizar"
   async function handleSincronizacao() {
-    setStatus({ type: 'loading', text: 'Sincronizando... Isso pode levar um momento.' });
-    
+    setStatus({ type: 'loading', text: 'Sincronizando todos os produtos... Isso pode levar vários minutos.' });
     try {
-      const response = await fetch('/api/sync-produtos', {
-        method: 'POST',
-      });
-      
+      const response = await fetch('/api/sync-produtos', { method: 'POST' });
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Ocorreu um erro desconhecido na API.');
-      }
-
-      setStatus({ type: 'success', text: result.message || 'Produtos sincronizados com sucesso!' });
-      await fetchProdutosDoBanco(); // Atualiza a lista na tela
-
+      if (!response.ok) throw new Error(result.error);
+      setStatus({ type: 'success', text: result.message });
+      setPaginaAtual(1); // Volta para a primeira página após sincronizar
+      await fetchProdutosDoBanco(1);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor.';
       setStatus({ type: 'error', text: `Falha na sincronização: ${errorMessage}` });
     }
   }
+
+  const totalPaginas = Math.ceil(totalProdutos / ITENS_POR_PAGINA);
 
   return (
     <div className="p-8 font-sans">
