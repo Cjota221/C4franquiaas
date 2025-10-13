@@ -1,38 +1,42 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Interface para garantir a tipagem dos dados vindos da API externa
+// Interface que agora corresponde à documentação da API FácilZap
 interface ExternalProduct {
-  // ATENÇÃO: Estes nomes de campos são exemplos.
-  // Você DEVE ajustá-los para que correspondam EXATAMENTE
-  // aos nomes dos campos que a API da FácilZap envia.
   id: string;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  barcode?: string;
-  images?: string[];
-  videos?: string[];
-  status?: string;
+  nome: string;
+  ativado: boolean;
+  imagens: string[];
+  video?: string; // Vídeo é opcional e vem como string
+  cod_barras: string[];
+  estoque: {
+    // ATENÇÃO: Confirme o nome exato do campo para a quantidade disponível
+    disponivel: number; 
+  };
+  // ATENÇÃO: O campo de PREÇO não foi encontrado na listagem de produtos.
+  // Pode ser necessário buscar em outro lugar ou ele pode estar em 'variacoes'.
+  // Por enquanto, o preço não será sincronizado.
 }
 
 // Função para buscar os produtos da API externa REAL
 async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
   console.log("Buscando dados da API Externa Real...");
 
-  const apiUrl = process.env.FACILZAP_API_URL;
+  // A URL base da API
+  const apiBaseUrl = 'https://api.facilzap.app.br';
   const apiToken = process.env.FACILZAP_TOKEN;
 
-  if (!apiUrl || !apiToken) {
-    throw new Error('As variáveis de ambiente da API FácilZap não estão configuradas no Netlify.');
+  if (!apiToken) {
+    throw new Error('A variável de ambiente FACILZAP_TOKEN não está configurada no Netlify.');
   }
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`${apiBaseUrl}/produtos`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       }
     });
 
@@ -43,19 +47,20 @@ async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
 
     const data = await response.json();
     
-    // IMPORTANTE: Verifique se a API retorna um array direto ou um objeto com um array dentro.
-    // Exemplo: Se os produtos vierem em data.products, você deve retornar data.products
-    return data; 
+    // CORREÇÃO CRÍTICA: Os produtos estão dentro da chave 'data'
+    return data.data || []; 
 
   } catch (error) {
     console.error("Falha ao buscar produtos da FácilZap:", error);
-    return []; // Retorna array vazio em caso de erro para não quebrar o resto do processo
+    return [];
   }
 }
 
 
-// Função principal da nossa API, chamada pelo botão "Sincronizar"
+// Função principal da nossa API
 export async function POST() {
+  console.log("--- INÍCIO DA SINCRONIZAÇÃO DE PRODUTOS ---");
+
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,22 +70,21 @@ export async function POST() {
     const produtosExternos = await fetchProdutosExternos();
 
     if (!produtosExternos || produtosExternos.length === 0) {
-      return NextResponse.json({ message: 'Nenhum produto encontrado na API externa ou falha na comunicação.' });
+      return NextResponse.json({ message: 'Nenhum produto encontrado na API externa.' });
     }
 
-    // Mapeia os dados da API externa para a estrutura da nossa tabela 'produtos'
+    // Mapeia os dados REAIS da API para a nossa tabela 'produtos'
     const produtosParaSalvar = produtosExternos.map((p) => ({
       id_externo: p.id,
-      nome: p.name,
-      preco_base: p.price,
-      estoque: p.stock_quantity,
-      codigo_barra: p.barcode,
-      imagens: p.images,
-      videos: p.videos,
-      ativo: p.status === 'active', // Exemplo de como converter um status de texto para booleano
+      nome: p.nome,
+      // preco_base: p.preco, // CAMPO DE PREÇO AINDA NÃO ENCONTRADO
+      estoque: p.estoque?.disponivel ?? 0, // Acessa o estoque dentro do objeto
+      codigo_barra: p.cod_barras?.[0] ?? null, // Pega o primeiro código de barras da lista
+      imagens: p.imagens,
+      videos: p.video ? [p.video] : [], // Transforma a string de vídeo em uma lista
+      ativo: p.ativado,
     }));
 
-    // Salva os dados no Supabase
     const { error } = await supabase
       .from('produtos')
       .upsert(produtosParaSalvar, { onConflict: 'id_externo' });
@@ -92,9 +96,7 @@ export async function POST() {
     return NextResponse.json({ message: `Sincronização concluída! ${produtosParaSalvar.length} produtos processados.` });
 
   } catch (err: unknown) {
-    console.error('Erro na API de sincronização:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado no servidor.';
+    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
