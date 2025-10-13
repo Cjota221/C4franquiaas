@@ -1,49 +1,60 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Tipagem para os produtos que recebemos da API externa
+// Interface para garantir a tipagem dos dados vindos da API externa
 interface ExternalProduct {
-  id_unico_externo: string;
-  nome_produto: string;
-  preco: number;
-  quantidade_estoque: number;
-  ean?: string;
-  fotos?: string[];
+  // ATENÇÃO: Estes nomes de campos são exemplos.
+  // Você DEVE ajustá-los para que correspondam EXATAMENTE
+  // aos nomes dos campos que a API da FácilZap envia.
+  id: string;
+  name: string;
+  price: number;
+  stock_quantity: number;
+  barcode?: string;
+  images?: string[];
   videos?: string[];
-  ativo?: boolean;
+  status?: string;
 }
 
-// Função para buscar os produtos da API externa (exemplo)
+// Função para buscar os produtos da API externa REAL
 async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
-  console.log('Buscando dados da API Externa...');
-  return [
-    {
-      id_unico_externo: 'FZ-001',
-      nome_produto: 'Produto Sincronizado A',
-      preco: 149.90,
-      quantidade_estoque: 35,
-      ean: '1234567890123',
-      fotos: [
-        'https://placehold.co/600x400/DB1472/white?text=Produto+A',
-        'https://placehold.co/600x400/DB1472/white?text=Produto+A2'
-      ],
-      videos: ['https://exemplo.com/videoA.mp4'],
-      ativo: true
-    },
-    {
-      id_unico_externo: 'FZ-002',
-      nome_produto: 'Produto Sincronizado B (Sem Estoque)',
-      preco: 79.00,
-      quantidade_estoque: 0,
-      ean: '9876543210987',
-      fotos: ['https://placehold.co/600x400/gray/white?text=Produto+B'],
-      videos: [],
-      ativo: false
+  console.log("Buscando dados da API Externa Real...");
+
+  const apiUrl = process.env.FACILZAP_API_URL;
+  const apiToken = process.env.FACILZAP_TOKEN;
+
+  if (!apiUrl || !apiToken) {
+    throw new Error('As variáveis de ambiente da API FácilZap não estão configuradas no Netlify.');
+  }
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Erro na API FácilZap: ${response.statusText} - ${errorBody}`);
     }
-  ];
+
+    const data = await response.json();
+    
+    // IMPORTANTE: Verifique se a API retorna um array direto ou um objeto com um array dentro.
+    // Exemplo: Se os produtos vierem em data.products, você deve retornar data.products
+    return data; 
+
+  } catch (error) {
+    console.error("Falha ao buscar produtos da FácilZap:", error);
+    return []; // Retorna array vazio em caso de erro para não quebrar o resto do processo
+  }
 }
 
-// Função chamada via método POST
+
+// Função principal da nossa API, chamada pelo botão "Sincronizar"
 export async function POST() {
   try {
     const supabase = createClient(
@@ -53,41 +64,37 @@ export async function POST() {
 
     const produtosExternos = await fetchProdutosExternos();
 
-    const produtosParaSalvar = produtosExternos.map((p) => ({
-      id_externo: p.id_unico_externo,
-      nome: p.nome_produto,
-      preco_base: p.preco,
-      estoque: p.quantidade_estoque,
-      codigo_barra: p.ean,
-      imagens: p.fotos,
-      videos: p.videos,
-      ativo: p.ativo,
-    }));
-
-    if (produtosParaSalvar.length === 0) {
-      return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.' });
+    if (!produtosExternos || produtosExternos.length === 0) {
+      return NextResponse.json({ message: 'Nenhum produto encontrado na API externa ou falha na comunicação.' });
     }
 
+    // Mapeia os dados da API externa para a estrutura da nossa tabela 'produtos'
+    const produtosParaSalvar = produtosExternos.map((p) => ({
+      id_externo: p.id,
+      nome: p.name,
+      preco_base: p.price,
+      estoque: p.stock_quantity,
+      codigo_barra: p.barcode,
+      imagens: p.images,
+      videos: p.videos,
+      ativo: p.status === 'active', // Exemplo de como converter um status de texto para booleano
+    }));
+
+    // Salva os dados no Supabase
     const { error } = await supabase
       .from('produtos')
       .upsert(produtosParaSalvar, { onConflict: 'id_externo' });
 
     if (error) {
-      console.error('Erro ao salvar no Supabase:', error);
       throw new Error(`Erro do Supabase: ${error.message}`);
     }
 
-    return NextResponse.json({ message: 'Sincronização concluída com sucesso!' });
+    return NextResponse.json({ message: `Sincronização concluída! ${produtosParaSalvar.length} produtos processados.` });
 
   } catch (err: unknown) {
     console.error('Erro na API de sincronização:', err);
-
-    // Tratamento seguro do erro
-    let errorMessage = 'Ocorreu um erro no servidor.';
-    if (err instanceof Error) {
-      errorMessage = err.message;
-    }
-
+    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado no servidor.';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
