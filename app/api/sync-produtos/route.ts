@@ -11,7 +11,7 @@ interface ExternalProduct {
   cod_barras: string[];
   estoque: {
     // ATENÇÃO: Confirme o nome exato do campo para a quantidade disponível
-    disponivel: number; 
+    disponivel: number;
   };
   // ATENÇÃO: O campo de PREÇO não foi encontrado na listagem de produtos.
   // Pode ser necessário buscar em outro lugar ou ele pode estar em 'variacoes'.
@@ -22,7 +22,6 @@ interface ExternalProduct {
 async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
   console.log("Buscando dados da API Externa Real...");
 
-  // A URL base da API
   const apiBaseUrl = 'https://api.facilzap.app.br';
   const apiToken = process.env.FACILZAP_TOKEN;
 
@@ -31,12 +30,17 @@ async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
   }
 
   try {
-    const response = await fetch(`${apiBaseUrl}/produtos`, {
+    // MUDANÇA 1: Adicionada paginação para buscar os primeiros 100 produtos.
+    const apiUrlComPaginacao = `${apiBaseUrl}/produtos?page=1&length=100`;
+
+    const response = await fetch(apiUrlComPaginacao, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        // MUDANÇA 2: Adicionado o "disfarce" de navegador (User-Agent).
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
@@ -47,7 +51,6 @@ async function fetchProdutosExternos(): Promise<ExternalProduct[]> {
 
     const data = await response.json();
     
-    // CORREÇÃO CRÍTICA: Os produtos estão dentro da chave 'data'
     return data.data || []; 
 
   } catch (error) {
@@ -100,3 +103,4 @@ export async function POST() {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
