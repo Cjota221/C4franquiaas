@@ -27,6 +27,7 @@ export type ProdutoDB = {
   ativo: boolean;
   imagem: string | null;
   imagens: string[];
+  codigo_barras?: string | null;
 };
 
 const API_BASE = 'https://api.facilzap.app.br';
@@ -151,6 +152,10 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
         .filter((x): x is string => !!x)
         .map(normalizeToProxy);
 
+      // try to extract barcode from product or first variation
+      const codigoBarras = asString((p as Record<string, unknown>)['codigo_barras'] ?? (p as Record<string, unknown>)['ean'])
+        ?? (Array.isArray(p.variacoes) && p.variacoes.length > 0 ? asString((p.variacoes[0] as Record<string, unknown>)['codigo_barras'] ?? (p.variacoes[0] as Record<string, unknown>)['ean']) : undefined);
+
       result.push({
         id_externo: id,
         nome,
@@ -159,6 +164,7 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
         ativo: Boolean(ativo),
         imagem: imgs.length > 0 ? imgs[0] : null,
         imagens: imgs,
+        codigo_barras: codigoBarras ?? null,
       });
     }
 
