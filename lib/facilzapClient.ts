@@ -69,7 +69,7 @@ function normalizeToProxy(u: string): string {
 
   // include both the original FácilZap URL (encoded) and a url param for compatibility
   const facilzapParam = encodeURIComponent(s);
-  const urlParam = encodeURI(s); // leave slashes intact to avoid double-encoding by next/image
+  const urlParam = encodeURIComponent(s); // use strict encoding for compatibility
   // use the Netlify host so the function is reachable via the netlify.app domain
   const PROXY_HOST = 'https://c4franquiaas.netlify.app';
   return `${PROXY_HOST}/.netlify/functions/proxy-facilzap-image?facilzap=${facilzapParam}&url=${urlParam}`;
