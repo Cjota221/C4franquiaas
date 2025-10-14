@@ -5,6 +5,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import { RefreshCw } from 'lucide-react';
+import DebugVariacoes from '../../../components/DebugVariacoes';
 
 const PAGE_SIZE = 50;
 const axiosClient = axios.create({ timeout: 10000 });
@@ -145,6 +146,7 @@ export default function ProdutosPage() {
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [modalVariacoes, setModalVariacoes] = useState<Variacao[] | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   // modalVariacoes holds variations for the selected product
 
   async function openProdutoModal(produto: Produto) {
@@ -509,9 +511,11 @@ export default function ProdutosPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Detalhes: {modalProduto?.nome}</h2>
             <div className="flex items-center gap-3">
+              <button onClick={() => setShowDebug(s => !s)} className="text-sm text-gray-500 hover:text-gray-700 border rounded px-2 py-1">Debug</button>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">Fechar</button>
             </div>
           </div>
+          {showDebug && <DebugVariacoes productId={modalProduto?.id ?? null} />}
           {modalLoading ? (
             <div className="text-center py-10">Carregando variações...</div>
           ) : modalVariacoes && modalVariacoes.length > 0 ? (
