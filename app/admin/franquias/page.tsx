@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { PlusCircle } from 'lucide-react';
 import ModalFranquia from '@/components/ModalFranquia'; // Importa nosso modal
 
@@ -75,9 +76,11 @@ export default function FranquiasPage() {
             </thead>
             <tbody>
               {franquias.map((franquia) => (
-                <tr key={franquia.id} className="border-b hover:bg-gray-50">
+                  <tr key={franquia.id} className="border-b hover:bg-gray-50">
                   <td className="p-4 flex items-center gap-4">
-                    <img src={franquia.logo} alt={franquia.nome} className="w-12 h-12 rounded-lg object-cover" />
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden">
+                      <Image src={franquia.logo} alt={franquia.nome} width={48} height={48} className="object-cover" />
+                    </div>
                     <span className="font-semibold">{franquia.nome}</span>
                   </td>
                   <td className="p-4">{franquia.dominio}</td>

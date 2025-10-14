@@ -1,58 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { fetchProdutosFacilZap } from '@/lib/facilzapClient';
+import { fetchAllProdutosFacilZap, ProdutoDB } from '@/lib/facilzapClient';
 
 export async function POST() {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-  const produtosExternos = await fetchProdutosFacilZap();
+    const { produtos, pages } = await fetchAllProdutosFacilZap();
 
-    if (!produtosExternos || produtosExternos.length === 0) {
-      return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.' });
+    if (!produtos || produtos.length === 0) {
+      return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.', processed: 0, pages }, { status: 200 });
     }
 
-    const produtosParaSalvar = produtosExternos.map((p) => {
-      // Normalize to absolute URLs first
-      const imagensAbs = (p.imagens || []).map((url) => {
-        if (!url) return null;
-        let correctedUrl = url;
-        if (!correctedUrl.includes('://')) {
-          correctedUrl = `https://arquivos.facilzap.app.br/${correctedUrl.replace(/^\//, '')}`;
-        }
-        return correctedUrl.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
-      }).filter(Boolean) as string[];
+    const payload = produtos.map((p: ProdutoDB) => ({
+      id_externo: p.id_externo,
+      nome: p.nome,
+      preco_base: p.preco_base,
+      estoque: p.estoque,
+      imagem: p.imagem,
+      imagens: p.imagens,
+      ativo: p.ativo,
+    }));
 
-      // Create proxy URLs that the frontend can use directly
-      const imagensProxy = imagensAbs.map(u => `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(u)}`);
-
-      return {
-        id_externo: p.id,
-        nome: p.nome,
-        preco_base: p.preco ?? null,
-        estoque: p.estoque ?? 0,
-        // Save proxy URLs so frontend can directly use them as image src
-        imagens: imagensProxy,
-        imagem: imagensProxy[0] ?? null,
-        ativo: p.ativo,
-      };
-    });
-
-    const { error } = await supabase
-      .from('produtos')
-      .upsert(produtosParaSalvar, { onConflict: 'id_externo' });
-
+    const { error } = await supabase.from('produtos').upsert(payload, { onConflict: 'id_externo' });
     if (error) {
-      throw new Error(`Erro do Supabase: ${error.message}`);
+      console.error('[sync-produtos] upsert error', error);
+      return NextResponse.json({ error: error.message || 'Erro ao salvar produtos.' }, { status: 500 });
     }
 
-    return NextResponse.json({ message: `Sincronização concluída! ${produtosParaSalvar.length} produtos processados.` });
-
+    return NextResponse.json({ message: 'Sincronização concluída.', processed: payload.length, pages }, { status: 200 });
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Erro inesperado.';
+    console.error('[sync-produtos] catch', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

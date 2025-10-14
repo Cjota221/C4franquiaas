@@ -1,159 +1,121 @@
 import axios from 'axios';
 
-export type NormalizedProduct = {
-  id: string;
-  nome: string;
-  preco: number | null;
-  estoque: number;
-  ativo: boolean;
-  imagens: string[]; // proxy URLs
-  imagem: string | null;
+export type ExternalProduct = {
+  id?: string | number;
+  codigo?: string | number;
+  nome?: string;
+  ativado?: boolean;
+  ativo?: boolean;
+  imagens?: Array<string | number>;
+  fotos?: Array<string | number>;
+  variacoes?: Array<{ preco?: number | string }>;
+  estoque?: { disponivel?: number } | number;
+  preco?: number | string;
+  // any other fields are ignored
 };
 
-export async function fetchProdutosFacilZap(): Promise<NormalizedProduct[]> {
-  const apiBaseUrl = 'https://api.facilzap.app.br';
-  const apiToken = process.env.FACILZAP_TOKEN;
-  if (!apiToken) throw new Error('FACILZAP_TOKEN não configurado');
+export type ProdutoDB = {
+  id_externo: string;
+  nome: string;
+  preco_base: number | null;
+  estoque: number;
+  ativo: boolean;
+  imagem: string | null;
+  imagens: string[];
+};
 
-  const pageSize = 100;
-  let page = 1;
-  const results: NormalizedProduct[] = [];
+const API_BASE = 'https://api.facilzap.app.br';
+const PAGE_SIZE = 50;
+const TIMEOUT = 10000;
 
-  const axiosClient = axios.create({
-    baseURL: apiBaseUrl,
-    headers: {
-      Authorization: `Bearer ${apiToken}`,
-      Accept: 'application/json',
-      'User-Agent': 'C4-Franquias-Integration/1.0',
-    },
-    timeout: 10000,
-  });
-
-  async function getPageWithRetry(path: string, attempts = 3): Promise<unknown> {
-    let lastErr: unknown = null;
-    for (let i = 0; i < attempts; i++) {
-      try {
-        const res = await axiosClient.get(path);
-        return res.data;
-      } catch (err: unknown) {
-        lastErr = err;
-        // backoff
-        await new Promise((r) => setTimeout(r, 300 * (i + 1)));
-      }
-    }
-    throw lastErr;
+function normalizeToProxy(u: string): string {
+  let s = u;
+  if (!s.includes('://')) {
+    s = s.replace(/^\/+/, '');
+    s = `https://arquivos.facilzap.app.br/${s}`;
   }
+  s = s.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
+  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(s)}`;
+}
+
+function asString(v?: unknown): string | undefined {
+  if (typeof v === 'string' && v.trim() !== '') return v.trim();
+  if (typeof v === 'number') return String(v);
+  return undefined;
+}
+
+export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[]; pages: number }> {
+  const token = process.env.FACILZAP_TOKEN;
+  if (!token) throw new Error('FACILZAP_TOKEN não configurado');
+
+  const client = axios.create({ baseURL: API_BASE, timeout: TIMEOUT, headers: { Authorization: `Bearer ${token}` } });
+
+  const result: ProdutoDB[] = [];
+  let page = 1;
+  let pagesConsumed = 0;
 
   while (true) {
-    const path = `/produtos?page=${page}&length=${pageSize}`;
-    let body: unknown;
+    const path = `/produtos?page=${page}&length=${PAGE_SIZE}`;
+    let data: unknown;
     try {
-      body = await getPageWithRetry(path, 3);
+      const resp = await client.get(path);
+      data = resp.data;
     } catch (err: unknown) {
-      const errMsg =
-        typeof err === 'object' && err !== null && 'message' in err && typeof (err as Record<string, unknown>)['message'] === 'string'
-          ? String((err as Record<string, unknown>)['message'])
-          : String(err);
-      console.error('[fetchProdutosFacilZap] erro ao buscar página', page, errMsg);
+      console.error('[facilzap] erro ao buscar página', page, err instanceof Error ? err.message : String(err));
       break;
     }
 
-    const pageData: unknown[] =
-      typeof body === 'object' && body !== null && Array.isArray((body as Record<string, unknown>).data)
-        ? ((body as Record<string, unknown>).data as unknown[])
-        : Array.isArray(body)
-        ? (body as unknown[])
+    const items: ExternalProduct[] =
+      typeof data === 'object' && data !== null && Array.isArray((data as Record<string, unknown>)['data'])
+        ? ((data as Record<string, unknown>)['data'] as ExternalProduct[])
+        : Array.isArray(data)
+        ? (data as ExternalProduct[])
         : [];
-    if (!pageData || pageData.length === 0) break;
-    for (const raw of pageData) {
-      const r = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+    if (!items || items.length === 0) break;
 
-      const getString = (key: string): string | undefined => {
-        const v = r[key];
-        if (typeof v === 'string') return v;
-        if (typeof v === 'number') return String(v);
-        return undefined;
-      };
+    for (const p of items) {
+      const id = asString(p.id ?? p.codigo);
+      if (!id) continue;
+      const nome = asString(p.nome) ?? 'Sem nome';
+      const ativo = typeof p.ativado === 'boolean' ? p.ativado : typeof p.ativo === 'boolean' ? p.ativo : true;
 
-      const getNumber = (key: string): number | undefined => {
-        const v = r[key];
-        if (typeof v === 'number') return v;
-        if (typeof v === 'string') {
-          const n = Number(v);
-          return Number.isFinite(n) ? n : undefined;
-        }
-        return undefined;
-      };
-
-      const getArray = (key: string): unknown[] | undefined => {
-        const v = r[key];
-        return Array.isArray(v) ? v : undefined;
-      };
-
-      const id = getString('id') ?? getString('codigo') ?? '';
-      const nome = getString('nome') ?? getString('title') ?? 'Sem nome';
-      const ativo = ((): boolean => {
-        const v = r['ativado'] ?? r['ativo'];
-        if (typeof v === 'boolean') return v;
-        if (typeof v === 'string') return v === 'true';
-        return true;
-      })();
-
-      const estoqueFromObj = typeof r['estoque'] === 'object' && r['estoque'] !== null ? (r['estoque'] as Record<string, unknown>)['disponivel'] : undefined;
-      const estoque = Number(estoqueFromObj ?? getNumber('quantidade') ?? 0);
-      if (!ativo) continue;
-      if ((estoque ?? 0) <= 0) continue;
-
-      let preco: number | null = null;
-      const variacoes = getArray('variacoes');
-      if (variacoes && variacoes.length > 0) {
-        const v0 = variacoes[0];
-        const v0rec = typeof v0 === 'object' && v0 !== null ? (v0 as Record<string, unknown>) : {};
-        const p = v0rec['preco'];
-        if (typeof p === 'number') preco = p;
-        if (typeof p === 'string') {
-          const pn = Number(p);
-          if (Number.isFinite(pn)) preco = pn;
-        }
+      // estoque
+      let estoque = 0;
+      if (typeof p.estoque === 'number') estoque = p.estoque;
+      else if (p.estoque && typeof p.estoque === 'object') {
+        const estoqueObj = p.estoque as Record<string, unknown>;
+        if (typeof estoqueObj['disponivel'] === 'number') estoque = estoqueObj['disponivel'] as number;
       }
-      if (preco === null) {
-        const pRaw = r['preco'];
-        if (typeof pRaw === 'number') preco = pRaw;
-        if (typeof pRaw === 'string') {
-          const pn = Number(pRaw);
-          if (Number.isFinite(pn)) preco = pn;
+
+      // preco_base from variacoes[0].preco
+      let preco_base: number | null = null;
+      if (Array.isArray(p.variacoes) && p.variacoes.length > 0) {
+        const v0 = p.variacoes[0];
+        if (v0 && typeof v0.preco === 'number') preco_base = v0.preco;
+        if (v0 && typeof v0.preco === 'string') {
+          const n = Number(v0.preco);
+          if (Number.isFinite(n)) preco_base = n;
         }
       }
 
-      const imagensFromKey = getArray('imagens') ?? getArray('fotos') ?? [];
-      const rawImgs = imagensFromKey.map((x) => (typeof x === 'string' || typeof x === 'number' ? String(x) : '')).filter(Boolean);
-      const absImgs = rawImgs
-        .map((s) => {
-          let str = s;
-          if (!str.includes('://')) {
-            str = str.replace(/^\/+/, '');
-            str = `https://arquivos.facilzap.app.br/${str}`;
-          }
-          str = str.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
-          return str;
-        })
-        .filter(Boolean);
+      // imagens
+      const imgsRaw = Array.isArray(p.imagens) ? p.imagens : Array.isArray(p.fotos) ? p.fotos : [];
+      const imgs = imgsRaw.map((x) => asString(x)).filter((x): x is string => !!x).map(normalizeToProxy);
 
-      const imagensProxy = absImgs.map((u) => `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(u)}`);
-
-      results.push({
-        id: String(id),
+      result.push({
+        id_externo: id,
         nome,
-        preco: typeof preco === 'number' ? preco : null,
+        preco_base,
         estoque: Number(estoque || 0),
         ativo: Boolean(ativo),
-        imagens: imagensProxy,
-        imagem: imagensProxy[0] ?? null,
+        imagem: imgs.length > 0 ? imgs[0] : null,
+        imagens: imgs,
       });
     }
 
+    pagesConsumed++;
     page++;
   }
 
-  return results;
+  return { produtos: result, pages: pagesConsumed };
 }
