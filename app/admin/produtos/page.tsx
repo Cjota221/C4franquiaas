@@ -74,7 +74,7 @@ export default function ProdutosPage() {
       const to = from + PAGE_SIZE - 1;
       const { data, error, count } = await supabase
         .from('produtos')
-        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem', { count: 'exact' })
+        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens', { count: 'exact' })
         .range(from, to)
         .order('nome', { ascending: true });
 
@@ -100,7 +100,8 @@ export default function ProdutosPage() {
   async function handleSync() {
     setStatusMsg({ type: 'loading', text: 'Sincronizando produtos...' });
     try {
-      const resp = await axiosClient.post('/api/sync-produtos');
+      // request sync for current page only to avoid heavy operations
+      const resp = await axiosClient.post('/api/sync-produtos', { page: pagina, length: PAGE_SIZE });
       setStatusMsg({ type: 'success', text: resp.data?.message ?? 'Sincronização concluída.' });
       setPagina(1);
       await fetchPage(1);
@@ -173,15 +174,12 @@ export default function ProdutosPage() {
                 produtos.map((p) => (
                   <tr key={p.id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-4">
-                      <div className="relative h-16 w-16 rounded-md overflow-hidden bg-gray-100">
-                          <Image
-                            src={resolveImageSrc(p.imagem ?? p.imagens ?? '/placeholder-100.png')}
-                            alt={p.nome}
-                            width={64}
-                            height={64}
-                            className="object-cover"
-                            unoptimized={false}
-                          />
+                      <div className="flex gap-2">
+                        {(p.imagens && p.imagens.length > 0 ? p.imagens.slice(0,3) : [p.imagem ?? '/placeholder-100.png']).map((src, idx) => (
+                          <a key={idx} href={resolveImageSrc(src)} target="_blank" rel="noreferrer" className="block rounded overflow-hidden bg-gray-100">
+                            <Image src={resolveImageSrc(src)} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
+                          </a>
+                        ))}
                       </div>
                     </td>
                     <td className="p-4 font-medium text-gray-800">{p.nome}</td>
