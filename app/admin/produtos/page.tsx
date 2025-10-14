@@ -169,12 +169,46 @@ export default function ProdutosPage() {
           : (estoqueVal && typeof estoqueVal === 'object' ? (Number((estoqueVal as Record<string, unknown>)['estoque'] ?? (estoqueVal as Record<string, unknown>)['disponivel']) || null) : null);
         const precoRaw = rec['preco'];
         const preco = typeof precoRaw === 'number' ? precoRaw : (typeof precoRaw === 'string' ? Number(precoRaw) : null);
+        const maybeBarcode = (r: Record<string, unknown>) => {
+          // try common barcode/ean fields and variants
+          const candidates = ['codigo_de_barras', 'codigoBarras', 'codigo', 'codigo_barras', 'codigobarras', 'barcode', 'ean', 'gtin', 'code'];
+          for (const k of candidates) {
+            const v = r[k];
+            if (typeof v === 'string' && v.trim() !== '') return v.trim();
+            if (typeof v === 'number') return String(v);
+          }
+          return null;
+        };
+
+        const displayName = ((): string => {
+          // prefer explicit variation name fields if available
+          const names = ['nome', 'nome_variacao', 'descricao', 'descricao_variacao', 'descricaoVar', 'sku', 'id', 'codigo'];
+          for (const k of names) {
+            const v = rec[k];
+            if (typeof v === 'string' && v.trim() !== '') return v.trim();
+            if (typeof v === 'number') return String(v);
+          }
+          return '';
+        })();
+
+        const resolvedId = ((): string | number | null => {
+          const v = rec['id'] ?? rec['codigo'];
+          if (typeof v === 'string' || typeof v === 'number') return v;
+          return null;
+        })();
+        const resolvedSku = ((): string | number | null => {
+          const v = rec['sku'] ?? rec['id'];
+          if (typeof v === 'string' || typeof v === 'number') return v;
+          return null;
+        })();
+
         const base: Variacao = {
-          id: rec['id'] ?? rec['codigo'] ?? null,
-          sku: rec['sku'] ?? rec['id'] ?? null,
-          codigo_de_barras: (rec['codigo_de_barras'] ?? rec['codigoBarras'] ?? rec['barcode']) as string | null ?? null,
+          id: resolvedId,
+          sku: resolvedSku,
+          codigo_de_barras: maybeBarcode(rec) ?? null,
           estoque: typeof estoque === 'number' && Number.isFinite(estoque) ? estoque : null,
           preco: typeof preco === 'number' && Number.isFinite(preco) ? preco : null,
+          displayName,
           ...rec,
         } as Variacao;
         // find override in meta by id or sku or barcode
@@ -183,12 +217,19 @@ export default function ProdutosPage() {
           const mm = m as Record<string, unknown>;
           if (mm['id'] && base.id && String(mm['id']) === String(base.id)) return true;
           if (mm['sku'] && base.sku && String(mm['sku']) === String(base.sku)) return true;
+          // allow override match by any barcode-like field too
           if (mm['codigo_de_barras'] && base.codigo_de_barras && String(mm['codigo_de_barras']) === String(base.codigo_de_barras)) return true;
+          if (mm['codigo'] && base.codigo_de_barras && String(mm['codigo']) === String(base.codigo_de_barras)) return true;
           return false;
         }) as Record<string, unknown> | undefined;
         if (override) {
           if (typeof override['estoque'] === 'number') base.estoque = override['estoque'] as number;
           if (typeof override['codigo_de_barras'] === 'string') base.codigo_de_barras = override['codigo_de_barras'] as string;
+          // fallback override barcode keys
+          if (!base.codigo_de_barras) {
+            const mm = override as Record<string, unknown>;
+            base.codigo_de_barras = (typeof mm['codigo'] === 'string' ? mm['codigo'] : (typeof mm['barcode'] === 'string' ? mm['barcode'] : base.codigo_de_barras)) as string | null;
+          }
           base.overridden = true;
         }
         return base;
