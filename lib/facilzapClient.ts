@@ -35,13 +35,40 @@ const PAGE_SIZE = 50;
 const TIMEOUT = 10000;
 
 function normalizeToProxy(u: string): string {
-  let s = u;
-  if (!s.includes('://')) {
+  if (!u) return u;
+  let s = String(u).trim();
+
+  // If already proxied, return as-is
+  if (s.includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image')) return s;
+
+  // Try to decode once in case the URL is double-encoded
+  try {
+    const d = decodeURIComponent(s);
+    if (d && d.length > 0) s = d;
+  } catch (e) {
+    // ignore decode errors
+  }
+
+  // Replace spaces with %20 to avoid 400s
+  s = s.replace(/\s+/g, '%20');
+
+  // Normalize protocol-relative URLs
+  if (s.startsWith('//')) s = 'https:' + s;
+
+  // If there's no scheme, assume it's a relative path from arquivos.facilzap
+  if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(s)) {
     s = s.replace(/^\/+/, '');
     s = `https://arquivos.facilzap.app.br/${s}`;
   }
+
+  // Fix malformed host like https://produtos/...
   s = s.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
-  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(s)}`;
+
+  // Force https
+  s = s.replace(/^http:/i, 'https:');
+
+  // use encodeURI so slashes and colons are left intact (avoids double-encoding by next/image)
+  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?url=${encodeURI(s)}`;
 }
 
 function asString(v?: unknown): string | undefined {
