@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
@@ -20,6 +20,16 @@ type Produto = {
   ativo: boolean;
   imagem: string | null;
   imagens?: string[];
+};
+
+type Variacao = {
+  id?: string | number;
+  sku?: string | null;
+  codigo_de_barras?: string | null;
+  estoque?: number | null;
+  preco?: number | null;
+  overridden?: boolean;
+  [k: string]: unknown;
 };
 
 function resolveImageSrc(raw: unknown): string {
@@ -131,9 +141,119 @@ export default function ProdutosPage() {
     }
   }
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalProduto, setModalProduto] = useState<Produto | null>(null);
+  const [modalVariacoes, setModalVariacoes] = useState<Variacao[] | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const barcodeInputsRef = React.useRef<Array<HTMLInputElement | null>>([]);
+
+  async function openProdutoModal(produto: Produto) {
+    setModalProduto(produto);
+    setModalVariacoes(null);
+    setModalOpen(true);
+    setModalLoading(true);
+    try {
+      const resp = await axiosClient.get(`/api/produtos/${produto.id}`);
+      const facil = resp.data?.facilzap;
+      const dbRow = resp.data?.produto ?? null;
+      const meta: unknown[] = Array.isArray(dbRow?.variacoes_meta) ? dbRow.variacoes_meta : [];
+
+      // try to extract and merge variations from facilzap response and apply overrides from meta
+      const rawVars: unknown[] = Array.isArray(facil?.variacoes) ? facil.variacoes : [];
+      const vars: Variacao[] = rawVars.map((v: unknown) => {
+        const rec = (v && typeof v === 'object') ? v as Record<string, unknown> : {};
+        const estoqueVal = rec['estoque'];
+        const estoque = typeof estoqueVal === 'number'
+          ? estoqueVal
+          : (estoqueVal && typeof estoqueVal === 'object' ? (Number((estoqueVal as Record<string, unknown>)['estoque'] ?? (estoqueVal as Record<string, unknown>)['disponivel']) || null) : null);
+        const precoRaw = rec['preco'];
+        const preco = typeof precoRaw === 'number' ? precoRaw : (typeof precoRaw === 'string' ? Number(precoRaw) : null);
+        const base: Variacao = {
+          id: rec['id'] ?? rec['codigo'] ?? null,
+          sku: rec['sku'] ?? rec['id'] ?? null,
+          codigo_de_barras: (rec['codigo_de_barras'] ?? rec['codigoBarras'] ?? rec['barcode']) as string | null ?? null,
+          estoque: typeof estoque === 'number' && Number.isFinite(estoque) ? estoque : null,
+          preco: typeof preco === 'number' && Number.isFinite(preco) ? preco : null,
+          ...rec,
+        } as Variacao;
+        // find override in meta by id or sku or barcode
+        const override = meta.find((m) => {
+          if (!m || typeof m !== 'object') return false;
+          const mm = m as Record<string, unknown>;
+          if (mm['id'] && base.id && String(mm['id']) === String(base.id)) return true;
+          if (mm['sku'] && base.sku && String(mm['sku']) === String(base.sku)) return true;
+          if (mm['codigo_de_barras'] && base.codigo_de_barras && String(mm['codigo_de_barras']) === String(base.codigo_de_barras)) return true;
+          return false;
+        }) as Record<string, unknown> | undefined;
+        if (override) {
+          if (typeof override['estoque'] === 'number') base.estoque = override['estoque'] as number;
+          if (typeof override['codigo_de_barras'] === 'string') base.codigo_de_barras = override['codigo_de_barras'] as string;
+          base.overridden = true;
+        }
+        return base;
+      });
+
+      // sort by SKU or id for UX stability
+      vars.sort((a, b) => {
+        const sa = String(a.sku ?? a.id ?? '')
+        const sb = String(b.sku ?? b.id ?? '')
+        return sa.localeCompare(sb, undefined, { numeric: true });
+      });
+
+      setModalVariacoes(vars);
+    } catch (err: unknown) {
+      console.error('[modal] fetch detail error', err);
+      setModalVariacoes([]);
+    } finally {
+      setModalLoading(false);
+    }
+  }
+
+  const [saving, setSaving] = useState(false);
+
+  async function saveVariacoes() {
+    if (!modalProduto) return;
+    if (!modalVariacoes) return;
+    setSaving(true);
+    try {
+      // build variacoes_meta payload: keep id, estoque, codigo_de_barras
+      const variacoes_meta = modalVariacoes.map(v => ({ id: v.id ?? null, estoque: v.estoque ?? null, codigo_de_barras: v.codigo_de_barras ?? null }));
+      // compute aggregated estoque
+      const totalEstoque = modalVariacoes.reduce((acc, v) => acc + (typeof v.estoque === 'number' ? v.estoque : 0), 0);
+
+      const payload: Record<string, unknown> = { variacoes_meta };
+      // also update produto.estoque and ativo based on total
+      payload.estoque = totalEstoque;
+      payload.ativo = totalEstoque > 0;
+
+      const resp = await axiosClient.patch(`/api/produtos/${modalProduto.id}`, payload, { headers: { 'Content-Type': 'application/json', 'x-admin-token': process.env.NEXT_PUBLIC_SYNC_PRODUCTS_TOKEN ?? '' } });
+      if (resp.status >= 200 && resp.status < 300) {
+        setStatusMsg({ type: 'success', text: 'Variações salvas.' });
+        // update local list
+        setProdutos(prev => prev.map(p => p.id === modalProduto.id ? { ...p, estoque: totalEstoque, ativo: totalEstoque > 0 } : p));
+        closeModal();
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Falha ao salvar.' });
+      }
+    } catch (err: unknown) {
+      console.error('[saveVariacoes] error', err);
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar variações.';
+      setStatusMsg({ type: 'error', text: msg });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setModalProduto(null);
+    setModalVariacoes(null);
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
+    <>
     <div className="p-8 font-sans">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -189,9 +309,12 @@ export default function ProdutosPage() {
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${p.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{p.ativo ? 'Ativo' : 'Inativo'}</span>
                     </td>
                     <td className="p-4">
-                      <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">
-                        {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => openProdutoModal(p)} className="px-3 py-1 text-sm rounded bg-white border hover:bg-gray-50">Ver</button>
+                        <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">
+                          {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -211,5 +334,67 @@ export default function ProdutosPage() {
         </div>
       </div>
     </div>
+    {/* Modal */}
+    {modalOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-lg w-11/12 max-w-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Detalhes: {modalProduto?.nome}</h2>
+            <div className="flex items-center gap-3">
+              <button onClick={() => {
+                // focus first barcode input if exists
+                const first = barcodeInputsRef.current.find(i => i !== null && i !== undefined) as HTMLInputElement | undefined;
+                if (first) first.focus();
+              }} className="px-2 py-1 text-sm bg-gray-100 rounded">Focar Bipador</button>
+              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">Fechar</button>
+            </div>
+          </div>
+          {modalLoading ? (
+            <div className="text-center py-10">Carregando variações...</div>
+          ) : modalVariacoes && modalVariacoes.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b"><tr>
+                  <th className="p-2">Variante</th>
+                  <th className="p-2">Estoque</th>
+                  <th className="p-2">Preço</th>
+                  <th className="p-2">Código de Barras</th>
+                </tr></thead>
+                <tbody>
+                  {modalVariacoes.map((v, idx) => (
+                    <tr key={String(v.id ?? idx)} className="border-b">
+                      <td className="p-2 align-top">{v.sku ?? v.id ?? `Var ${idx+1}`}</td>
+                      <td className="p-2">
+                        <input type="number" className="w-24 border rounded px-2 py-1" value={v.estoque ?? ''} onChange={(e) => {
+                          const val = e.target.value === '' ? null : Number(e.target.value);
+                          setModalVariacoes(prev => prev ? prev.map((pv, pi) => pi === idx ? { ...pv, estoque: val } : pv) : prev);
+                        }} />
+                      </td>
+                      <td className="p-2">{typeof v.preco === 'number' ? `R$ ${v.preco.toFixed ? v.preco.toFixed(2) : Number(v.preco).toFixed(2)}` : (v.preco ?? '—')}</td>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <input ref={(el) => { barcodeInputsRef.current[idx] = el; }} type="text" className="w-44 border rounded px-2 py-1" value={v.codigo_de_barras ?? ''} onChange={(e) => {
+                            const val = e.target.value || null;
+                            setModalVariacoes(prev => prev ? prev.map((pv, pi) => pi === idx ? { ...pv, codigo_de_barras: val } : pv) : prev);
+                          }} />
+                          { Boolean(v.overridden) && <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Override</span> }
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex justify-end gap-2 mt-4">
+                <button onClick={closeModal} className="px-4 py-2 rounded bg-white border">Cancelar</button>
+                <button onClick={saveVariacoes} disabled={saving} className="px-4 py-2 rounded bg-pink-600 text-white">{saving ? 'Salvando...' : 'Salvar'}</button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-600">Nenhuma variação encontrada para este produto.</div>
+          )}
+        </div>
+      </div>
+    )}
+    </>
   );
 }

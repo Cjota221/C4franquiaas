@@ -279,3 +279,22 @@ export async function fetchProdutosFacilZapPage(page = 1, length = PAGE_SIZE): P
 
   return { produtos: result, page, count: items.length };
 }
+
+export async function fetchProdutoFacilZapById(id: string): Promise<ExternalProduct | null> {
+  const token = process.env.FACILZAP_TOKEN;
+  if (!token) throw new Error('FACILZAP_TOKEN não configurado');
+
+  const client = axios.create({ baseURL: API_BASE, timeout: TIMEOUT, headers: { Authorization: `Bearer ${token}` } });
+  try {
+    // tentativa padrão: GET /produtos/{id}
+    const resp = await client.get(`/produtos/${encodeURIComponent(id)}`);
+    // FácilZap pode encapsular em { data: {...} } ou retornar o objeto diretamente
+    const data = resp.data;
+    if (!data) return null;
+    const prod = (typeof data === 'object' && data !== null && (data as Record<string, unknown>)['data']) ? (data as Record<string, unknown>)['data'] as ExternalProduct : data as ExternalProduct;
+    return prod ?? null;
+  } catch (err: unknown) {
+    console.error('[facilzap] erro ao buscar produto detalhe', id, err instanceof Error ? err.message : String(err));
+    return null;
+  }
+}

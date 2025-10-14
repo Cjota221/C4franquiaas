@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
           estoque: p.estoque,
           imagem: p.imagem ?? null,
           imagens: p.imagens ?? [],
-          ativo: p.ativo,
+          // deactivate products with zero stock
+          ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
           last_synced_at: new Date().toISOString(),
         }));
   const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
@@ -54,7 +55,8 @@ export async function POST(request: NextRequest) {
         estoque: p.estoque,
         imagem: p.imagem ?? null,
         imagens: p.imagens ?? [],
-        ativo: p.ativo,
+        // deactivate products with zero stock
+        ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
         last_synced_at: new Date().toISOString(),
       }));
   const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });

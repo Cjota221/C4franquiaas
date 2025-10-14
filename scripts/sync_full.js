@@ -165,7 +165,8 @@ async function run() {
         nome: p.nome,
         preco_base: p.preco_base,
         estoque: p.estoque,
-        ativo: p.ativo,
+        // deactivate products with zero stock
+        ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
         imagem: p.imagem ?? null,
         imagens: p.imagens ?? [],
         last_synced_at: new Date().toISOString(),
