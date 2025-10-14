@@ -38,7 +38,7 @@ function normalizeToProxy(u: string): string {
   if (!u) return u;
   let s = String(u).trim();
 
-  // If already proxied, return as-is
+  // If already proxied, return as-is (assume it already contains the necessary params)
   if (s.includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image')) return s;
 
   // Try to decode once in case the URL is double-encoded
@@ -67,8 +67,10 @@ function normalizeToProxy(u: string): string {
   // Force https
   s = s.replace(/^http:/i, 'https:');
 
-  // use encodeURI so slashes and colons are left intact (avoids double-encoding by next/image)
-  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?url=${encodeURI(s)}`;
+  // include both the original FácilZap URL (encoded) and a url param for compatibility
+  const facilzapParam = encodeURIComponent(s);
+  const urlParam = encodeURI(s); // leave slashes intact to avoid double-encoding by next/image
+  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?facilzap=${facilzapParam}&url=${urlParam}`;
 }
 
 function asString(v?: unknown): string | undefined {
