@@ -419,11 +419,23 @@ export default function ProdutosPage() {
                   <tr className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-4">
                       <div className="flex gap-2">
-                        {(p.imagens && p.imagens.length > 0 ? p.imagens.slice(0,3) : [p.imagem ?? '/placeholder-100.png']).map((src, idx) => (
-                          <a key={idx} href={resolveImageSrc(src)} target="_blank" rel="noreferrer" className="block rounded overflow-hidden bg-gray-100">
-                            <Image src={resolveImageSrc(src)} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
-                          </a>
-                        ))}
+                        {(p.imagens && p.imagens.length > 0 ? p.imagens.slice(0,3) : [p.imagem ?? '/placeholder-100.png']).map((src, idx) => {
+                          const srcStr = resolveImageSrc(src);
+                          // Render plain <img> for proxy URLs or direct FácilZap hosts to avoid next/image re-encoding
+                          const isProxy = String(srcStr).includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image') || String(srcStr).includes('arquivos.facilzap.app.br');
+                          return (
+                            <a key={idx} href={srcStr} target="_blank" rel="noreferrer" className="block rounded overflow-hidden bg-gray-100">
+                              {isProxy ? (
+                                // use plain <img> for proxied URLs to avoid next/image re-encoding query params
+                                // keep same layout/size for visual consistency
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={srcStr} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
+                              ) : (
+                                <Image src={srcStr} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
+                              )}
+                            </a>
+                          );
+                        })}
                       </div>
                     </td>
                     <td className="p-4 font-medium text-gray-800">{p.nome}</td>
