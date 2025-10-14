@@ -451,7 +451,7 @@ export default function ProdutosPage() {
                             <tbody>
                               {expandedVariations[p.id].variacoes!.map((v, vi) => (
                                 <tr key={String(v.id ?? vi)} className="border-b">
-                                  <td className="p-2 align-top">{v.sku ? `${p.nome} - ${v.sku}` : v.id ?? `Var ${vi+1}`}</td>
+                                  <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : (v.sku ?? v.id ?? `Var ${vi+1}`)}</td>
                                   <td className="p-2">{typeof v.estoque === 'number' ? v.estoque : '—'}</td>
                                   <td className="p-2">{typeof v.preco === 'number' ? `R$ ${v.preco.toFixed(2)}` : (v.preco ?? '—')}</td>
                                   <td className="p-2">
@@ -514,7 +514,7 @@ export default function ProdutosPage() {
                 <tbody>
                   {modalVariacoes.map((v, idx) => (
                     <tr key={String(v.id ?? idx)} className="border-b">
-                      <td className="p-2 align-top">{v.sku ?? v.id ?? `Var ${idx+1}`}</td>
+                      <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : (v.sku ?? v.id ?? `Var ${idx+1}`)}</td>
                       <td className="p-2">
                         <input type="number" className="w-24 border rounded px-2 py-1" value={v.estoque ?? ''} onChange={(e) => {
                           const val = e.target.value === '' ? null : Number(e.target.value);
