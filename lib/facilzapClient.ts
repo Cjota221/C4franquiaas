@@ -17,7 +17,6 @@ export async function fetchProdutosFacilZap(): Promise<NormalizedProduct[]> {
 
   const pageSize = 100;
   let page = 1;
-  let keepGoing = true;
   const results: NormalizedProduct[] = [];
 
   const axiosClient = axios.create({
@@ -30,65 +29,117 @@ export async function fetchProdutosFacilZap(): Promise<NormalizedProduct[]> {
     timeout: 10000,
   });
 
-  async function getPageWithRetry(path: string, attempts = 3) {
-    let lastErr: any = null;
+  async function getPageWithRetry(path: string, attempts = 3): Promise<unknown> {
+    let lastErr: unknown = null;
     for (let i = 0; i < attempts; i++) {
       try {
         const res = await axiosClient.get(path);
         return res.data;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
-        await new Promise(r => setTimeout(r, 300 * (i + 1)));
+        // backoff
+        await new Promise((r) => setTimeout(r, 300 * (i + 1)));
       }
     }
     throw lastErr;
   }
 
-  while (keepGoing) {
+  while (true) {
     const path = `/produtos?page=${page}&length=${pageSize}`;
-    let body: any;
+    let body: unknown;
     try {
       body = await getPageWithRetry(path, 3);
-    } catch (err) {
-      const errMsg = err && typeof err === 'object' && 'message' in err ? (err as any).message : String(err);
+    } catch (err: unknown) {
+      const errMsg =
+        typeof err === 'object' && err !== null && 'message' in err && typeof (err as Record<string, unknown>)['message'] === 'string'
+          ? String((err as Record<string, unknown>)['message'])
+          : String(err);
       console.error('[fetchProdutosFacilZap] erro ao buscar página', page, errMsg);
       break;
     }
 
-    const pageData = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []);
+    const pageData: unknown[] =
+      typeof body === 'object' && body !== null && Array.isArray((body as Record<string, unknown>).data)
+        ? ((body as Record<string, unknown>).data as unknown[])
+        : Array.isArray(body)
+        ? (body as unknown[])
+        : [];
     if (!pageData || pageData.length === 0) break;
-
     for (const raw of pageData) {
-      const id = raw?.id ?? String(raw?.codigo ?? '');
-      const nome = raw?.nome ?? raw?.title ?? 'Sem nome';
-      const ativo = raw?.ativado ?? raw?.ativo ?? true;
+      const r = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
 
-      const estoque = Number(raw?.estoque?.disponivel ?? raw?.quantidade ?? 0);
+      const getString = (key: string): string | undefined => {
+        const v = r[key];
+        if (typeof v === 'string') return v;
+        if (typeof v === 'number') return String(v);
+        return undefined;
+      };
+
+      const getNumber = (key: string): number | undefined => {
+        const v = r[key];
+        if (typeof v === 'number') return v;
+        if (typeof v === 'string') {
+          const n = Number(v);
+          return Number.isFinite(n) ? n : undefined;
+        }
+        return undefined;
+      };
+
+      const getArray = (key: string): unknown[] | undefined => {
+        const v = r[key];
+        return Array.isArray(v) ? v : undefined;
+      };
+
+      const id = getString('id') ?? getString('codigo') ?? '';
+      const nome = getString('nome') ?? getString('title') ?? 'Sem nome';
+      const ativo = ((): boolean => {
+        const v = r['ativado'] ?? r['ativo'];
+        if (typeof v === 'boolean') return v;
+        if (typeof v === 'string') return v === 'true';
+        return true;
+      })();
+
+      const estoqueFromObj = typeof r['estoque'] === 'object' && r['estoque'] !== null ? (r['estoque'] as Record<string, unknown>)['disponivel'] : undefined;
+      const estoque = Number(estoqueFromObj ?? getNumber('quantidade') ?? 0);
       if (!ativo) continue;
       if ((estoque ?? 0) <= 0) continue;
 
       let preco: number | null = null;
-      if (Array.isArray(raw?.variacoes) && raw.variacoes.length > 0) {
-        const v0 = raw.variacoes[0];
-        preco = typeof v0?.preco === 'number' ? v0.preco : preco;
+      const variacoes = getArray('variacoes');
+      if (variacoes && variacoes.length > 0) {
+        const v0 = variacoes[0];
+        const v0rec = typeof v0 === 'object' && v0 !== null ? (v0 as Record<string, unknown>) : {};
+        const p = v0rec['preco'];
+        if (typeof p === 'number') preco = p;
+        if (typeof p === 'string') {
+          const pn = Number(p);
+          if (Number.isFinite(pn)) preco = pn;
+        }
       }
-      if (preco === null && typeof raw?.preco === 'number') preco = raw.preco;
+      if (preco === null) {
+        const pRaw = r['preco'];
+        if (typeof pRaw === 'number') preco = pRaw;
+        if (typeof pRaw === 'string') {
+          const pn = Number(pRaw);
+          if (Number.isFinite(pn)) preco = pn;
+        }
+      }
 
-      const rawImgs: string[] = Array.isArray(raw?.imagens) ? raw.imagens : (raw?.fotos || []);
-      const absImgs = (rawImgs || [])
-        .map((u: string) => {
-          if (!u) return null;
-          let s = String(u);
-          if (!s.includes('://')) {
-            s = s.replace(/^\/+/, '');
-            s = `https://arquivos.facilzap.app.br/${s}`;
+      const imagensFromKey = getArray('imagens') ?? getArray('fotos') ?? [];
+      const rawImgs = imagensFromKey.map((x) => (typeof x === 'string' || typeof x === 'number' ? String(x) : '')).filter(Boolean);
+      const absImgs = rawImgs
+        .map((s) => {
+          let str = s;
+          if (!str.includes('://')) {
+            str = str.replace(/^\/+/, '');
+            str = `https://arquivos.facilzap.app.br/${str}`;
           }
-          s = s.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
-          return s;
+          str = str.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
+          return str;
         })
-        .filter(Boolean) as string[];
+        .filter(Boolean);
 
-      const imagensProxy = absImgs.map(u => `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(u)}`);
+      const imagensProxy = absImgs.map((u) => `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(u)}`);
 
       results.push({
         id: String(id),
