@@ -45,8 +45,11 @@ function normalizeToProxy(u: string): string {
   try {
     const d = decodeURIComponent(s);
     if (d && d.length > 0) s = d;
-  } catch (e) {
-    // ignore decode errors
+  } catch (decodeErr) {
+    if (process.env.DEBUG_SYNC === 'true') {
+      console.warn('[facilzap] decodeURIComponent failed for', s, decodeErr);
+    }
+    // otherwise ignore decode errors
   }
 
   // Replace spaces with %20 to avoid 400s

@@ -145,8 +145,7 @@ export default function ProdutosPage() {
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [modalVariacoes, setModalVariacoes] = useState<Variacao[] | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
-  // expandedVariations holds per-product state: { loading, variacoes, saving }
-  const [expandedVariations, setExpandedVariations] = useState<Record<number, { loading: boolean; variacoes: Variacao[] | null; saving?: boolean }>>({});
+  // modalVariacoes holds variations for the selected product
 
   async function openProdutoModal(produto: Produto) {
     setModalProduto(produto);
@@ -256,81 +255,9 @@ export default function ProdutosPage() {
     }
   }
 
-  async function toggleExpandVariacoes(produto: Produto) {
-    const existing = expandedVariations[produto.id];
-    if (existing && existing.variacoes) {
-      // collapse
-      setExpandedVariations(prev => ({ ...prev, [produto.id]: { loading: false, variacoes: null } }));
-      return;
-    }
-    // fetch variations
-    setExpandedVariations(prev => ({ ...prev, [produto.id]: { loading: true, variacoes: null } }));
-    try {
-      const resp = await axiosClient.get(`/api/produtos/${produto.id}`);
-      const facil = resp.data?.facilzap;
-      const dbRow = resp.data?.produto ?? null;
-      const meta: unknown[] = Array.isArray(dbRow?.variacoes_meta) ? dbRow.variacoes_meta : [];
-      const rawVars: unknown[] = Array.isArray(facil?.variacoes) ? facil.variacoes : [];
-      const vars: Variacao[] = rawVars.map((v: unknown) => {
-        const rec = (v && typeof v === 'object') ? v as Record<string, unknown> : {};
-        const estoqueVal = rec['estoque'];
-        const estoque = typeof estoqueVal === 'number'
-          ? estoqueVal
-          : (estoqueVal && typeof estoqueVal === 'object' ? (Number((estoqueVal as Record<string, unknown>)['estoque'] ?? (estoqueVal as Record<string, unknown>)['disponivel']) || null) : null);
-        const precoRaw = rec['preco'];
-        const preco = typeof precoRaw === 'number' ? precoRaw : (typeof precoRaw === 'string' ? Number(precoRaw) : null);
-        const base: Variacao = {
-          id: rec['id'] ?? rec['codigo'] ?? null,
-          sku: rec['sku'] ?? rec['id'] ?? null,
-          codigo_de_barras: (rec['codigo_de_barras'] ?? rec['codigoBarras'] ?? rec['barcode']) as string | null ?? null,
-          estoque: typeof estoque === 'number' && Number.isFinite(estoque) ? estoque : null,
-          preco: typeof preco === 'number' && Number.isFinite(preco) ? preco : null,
-          ...rec,
-        } as Variacao;
-        const override = meta.find((m) => {
-          if (!m || typeof m !== 'object') return false;
-          const mm = m as Record<string, unknown>;
-          if (mm['id'] && base.id && String(mm['id']) === String(base.id)) return true;
-          if (mm['sku'] && base.sku && String(mm['sku']) === String(base.sku)) return true;
-          if (mm['codigo_de_barras'] && base.codigo_de_barras && String(mm['codigo_de_barras']) === String(base.codigo_de_barras)) return true;
-          return false;
-        }) as Record<string, unknown> | undefined;
-        if (override) {
-          if (typeof override['estoque'] === 'number') base.estoque = override['estoque'] as number;
-          if (typeof override['codigo_de_barras'] === 'string') base.codigo_de_barras = override['codigo_de_barras'] as string;
-          base.overridden = true;
-        }
-        return base;
-      });
-      vars.sort((a, b) => String(a.sku ?? a.id ?? '').localeCompare(String(b.sku ?? b.id ?? ''), undefined, { numeric: true }));
-      setExpandedVariations(prev => ({ ...prev, [produto.id]: { loading: false, variacoes: vars } }));
-    } catch (err) {
-      console.error('[expand] error', err);
-      setExpandedVariations(prev => ({ ...prev, [produto.id]: { loading: false, variacoes: [] } }));
-    }
-  }
+  // removed inline expansion; variants are shown inside the Details modal
 
-  async function saveBarcodesForProduct(produto: Produto) {
-    const state = expandedVariations[produto.id];
-    if (!state || !state.variacoes) return;
-    setExpandedVariations(prev => ({ ...prev, [produto.id]: { ...prev[produto.id], saving: true } }));
-    try {
-      const variacoes_meta = state.variacoes.map(v => ({ id: v.id ?? null, estoque: typeof v.estoque === 'number' ? v.estoque : null, codigo_de_barras: v.codigo_de_barras ?? null }));
-      const payload: Record<string, unknown> = { variacoes_meta };
-      const resp = await axiosClient.patch(`/api/produtos/${produto.id}`, payload, { headers: { 'Content-Type': 'application/json', 'x-admin-token': process.env.NEXT_PUBLIC_SYNC_PRODUCTS_TOKEN ?? '' } });
-      if (resp.status >= 200 && resp.status < 300) {
-        setStatusMsg({ type: 'success', text: 'Códigos de barras salvos.' });
-        setExpandedVariations(prev => ({ ...prev, [produto.id]: { ...prev[produto.id], saving: false } }));
-      } else {
-        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Falha ao salvar.' });
-        setExpandedVariations(prev => ({ ...prev, [produto.id]: { ...prev[produto.id], saving: false } }));
-      }
-    } catch (err: unknown) {
-      console.error('[saveBarcodes] error', err);
-      setStatusMsg({ type: 'error', text: err instanceof Error ? err.message : 'Erro ao salvar.' });
-      setExpandedVariations(prev => ({ ...prev, [produto.id]: { ...prev[produto.id], saving: false } }));
-    }
-  }
+  // saveBarcodesForProduct removed; saving occurs from modal saveVariacoes
 
   const [saving, setSaving] = useState(false);
 
@@ -454,7 +381,6 @@ export default function ProdutosPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => toggleExpandVariacoes(p)} className="px-3 py-1 text-sm rounded bg-white border hover:bg-gray-50">Variações</button>
                         <button onClick={() => openProdutoModal(p)} className="px-3 py-1 text-sm rounded bg-white border hover:bg-gray-50">Detalhes</button>
                         <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">
                           {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
@@ -462,41 +388,7 @@ export default function ProdutosPage() {
                       </div>
                     </td>
                   </tr>
-                  {expandedVariations[p.id] && expandedVariations[p.id].variacoes && (
-                    <tr key={`vars-${p.id}`} className="bg-gray-50">
-                      <td colSpan={6} className="p-4">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left">
-                            <thead className="bg-white border-b"><tr>
-                              <th className="p-2">Variação</th>
-                              <th className="p-2">Estoque</th>
-                              <th className="p-2">Preço</th>
-                              <th className="p-2">Código de Barras</th>
-                            </tr></thead>
-                            <tbody>
-                              {expandedVariations[p.id].variacoes!.map((v, vi) => (
-                                <tr key={String(v.id ?? vi)} className="border-b">
-                                  <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : (v.sku ?? v.id ?? `Var ${vi+1}`)}</td>
-                                  <td className="p-2">{typeof v.estoque === 'number' ? v.estoque : '—'}</td>
-                                  <td className="p-2">{typeof v.preco === 'number' ? `R$ ${v.preco.toFixed(2)}` : (v.preco ?? '—')}</td>
-                                  <td className="p-2">
-                                    <input type="text" className="w-64 border rounded px-2 py-1" value={v.codigo_de_barras ?? ''} onChange={(e) => {
-                                      const val = e.target.value || null;
-                                      setExpandedVariations(prev => prev ? ({ ...prev, [p.id]: { ...prev[p.id], variacoes: prev[p.id]!.variacoes!.map((pv, pvi) => pvi === vi ? { ...pv, codigo_de_barras: val } : pv) } }) : prev);
-                                    }} />
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          <div className="flex justify-end gap-2 mt-3">
-                            <button onClick={() => setExpandedVariations(prev => ({ ...prev, [p.id]: { loading: false, variacoes: null } }))} className="px-3 py-1 rounded bg-white border">Fechar</button>
-                            <button onClick={() => saveBarcodesForProduct(p)} disabled={!!expandedVariations[p.id].saving} className="px-3 py-1 rounded bg-pink-600 text-white">{expandedVariations[p.id].saving ? 'Salvando...' : 'Salvar'}</button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+                  
                   </React.Fragment>
                 ))
               ) : (
@@ -587,6 +479,9 @@ function extractOriginalFromProxy(src: string): string | null {
       return facil;
     }
   } catch (err) {
+    // log for diagnostics when unexpected src formats are passed
+  // (non-blocking; keeps TypeScript/ESLint happy)
+  console.error('extractOriginalFromProxy error:', err);
     return null;
   }
 }
