@@ -224,6 +224,18 @@ export default function ProdutosPage() {
             // internal/generated keys (facilzap naming variants)
             'codigo_interno', 'codigoInterno', 'codigo_interno_facilzap', 'codigo_gerado', 'codigo_gerado_facilzap', 'internal_code', 'internalBarcode'
           ];
+          // also check for arrays named like cod_barras which some endpoints return
+          const arrCandidates = ['cod_barras', 'codigos', 'codigos_de_barras', 'codigos_barras'];
+          for (const ak of arrCandidates) {
+            const av = r[ak];
+            if (Array.isArray(av) && av.length > 0) {
+              // pick first non-null string/number
+              for (const it of av) {
+                if (typeof it === 'string' && it.trim() !== '') return it.trim();
+                if (typeof it === 'number') return String(it);
+              }
+            }
+          }
           for (const k of candidates) {
             const v = r[k];
             if (typeof v === 'string' && v.trim() !== '') return v.trim();
@@ -310,6 +322,21 @@ export default function ProdutosPage() {
       try {
         console.debug('[modal debug] facilzap payload:', facil);
         console.debug('[modal debug] parsed variations:', vars);
+      } catch {}
+
+      // If the upstream product provides a top-level array of barcodes (e.g. "cod_barras": [..])
+      // map them to variations by index when the variation itself didn't provide a barcode.
+      try {
+        const productBarcodes = Array.isArray((facil as any)?.cod_barras) ? (facil as any).cod_barras : Array.isArray((dbRow as any)?.cod_barras) ? (dbRow as any).cod_barras : null;
+        if (Array.isArray(productBarcodes) && productBarcodes.length > 0) {
+          for (let i = 0; i < vars.length; i++) {
+            const cand = productBarcodes[i];
+            if ((vars[i].codigo_de_barras === null || vars[i].codigo_de_barras === undefined || String(vars[i].codigo_de_barras).trim() === '') && (typeof cand === 'string' && cand.trim() !== '' || typeof cand === 'number')) {
+              vars[i].codigo_de_barras = typeof cand === 'number' ? String(cand) : (cand as string).trim();
+              vars[i].overridden = vars[i].overridden || false;
+            }
+          }
+        }
       } catch {}
       setModalVariacoes(vars);
     } catch (err: unknown) {
