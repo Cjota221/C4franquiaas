@@ -170,8 +170,13 @@ export default function ProdutosPage() {
         const precoRaw = rec['preco'];
         const preco = typeof precoRaw === 'number' ? precoRaw : (typeof precoRaw === 'string' ? Number(precoRaw) : null);
         const maybeBarcode = (r: Record<string, unknown>) => {
-          // try common barcode/ean fields and variants
-          const candidates = ['codigo_de_barras', 'codigoBarras', 'codigo', 'codigo_barras', 'codigobarras', 'barcode', 'ean', 'gtin', 'code'];
+          // try common barcode/ean fields and variants, including possible internal keys used by FácilZap
+          const candidates = [
+            'codigo_de_barras', 'codigoBarras', 'codigo', 'codigo_barras', 'codigobarras',
+            'barcode', 'ean', 'gtin', 'code',
+            // internal/generated keys (facilzap naming variants)
+            'codigo_interno', 'codigoInterno', 'codigo_interno_facilzap', 'codigo_gerado', 'codigo_gerado_facilzap', 'internal_code', 'internalBarcode'
+          ];
           for (const k of candidates) {
             const v = r[k];
             if (typeof v === 'string' && v.trim() !== '') return v.trim();

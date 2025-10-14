@@ -22,26 +22,47 @@ exports.handler = async function (event) {
 
   let normalized = '';
   try {
-    // decode and normalize
-    normalized = decodeURIComponent(encoded);
-  } catch {
-    // fallback to raw
-    normalized = encoded;
-  }
+    // decode and normalize (be permissive)
+    try {
+      normalized = decodeURIComponent(encoded);
+    } catch {
+      // try raw if decode fails
+      normalized = encoded;
+    }
 
-  // fix common malformed patterns
-  normalized = normalized.replace(/%3A(?!%[0-9A-F]{2})/gi, '%3A');
-  normalized = normalized.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
+    // replace stray spaces and control chars
+    normalized = normalized.replace(/\s+/g, '%20');
+    // fix common malformed patterns
+    normalized = normalized.replace(/%3A(?!%[0-9A-F]{2})/gi, '%3A');
+    normalized = normalized.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
 
-  if (!normalized.includes('://')) {
-    // treat as relative path on arquivos.facilzap.app.br
-    normalized = `https://arquivos.facilzap.app.br/${normalized.replace(/^\/+/, '')}`;
-  }
+    // if missing scheme, treat as relative path on arquivos.facilzap.app.br
+    if (!normalized.includes('://') && !normalized.startsWith('data:')) {
+      normalized = `https://arquivos.facilzap.app.br/${normalized.replace(/^\/+/, '')}`;
+    }
 
-  let parsed;
-  try {
-    parsed = new URL(normalized);
+    // try multiple parsing strategies before failing
+    let parsed = null;
+    const parsers = [
+      (s) => new URL(s),
+      (s) => new URL(encodeURI(s)),
+      (s) => new URL(s.startsWith('http') ? s : `https://${s}`),
+    ];
+    let lastErr = null;
+    for (const p of parsers) {
+      try {
+        parsed = p(normalized);
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (!parsed) {
+      console.warn('proxy-facilzap-image: invalid url after normalization', { original: encoded });
+      return { statusCode: 400, body: 'invalid url' };
+    }
   } catch (err) {
+    console.warn('proxy-facilzap-image: normalization failure', { original: encoded, err: err instanceof Error ? err.message : String(err) });
     return { statusCode: 400, body: 'invalid url' };
   }
 
