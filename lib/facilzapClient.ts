@@ -28,6 +28,7 @@ export type ProdutoDB = {
   imagem: string | null;
   imagens: string[];
   codigo_barras?: string | null;
+  variacoes_meta?: Array<{ id?: string | number; sku?: string; codigo_barras?: string | null; estoque?: number | null }>;
 };
 
 const API_BASE = 'https://api.facilzap.app.br';
@@ -84,6 +85,140 @@ function asString(v?: unknown): string | undefined {
   return undefined;
 }
 
+function normalizeNumberLike(val: unknown): number | null {
+  if (typeof val === 'number' && Number.isFinite(val)) return val;
+  if (typeof val === 'string') {
+    const n = Number(String(val).replace(/[^0-9\-.,]/g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+  if (val && typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    const candidates = ['estoque', 'disponivel', 'quantity', 'quantidade', 'qtd', 'available', 'valor', 'preco', 'price'];
+    for (const k of candidates) {
+      if (typeof obj[k] !== 'undefined') {
+        const n = normalizeNumberLike(obj[k]);
+        if (n !== null) return n;
+      }
+    }
+    // try any numeric-like descendant
+    for (const key of Object.keys(obj)) {
+      const n = normalizeNumberLike(obj[key]);
+      if (n !== null) return n;
+    }
+  }
+  return null;
+}
+
+function extractBarcode(item: Record<string, unknown>): string | null {
+  if (!item) return null;
+  // check arrays like cod_barras
+  const arrKeys = ['cod_barras', 'codigos', 'codigos_de_barras', 'codigos_barras'];
+  for (const k of arrKeys) {
+    const v = item[k];
+    if (Array.isArray(v) && v.length > 0) {
+      for (const it of v) {
+        if (typeof it === 'string' && it.trim() !== '') return it.trim();
+        if (typeof it === 'number') return String(it);
+      }
+    }
+  }
+  const candidates = ['codigo_barras', 'codigoBarras', 'codigo', 'ean', 'gtin', 'barcode', 'cod_barras'];
+  for (const k of candidates) {
+    const v = item[k];
+    if (typeof v === 'string' && v.trim() !== '') return v.trim();
+    if (typeof v === 'number') return String(v);
+  }
+  // fallback scan keys
+  for (const key of Object.keys(item)) {
+    const lk = key.toLowerCase();
+    if (lk.includes('cod') || lk.includes('ean') || lk.includes('bar') || lk.includes('gtin')) {
+      const v = item[key];
+      if (typeof v === 'string' && v.trim() !== '') return v.trim();
+      if (typeof v === 'number') return String(v);
+    }
+  }
+  return null;
+}
+
+function processVariacoes(produto: ExternalProduct) {
+  let estoqueTotal = 0;
+  const variacoes_meta: Array<{ id?: string | number; sku?: string; codigo_barras?: string | null; estoque?: number | null }> = [];
+  let primeiro_barcode: string | null = null;
+
+  const productBarcodes = Array.isArray((produto as Record<string, unknown>)['cod_barras']) ? (produto as Record<string, unknown>)['cod_barras'] as unknown[] : undefined;
+
+  if (Array.isArray(produto.variacoes) && produto.variacoes.length > 0) {
+    produto.variacoes.forEach((variacao, idx) => {
+      const rec = (variacao && typeof variacao === 'object') ? variacao as Record<string, unknown> : {};
+  const varEst = normalizeNumberLike(rec['estoque']) ?? normalizeNumberLike(rec['quantity']) ?? null;
+      const estoqueVal = typeof varEst === 'number' && Number.isFinite(varEst) ? varEst : 0;
+      estoqueTotal += estoqueVal;
+
+      let barcode = extractBarcode(rec);
+      // fallback to product-level barcode array
+      if ((!barcode || barcode === '') && Array.isArray(productBarcodes) && productBarcodes[idx]) {
+        const cand = productBarcodes[idx];
+        if (typeof cand === 'string' && cand.trim() !== '') barcode = cand.trim();
+        if (typeof cand === 'number') barcode = String(cand);
+      }
+
+      if (!primeiro_barcode && barcode) primeiro_barcode = barcode;
+
+      const resolvedId = (() => {
+        const cand = rec['id'] ?? rec['codigo'];
+        if (typeof cand === 'string' || typeof cand === 'number') return cand as string | number;
+        return undefined;
+      })();
+      variacoes_meta.push({
+        id: resolvedId,
+        sku: asString(rec['sku'] ?? rec['codigo'] ?? rec['id']) ?? undefined,
+        codigo_barras: barcode ?? null,
+        estoque: estoqueVal ?? null,
+      });
+    });
+  } else {
+    // no variations: use product-level estoque
+    const est = normalizeNumberLike(produto.estoque) ?? 0;
+    estoqueTotal = typeof est === 'number' ? est : 0;
+    primeiro_barcode = extractBarcode(produto as Record<string, unknown>);
+  }
+
+  return { estoque: estoqueTotal, variacoes_meta, primeiro_barcode };
+}
+
+function extractPrecoBase(produto: ExternalProduct): number | null {
+  // catalogos
+  if (Array.isArray(produto.catalogos) && produto.catalogos.length > 0) {
+    const c0 = produto.catalogos[0];
+    if (c0 && c0.precos && typeof c0.precos === 'object') {
+      const pc = (c0.precos as Record<string, unknown>)['preco'];
+      if (typeof pc === 'number') return pc;
+      if (typeof pc === 'string') {
+        const n = Number(pc);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+  }
+  // first variation
+  if (Array.isArray(produto.variacoes) && produto.variacoes.length > 0) {
+    const p0 = produto.variacoes[0];
+    if (p0) {
+      const precoVal = (p0 as Record<string, unknown>)['preco'];
+      if (typeof precoVal === 'number') return precoVal as number;
+      if (typeof precoVal === 'string') {
+        const n = Number(precoVal);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+  }
+  if (typeof produto.preco === 'number') return produto.preco as number;
+  if (typeof produto.preco === 'string') {
+    const n = Number(produto.preco);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
 function extractImageUrl(x: unknown): string | undefined {
   if (!x) return undefined;
   if (typeof x === 'string') return x;
@@ -129,55 +264,11 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
       const nome = asString(p.nome) ?? 'Sem nome';
       const ativo = typeof p.ativado === 'boolean' ? p.ativado : typeof p.ativo === 'boolean' ? p.ativo : true;
 
-      // estoque: prefer sum of variation-level estoque when present
-      let estoque = 0;
-      if (Array.isArray(p.variacoes) && p.variacoes.length > 0) {
-        estoque = p.variacoes.reduce((acc, v: Variation) => {
-          if (!v) return acc;
-          const ve = v.estoque;
-          if (typeof ve === 'number') return acc + ve;
-          if (ve && typeof ve === 'object' && typeof (ve as Record<string, unknown>)['estoque'] === 'number') return acc + ((ve as Record<string, unknown>)['estoque'] as number);
-          return acc;
-        }, 0);
-      }
-      // fallback to product-level estoque fields
-      if (estoque === 0) {
-        if (typeof p.estoque === 'number') estoque = p.estoque as number;
-        else if (p.estoque && typeof p.estoque === 'object') {
-          const estoqueObj = p.estoque as Record<string, unknown>;
-          if (typeof estoqueObj['estoque'] === 'number') estoque = estoqueObj['estoque'] as number;
-          else if (typeof estoqueObj['disponivel'] === 'number') estoque = estoqueObj['disponivel'] as number;
-        }
-      }
+      // process variations (estoque per-variation, variacoes_meta and product-level barcode mapping)
+      const { estoque, variacoes_meta, primeiro_barcode } = processVariacoes(p);
 
-      // preco_base: prefer catalogos[0].precos.preco, then variacoes[0].preco, then p.preco
-      let preco_base: number | null = null;
-      if (Array.isArray(p.catalogos) && p.catalogos.length > 0) {
-        const c0 = p.catalogos[0];
-        if (c0 && c0.precos && typeof c0.precos === 'object') {
-          const pc = (c0.precos as Record<string, unknown>)['preco'];
-          if (typeof pc === 'number') preco_base = pc;
-          if (typeof pc === 'string') {
-            const n = Number(pc);
-            if (Number.isFinite(n)) preco_base = n;
-          }
-        }
-      }
-      if (preco_base === null && Array.isArray(p.variacoes) && p.variacoes.length > 0) {
-        const v0 = p.variacoes[0];
-        if (v0 && typeof v0.preco === 'number') preco_base = v0.preco as number;
-        if (v0 && typeof v0.preco === 'string') {
-          const n = Number(v0.preco);
-          if (Number.isFinite(n)) preco_base = n;
-        }
-      }
-      if (preco_base === null && typeof p.preco !== 'undefined') {
-        if (typeof p.preco === 'number') preco_base = p.preco;
-        if (typeof p.preco === 'string') {
-          const n = Number(p.preco);
-          if (Number.isFinite(n)) preco_base = n;
-        }
-      }
+      // preco_base
+      const preco_base = extractPrecoBase(p);
 
       // imagens: entries may be objects with 'url' or 'file' fields
       const imgsRaw = Array.isArray(p.imagens) ? p.imagens : Array.isArray(p.fotos) ? p.fotos : [];
@@ -186,19 +277,16 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
         .filter((x): x is string => !!x)
         .map(normalizeToProxy);
 
-      // try to extract barcode from product or first variation
-      const codigoBarras = asString((p as Record<string, unknown>)['codigo_barras'] ?? (p as Record<string, unknown>)['ean'])
-        ?? (Array.isArray(p.variacoes) && p.variacoes.length > 0 ? asString((p.variacoes[0] as Record<string, unknown>)['codigo_barras'] ?? (p.variacoes[0] as Record<string, unknown>)['ean']) : undefined);
-
       result.push({
         id_externo: id,
         nome,
         preco_base,
         estoque: Number(estoque || 0),
-        ativo: Boolean(ativo),
+        ativo: Boolean(ativo) && (Number(estoque || 0) > 0),
         imagem: imgs.length > 0 ? imgs[0] : null,
         imagens: imgs,
-        codigo_barras: codigoBarras ?? null,
+        codigo_barras: primeiro_barcode ?? null,
+        variacoes_meta: variacoes_meta.length > 0 ? variacoes_meta : undefined,
       });
     }
 
