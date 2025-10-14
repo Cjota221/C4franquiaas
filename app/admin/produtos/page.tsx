@@ -327,7 +327,10 @@ export default function ProdutosPage() {
       // If the upstream product provides a top-level array of barcodes (e.g. "cod_barras": [..])
       // map them to variations by index when the variation itself didn't provide a barcode.
       try {
-        const productBarcodes = Array.isArray((facil as any)?.cod_barras) ? (facil as any).cod_barras : Array.isArray((dbRow as any)?.cod_barras) ? (dbRow as any).cod_barras : null;
+        const asRecord = (x: unknown): Record<string, unknown> | null => (typeof x === 'object' && x !== null) ? x as Record<string, unknown> : null;
+        const facilRec = asRecord(facil);
+        const dbRec = asRecord(dbRow);
+        const productBarcodes = Array.isArray(facilRec?.['cod_barras']) ? facilRec!['cod_barras'] as unknown[] : Array.isArray(dbRec?.['cod_barras']) ? dbRec!['cod_barras'] as unknown[] : null;
         if (Array.isArray(productBarcodes) && productBarcodes.length > 0) {
           for (let i = 0; i < vars.length; i++) {
             const cand = productBarcodes[i];
