@@ -160,14 +160,62 @@ export default function ProdutosPage() {
 
   // try to extract and merge variations from facilzap response and apply overrides from meta
   const rawVars: unknown[] = Array.isArray(facil?.variacoes) ? facil.variacoes : [];
+      // helper: try common keys / substrings to find a value (may return number|string|object)
+      const findValueByKeys = (r: Record<string, unknown>, candidates: string[]) => {
+        for (const k of candidates) {
+          const val = r[k];
+          if (typeof val === 'number' || typeof val === 'string' || (typeof val === 'object' && val !== null)) return val;
+        }
+        // fallback: try substring matches
+        for (const key of Object.keys(r)) {
+          const lk = key.toLowerCase();
+          for (const cand of candidates) {
+            if (lk.includes(cand.toLowerCase())) {
+              const val = r[key];
+              if (typeof val === 'number' || typeof val === 'string' || (typeof val === 'object' && val !== null)) return val;
+            }
+          }
+        }
+        return undefined;
+      };
+
+      const normalizeNumberLike = (val: unknown, nestedCandidates: string[] = ['estoque', 'disponivel', 'preco', 'price', 'valor']) : number | null => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') {
+          const n = Number(val);
+          return Number.isFinite(n) ? n : null;
+        }
+        if (val && typeof val === 'object') {
+          const obj = val as Record<string, unknown>;
+          for (const k of nestedCandidates) {
+            const v = obj[k];
+            if (typeof v === 'number') return v;
+            if (typeof v === 'string') {
+              const n = Number(v);
+              if (Number.isFinite(n)) return n;
+            }
+          }
+          // also try any numeric-like descendant
+          for (const key of Object.keys(obj)) {
+            const v = obj[key];
+            if (typeof v === 'number') return v;
+            if (typeof v === 'string') {
+              const n = Number(v);
+              if (Number.isFinite(n)) return n;
+            }
+          }
+        }
+        return null;
+      };
+
       const vars: Variacao[] = rawVars.map((v: unknown) => {
         const rec = (v && typeof v === 'object') ? v as Record<string, unknown> : {};
-        const estoqueVal = rec['estoque'];
-        const estoque = typeof estoqueVal === 'number'
-          ? estoqueVal
-          : (estoqueVal && typeof estoqueVal === 'object' ? (Number((estoqueVal as Record<string, unknown>)['estoque'] ?? (estoqueVal as Record<string, unknown>)['disponivel']) || null) : null);
-        const precoRaw = rec['preco'];
-        const preco = typeof precoRaw === 'number' ? precoRaw : (typeof precoRaw === 'string' ? Number(precoRaw) : null);
+        // estoque: try explicit keys then substrings; normalize nested objects
+        const estoqueVal = findValueByKeys(rec, ['estoque', 'disponivel', 'quantity', 'quantidade', 'qtd', 'stock', 'available']);
+        const estoque = normalizeNumberLike(estoqueVal, ['estoque', 'disponivel', 'quantity', 'qtd', 'available']);
+        // preco: try several naming variants and normalize
+        const precoRaw = findValueByKeys(rec, ['preco', 'price', 'valor', 'valor_unitario', 'preco_unitario']);
+        const preco = normalizeNumberLike(precoRaw, ['preco', 'price', 'valor']);
         const maybeBarcode = (r: Record<string, unknown>) => {
           // try common barcode/ean fields and variants, including possible internal keys used by FácilZap
           const candidates = [
@@ -180,6 +228,15 @@ export default function ProdutosPage() {
             const v = r[k];
             if (typeof v === 'string' && v.trim() !== '') return v.trim();
             if (typeof v === 'number') return String(v);
+          }
+          // fallback: scan keys for substrings like 'cod' or 'ean' or 'bar'
+          for (const key of Object.keys(r)) {
+            const lk = key.toLowerCase();
+            if (lk.includes('cod') || lk.includes('ean') || lk.includes('bar') || lk.includes('gtin')) {
+              const v = r[key];
+              if (typeof v === 'string' && v.trim() !== '') return v.trim();
+              if (typeof v === 'number') return String(v);
+            }
           }
           return null;
         };
@@ -201,8 +258,11 @@ export default function ProdutosPage() {
           return null;
         })();
         const resolvedSku = ((): string | number | null => {
-          const v = rec['sku'] ?? rec['id'];
+          const v = rec['sku'] ?? rec['id'] ?? rec['codigo'] ?? rec['codigo_interno'] ?? rec['reference'];
           if (typeof v === 'string' || typeof v === 'number') return v;
+          // try substring-key search for fallback
+          const fk = findValueByKeys(rec, ['sku', 'id', 'codigo', 'code', 'reference']);
+          if (typeof fk === 'string' || typeof fk === 'number') return fk as string | number;
           return null;
         })();
 
@@ -246,6 +306,13 @@ export default function ProdutosPage() {
         return sa.localeCompare(sb, undefined, { numeric: true });
       });
 
+      // debug: expose upstream payload and parsed variations in browser console
+      try {
+        // @ts-ignore - dev-only
+        console.debug('[modal debug] facilzap payload:', facil);
+        // @ts-ignore - dev-only
+        console.debug('[modal debug] parsed variations:', vars);
+      } catch {}
       setModalVariacoes(vars);
     } catch (err: unknown) {
       console.error('[modal] fetch detail error', err);
@@ -424,6 +491,7 @@ export default function ProdutosPage() {
               <table className="w-full text-left">
                 <thead className="bg-gray-50 border-b"><tr>
                   <th className="p-2">Variante</th>
+                  <th className="p-2">SKU</th>
                   <th className="p-2">Estoque</th>
                   <th className="p-2">Preço</th>
                   <th className="p-2">Código de Barras</th>
@@ -431,7 +499,8 @@ export default function ProdutosPage() {
                 <tbody>
                   {modalVariacoes.map((v, idx) => (
                     <tr key={String(v.id ?? idx)} className="border-b">
-                      <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : (v.sku ?? v.id ?? `Var ${idx+1}`)}</td>
+                      <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : `Var ${idx+1}`}</td>
+                      <td className="p-2 text-sm text-gray-700">{v.sku ?? v.id ?? '—'}</td>
                       <td className="p-2">
                         <input type="number" className="w-24 border rounded px-2 py-1" value={v.estoque ?? ''} onChange={(e) => {
                           const val = e.target.value === '' ? null : Number(e.target.value);
