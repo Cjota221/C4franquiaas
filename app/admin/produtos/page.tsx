@@ -308,9 +308,7 @@ export default function ProdutosPage() {
 
       // debug: expose upstream payload and parsed variations in browser console
       try {
-        // @ts-expect-error - dev-only
         console.debug('[modal debug] facilzap payload:', facil);
-        // @ts-expect-error - dev-only
         console.debug('[modal debug] parsed variations:', vars);
       } catch {}
       setModalVariacoes(vars);
