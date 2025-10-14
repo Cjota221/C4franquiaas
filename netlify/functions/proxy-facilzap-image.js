@@ -50,13 +50,34 @@ exports.handler = async function (event) {
   const allowed = ALLOWED_HOSTS.some((h) => hostname === h || hostname.endsWith(`.${h}`));
   if (!allowed) return { statusCode: 403, body: 'host not allowed' };
 
-  // fetch the image
+  // fetch the image with conservative headers; some hosts block unknown UAs or missing referer
+  const defaultHeaders = { 'User-Agent': 'Mozilla/5.0 (compatible; cjotarasteirinhas-proxy/1.0)', Referer: 'https://app.facilzap.app.br' };
+  async function tryFetch(url, extraHeaders = {}) {
+    const h = { ...defaultHeaders, ...(extraHeaders || {}) };
+    const res = await fetch(url, { headers: h });
+    return res;
+  }
+
   try {
-    const res = await fetch(parsed.toString(), { headers: { 'User-Agent': 'cjotarasteirinhas-proxy/1.0' } });
-    if (!res.ok) return { statusCode: res.status, body: 'failed to fetch image' };
+    let res = await tryFetch(parsed.toString());
+
+    // If upstream forbids us (403) and we have a FACILZAP_TOKEN configured, retry with Authorization
+    const token = process.env.FACILZAP_TOKEN || process.env.NEXT_PUBLIC_FACILZAP_TOKEN || process.env.SYNC_PRODUCTS_TOKEN;
+    if (res.status === 403 && token) {
+      try {
+        res = await tryFetch(parsed.toString(), { Authorization: `Bearer ${token}` });
+      } catch (e) {
+        // swallow and continue to error handling below
+      }
+    }
+
+    if (!res.ok) {
+      // don't leak upstream URLs in the response. Log a short message and return upstream status.
+      console.warn('proxy-facilzap-image: upstream fetch failed', { status: res.status, host: parsed.hostname });
+      return { statusCode: res.status, body: 'failed to fetch image' };
+    }
 
     const contentType = res.headers.get('content-type') || 'application/octet-stream';
-    // allow common image content-types only
     if (!/^image\//i.test(contentType)) {
       return { statusCode: 415, body: 'unsupported media type' };
     }
@@ -66,21 +87,18 @@ exports.handler = async function (event) {
 
     const base64 = Buffer.from(buffer).toString('base64');
 
-    // Return base64 with CORS header pinned to the requested domain
     return {
       statusCode: 200,
       headers: {
         'Content-Type': contentType,
         'Access-Control-Allow-Origin': CORS_ORIGIN,
         'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-        // Hide the original facilzap domain from responses by not echoing the URL
       },
       body: base64,
       isBase64Encoded: true,
     };
   } catch (err) {
-    // Do not leak the upstream domain or raw URLs in the response body.
-    console.error('proxy-facilzap-image error', err);
+    console.error('proxy-facilzap-image error', { message: err instanceof Error ? err.message : String(err) });
     return { statusCode: 500, body: 'internal proxy error' };
   }
 };
