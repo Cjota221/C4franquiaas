@@ -1,0 +1,26 @@
+
+> c4-franquias-admin@0.1.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.4 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 60ms
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./lib/facilzapClient.ts:107:11
+Parsing ecmascript source code failed
+[0m [90m 105 |[39m         [36mif[39m ([36mtypeof[39m p[33m.[39mpreco [33m===[39m [32m'number'[39m) preco_base [33m=[39m p[33m.[39mpreco[33m;[39m
+ [90m 106 |[39m         [36mif[39m ([36mtypeof[39m p[33m.[39mpreco [33m===[39m [32m'string'[39m) {
+[31m[1m>[22m[39m[90m 107 |[39m           [36mimport[39m axios [36mfrom[39m [32m'axios'[39m[33m;[39m
+ [90m     |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 108 |[39m
+ [90m 109 |[39m           [36mexport[39m type [33mExternalProduct[39m [33m=[39m {
+ [90m 110 |[39m             id[33m?[39m[33m:[39m string [33m|[39m number[33m;[39m[0m
+
+'import', and 'export' cannot be used outside of module code
+
+
+    at <unknown> (./lib/facilzapClient.ts:107:11)

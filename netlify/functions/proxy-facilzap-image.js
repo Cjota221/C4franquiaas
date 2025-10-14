@@ -24,7 +24,7 @@ exports.handler = async function (event) {
   try {
     // decode and normalize
     normalized = decodeURIComponent(encoded);
-  } catch (_) {
+  } catch {
     // fallback to raw
     normalized = encoded;
   }

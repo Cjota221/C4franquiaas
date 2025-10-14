@@ -27,14 +27,14 @@ function resolveImageSrc(raw: unknown): string {
   // common object shapes and JSON strings. Fallbacks to placeholder.
   try {
     if (!raw) return '/placeholder-100.png';
-    if (typeof raw === 'string') {
+      if (typeof raw === 'string') {
       // If it's a JSON string representing an object, try to parse
       const trimmed = raw.trim();
       if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && trimmed.includes('"')) {
         try {
           const parsed = JSON.parse(trimmed);
           return resolveImageSrc(parsed);
-        } catch (_) {
+        } catch {
           // not JSON, treat as URL
         }
       }
@@ -95,7 +95,6 @@ export default function ProdutosPage() {
 
   useEffect(() => {
     fetchPage(pagina);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagina]);
 
   async function handleSync() {
