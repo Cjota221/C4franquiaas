@@ -14,10 +14,11 @@ const ALLOWED_HOSTS = [
 ];
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const CORS_ORIGIN = 'https://cjotarasteirinhas.com.br';
+const CORS_ORIGIN = 'https://c4franquiaas.netlify.app';
 
 exports.handler = async function (event) {
-  const encoded = event.queryStringParameters && event.queryStringParameters.url;
+  // Prefer explicit 'facilzap' param (original URL) when provided, fall back to 'url'
+  const encoded = event.queryStringParameters && (event.queryStringParameters.facilzap ?? event.queryStringParameters.url);
   if (!encoded) return { statusCode: 400, body: 'url query parameter is required' };
 
   let normalized = '';

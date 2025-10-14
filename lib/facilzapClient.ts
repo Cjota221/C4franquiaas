@@ -70,7 +70,9 @@ function normalizeToProxy(u: string): string {
   // include both the original FácilZap URL (encoded) and a url param for compatibility
   const facilzapParam = encodeURIComponent(s);
   const urlParam = encodeURI(s); // leave slashes intact to avoid double-encoding by next/image
-  return `https://cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image?facilzap=${facilzapParam}&url=${urlParam}`;
+  // use the Netlify host so the function is reachable via the netlify.app domain
+  const PROXY_HOST = 'https://c4franquiaas.netlify.app';
+  return `${PROXY_HOST}/.netlify/functions/proxy-facilzap-image?facilzap=${facilzapParam}&url=${urlParam}`;
 }
 
 function asString(v?: unknown): string | undefined {
