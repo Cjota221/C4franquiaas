@@ -22,6 +22,43 @@ type Produto = {
   imagens?: string[];
 };
 
+function resolveImageSrc(raw: unknown): string {
+  // Returns a safe string src for next/image. Prefer raw strings, then try
+  // common object shapes and JSON strings. Fallbacks to placeholder.
+  try {
+    if (!raw) return '/placeholder-100.png';
+    if (typeof raw === 'string') {
+      // If it's a JSON string representing an object, try to parse
+      const trimmed = raw.trim();
+      if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && trimmed.includes('"')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          return resolveImageSrc(parsed);
+        } catch (_) {
+          // not JSON, treat as URL
+        }
+      }
+      return raw;
+    }
+    if (Array.isArray(raw) && raw.length > 0) {
+      return resolveImageSrc(raw[0]);
+    }
+    if (typeof raw === 'object' && raw !== null) {
+      const obj = raw as Record<string, unknown>;
+      // common fields
+      if (typeof obj['url'] === 'string') return obj['url'] as string;
+      if (typeof obj['file'] === 'string') return obj['file'] as string;
+      if (typeof obj['path'] === 'string') return obj['path'] as string;
+      if (typeof obj['src'] === 'string') return obj['src'] as string;
+      // if imagens array exists
+      if (Array.isArray(obj['imagens']) && obj['imagens'].length > 0) return String(obj['imagens'][0]);
+    }
+  } catch (e) {
+    console.error('resolveImageSrc error', e);
+  }
+  return '/placeholder-100.png';
+}
+
 export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [pagina, setPagina] = useState(1);
@@ -138,14 +175,14 @@ export default function ProdutosPage() {
                   <tr key={p.id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-4">
                       <div className="relative h-16 w-16 rounded-md overflow-hidden bg-gray-100">
-                        <Image
-                          src={p.imagem ?? '/placeholder-100.png'}
-                          alt={p.nome}
-                          width={64}
-                          height={64}
-                          className="object-cover"
-                          unoptimized={false}
-                        />
+                          <Image
+                            src={resolveImageSrc(p.imagem ?? p.imagens ?? '/placeholder-100.png')}
+                            alt={p.nome}
+                            width={64}
+                            height={64}
+                            className="object-cover"
+                            unoptimized={false}
+                          />
                       </div>
                     </td>
                     <td className="p-4 font-medium text-gray-800">{p.nome}</td>
