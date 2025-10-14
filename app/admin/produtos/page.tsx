@@ -429,7 +429,15 @@ export default function ProdutosPage() {
                                 // use plain <img> for proxied URLs to avoid next/image re-encoding query params
                                 // keep same layout/size for visual consistency
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={srcStr} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
+                                <img src={srcStr} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover"
+                                  onError={(e) => {
+                                    const el = e.currentTarget as HTMLImageElement;
+                                    const original = extractOriginalFromProxy(el.src);
+                                    if (original && el.src !== original) {
+                                      el.src = original;
+                                    }
+                                  }}
+                                />
                               ) : (
                                 <Image src={srcStr} alt={`${p.nome} ${idx+1}`} width={48} height={48} className="object-cover" />
                               )}
@@ -565,4 +573,20 @@ export default function ProdutosPage() {
     )}
     </>
   );
+}
+
+function extractOriginalFromProxy(src: string): string | null {
+  try {
+    const u = new URL(src);
+    // prefer facilzap param then url
+    const facil = u.searchParams.get('facilzap') ?? u.searchParams.get('url');
+    if (!facil) return null;
+    try {
+      return decodeURIComponent(facil);
+    } catch {
+      return facil;
+    }
+  } catch (err) {
+    return null;
+  }
 }
