@@ -89,25 +89,22 @@ export default function ProdutosPage() {
     try {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
-      const { data, error, count } = await supabase
-        .from('produtos')
-        // include variacoes_meta and created_at to compute display estoque and enable sorting
-        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,variacoes_meta,codigo_barras,created_at', { count: 'exact' })
-        .range(from, to)
-        .order('nome', { ascending: true });
+      // Build a defensive query: only order by known safe columns to avoid Bad Request
+      const allowedOrderCols = ['id', 'nome', 'preco_base', 'created_at'];
+      const q = supabase.from('produtos').select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,variacoes_meta,codigo_barras,created_at', { count: 'exact' }).range(from, to);
+      let finalQ = q;
+      if (allowedOrderCols.includes('nome')) {
+        finalQ = finalQ.order('nome', { ascending: true });
+      }
+      const { data, error, count } = await finalQ;
 
       if (error) {
         // Improve logging so we can see Supabase error details in the browser console
         const asRecord = (e: unknown): Record<string, unknown> => (typeof e === 'object' && e !== null) ? e as Record<string, unknown> : { message: String(e) };
         const info = asRecord(error);
         try {
-          console.error('[produtos] supabase error', {
-            message: (info['message'] ?? info['msg'] ?? info['error_description'] ?? String(info['message'] ?? '')),
-            details: info['details'] ?? null,
-            hint: info['hint'] ?? null,
-            status: info['status'] ?? info['code'] ?? null,
-            full: info
-          });
+          // Stringify to ensure the full object is visible in minified production consoles
+          console.error('[produtos] supabase error', JSON.stringify(info, null, 2));
         } catch (e) {
           console.error('[produtos] supabase raw error', error);
         }
