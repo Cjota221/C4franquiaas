@@ -6,7 +6,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const expected = process.env.SYNC_PRODUCTS_TOKEN;
+    // Accept either the server-only token or the public NEXT_PUBLIC token
+    const expected = process.env.SYNC_PRODUCTS_TOKEN ?? process.env.NEXT_PUBLIC_SYNC_PRODUCTS_TOKEN;
     const provided = request.headers.get('x-admin-token') ?? '';
     if (expected && provided !== expected) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
