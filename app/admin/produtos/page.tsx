@@ -148,6 +148,7 @@ export default function ProdutosPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   // modalVariacoes holds variations for the selected product
+  const [modalFacilzap, setModalFacilzap] = useState<Record<string, unknown> | null>(null);
 
   async function openProdutoModal(produto: Produto) {
     setModalProduto(produto);
@@ -157,6 +158,7 @@ export default function ProdutosPage() {
     try {
       const resp = await axiosClient.get(`/api/produtos/${produto.id}`);
   const facil = resp.data?.facilzap;
+  setModalFacilzap(facil && typeof facil === 'object' ? (facil as Record<string, unknown>) : null);
   const dbRow = resp.data?.produto ?? null;
   const meta: unknown[] = Array.isArray(dbRow?.variacoes_meta) ? dbRow.variacoes_meta : [];
 
@@ -235,7 +237,19 @@ export default function ProdutosPage() {
               for (const it of av) {
                 if (typeof it === 'string' && it.trim() !== '') return it.trim();
                 if (typeof it === 'number') return String(it);
+                // sometimes items are objects like {numero: '...'}
+                if (it && typeof it === 'object') {
+                  const itRec = it as Record<string, unknown>;
+                  const cand = (typeof itRec['numero'] === 'string' && itRec['numero'].trim() !== '') ? itRec['numero'] : (typeof itRec['number'] === 'string' && itRec['number'].trim() !== '' ? itRec['number'] : null);
+                  if (cand) return String(cand).trim();
+                }
               }
+            }
+            // sometimes cod_barras is provided as an object like { tipo:'ean13', numero: '...' }
+            if (av && typeof av === 'object' && !Array.isArray(av)) {
+              const obj = av as Record<string, unknown>;
+              if (typeof obj['numero'] === 'string' && obj['numero'].trim() !== '') return obj['numero'].trim();
+              if (typeof obj['number'] === 'string' && obj['number'].trim() !== '') return obj['number'].trim();
             }
           }
           for (const k of candidates) {
@@ -250,6 +264,12 @@ export default function ProdutosPage() {
               const v = r[key];
               if (typeof v === 'string' && v.trim() !== '') return v.trim();
               if (typeof v === 'number') return String(v);
+              // handle nested object like { tipo:'ean13', numero: '...' }
+              if (v && typeof v === 'object') {
+                const vr = v as Record<string, unknown>;
+                if (typeof vr['numero'] === 'string' && vr['numero'].trim() !== '') return vr['numero'].trim();
+                if (typeof vr['number'] === 'string' && vr['number'].trim() !== '') return vr['number'].trim();
+              }
             }
           }
           return null;
@@ -332,7 +352,23 @@ export default function ProdutosPage() {
         const asRecord = (x: unknown): Record<string, unknown> | null => (typeof x === 'object' && x !== null) ? x as Record<string, unknown> : null;
         const facilRec = asRecord(facil);
         const dbRec = asRecord(dbRow);
-        const productBarcodes = Array.isArray(facilRec?.['cod_barras']) ? facilRec!['cod_barras'] as unknown[] : Array.isArray(dbRec?.['cod_barras']) ? dbRec!['cod_barras'] as unknown[] : null;
+        // product-level cod_barras may be an array or an object like { numero: '...' }
+        let productBarcodes: unknown[] | null = null;
+        if (Array.isArray(facilRec?.['cod_barras'])) {
+          productBarcodes = facilRec!['cod_barras'] as unknown[];
+        } else if (facilRec && typeof facilRec['cod_barras'] === 'object' && facilRec['cod_barras'] !== null) {
+          const cb = facilRec['cod_barras'] as Record<string, unknown>;
+          const num = typeof cb['numero'] === 'string' && cb['numero'].trim() !== '' ? cb['numero'].trim() : (typeof cb['number'] === 'string' && cb['number'].trim() !== '' ? cb['number'].trim() : null);
+          productBarcodes = num ? [num] : null;
+        } else if (Array.isArray(dbRec?.['cod_barras'])) {
+          productBarcodes = dbRec!['cod_barras'] as unknown[];
+        } else if (dbRec && typeof dbRec['cod_barras'] === 'object' && dbRec['cod_barras'] !== null) {
+          const cb = dbRec['cod_barras'] as Record<string, unknown>;
+          const num = typeof cb['numero'] === 'string' && cb['numero'].trim() !== '' ? cb['numero'].trim() : (typeof cb['number'] === 'string' && cb['number'].trim() !== '' ? cb['number'].trim() : null);
+          productBarcodes = num ? [num] : null;
+        } else {
+          productBarcodes = null;
+        }
         if (Array.isArray(productBarcodes) && productBarcodes.length > 0) {
           for (let i = 0; i < vars.length; i++) {
             const cand = productBarcodes[i];
@@ -349,6 +385,50 @@ export default function ProdutosPage() {
       setModalVariacoes([]);
     } finally {
       setModalLoading(false);
+    }
+  }
+
+  function importUpstreamValues() {
+    if (!modalFacilzap || !modalVariacoes) return;
+    if (!confirm('Deseja importar os valores do upstream e sobrescrever os campos das variações? Esta ação pode alterar estoque, SKU e códigos de barras.')) return;
+    try {
+      const apiVars = Array.isArray(modalFacilzap['variacoes']) ? (modalFacilzap['variacoes'] as unknown[]) : [];
+      setModalVariacoes(prev => prev ? prev.map((pv, idx) => {
+        const up = apiVars[idx];
+        if (!up || typeof up !== 'object') return pv;
+        const upRec = up as Record<string, unknown>;
+        const extractNumber = (x: unknown): number | null => {
+          if (typeof x === 'number') return Number.isFinite(x) ? x : null;
+          if (typeof x === 'string') { const n = Number(x); return Number.isFinite(n) ? n : null; }
+          if (x && typeof x === 'object') {
+            const nx = x as Record<string, unknown>;
+            for (const k of ['estoque','disponivel','quantity','qtd','available']) {
+              const v = nx[k];
+              if (typeof v === 'number') return v;
+              if (typeof v === 'string') { const n = Number(v); if (Number.isFinite(n)) return n; }
+            }
+          }
+          return null;
+        };
+        const extractBarcode = (v: unknown): string | null => {
+          if (typeof v === 'string' && v.trim() !== '') return v.trim();
+          if (typeof v === 'number') return String(v);
+          if (v && typeof v === 'object') {
+            const vr = v as Record<string, unknown>;
+            if (typeof vr['numero'] === 'string' && vr['numero'].trim() !== '') return vr['numero'].trim();
+            if (typeof vr['number'] === 'string' && vr['number'].trim() !== '') return vr['number'].trim();
+          }
+          return null;
+        };
+        const newEst = extractNumber(upRec['estoque'] ?? upRec['quantity'] ?? upRec['disponivel'] ?? upRec['available']);
+        const newBarcode = extractBarcode(upRec['cod_barras'] ?? upRec['codigo_de_barras'] ?? upRec['codigos'] ?? upRec['codigo']);
+        const newSku = (typeof upRec['sku'] === 'string' || typeof upRec['sku'] === 'number') ? String(upRec['sku']) : pv.sku;
+        return { ...pv, estoque: newEst ?? pv.estoque, codigo_de_barras: newBarcode ?? pv.codigo_de_barras, sku: newSku ?? pv.sku } as Variacao;
+      }) : prev);
+      setStatusMsg({ type: 'success', text: 'Valores importados do upstream.' });
+    } catch (e) {
+      console.error('importUpstreamValues error', e);
+      setStatusMsg({ type: 'error', text: 'Falha ao importar upstream.' });
     }
   }
 
@@ -511,6 +591,7 @@ export default function ProdutosPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Detalhes: {modalProduto?.nome}</h2>
             <div className="flex items-center gap-3">
+              <button onClick={importUpstreamValues} className="text-sm text-gray-500 hover:text-gray-700 border rounded px-2 py-1">Importar upstream</button>
               <button onClick={() => setShowDebug(s => !s)} className="text-sm text-gray-500 hover:text-gray-700 border rounded px-2 py-1">Debug</button>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">Fechar</button>
             </div>
