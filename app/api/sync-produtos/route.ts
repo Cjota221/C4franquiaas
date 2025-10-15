@@ -65,6 +65,16 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
       if (error) {
         console.error('[sync-produtos] supabase upsert error', error);
+          // Diagnostic info (don't expose secrets) — helpful when debugging 500s in environments like Netlify
+          try {
+            const present = {
+              FACILZAP_TOKEN: !!process.env.FACILZAP_TOKEN,
+              NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+              SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+              DEBUG_SYNC: !!process.env.DEBUG_SYNC,
+            };
+            console.log('[sync-produtos] env present:', JSON.stringify(present));
+          } catch {}
         const msg = error?.message ?? 'Erro ao salvar produtos.';
         return NextResponse.json({ error: String(msg) }, { status: 500 });
       }
@@ -75,8 +85,28 @@ export async function POST(request: NextRequest) {
           const pRec = (p as unknown) && typeof p === 'object' ? p as Record<string, unknown> : {};
           const cs = Array.isArray(pRec['categorias']) ? (pRec['categorias'] as unknown[]) : Array.isArray(pRec['categories']) ? (pRec['categories'] as unknown[]) : [];
           if (Array.isArray(cs)) {
+              try {
+                const res = await fetchProdutosFacilZapPage(page, length ?? 50);
+                produtos = res.produtos ?? [];
+              } catch (fetchErr) {
+                console.error('[sync-produtos] error fetching page from FacilZap', fetchErr);
+                const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+                const body = { error: 'failed_fetch_facilzap', message: msg } as Record<string, unknown>;
+                if (process.env.DEBUG_SYNC === 'true') body['stack'] = (fetchErr as any)?.stack;
+                return NextResponse.json(body, { status: 500 });
+              }
             for (const c of cs) {
               if (!c) continue;
+              try {
+                const res = await fetchAllProdutosFacilZap();
+                produtos = res.produtos ?? [];
+              } catch (fetchErr) {
+                console.error('[sync-produtos] error fetching ALL products from FacilZap', fetchErr);
+                const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+                const body = { error: 'failed_fetch_facilzap_all', message: msg } as Record<string, unknown>;
+                if (process.env.DEBUG_SYNC === 'true') body['stack'] = (fetchErr as any)?.stack;
+                return NextResponse.json(body, { status: 500 });
+              }
               if (typeof c === 'string') catsToUpsert.push({ nome: c });
               else if (typeof c === 'object' && c !== null) {
                 const crec = c as Record<string, unknown>;
