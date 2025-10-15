@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { fetchProdutoFacilZapById } from '@/lib/facilzapClient';
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+    const { id } = await context.params;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
@@ -44,14 +44,15 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
-    const body = await request.json().catch(() => ({} as any));
+    const { id } = await context.params;
+    const parsed = await request.json().catch(() => ({} as unknown));
+  const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
 
-    const updates: Record<string, any> = {};
-    if (body.estoque !== undefined) updates.estoque = body.estoque;
-    if (body.variacoes_meta !== undefined) updates.variacoes_meta = body.variacoes_meta;
+  const updates: Record<string, unknown> = {};
+  if (Object.prototype.hasOwnProperty.call(body, 'estoque')) updates.estoque = body['estoque'];
+  if (Object.prototype.hasOwnProperty.call(body, 'variacoes_meta')) updates.variacoes_meta = body['variacoes_meta'];
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'Nenhum campo para atualizar.' }, { status: 400 });

@@ -56,16 +56,18 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
       if (error) {
         console.error('[sync-produtos] supabase upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
+        const msg = error?.message ?? 'Erro ao salvar produtos.';
+        return NextResponse.json({ error: String(msg) }, { status: 500 });
       }
       imported += batch.length;
     }
 
     console.log('[sync-produtos] SYNCHRONIZATION complete, imported=', imported);
     return NextResponse.json({ ok: true, imported }, { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
