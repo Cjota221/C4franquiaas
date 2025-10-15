@@ -97,7 +97,43 @@ export default function ProdutosPage() {
         .order('nome', { ascending: true });
 
       if (error) {
-        console.error('[produtos] supabase error', error);
+        // Improve logging so we can see Supabase error details in the browser console
+        const asRecord = (e: unknown): Record<string, unknown> => (typeof e === 'object' && e !== null) ? e as Record<string, unknown> : { message: String(e) };
+        const info = asRecord(error);
+        try {
+          console.error('[produtos] supabase error', {
+            message: (info['message'] ?? info['msg'] ?? info['error_description'] ?? String(info['message'] ?? '')),
+            details: info['details'] ?? null,
+            hint: info['hint'] ?? null,
+            status: info['status'] ?? info['code'] ?? null,
+            full: info
+          });
+        } catch (e) {
+          console.error('[produtos] supabase raw error', error);
+        }
+
+        // If Supabase returned a Bad Request (400), attempt a safer fallback query to help debug
+        const statusVal = (info['status'] ?? info['code']) as unknown;
+        if (statusVal === 400 || statusVal === '400') {
+          try {
+            const fb = await supabase
+              .from('produtos')
+              .select('id,nome,estoque,preco_base,ativo,imagem,imagens', { count: 'exact' })
+              .range(from, to)
+              .order('id', { ascending: true });
+            if (!fb.error && fb.data) {
+              const fallbackMapped = ((fb.data as Produto[]) || []).map(p => ({ ...p, estoque_display: Number(p.estoque ?? 0) } as Produto));
+              setProdutos(fallbackMapped);
+              setTotal(fb.count ?? 0);
+              setStatusMsg({ type: 'info', text: 'Consulta alternativa executada (fallback).' });
+              setLoading(false);
+              return;
+            }
+          } catch (fbErr) {
+            console.error('[produtos] supabase fallback error', fbErr);
+          }
+        }
+
         setStatusMsg({ type: 'error', text: 'Erro ao carregar produtos.' });
       } else {
         // compute a display estoque using variacoes_meta when present to keep list consistent with modal
