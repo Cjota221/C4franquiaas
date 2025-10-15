@@ -488,7 +488,7 @@ export default function ProdutosPage() {
                       </div>
                     </td>
                     <td className="p-4 font-medium text-gray-800">{p.nome}</td>
-                    <td className="p-4 text-gray-600">{p.estoque}</td>
+                    <td className="p-4 text-gray-600">{renderDisplayValue(p.estoque)}</td>
                     <td className="p-4 text-gray-600">{p.preco_base !== null ? `R$ ${p.preco_base.toFixed(2)}` : 'N/A'}</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${p.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{p.ativo ? 'Ativo' : 'Inativo'}</span>
@@ -549,7 +549,7 @@ export default function ProdutosPage() {
                     <tr key={String(v.id ?? idx)} className="border-b">
                       <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : `Var ${idx+1}`}</td>
                       <td className="p-2 text-sm text-gray-700">{v.sku ?? v.id ?? '—'}</td>
-                      <td className="p-2 text-gray-700">{typeof v.estoque === 'number' ? v.estoque : (v.estoque ?? '—')}</td>
+                      <td className="p-2 text-gray-700">{renderDisplayValue(v.estoque)}</td>
                       {/* Price and barcode columns removed per UI simplification */}
                     </tr>
                   ))}
@@ -586,4 +586,23 @@ function extractOriginalFromProxy(src: string): string | null {
   console.error('extractOriginalFromProxy error:', err);
     return null;
   }
+}
+
+function renderDisplayValue(v: unknown): React.ReactNode {
+  try {
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') {
+      // if it's a known shape, try to show a primary field
+      const obj = v as Record<string, unknown>;
+      if (typeof obj['estoque'] === 'number') return obj['estoque'];
+      if (typeof obj['estoque'] === 'string') return obj['estoque'];
+      if (typeof obj['quantidade'] === 'number') return obj['quantidade'];
+      // fallback to a compact JSON representation
+      return JSON.stringify(obj);
+    }
+  } catch {
+    // ignore and fallthrough
+  }
+  return '—';
 }
