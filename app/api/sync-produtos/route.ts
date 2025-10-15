@@ -20,6 +20,66 @@ export async function POST(request: NextRequest) {
     const page = Number(body?.page) > 0 ? Number(body.page) : undefined;
     const length = Number(body?.length) > 0 ? Number(body.length) : undefined;
 
+    // helper: robust category name extraction from various possible payload shapes
+    const extractCategoryNames = (obj: unknown): string[] => {
+      try {
+        if (!obj || typeof obj !== 'object') return [];
+        const rec = obj as Record<string, unknown>;
+        const collector: string[] = [];
+
+        const pushName = (v: unknown) => {
+          if (!v) return;
+          if (typeof v === 'string') {
+            const s = v.trim(); if (s) collector.push(s); return;
+          }
+          if (typeof v === 'object') {
+            const r = v as Record<string, unknown>;
+            // try common name keys
+            const nameKeys = ['nome', 'name', 'titulo', 'title', 'nome_categoria', 'category_name'];
+            for (const k of nameKeys) {
+              const val = r[k];
+              if (typeof val === 'string' && val.trim()) { collector.push(val.trim()); return; }
+            }
+            // if the object itself contains a stringish primitive
+            for (const key of Object.keys(r)) {
+              const val = r[key];
+              if (typeof val === 'string' && val.trim()) { collector.push(val.trim()); return; }
+            }
+          }
+        };
+
+        // common candidate keys
+        const candidates = ['categorias', 'categories', 'categoria', 'category', 'categorias_principais', 'categoria_principal'];
+        for (const k of candidates) {
+          const v = rec[k];
+          if (!v) continue;
+          if (Array.isArray(v)) {
+            for (const it of v) pushName(it);
+            continue;
+          }
+          pushName(v);
+        }
+
+        // fallback: scan all keys for anything that looks category-like
+        if (collector.length === 0) {
+          for (const key of Object.keys(rec)) {
+            const lk = key.toLowerCase();
+            if (lk.includes('cat') || lk.includes('categoria') || lk.includes('category')) {
+              const v = rec[key];
+              if (Array.isArray(v)) for (const it of v) pushName(it);
+              else pushName(v);
+            }
+          }
+        }
+
+        // normalize: dedupe & trim
+        const normalized = Array.from(new Set(collector.map(x => x.trim()).filter(Boolean)));
+        return normalized;
+      } catch {
+        return [];
+      }
+    };
+
     let produtos: ProdutoDB[] = [];
     if (page) {
       console.log('[sync-produtos] fetching page', page, 'length', length ?? undefined);
@@ -39,12 +99,9 @@ export async function POST(request: NextRequest) {
     const BATCH_SIZE = 50;
     let imported = 0;
     for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => {
-        // extract categories robustly without using `any`
-        const rawCats = (p as unknown) && typeof (p as unknown) === 'object' ? (p as unknown) as Record<string, unknown> : {} as Record<string, unknown>;
-        let cats: unknown[] = [];
-        if (Array.isArray(rawCats['categorias'])) cats = rawCats['categorias'] as unknown[];
-        else if (Array.isArray(rawCats['categories'])) cats = rawCats['categories'] as unknown[];
+      const slice = produtos.slice(i, i + BATCH_SIZE);
+      const batch = slice.map((p: ProdutoDB) => {
+        const catNames = extractCategoryNames(p);
         return {
           id_externo: p.id_externo,
           nome: p.nome,
@@ -55,7 +112,7 @@ export async function POST(request: NextRequest) {
           imagens: p.imagens ?? [],
           codigo_barras: p.codigo_barras ?? null,
           variacoes_meta: p.variacoes_meta ?? [],
-          categorias: cats,
+          categorias: catNames,
           last_synced_at: new Date().toISOString(),
         };
       });
@@ -74,29 +131,21 @@ export async function POST(request: NextRequest) {
               DEBUG_SYNC: !!process.env.DEBUG_SYNC,
             };
             console.log('[sync-produtos] env present:', JSON.stringify(present));
-          } catch {}
-        const msg = error?.message ?? 'Erro ao salvar produtos.';
-        return NextResponse.json({ error: String(msg) }, { status: 500 });
-      }
-      // Sync categories table (if categories provided)
-      try {
-        const catsToUpsert: { id?: string; nome?: string }[] = [];
-        for (const p of produtos.slice(i, i + BATCH_SIZE)) {
-          const pRec = (p as unknown) && typeof p === 'object' ? p as Record<string, unknown> : {};
-          const cs = Array.isArray(pRec['categorias']) ? (pRec['categorias'] as unknown[]) : Array.isArray(pRec['categories']) ? (pRec['categories'] as unknown[]) : [];
-          if (Array.isArray(cs)) {
-              try {
-                const res = await fetchProdutosFacilZapPage(page, length ?? 50);
-                produtos = res.produtos ?? [];
-              } catch (fetchErr) {
-                console.error('[sync-produtos] error fetching page from FacilZap', fetchErr);
-                const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-                const body = { error: 'failed_fetch_facilzap', message: msg } as Record<string, unknown>;
-                if (process.env.DEBUG_SYNC === 'true') body['stack'] = (fetchErr as any)?.stack;
-                return NextResponse.json(body, { status: 500 });
-              }
-            for (const c of cs) {
-              if (!c) continue;
+          try {
+            // collect all category names from this slice
+            const allNames: string[] = [];
+            for (const p of slice) {
+              const names = extractCategoryNames(p);
+              if (names && names.length > 0) allNames.push(...names);
+            }
+            const uniqNames = Array.from(new Set(allNames.map(n => n.trim()).filter(Boolean)));
+            if (uniqNames.length > 0) {
+              // upsert by nome
+              await supabase.from('categorias').upsert(uniqNames.map(n => ({ nome: n })), { onConflict: 'nome' });
+            }
+          } catch (catErr) {
+            console.error('[sync-produtos] categorias upsert error', catErr);
+          }
               try {
                 const res = await fetchAllProdutosFacilZap();
                 produtos = res.produtos ?? [];
