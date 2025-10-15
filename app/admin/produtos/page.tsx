@@ -5,7 +5,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import { RefreshCw } from 'lucide-react';
-import DebugVariacoes from '../../../components/DebugVariacoes';
+// Debug UI removed per request
 
 const PAGE_SIZE = 50;
 const axiosClient = axios.create({ timeout: 10000 });
@@ -21,6 +21,10 @@ type Produto = {
   ativo: boolean;
   imagem: string | null;
   imagens?: string[];
+  variacoes_meta?: unknown[];
+  codigo_barras?: string | null;
+  created_at?: string | null;
+  estoque_display?: number;
 };
 
 type Variacao = {
@@ -77,6 +81,8 @@ export default function ProdutosPage() {
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error' | 'loading' | 'info'; text: string } | null>(null);
   const [toggling, setToggling] = useState<Record<number, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old'>('none');
 
   async function fetchPage(page: number) {
     setLoading(true);
@@ -85,7 +91,8 @@ export default function ProdutosPage() {
       const to = from + PAGE_SIZE - 1;
       const { data, error, count } = await supabase
         .from('produtos')
-        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens', { count: 'exact' })
+        // include variacoes_meta and created_at to compute display estoque and enable sorting
+        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,variacoes_meta,codigo_barras,created_at', { count: 'exact' })
         .range(from, to)
         .order('nome', { ascending: true });
 
@@ -93,7 +100,23 @@ export default function ProdutosPage() {
         console.error('[produtos] supabase error', error);
         setStatusMsg({ type: 'error', text: 'Erro ao carregar produtos.' });
       } else {
-        setProdutos((data as Produto[]) || []);
+        // compute a display estoque using variacoes_meta when present to keep list consistent with modal
+        const mapped = ((data as Produto[]) || []).map(p => {
+          try {
+            const vm = Array.isArray((p as unknown as Record<string, unknown>).variacoes_meta) ? (p as unknown as Record<string, unknown>).variacoes_meta as unknown[] : [];
+            if (vm.length > 0) {
+              const total = vm.reduce((acc: number, it: unknown) => {
+                const e = it && typeof it === 'object' ? ((it as Record<string, unknown>).estoque ?? (it as Record<string, unknown>)['estoque']) : null;
+                if (typeof e === 'number') return acc + e;
+                if (typeof e === 'string') { const n = Number(String(e).replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? acc + n : acc; }
+                return acc;
+              }, 0);
+              return { ...p, estoque_display: Number(total) } as Produto;
+            }
+          } catch {}
+          return { ...p, estoque_display: Number(p.estoque ?? 0) } as Produto;
+        });
+        setProdutos(mapped);
         setTotal(count ?? 0);
       }
     } catch (err: unknown) {
@@ -146,7 +169,7 @@ export default function ProdutosPage() {
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [modalVariacoes, setModalVariacoes] = useState<Variacao[] | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+  // debug UI removed
   // modalVariacoes holds variations for the selected product
   const [modalFacilzap, setModalFacilzap] = useState<Record<string, unknown> | null>(null);
 
@@ -277,7 +300,7 @@ export default function ProdutosPage() {
 
         const displayName = ((): string => {
           // prefer explicit variation name fields if available
-          const names = ['nome', 'nome_variacao', 'descricao', 'descricao_variacao', 'descricaoVar', 'sku', 'id', 'codigo'];
+          const names = ['nome', 'nome_variacao', 'descricao_variacao', 'descricaoVar', 'sku', 'id', 'codigo'];
           for (const k of names) {
             const v = rec[k];
             if (typeof v === 'string' && v.trim() !== '') return v.trim();
@@ -340,11 +363,7 @@ export default function ProdutosPage() {
         return sa.localeCompare(sb, undefined, { numeric: true });
       });
 
-      // debug: expose upstream payload and parsed variations in browser console
-      try {
-        console.debug('[modal debug] facilzap payload:', facil);
-        console.debug('[modal debug] parsed variations:', vars);
-      } catch {}
+      // debug logs removed
 
       // If the upstream product provides a top-level array of barcodes (e.g. "cod_barras": [..])
       // map them to variations by index when the variation itself didn't provide a barcode.
@@ -388,25 +407,7 @@ export default function ProdutosPage() {
     }
   }
 
-  function importUpstreamValues() {
-    // Disabled: upstream values are synced automatically by the server-side sync job.
-    setStatusMsg({ type: 'info', text: 'Importação upstream desativada — os valores são atualizados automaticamente pelo sync.' });
-    return;
-  }
-
-  // removed inline expansion; variants are shown inside the Details modal
-
-  // saveBarcodesForProduct removed; saving occurs from modal saveVariacoes
-
-  const [saving, setSaving] = useState(false);
-
-  async function saveVariacoes() {
-    // Saving variations via the UI is disabled. The sync process updates variacoes_meta and estoque.
-    setSaving(true);
-    setStatusMsg({ type: 'info', text: 'Salvar variações desativado — alterações são feitas automaticamente pelo sync.' });
-    setSaving(false);
-    return;
-  }
+  // Import and manual save removed; estoque is synchronized automatically by the server-side sync job.
 
   function closeModal() {
     setModalOpen(false);
@@ -415,6 +416,23 @@ export default function ProdutosPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // derive visible products applying search and sort
+  const visibleProdutos = React.useMemo(() => {
+    let arr = produtos.slice();
+    if (searchTerm && searchTerm.trim() !== '') {
+      const q = searchTerm.toLowerCase();
+      arr = arr.filter(p => (p.nome ?? '').toLowerCase().includes(q) || (p.id_externo ?? '').toString().toLowerCase().includes(q));
+    }
+    switch (sortBy) {
+      case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
+      case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
+      case 'date_new': arr.sort((a,b) => { const da = a.created_at ? Date.parse(a.created_at) : 0; const db = b.created_at ? Date.parse(b.created_at) : 0; return db - da; }); break;
+      case 'date_old': arr.sort((a,b) => { const da = a.created_at ? Date.parse(a.created_at) : 0; const db = b.created_at ? Date.parse(b.created_at) : 0; return da - db; }); break;
+      default: break;
+    }
+    return arr;
+  }, [produtos, searchTerm, sortBy]);
 
   return (
     <>
@@ -439,6 +457,21 @@ export default function ProdutosPage() {
       )}
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar produtos..." className="px-3 py-2 border rounded w-64" />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Ordenar:</label>
+            <select value={sortBy} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as 'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old')} className="px-2 py-2 border rounded">
+              <option value="none">Padrão</option>
+              <option value="price_desc">Preço: maior → menor</option>
+              <option value="price_asc">Preço: menor → maior</option>
+              <option value="date_new">Data: novo → antigo</option>
+              <option value="date_old">Data: antigo → novo</option>
+            </select>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -455,7 +488,7 @@ export default function ProdutosPage() {
               {loading ? (
                 <tr><td colSpan={6} className="p-8 text-center text-gray-500">Carregando...</td></tr>
               ) : produtos.length > 0 ? (
-                produtos.map((p) => (
+                visibleProdutos.map((p) => (
                   <React.Fragment key={p.id}>
                   <tr className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-4">
@@ -488,7 +521,7 @@ export default function ProdutosPage() {
                       </div>
                     </td>
                     <td className="p-4 font-medium text-gray-800">{p.nome}</td>
-                    <td className="p-4 text-gray-600">{renderDisplayValue(p.estoque)}</td>
+                    <td className="p-4 text-gray-600">{renderDisplayValue(p.estoque_display ?? p.estoque)}</td>
                     <td className="p-4 text-gray-600">{p.preco_base !== null ? `R$ ${p.preco_base.toFixed(2)}` : 'N/A'}</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${p.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{p.ativo ? 'Ativo' : 'Inativo'}</span>
@@ -528,12 +561,11 @@ export default function ProdutosPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Detalhes: {modalProduto?.nome}</h2>
             <div className="flex items-center gap-3">
-              <button onClick={importUpstreamValues} className="text-sm text-gray-500 hover:text-gray-700 border rounded px-2 py-1">Importar upstream</button>
-              <button onClick={() => setShowDebug(s => !s)} className="text-sm text-gray-500 hover:text-gray-700 border rounded px-2 py-1">Debug</button>
+              {/* Import and Debug removed — estoque is synced automatically */}
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">Fechar</button>
             </div>
           </div>
-          {showDebug && <DebugVariacoes productId={modalProduto?.id ?? null} />}
+          {/* Debug view removed */}
           {modalLoading ? (
             <div className="text-center py-10">Carregando variações...</div>
           ) : modalVariacoes && modalVariacoes.length > 0 ? (
