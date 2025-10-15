@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({} as any));
-    const ids = Array.isArray(body?.ids) ? body.ids.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n)) : [];
-    const ativo = typeof body?.ativo === 'boolean' ? body.ativo : undefined;
+  const parsed = await req.json().catch(() => ({} as unknown));
+  const body = typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : {} as Record<string, unknown>;
+  const ids = Array.isArray(body.ids) ? (body.ids as unknown[]).map(v => Number(v)).filter(n => Number.isFinite(n)) : [] as number[];
+  const ativo = typeof body.ativo === 'boolean' ? body.ativo : undefined;
     if (ids.length === 0 || typeof ativo === 'undefined') return NextResponse.json({ error: 'ids and ativo required' }, { status: 400 });
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');

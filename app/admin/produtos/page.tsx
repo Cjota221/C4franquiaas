@@ -84,7 +84,6 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old'>('none');
   const [categories, setCategories] = useState<{ id?: number; nome: string }[]>([]);
-  const [activeTab, setActiveTab] = useState<'produtos' | 'categorias'>('produtos');
   const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
 
   async function fetchPage(page: number) {
@@ -106,11 +105,11 @@ export default function ProdutosPage() {
         const asRecord = (e: unknown): Record<string, unknown> => (typeof e === 'object' && e !== null) ? e as Record<string, unknown> : { message: String(e) };
         const info = asRecord(error);
         try {
-          // Stringify to ensure the full object is visible in minified production consoles
-          console.error('[produtos] supabase error', JSON.stringify(info, null, 2));
-        } catch (e) {
-          console.error('[produtos] supabase raw error', error);
-        }
+            // Stringify to ensure the full object is visible in minified production consoles
+            console.error('[produtos] supabase error', JSON.stringify(info, null, 2));
+          } catch (_err) {
+            console.error('[produtos] supabase raw error', error);
+          }
 
         // If Supabase returned a Bad Request (400), attempt a safer fallback query to help debug
         const statusVal = (info['status'] ?? info['code']) as unknown;
@@ -172,9 +171,9 @@ export default function ProdutosPage() {
     (async () => {
       try {
         const { data, error } = await supabase.from('categorias').select('id,nome').order('nome', { ascending: true }).limit(500);
-        if (!error && data) setCategories(data as any[]);
-      } catch (e) {
-        console.error('[produtos] fetch categorias error', e);
+        if (!error && data) setCategories(data as { id?: number; nome: string }[]);
+      } catch (err) {
+        console.error('[produtos] fetch categorias error', err);
       }
     })();
   }, []);
@@ -219,7 +218,7 @@ export default function ProdutosPage() {
   const [modalLoading, setModalLoading] = useState(false);
   // debug UI removed
   // modalVariacoes holds variations for the selected product
-  const [modalFacilzap, setModalFacilzap] = useState<Record<string, unknown> | null>(null);
+  // modalFacilzap was used during debugging; remove to satisfy linter
 
   async function openProdutoModal(produto: Produto) {
     setModalProduto(produto);
@@ -229,7 +228,6 @@ export default function ProdutosPage() {
     try {
       const resp = await axiosClient.get(`/api/produtos/${produto.id}`);
   const facil = resp.data?.facilzap;
-  setModalFacilzap(facil && typeof facil === 'object' ? (facil as Record<string, unknown>) : null);
   const dbRow = resp.data?.produto ?? null;
   const meta: unknown[] = Array.isArray(dbRow?.variacoes_meta) ? dbRow.variacoes_meta : [];
 
@@ -476,7 +474,7 @@ export default function ProdutosPage() {
           const resp = await axiosClient.get(`/api/produtos/search?query=${encodeURIComponent(searchTerm)}&limit=200`);
           const data = resp.data?.produtos ?? [];
           if (!mounted) return;
-          let arr = (data as Produto[]).map(p => ({ ...p, estoque_display: Number(p.estoque ?? 0) }));
+          const arr = (data as Produto[]).map(p => ({ ...p, estoque_display: Number(p.estoque ?? 0) }));
           // apply sort locally
           switch (sortBy) {
             case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
@@ -488,7 +486,7 @@ export default function ProdutosPage() {
           setVisibleProdutos(arr);
         } else {
           // use paginated products loaded in state
-          let arr = produtos.slice();
+          const arr = produtos.slice();
           switch (sortBy) {
             case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
             case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
@@ -572,7 +570,7 @@ export default function ProdutosPage() {
                 setVisibleProdutos(produtos.slice());
                 return;
               }
-              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some((c:any) => (c.nome ?? '') === v)));
+              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => (c && typeof c === 'object' && 'nome' in c ? (c as { nome?: string }).nome ?? '' : '') === v)));
             }} className="px-2 py-2 border rounded">
               <option value="">Todas categorias</option>
               {categories.map(c => <option key={c.id ?? c.nome} value={c.nome}>{c.nome}</option>)}

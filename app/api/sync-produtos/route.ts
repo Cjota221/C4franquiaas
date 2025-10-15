@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');
 
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
+  const parsed = await request.json().catch(() => ({} as unknown));
+  const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {} as Record<string, unknown>;
     const page = Number(body?.page) > 0 ? Number(body.page) : undefined;
     const length = Number(body?.length) > 0 ? Number(body.length) : undefined;
 
@@ -39,20 +39,26 @@ export async function POST(request: NextRequest) {
     const BATCH_SIZE = 50;
     let imported = 0;
     for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-        id_externo: p.id_externo,
-        nome: p.nome,
-        preco_base: p.preco_base ?? null,
-        estoque: p.estoque ?? null,
-        ativo: p.ativo ?? true,
-        imagem: p.imagem ?? null,
-        imagens: p.imagens ?? [],
-        codigo_barras: p.codigo_barras ?? null,
-        variacoes_meta: p.variacoes_meta ?? [],
-        // categories: optional array of category ids or names from FacilZap payload
-        categorias: (p as any).categorias ?? (p as any).categories ?? [],
-        last_synced_at: new Date().toISOString(),
-      }));
+      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => {
+        // extract categories robustly without using `any`
+        const rawCats = (p as unknown) && typeof (p as unknown) === 'object' ? (p as unknown) as Record<string, unknown> : {} as Record<string, unknown>;
+        let cats: unknown[] = [];
+        if (Array.isArray(rawCats['categorias'])) cats = rawCats['categorias'] as unknown[];
+        else if (Array.isArray(rawCats['categories'])) cats = rawCats['categories'] as unknown[];
+        return {
+          id_externo: p.id_externo,
+          nome: p.nome,
+          preco_base: p.preco_base ?? null,
+          estoque: p.estoque ?? null,
+          ativo: p.ativo ?? true,
+          imagem: p.imagem ?? null,
+          imagens: p.imagens ?? [],
+          codigo_barras: p.codigo_barras ?? null,
+          variacoes_meta: p.variacoes_meta ?? [],
+          categorias: cats,
+          last_synced_at: new Date().toISOString(),
+        };
+      });
 
       console.log(`[sync-produtos] upserting batch ${i}..${i + batch.length} (size=${batch.length})`);
       // Upsert produtos
@@ -66,12 +72,16 @@ export async function POST(request: NextRequest) {
       try {
         const catsToUpsert: { id?: string; nome?: string }[] = [];
         for (const p of produtos.slice(i, i + BATCH_SIZE)) {
-          const cs = (p as any).categorias ?? (p as any).categories ?? [];
+          const pRec = (p as unknown) && typeof p === 'object' ? p as Record<string, unknown> : {};
+          const cs = Array.isArray(pRec['categorias']) ? (pRec['categorias'] as unknown[]) : Array.isArray(pRec['categories']) ? (pRec['categories'] as unknown[]) : [];
           if (Array.isArray(cs)) {
             for (const c of cs) {
               if (!c) continue;
               if (typeof c === 'string') catsToUpsert.push({ nome: c });
-              else if (typeof c === 'object' && c !== null) catsToUpsert.push({ id: String((c as any).id ?? (c as any).codigo ?? ''), nome: (c as any).nome ?? (c as any).nome_categoria ?? '' });
+              else if (typeof c === 'object' && c !== null) {
+                const crec = c as Record<string, unknown>;
+                catsToUpsert.push({ id: String(crec['id'] ?? crec['codigo'] ?? ''), nome: String(crec['nome'] ?? crec['nome_categoria'] ?? '') });
+              }
             }
           }
         }
