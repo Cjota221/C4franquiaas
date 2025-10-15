@@ -24,6 +24,7 @@ type Produto = {
   variacoes_meta?: unknown[];
   codigo_barras?: string | null;
   estoque_display?: number;
+  categorias?: { id?: number; nome: string }[] | null;
 };
 
 type Variacao = {
@@ -82,6 +83,9 @@ export default function ProdutosPage() {
   const [toggling, setToggling] = useState<Record<number, boolean>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old'>('none');
+  const [categories, setCategories] = useState<{ id?: number; nome: string }[]>([]);
+  const [activeTab, setActiveTab] = useState<'produtos' | 'categorias'>('produtos');
+  const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
 
   async function fetchPage(page: number) {
     setLoading(true);
@@ -162,6 +166,18 @@ export default function ProdutosPage() {
   useEffect(() => {
     fetchPage(pagina);
   }, [pagina]);
+
+  useEffect(() => {
+    // fetch categories once
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('categorias').select('id,nome').order('nome', { ascending: true }).limit(500);
+        if (!error && data) setCategories(data as any[]);
+      } catch (e) {
+        console.error('[produtos] fetch categorias error', e);
+      }
+    })();
+  }, []);
 
   async function handleSync() {
     setStatusMsg({ type: 'loading', text: 'Sincronizando produtos...' });
@@ -449,22 +465,44 @@ export default function ProdutosPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // derive visible products applying search and sort
-  const visibleProdutos = React.useMemo(() => {
-    let arr = produtos.slice();
-    if (searchTerm && searchTerm.trim() !== '') {
-      const q = searchTerm.toLowerCase();
-      arr = arr.filter(p => (p.nome ?? '').toLowerCase().includes(q) || (p.id_externo ?? '').toString().toLowerCase().includes(q));
-    }
-    switch (sortBy) {
-      case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
-      case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
-  // created_at doesn't exist in DB; use id as proxy for insertion order (higher id -> newer)
-  case 'date_new': arr.sort((a,b) => (b.id ?? 0) - (a.id ?? 0)); break;
-  case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
-      default: break;
-    }
-    return arr;
+  // derive visible products applying search and sort; when searchTerm present use server-side search
+  const [visibleProdutos, setVisibleProdutos] = React.useState<Produto[]>([]);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (searchTerm && searchTerm.trim() !== '') {
+          // server-side search across all products
+          const resp = await axiosClient.get(`/api/produtos/search?query=${encodeURIComponent(searchTerm)}&limit=200`);
+          const data = resp.data?.produtos ?? [];
+          if (!mounted) return;
+          let arr = (data as Produto[]).map(p => ({ ...p, estoque_display: Number(p.estoque ?? 0) }));
+          // apply sort locally
+          switch (sortBy) {
+            case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
+            case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
+            case 'date_new': arr.sort((a,b) => (b.id ?? 0) - (a.id ?? 0)); break;
+            case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
+            default: break;
+          }
+          setVisibleProdutos(arr);
+        } else {
+          // use paginated products loaded in state
+          let arr = produtos.slice();
+          switch (sortBy) {
+            case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
+            case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
+            case 'date_new': arr.sort((a,b) => (b.id ?? 0) - (a.id ?? 0)); break;
+            case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
+            default: break;
+          }
+          setVisibleProdutos(arr);
+        }
+      } catch (e) {
+        console.error('[produtos] search error', e);
+      }
+    })();
+    return () => { mounted = false; };
   }, [produtos, searchTerm, sortBy]);
 
   return (
@@ -476,6 +514,30 @@ export default function ProdutosPage() {
           <p className="text-gray-500 mt-1">Gerencie e sincronize os produtos da sua loja.</p>
         </div>
         <div className="flex items-center gap-3">
+          <button disabled={Object.keys(selectedIds).length === 0} onClick={async () => {
+            const ids = Object.keys(selectedIds).map(k => Number(k));
+            try {
+              await axiosClient.patch('/api/produtos/batch', { ids, ativo: true });
+              setProdutos(prev => prev.map(p => ids.includes(p.id) ? { ...p, ativo: true } : p));
+              setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? { ...p, ativo: true } : p));
+              setSelectedIds({});
+            } catch (e) {
+              console.error('bulk activate error', e);
+            }
+          }} className="px-3 py-2 bg-green-600 text-white rounded disabled:opacity-50">Ativar selecionados</button>
+
+          <button disabled={Object.keys(selectedIds).length === 0} onClick={async () => {
+            const ids = Object.keys(selectedIds).map(k => Number(k));
+            try {
+              await axiosClient.patch('/api/produtos/batch', { ids, ativo: false });
+              setProdutos(prev => prev.map(p => ids.includes(p.id) ? { ...p, ativo: false } : p));
+              setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? { ...p, ativo: false } : p));
+              setSelectedIds({});
+            } catch (e) {
+              console.error('bulk deactivate error', e);
+            }
+          }} className="px-3 py-2 bg-red-600 text-white rounded disabled:opacity-50">Desativar selecionados</button>
+
           <button onClick={handleSync} disabled={statusMsg?.type === 'loading'} className="flex items-center gap-2 px-4 py-2 font-semibold text-white bg-pink-600 rounded-lg shadow-md hover:bg-pink-700 disabled:bg-pink-300">
             <RefreshCw className={`h-5 w-5 ${statusMsg?.type === 'loading' ? 'animate-spin' : ''}`} />
             {statusMsg?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
@@ -503,6 +565,18 @@ export default function ProdutosPage() {
               <option value="date_new">Data: novo → antigo</option>
               <option value="date_old">Data: antigo → novo</option>
             </select>
+            <select onChange={(e) => {
+              const v = e.target.value;
+              if (!v) {
+                // reset to original pagination
+                setVisibleProdutos(produtos.slice());
+                return;
+              }
+              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some((c:any) => (c.nome ?? '') === v)));
+            }} className="px-2 py-2 border rounded">
+              <option value="">Todas categorias</option>
+              {categories.map(c => <option key={c.id ?? c.nome} value={c.nome}>{c.nome}</option>)}
+            </select>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -519,11 +593,14 @@ export default function ProdutosPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="p-8 text-center text-gray-500">Carregando...</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-gray-500">Carregando...</td></tr>
               ) : produtos.length > 0 ? (
                 visibleProdutos.map((p) => (
                   <React.Fragment key={p.id}>
                   <tr className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="p-4">
+                      <input type="checkbox" checked={!!selectedIds[p.id ?? 0]} onChange={(e) => setSelectedIds(prev => ({ ...prev, [p.id ?? 0]: e.target.checked }))} />
+                    </td>
                     <td className="p-4">
                       <div className="flex gap-2">
                         {(p.imagens && p.imagens.length > 0 ? p.imagens.slice(0,3) : [p.imagem ?? '/placeholder-100.png']).map((src, idx) => {
@@ -572,7 +649,7 @@ export default function ProdutosPage() {
                   </React.Fragment>
                 ))
               ) : (
-                <tr><td colSpan={6} className="p-8 text-center text-gray-500">Nenhum produto encontrado.</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-gray-500">Nenhum produto encontrado.</td></tr>
               )}
             </tbody>
           </table>

@@ -49,15 +49,39 @@ export async function POST(request: NextRequest) {
         imagens: p.imagens ?? [],
         codigo_barras: p.codigo_barras ?? null,
         variacoes_meta: p.variacoes_meta ?? [],
+        // categories: optional array of category ids or names from FacilZap payload
+        categorias: (p as any).categorias ?? (p as any).categories ?? [],
         last_synced_at: new Date().toISOString(),
       }));
 
       console.log(`[sync-produtos] upserting batch ${i}..${i + batch.length} (size=${batch.length})`);
+      // Upsert produtos
       const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
       if (error) {
         console.error('[sync-produtos] supabase upsert error', error);
         const msg = error?.message ?? 'Erro ao salvar produtos.';
         return NextResponse.json({ error: String(msg) }, { status: 500 });
+      }
+      // Sync categories table (if categories provided)
+      try {
+        const catsToUpsert: { id?: string; nome?: string }[] = [];
+        for (const p of produtos.slice(i, i + BATCH_SIZE)) {
+          const cs = (p as any).categorias ?? (p as any).categories ?? [];
+          if (Array.isArray(cs)) {
+            for (const c of cs) {
+              if (!c) continue;
+              if (typeof c === 'string') catsToUpsert.push({ nome: c });
+              else if (typeof c === 'object' && c !== null) catsToUpsert.push({ id: String((c as any).id ?? (c as any).codigo ?? ''), nome: (c as any).nome ?? (c as any).nome_categoria ?? '' });
+            }
+          }
+        }
+        if (catsToUpsert.length > 0) {
+          // dedupe by nome
+          const uniq = Array.from(new Map(catsToUpsert.map(c => [c.nome, c])).values()).filter(c => c.nome && c.nome.trim() !== '');
+          await supabase.from('categorias').upsert(uniq.map(u => ({ nome: u.nome })), { onConflict: 'nome' });
+        }
+      } catch (catErr) {
+        console.error('[sync-produtos] categorias upsert error', catErr);
       }
       imported += batch.length;
     }
