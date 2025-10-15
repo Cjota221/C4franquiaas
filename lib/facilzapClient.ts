@@ -1,21 +1,21 @@
-// Definitive FácilZap client and normalizer
+// Clean, minimal FácilZap client used by the sync route.
 
 export type ProdutoDB = {
-  id_externo: string; // FácilZap product id
+  id_externo: string;
   nome: string;
   descricao?: string | null;
   preco_base?: number | null;
   preco_promocional?: number | null;
   estoque?: number | null;
   ativo?: boolean;
-  imagens?: Array<string>;
-  imagem?: string | null; // primary image (first of imagens)
-  variacoes_meta?: Record<string, unknown> | null; // pass-through from FácilZap
+  imagens?: string[];
+  imagem?: string | null;
+  variacoes_meta?: unknown | null;
   codigo_barras?: string | null;
-  last_synced_at?: string | null; // set by sync route
+  last_synced_at?: string | null;
 };
 
-type ExternalProduct = any; // FácilZap payloads are not strictly typed here
+type ExternalProduct = Record<string, any>;
 
 const FACILZAP_API = 'https://api.facilzap.app.br/api/v1/products';
 const PAGE_SIZE = 50;
@@ -31,7 +31,7 @@ function parseNumber(v: unknown): number | null {
   if (v == null) return null;
   if (typeof v === 'number') return Number.isFinite(v) ? (v as number) : null;
   if (typeof v === 'string') {
-    const cleaned = v.replace(/[R$\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
+    const cleaned = String(v).replace(/[R$\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : null;
   }
@@ -42,71 +42,51 @@ function normalizeEstoque(v: unknown): number | null {
   if (v == null) return null;
   if (typeof v === 'number') return Math.round(v);
   if (typeof v === 'string') {
-    const n = parseInt(v.replace(/[^0-9-]/g, ''), 10);
+    const n = parseInt((v as string).replace(/[^0-9-]/g, ''), 10);
     return Number.isNaN(n) ? null : n;
   }
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return normalizeEstoque(o['estoque'] ?? o['quantity'] ?? o['quantidade'] ?? null);
+  }
   return null;
 }
 
-function extractImageUrl(item: ExternalProduct): string | null {
+function extractImageUrl(item: unknown): string | null {
   if (!item) return null;
   if (typeof item === 'string') return item;
-  if (Array.isArray(item) && item.length) return asString(item[0]) ?? null;
+  if (Array.isArray(item) && item.length) return asString(item[0]);
   if (typeof item === 'object') {
+    const o = item as Record<string, unknown>;
     for (const k of ['images', 'imagens', 'fotos', 'foto', 'imagem', 'picture', 'pictures']) {
-      const v = (item as any)[k];
-      if (Array.isArray(v) && v.length) return asString(v[0]) ?? null;
-      if (typeof v === 'string') return v;
+      const v = o[k];
+      if (Array.isArray(v) && v.length) return asString(v[0]);
+      if (typeof v === 'string') return v as string;
     }
     for (const k of ['url', 'link', 'path']) {
-      const v = (item as any)[k];
+      const v = o[k];
       if (typeof v === 'string') return v;
     }
-  }
-  return null;
-}
-
-function normalizeToProxy(url: string | null | undefined) {
-  if (!url) return null;
-  const proxy = process.env.NEXT_PUBLIC_PROXY_HOST || process.env.NEXT_PUBLIC_PROXY_URL;
-  if (proxy) {
-    try {
-      const u = new URL(String(url));
-      if (u.hostname === new URL(proxy).hostname) return u.toString();
-    } catch (e) {
-      // ignore
-    }
-    return `${proxy.replace(/\/+$/, '')}/${String(url).replace(/^\/+/, '')}`;
-  }
-  return url;
-}
-
-function extractBarcode(item: ExternalProduct): string | null {
-  if (!item || typeof item !== 'object') return null;
-  const keys = ['codigo_barras', 'barcode', 'ean', 'gtin', 'codigo', 'cod_barras'];
-  for (const k of keys) {
-    const v = (item as any)[k];
-    if (typeof v === 'string' && v.trim()) return v.trim();
-    if (typeof v === 'number') return String(v);
   }
   return null;
 }
 
 function mapToProdutoDB(item: ExternalProduct): ProdutoDB {
-  const id_externo = asString(item?.id ?? item?._id ?? item?.codigo ?? item?.sku) || '';
-  const nome = asString(item?.title ?? item?.titulo ?? item?.nome) || '';
+  const id_externo = asString(item?.id ?? item?.codigo ?? item?.sku) || '';
+  const nome = asString(item?.name ?? item?.titulo ?? item?.nome) || 'Sem nome';
   const descricao = asString(item?.description ?? item?.descricao) ?? null;
   const preco_base = parseNumber(item?.price ?? item?.preco ?? item?.valor) ?? null;
   const preco_promocional = parseNumber(item?.sale_price ?? item?.preco_promocional) ?? null;
   const estoque = normalizeEstoque(item?.stock ?? item?.estoque ?? item?.quantity) ?? null;
   const ativo = item?.active != null ? Boolean(item.active) : item?.ativo != null ? Boolean(item.ativo) : true;
-  const imagem = normalizeToProxy(extractImageUrl(item));
+
   const imagens: string[] = [];
   if (Array.isArray(item?.images)) imagens.push(...(item.images as any[]).map(asString).filter(Boolean) as string[]);
   if (Array.isArray(item?.imagens)) imagens.push(...(item.imagens as any[]).map(asString).filter(Boolean) as string[]);
-  if (imagem && !imagens.includes(imagem)) imagens.unshift(imagem);
+  const imagem = imagens.length ? imagens[0] : extractImageUrl(item) ?? null;
+
   const variacoes_meta = item?.variations ?? item?.variacoes ?? null;
-  const codigo_barras = extractBarcode(item);
+  const codigo_barras = (item && typeof item === 'object') ? (item as any).codigo_barras ?? (item as any).barcode ?? null : null;
 
   return {
     id_externo,
@@ -116,142 +96,149 @@ function mapToProdutoDB(item: ExternalProduct): ProdutoDB {
     preco_promocional,
     estoque,
     ativo,
-    imagem,
-    imagens,
-    variacoes_meta,
-    codigo_barras,
+    imagens: imagens.length ? imagens.map((u) => u).filter(Boolean) : undefined,
+    imagem: imagem ?? null,
+    variacoes_meta: variacoes_meta ?? null,
+    codigo_barras: codigo_barras ?? null,
     last_synced_at: null,
   };
 }
 
 async function fetchFacilZap(path: string) {
   const token = process.env.FACILZAP_TOKEN;
-  if (!token) throw new Error('FACILZAP_TOKEN is required');
+  if (!token) throw new Error('FACILZAP_TOKEN is not set');
   const url = path.startsWith('http') ? path : `${FACILZAP_API}${path}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
   if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`FacilZap fetch error ${res.status}: ${txt}`);
+    const body = await res.text().catch(() => '');
+    throw new Error(`FacilZap fetch error ${res.status} ${res.statusText} - ${body}`);
   }
   return res.json();
 }
 
 export async function fetchProdutosFacilZapPage(page = 1, length = PAGE_SIZE) {
-  const url = `${FACILZAP_API}?page=${page}&length=${length}`;
-  const data = await fetchFacilZap(url);
-  const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.produtos) ? data.produtos : [];
-  const produtos = items.map((i: any) => mapToProdutoDB(i));
-  return { produtos, page: data?.page ?? page };
+  const q = `?page=${page}&length=${length}`;
+  const data = await fetchFacilZap(q);
+  let items: any[] = [];
+  if (Array.isArray(data)) items = data;
+  else if (Array.isArray(data?.items)) items = data.items;
+  else if (Array.isArray(data?.produtos)) items = data.produtos;
+
+  const normalized = items.map((it) => mapToProdutoDB(it));
+  return { produtos: normalized, total: Number(data?.total ?? normalized.length), page: Number(data?.page ?? page) };
 }
 
 export async function fetchAllProdutosFacilZap(maxPages = 1000) {
-  const first = await fetchProdutosFacilZapPage(1);
-  const pages = Math.min(first?.page ?? 1, maxPages);
-  let produtos = first.produtos ?? [];
-  for (let p = 2; p <= pages; p++) {
-    const res = await fetchProdutosFacilZapPage(p);
-    produtos = produtos.concat(res.produtos ?? []);
+  const out: ProdutoDB[] = [];
+  for (let p = 1; p <= maxPages; p++) {
+    const { produtos } = await fetchProdutosFacilZapPage(p, PAGE_SIZE);
+    if (!produtos || produtos.length === 0) break;
+    out.push(...produtos);
+    if (produtos.length < PAGE_SIZE) break;
   }
-  return { produtos, pages };
+  return { produtos: out, pages: Math.max(1, Math.ceil(out.length / PAGE_SIZE)) };
 }
 
 export async function fetchProdutoFacilZapById(id: string) {
-  const url = `${FACILZAP_API}/${encodeURIComponent(id)}`;
-  const data = await fetchFacilZap(url);
-  return mapToProdutoDB(data);
+  if (!id) return null;
+  const data = await fetchFacilZap(`/${encodeURIComponent(id)}`);
+  return data ? mapToProdutoDB(data) : null;
 }
 
 export default { fetchProdutosFacilZapPage, fetchAllProdutosFacilZap, fetchProdutoFacilZapById };
-/* CORREÇÃO DEFINITIVA - fácilzap client
- * - Normaliza payloads do FácilZap para a forma ProdutoDB
- * - Exports: fetchProdutosFacilZapPage, fetchAllProdutosFacilZap, fetchProdutoFacilZapById, default
- */
+// Definitive FácilZap client and normalizer (single clean implementation)
 
 export type ProdutoDB = {
   id_externo: string;
-  titulo: string;
+  nome: string;
   descricao?: string | null;
   preco_base?: number | null;
   preco_promocional?: number | null;
   estoque?: number | null;
   ativo?: boolean;
-  imagem?: string | null;
   imagens?: string[];
-  variacoes_meta?: any;
+  imagem?: string | null;
+  variacoes_meta?: unknown | null;
   codigo_barras?: string | null;
   last_synced_at?: string | null;
 };
 
-type ExternalProduct = any;
+type ExternalProduct = Record<string, any>;
 
 const FACILZAP_API = 'https://api.facilzap.app.br/api/v1/products';
 const PAGE_SIZE = 50;
 
-function asString(v: unknown) {
-  if (v == null) return undefined;
-  if (typeof v === 'string') return v.trim() || undefined;
+function asString(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === 'string') return v.trim() || null;
   if (typeof v === 'number') return String(v);
-  return undefined;
+  return null;
 }
 
-function parseNumber(v: unknown) {
-  if (v == null) return undefined;
-  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
-  const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(',', '.'));
-  return Number.isFinite(n) ? n : undefined;
-}
-
-function normalizeEstoque(v: unknown) {
-  if (v == null) return undefined;
-  if (typeof v === 'number') return Math.max(0, Math.floor(v));
+function parseNumber(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? (v as number) : null;
   if (typeof v === 'string') {
-    const n = Number(String(v).replace(/[^0-9.-]/g, ''));
-    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : undefined;
+    const cleaned = String(v).replace(/[R$\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function normalizeEstoque(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === 'number') return Math.round(v);
+  if (typeof v === 'string') {
+    const n = parseInt((v as string).replace(/[^0-9-]/g, ''), 10);
+    return Number.isNaN(n) ? null : n;
   }
   if (typeof v === 'object') {
     const o = v as Record<string, unknown>;
-    return normalizeEstoque(o['estoque'] ?? o['disponivel'] ?? o['quantity'] ?? o['quantidade']);
+    return normalizeEstoque(o['estoque'] ?? o['quantity'] ?? o['quantidade'] ?? null);
   }
-  return undefined;
+  return null;
 }
 
-function extractImageUrl(item: ExternalProduct): string | null {
+function extractImageUrl(item: unknown): string | null {
   if (!item) return null;
   if (typeof item === 'string') return item;
-  if (Array.isArray(item)) return asString(item[0]) ?? null;
+  if (Array.isArray(item) && item.length) return asString(item[0]);
   if (typeof item === 'object') {
+    const o = item as Record<string, unknown>;
     for (const k of ['images', 'imagens', 'fotos', 'foto', 'imagem', 'picture', 'pictures']) {
-      const v = (item as any)[k];
-      if (Array.isArray(v) && v.length) return asString(v[0]) ?? null;
-      if (typeof v === 'string') return v;
+      const v = o[k];
+      if (Array.isArray(v) && v.length) return asString(v[0]);
+      if (typeof v === 'string') return v as string;
     }
     for (const k of ['url', 'link', 'path']) {
-      const v = (item as any)[k];
+      const v = o[k];
       if (typeof v === 'string') return v;
     }
   }
   return null;
 }
 
-function normalizeToProxy(url: string | null | undefined) {
+function normalizeToProxy(url: string | null | undefined): string | null {
   if (!url) return null;
-  const proxy = process.env.NEXT_PUBLIC_PROXY_HOST || 'https://c4franquiaas.netlify.app';
+  const proxy = process.env.NEXT_PUBLIC_PROXY_HOST || process.env.NEXT_PUBLIC_PROXY_URL;
+  if (!proxy) return url;
   try {
-        titulo: string; // Added field
-        last_synced_at?: string | null; // Added field
     const u = new URL(String(url));
-    if (u.hostname === new URL(proxy).hostname) return u.toString();
+    // If already pointing to proxy host, keep as-is
+    if (new URL(proxy).hostname === u.hostname) return u.toString();
   } catch (e) {
-    // ignore
+    // ignore parsing errors
   }
-  return `${proxy}/api/proxy?url=${encodeURIComponent(String(url))}`;
+  return `${proxy.replace(/\/+$/, '')}/${String(url).replace(/^\/+/, '')}`;
 }
 
-function extractBarcode(item: ExternalProduct): string | null {
+function extractBarcode(item: unknown): string | null {
   if (!item || typeof item !== 'object') return null;
+  const o = item as Record<string, unknown>;
   const keys = ['codigo_barras', 'barcode', 'ean', 'gtin', 'codigo', 'cod_barras'];
   for (const k of keys) {
-    const v = (item as any)[k];
+    const v = o[k];
     if (typeof v === 'string' && v.trim()) return v.trim();
     if (typeof v === 'number') return String(v);
   }
@@ -259,84 +246,250 @@ function extractBarcode(item: ExternalProduct): string | null {
 }
 
 function mapToProdutoDB(item: ExternalProduct): ProdutoDB {
-  const id_externo = asString(item?.id ?? item?._id ?? item?.codigo ?? item?.sku) || '';
-  const titulo = asString(item?.title ?? item?.titulo ?? item?.nome) || '';
+  const id_externo = asString(item?.id ?? item?.codigo ?? item?.sku) || '';
+  const nome = asString(item?.name ?? item?.titulo ?? item?.nome) || 'Sem nome';
   const descricao = asString(item?.description ?? item?.descricao) ?? null;
   const preco_base = parseNumber(item?.price ?? item?.preco ?? item?.valor) ?? null;
   const preco_promocional = parseNumber(item?.sale_price ?? item?.preco_promocional) ?? null;
   const estoque = normalizeEstoque(item?.stock ?? item?.estoque ?? item?.quantity) ?? null;
   const ativo = item?.active != null ? Boolean(item.active) : item?.ativo != null ? Boolean(item.ativo) : true;
-  const imagem = normalizeToProxy(extractImageUrl(item));
+
   const imagens: string[] = [];
   if (Array.isArray(item?.images)) imagens.push(...(item.images as any[]).map(asString).filter(Boolean) as string[]);
   if (Array.isArray(item?.imagens)) imagens.push(...(item.imagens as any[]).map(asString).filter(Boolean) as string[]);
-  if (imagem && !imagens.includes(imagem)) imagens.unshift(imagem);
+  const imagem = imagens.length ? imagens[0] : extractImageUrl(item) ?? null;
+
   const variacoes_meta = item?.variations ?? item?.variacoes ?? null;
-  const codigo_barras = extractBarcode(item);
+  const codigo_barras = extractBarcode(item?.meta ?? item);
 
   return {
     id_externo,
-    titulo,
+    nome,
     descricao,
     preco_base,
     preco_promocional,
     estoque,
     ativo,
-    imagem,
-    imagens,
-    variacoes_meta,
-    codigo_barras,
+    imagens: imagens.length ? imagens.map((u) => normalizeToProxy(u) as string).filter(Boolean) : undefined,
+    imagem: imagem ? normalizeToProxy(imagem) : null,
+    variacoes_meta: variacoes_meta ?? null,
+    codigo_barras: codigo_barras ?? null,
     last_synced_at: null,
   };
 }
 
 async function fetchFacilZap(path: string) {
   const token = process.env.FACILZAP_TOKEN;
-  if (!token) throw new Error('FACILZAP_TOKEN is required');
-  const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+  if (!token) throw new Error('FACILZAP_TOKEN is not set');
+  const url = path.startsWith('http') ? path : `${FACILZAP_API}${path}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
   if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`FacilZap fetch error ${res.status}: ${txt}`);
+    const body = await res.text().catch(() => '');
+    throw new Error(`FacilZap fetch error ${res.status} ${res.statusText} - ${body}`);
   }
   return res.json();
 }
 
 export async function fetchProdutosFacilZapPage(page = 1, length = PAGE_SIZE) {
-  const url = `${FACILZAP_API}?page=${page}&length=${length}`;
-  const data = await fetchFacilZap(url);
-  const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.produtos) ? data.produtos : [];
-  const produtos = items.map((i: any) => mapToProdutoDB(i));
-  return { produtos, page: data?.page ?? page };
+  const q = `?page=${page}&length=${length}`;
+  const data = await fetchFacilZap(q);
+  let items: any[] = [];
+  if (Array.isArray(data)) items = data;
+  else if (Array.isArray(data?.items)) items = data.items;
+  else if (Array.isArray(data?.produtos)) items = data.produtos;
+
+  const normalized = items.map((it) => mapToProdutoDB(it));
+  return { produtos: normalized, total: Number(data?.total ?? normalized.length), page: Number(data?.page ?? page) };
 }
 
 export async function fetchAllProdutosFacilZap(maxPages = 1000) {
-  const first = await fetchProdutosFacilZapPage(1);
-  const pages = Math.min(first?.page ?? 1, maxPages);
-  let produtos = first.produtos ?? [];
-  for (let p = 2; p <= pages; p++) {
-    const res = await fetchProdutosFacilZapPage(p);
-    produtos = produtos.concat(res.produtos ?? []);
+  const out: ProdutoDB[] = [];
+  let lastPage = 0;
+  for (let p = 1; p <= maxPages; p++) {
+    const { produtos, page } = await fetchProdutosFacilZapPage(p, PAGE_SIZE);
+    lastPage = page ?? p;
+    if (!produtos || produtos.length === 0) break;
+    out.push(...produtos);
+    if (produtos.length < PAGE_SIZE) break;
   }
-  return { produtos, pages };
+  return { produtos: out, pages: lastPage };
 }
 
 export async function fetchProdutoFacilZapById(id: string) {
-  const url = `${FACILZAP_API}/${encodeURIComponent(id)}`;
-  const data = await fetchFacilZap(url);
-  return mapToProdutoDB(data);
+  if (!id) return null;
+  const data = await fetchFacilZap(`/${encodeURIComponent(id)}`);
+  return data ? mapToProdutoDB(data) : null;
 }
 
 export default { fetchProdutosFacilZapPage, fetchAllProdutosFacilZap, fetchProdutoFacilZapById };
-
-// CORREÇÃO DEFINITIVA - cliente FácilZap (normaliza payloads para ProdutoDB)
+// Definitive FácilZap client and normalizer
 
 export type ProdutoDB = {
-  id_externo: string;
-  titulo: string;
+  id_externo: string; // FácilZap product id
+  nome: string;
   descricao?: string | null;
   preco_base?: number | null;
   preco_promocional?: number | null;
   estoque?: number | null;
+  // CORREÇÃO DEFINITIVA - FácilZap client (single clean implementation)
+
+  export type ProdutoDB = {
+    id_externo: string;
+    nome: string;
+    descricao?: string | null;
+    preco_base?: number | null;
+    preco_promocional?: number | null;
+    estoque?: number | null;
+    ativo?: boolean;
+    imagens?: string[];
+    imagem?: string | null;
+    variacoes_meta?: Record<string, unknown> | null;
+    codigo_barras?: string | null;
+    last_synced_at?: string | null;
+  };
+
+  type ExternalProduct = any;
+
+  const FACILZAP_API = 'https://api.facilzap.app.br/api/v1/products';
+  const PAGE_SIZE = 50;
+
+  function asString(v: unknown): string | null {
+    if (v == null) return null;
+    if (typeof v === 'string') return v.trim() || null;
+    if (typeof v === 'number') return String(v);
+    return null;
+  }
+
+  function parseNumber(v: unknown): number | null {
+    if (v == null) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? (v as number) : null;
+    if (typeof v === 'string') {
+      const cleaned = String(v).replace(/[R$\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }
+
+  function normalizeEstoque(v: unknown): number | null {
+    if (v == null) return null;
+    if (typeof v === 'number') return Math.round(v);
+    if (typeof v === 'string') {
+      const n = parseInt(v.replace(/[^0-9-]/g, ''), 10);
+      return Number.isNaN(n) ? null : n;
+    }
+    return null;
+  }
+
+  function extractImageUrl(item: ExternalProduct): string | null {
+    if (!item) return null;
+    if (typeof item === 'string') return item;
+    if (Array.isArray(item) && item.length) return asString(item[0]) ?? null;
+    if (typeof item === 'object') {
+      for (const k of ['images', 'imagens', 'fotos', 'foto', 'imagem', 'picture', 'pictures']) {
+        const v = (item as any)[k];
+        if (Array.isArray(v) && v.length) return asString(v[0]) ?? null;
+        if (typeof v === 'string') return v;
+      }
+      for (const k of ['url', 'link', 'path']) {
+        const v = (item as any)[k];
+        if (typeof v === 'string') return v;
+      }
+    }
+    return null;
+  }
+
+  function normalizeToProxy(url: string | null | undefined): string | null {
+    if (!url) return null;
+    const proxy = process.env.NEXT_PUBLIC_PROXY_HOST || process.env.NEXT_PUBLIC_PROXY_URL;
+    if (!proxy) return url;
+    return `${proxy.replace(/\/+$/, '')}/${String(url).replace(/^\/+/, '')}`;
+  }
+
+  function extractBarcode(item: ExternalProduct): string | null {
+    if (!item || typeof item !== 'object') return null;
+    const keys = ['codigo_barras', 'barcode', 'ean', 'gtin', 'codigo'];
+    for (const k of keys) {
+      const v = (item as any)[k];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+      if (typeof v === 'number') return String(v);
+    }
+    return null;
+  }
+
+  function mapToProdutoDB(item: ExternalProduct): ProdutoDB {
+    const id_externo = asString(item?.id ?? item?.codigo ?? item?.sku) || '';
+    const nome = asString(item?.name ?? item?.titulo ?? item?.nome) || 'Sem nome';
+    const descricao = asString(item?.description ?? item?.descricao) ?? null;
+    const preco_base = parseNumber(item?.price ?? item?.preco ?? item?.valor) ?? null;
+    const preco_promocional = parseNumber(item?.sale_price ?? item?.preco_promocional) ?? null;
+    const estoque = normalizeEstoque(item?.stock ?? item?.estoque ?? item?.quantity) ?? null;
+    const ativo = item?.active != null ? Boolean(item.active) : item?.ativo != null ? Boolean(item.ativo) : true;
+    const imagens: string[] = [];
+    if (Array.isArray(item?.images)) imagens.push(...(item.images as any[]).map(asString).filter(Boolean) as string[]);
+    if (Array.isArray(item?.imagens)) imagens.push(...(item.imagens as any[]).map(asString).filter(Boolean) as string[]);
+    const imagem = imagens.length ? imagens[0] : extractImageUrl(item);
+    const variacoes_meta = item?.variations ?? item?.variacoes ?? null;
+    const codigo_barras = extractBarcode(item);
+
+    return {
+      id_externo,
+      nome,
+      descricao,
+      preco_base,
+      preco_promocional,
+      estoque,
+      ativo,
+      imagens: imagens.length ? imagens.map(normalizeToProxy).filter(Boolean) as string[] : undefined,
+      imagem: (imagem ? normalizeToProxy(imagem) : null),
+      variacoes_meta: variacoes_meta ?? null,
+      codigo_barras: codigo_barras ?? null,
+      last_synced_at: null,
+    };
+  }
+
+  async function fetchFacilZap(path: string) {
+    const token = process.env.FACILZAP_TOKEN;
+    if (!token) throw new Error('FACILZAP_TOKEN is not set');
+    const url = path.startsWith('http') ? path : `${FACILZAP_API}${path}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`FacilZap fetch error ${res.status} ${res.statusText} - ${body}`);
+    }
+    return await res.json();
+  }
+
+  export async function fetchProdutosFacilZapPage(page = 1, length = PAGE_SIZE) {
+    const q = `?page=${page}&length=${length}`;
+    const data = await fetchFacilZap(q);
+    let items: any[] = [];
+    if (Array.isArray(data)) items = data;
+    else if (Array.isArray(data?.items)) items = data.items;
+    else if (Array.isArray(data?.produtos)) items = data.produtos;
+
+    const normalized = items.map((it) => mapToProdutoDB(it));
+    return { items: normalized, total: Number(data?.total ?? normalized.length) };
+  }
+
+  export async function fetchAllProdutosFacilZap(maxPages = 1000) {
+    const out: ProdutoDB[] = [];
+    for (let p = 1; p <= maxPages; p++) {
+      const { items } = await fetchProdutosFacilZapPage(p, PAGE_SIZE);
+      if (!items || items.length === 0) break;
+      out.push(...items);
+      if (items.length < PAGE_SIZE) break;
+    }
+    return out;
+  }
+
+  export async function fetchProdutoFacilZapById(id: string) {
+    if (!id) return null;
+    const data = await fetchFacilZap(`/${encodeURIComponent(id)}`);
+    return data ? mapToProdutoDB(data) : null;
+  }
+
+  export default { fetchProdutosFacilZapPage, fetchAllProdutosFacilZap, fetchProdutoFacilZapById };
   ativo?: boolean;
   imagem?: string | null;
   imagens?: string[];

@@ -1,655 +1,144 @@
-import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
+import { NextResponse } from 'next/server';
+import axios from 'axios';
 
-const BATCH_SIZE = 50;
+// Tipos que correspondem à estrutura real da API, baseados no seu debug
+type VariacaoAPI = {
+  id: number;
+  nome: string;
+  sku: string;
+  cod_barras: { tipo: string; numero: string };
+  estoque: { estoque: number };
+  [key: string]: unknown;
+};
 
-// Definitive sync route: accepts optional { page, length } and upserts products in batches.
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+type CatalogoAPI = {
+  precos?: {
+    preco?: number;
+  };
+  [key: string]: unknown;
+};
 
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-    const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-    const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
+type ExternalProduct = {
+  id: string;
+  nome: string;
+  ativado: boolean;
+  imagens: { url: string }[];
+  variacoes: VariacaoAPI[];
+  cod_barras: { tipo: string; numero: string };
+  catalogos: CatalogoAPI[];
+  [key: string]: unknown;
+};
 
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
 
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
+// Função para buscar TODOS os produtos da API externa, página por página
+async function fetchTodosProdutosExternos(): Promise<ExternalProduct[]> {
+  const apiBaseUrl = 'https://api.facilzap.app.br';
+  const apiToken = process.env.FACILZAP_TOKEN;
+  let todosProdutos: ExternalProduct[] = [];
+  let paginaAtual = 1;
+  const itensPorPagina = 100;
+  let continuarBuscando = true;
 
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
+  if (!apiToken) {
+    throw new Error('A variável de ambiente FACILZAP_TOKEN não está configurada.');
   }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
 
-const BATCH_SIZE = 50;
-
-// Definitive single-file implementation of the sync route.
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-    const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-    const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
+  while (continuarBuscando) {
+    try {
+      const apiUrl = `${apiBaseUrl}/produtos?page=${paginaAtual}&length=${itensPorPagina}`;
+      const response = await axios.get(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-        imported += batch.length;
+      });
+
+      const produtosDaPagina = response.data?.data || [];
+
+      if (produtosDaPagina.length > 0) {
+        todosProdutos = todosProdutos.concat(produtosDaPagina);
+        paginaAtual++;
+      } else {
+        continuarBuscando = false;
       }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
+    } catch (error) {
+      console.error("Falha ao buscar uma página de produtos da FácilZap:", error);
+      continuarBuscando = false;
     }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
   }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-// Definitive single-copy implementation of the sync route.
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-    const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-    const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-    const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-    const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
+  return todosProdutos;
 }
 
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
 
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    const parsed = await request.json().catch(() => ({} as unknown));
-    const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-    const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-    const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
+    const produtosExternos = await fetchTodosProdutosExternos();
 
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
+    if (!produtosExternos || produtosExternos.length === 0) {
+      return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.' });
     }
 
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
+    const produtosParaSalvar = produtosExternos.map((p) => {
+      // --- NOVA LÓGICA DE TRADUÇÃO INTELIGENTE ---
 
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
+      // 1. Soma o estoque de todas as variações
+      const estoqueTotal = (p.variacoes || []).reduce((acc, v) => {
+        return acc + (v.estoque?.estoque || 0);
+      }, 0);
 
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
+      // 2. Busca o primeiro código de barras válido nas variações
+      const primeiroCodigoDeBarras = 
+        (p.variacoes || []).map(v => v.cod_barras?.numero).find(num => num) || p.cod_barras?.numero || null;
 
-const BATCH_SIZE = 50;
+      // 3. Busca o preço no primeiro catálogo
+      const precoBase = p.catalogos?.[0]?.precos?.preco ?? null;
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+      // 4. Mapeia todas as imagens
+      const imagensUrls = (p.imagens || []).map(img => img.url);
 
-    const body = await request.json().catch(() => ({}));
-    const page = body && typeof body.page === 'number' ? body.page : undefined;
-    const length = body && typeof body.length === 'number' ? body.length : undefined;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum } = await fetchProdutosFacilZapPage(page, length ?? BATCH_SIZE);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const body = await request.json().catch(() => ({}));
-    const page = Number(body?.page ?? 1) || 1;
-    const length = Number(body?.length ?? BATCH_SIZE) || BATCH_SIZE;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum, count } = await fetchProdutosFacilZapPage(page, length ?? undefined);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const body = await request.json().catch(() => ({}));
-    const page = Number(body?.page ?? 1) || 1;
-    const length = Number(body?.length ?? BATCH_SIZE) || BATCH_SIZE;
-
-    if (page && page > 0) {
-      const { produtos, page: pnum, count } = await fetchProdutosFacilZapPage(page, length ?? undefined);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, page: pnum }, { status: 200 });
-
-      let imported = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        imported += batch.length;
-      }
-
-      return NextResponse.json({ ok: true, imported, page: pnum }, { status: 200 });
-    }
-
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0, pages }, { status: 200 });
-
-    let imported = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({ ...p, last_synced_at: new Date().toISOString() }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      imported += batch.length;
-    }
-
-    return NextResponse.json({ ok: true, imported, pages }, { status: 200 });
-  } catch (e: any) {
-    console.error('[sync-produtos] error', e);
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
-  }
-}
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const body = await request.json().catch(() => ({}));
-    const page = Number(body?.page ?? 1) || 1;
-    const length = Number(body?.length ?? BATCH_SIZE) || BATCH_SIZE;
-
-    if (page && page > 0) {
-      // fetch only one page and upsert in batches
-      const { produtos, page: pnum, count } = await fetchProdutosFacilZapPage(page, length ?? undefined);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto nesta página.', processed: 0, page: pnum }, { status: 200 });
-
-      // upsert in batches
-      let processed = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-          id_externo: p.id_externo,
-          nome: p.nome,
-          preco_base: p.preco_base,
-          estoque: p.estoque,
-          imagem: p.imagem ?? null,
-          imagens: p.imagens ?? [],
-          // keep provided codigo_barras and variacoes_meta if present
-          codigo_barras: (p as any).codigo_barras ?? null,
-          variacoes_meta: (p as any).variacoes_meta ?? null,
-          // deactivate products with zero stock
-          ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-          last_synced_at: new Date().toISOString(),
-        }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        processed += batch.length;
-      }
-      return NextResponse.json({ message: 'Sincronização de página concluída.', processed, page: pnum, count }, { status: 200 });
-    }
-
-    // default: fetch all pages and upsert in batches per page to avoid huge payloads
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.', processed: 0, pages }, { status: 200 });
-
-    let totalProcessed = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-        id_externo: p.id_externo,
-        nome: p.nome,
-        preco_base: p.preco_base,
-        estoque: p.estoque,
-        imagem: p.imagem ?? null,
-        imagens: p.imagens ?? [],
-        codigo_barras: (p as any).codigo_barras ?? null,
-        variacoes_meta: (p as any).variacoes_meta ?? null,
-        ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-        last_synced_at: new Date().toISOString(),
+      // 5. Guarda os metadados das variações para uso futuro
+      const variacoesMeta = (p.variacoes || []).map(v => ({
+        id: v.id,
+        nome: v.nome,
+        sku: v.sku,
+        estoque: v.estoque?.estoque || 0,
+        codigo_barras: v.cod_barras?.numero || null
       }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      totalProcessed += batch.length;
-    }
 
-    return NextResponse.json({ message: 'Sincronização concluída.', processed: totalProcessed, pages }, { status: 200 });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erro inesperado.';
-    console.error('[sync-produtos] catch', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse, NextRequest } from 'next/server';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
-
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const body = await request.json().catch(() => ({}));
-    const page = Number(body?.page ?? 1) || 1;
-    const length = Number(body?.length ?? BATCH_SIZE) || BATCH_SIZE;
-
-    if (page && page > 0) {
-      // fetch only one page and upsert in batches
-      const { produtos, page: pnum, count } = await fetchProdutosFacilZapPage(page, length ?? undefined);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto nesta página.', processed: 0, page: pnum }, { status: 200 });
-
-      // upsert in batches
-      let processed = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-          id_externo: p.id_externo,
-          nome: p.nome,
-          preco_base: p.preco_base,
-          estoque: p.estoque,
-          imagem: p.imagem ?? null,
-          imagens: p.imagens ?? [],
-          // deactivate products with zero stock
-          ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-          last_synced_at: new Date().toISOString(),
-        }));
-        const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        processed += batch.length;
-      }
-      return NextResponse.json({ message: 'Sincronização de página concluída.', processed, page: pnum, count }, { status: 200 });
-    }
-
-    // default: fetch all pages and upsert in batches per page to avoid huge payloads
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.', processed: 0, pages }, { status: 200 });
-
-    let totalProcessed = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-        id_externo: p.id_externo,
+      return {
+        id_externo: p.id,
         nome: p.nome,
-        preco_base: p.preco_base,
-        estoque: p.estoque,
-        imagem: p.imagem ?? null,
-        imagens: p.imagens ?? [],
-        // deactivate products with zero stock
-        ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-        last_synced_at: new Date().toISOString(),
-      }));
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: (error as any).message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      totalProcessed += batch.length;
+        preco_base: precoBase,
+        estoque: estoqueTotal,
+        imagens: imagensUrls,
+        ativo: p.ativado,
+        codigo_barras: primeiroCodigoDeBarras,
+        variacoes_meta: variacoesMeta
+      };
+    });
+
+    const { error } = await supabase
+      .from('produtos')
+      .upsert(produtosParaSalvar, { onConflict: 'id_externo' });
+
+    if (error) {
+      console.error("Erro do Supabase ao salvar:", error);
+      throw new Error(`Erro do Supabase: ${error.message}`);
     }
 
-    return NextResponse.json({ message: 'Sincronização concluída.', processed: totalProcessed, pages }, { status: 200 });
+    return NextResponse.json({ message: `Sincronização concluída! ${produtosParaSalvar.length} produtos processados.` });
+
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erro inesperado.';
-    console.error('[sync-produtos] catch', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
+    console.error("Erro fatal na sincronização:", errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse, NextRequest } from 'next/server';
-import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
 
-const BATCH_SIZE = 50;
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-  const parsed = await request.json().catch(() => ({} as unknown));
-  const body = typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : {} as Record<string, unknown>;
-  const page = typeof body['page'] === 'number' ? (body['page'] as number) : undefined;
-  const length = typeof body['length'] === 'number' ? (body['length'] as number) : undefined;
-
-    if (page && page > 0) {
-      // fetch only one page and upsert in batches
-      const { produtos, page: pnum, count } = await fetchProdutosFacilZapPage(page, length ?? undefined);
-      if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto nesta página.', processed: 0, page: pnum }, { status: 200 });
-
-      // upsert in batches
-      let processed = 0;
-      for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-        const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-          id_externo: p.id_externo,
-          nome: p.nome,
-          preco_base: p.preco_base,
-          estoque: p.estoque,
-          imagem: p.imagem ?? null,
-          imagens: p.imagens ?? [],
-          // deactivate products with zero stock
-          ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-          last_synced_at: new Date().toISOString(),
-        }));
-  const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-        if (error) {
-          console.error('[sync-produtos] upsert error', error);
-          return NextResponse.json({ error: error.message || 'Erro ao salvar produtos.' }, { status: 500 });
-        }
-        processed += batch.length;
-      }
-      return NextResponse.json({ message: 'Sincronização de página concluída.', processed, page: pnum, count }, { status: 200 });
-    }
-
-    // default: fetch all pages and upsert in batches per page to avoid huge payloads
-    const { produtos, pages } = await fetchAllProdutosFacilZap();
-    if (!produtos || produtos.length === 0) return NextResponse.json({ message: 'Nenhum produto encontrado para sincronizar.', processed: 0, pages }, { status: 200 });
-
-    let totalProcessed = 0;
-    for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
-      const batch = produtos.slice(i, i + BATCH_SIZE).map((p: ProdutoDB) => ({
-        id_externo: p.id_externo,
-        nome: p.nome,
-        preco_base: p.preco_base,
-        estoque: p.estoque,
-        imagem: p.imagem ?? null,
-        imagens: p.imagens ?? [],
-        // deactivate products with zero stock
-        ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
-        last_synced_at: new Date().toISOString(),
-      }));
-  const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
-      if (error) {
-        console.error('[sync-produtos] upsert error', error);
-        return NextResponse.json({ error: error.message || 'Erro ao salvar produtos.' }, { status: 500 });
-      }
-      totalProcessed += batch.length;
-    }
-
-    return NextResponse.json({ message: 'Sincronização concluída.', processed: totalProcessed, pages }, { status: 200 });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erro inesperado.';
-    console.error('[sync-produtos] catch', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
