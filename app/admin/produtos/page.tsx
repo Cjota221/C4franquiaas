@@ -23,7 +23,6 @@ type Produto = {
   imagens?: string[];
   variacoes_meta?: unknown[];
   codigo_barras?: string | null;
-  created_at?: string | null;
   estoque_display?: number;
 };
 
@@ -460,8 +459,9 @@ export default function ProdutosPage() {
     switch (sortBy) {
       case 'price_desc': arr.sort((a,b) => (b.preco_base ?? 0) - (a.preco_base ?? 0)); break;
       case 'price_asc': arr.sort((a,b) => (a.preco_base ?? 0) - (b.preco_base ?? 0)); break;
-      case 'date_new': arr.sort((a,b) => { const da = a.created_at ? Date.parse(a.created_at) : 0; const db = b.created_at ? Date.parse(b.created_at) : 0; return db - da; }); break;
-      case 'date_old': arr.sort((a,b) => { const da = a.created_at ? Date.parse(a.created_at) : 0; const db = b.created_at ? Date.parse(b.created_at) : 0; return da - db; }); break;
+  // created_at doesn't exist in DB; use id as proxy for insertion order (higher id -> newer)
+  case 'date_new': arr.sort((a,b) => (b.id ?? 0) - (a.id ?? 0)); break;
+  case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
       default: break;
     }
     return arr;
