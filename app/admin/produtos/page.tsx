@@ -75,7 +75,7 @@ export default function ProdutosPage() {
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error' | 'loading'; text: string } | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error' | 'loading' | 'info'; text: string } | null>(null);
   const [toggling, setToggling] = useState<Record<number, boolean>>({});
 
   async function fetchPage(page: number) {
@@ -389,47 +389,9 @@ export default function ProdutosPage() {
   }
 
   function importUpstreamValues() {
-    if (!modalFacilzap || !modalVariacoes) return;
-    if (!confirm('Deseja importar os valores do upstream e sobrescrever os campos das variações? Esta ação pode alterar estoque, SKU e códigos de barras.')) return;
-    try {
-      const apiVars = Array.isArray(modalFacilzap['variacoes']) ? (modalFacilzap['variacoes'] as unknown[]) : [];
-      setModalVariacoes(prev => prev ? prev.map((pv, idx) => {
-        const up = apiVars[idx];
-        if (!up || typeof up !== 'object') return pv;
-        const upRec = up as Record<string, unknown>;
-        const extractNumber = (x: unknown): number | null => {
-          if (typeof x === 'number') return Number.isFinite(x) ? x : null;
-          if (typeof x === 'string') { const n = Number(x); return Number.isFinite(n) ? n : null; }
-          if (x && typeof x === 'object') {
-            const nx = x as Record<string, unknown>;
-            for (const k of ['estoque','disponivel','quantity','qtd','available']) {
-              const v = nx[k];
-              if (typeof v === 'number') return v;
-              if (typeof v === 'string') { const n = Number(v); if (Number.isFinite(n)) return n; }
-            }
-          }
-          return null;
-        };
-        const extractBarcode = (v: unknown): string | null => {
-          if (typeof v === 'string' && v.trim() !== '') return v.trim();
-          if (typeof v === 'number') return String(v);
-          if (v && typeof v === 'object') {
-            const vr = v as Record<string, unknown>;
-            if (typeof vr['numero'] === 'string' && vr['numero'].trim() !== '') return vr['numero'].trim();
-            if (typeof vr['number'] === 'string' && vr['number'].trim() !== '') return vr['number'].trim();
-          }
-          return null;
-        };
-        const newEst = extractNumber(upRec['estoque'] ?? upRec['quantity'] ?? upRec['disponivel'] ?? upRec['available']);
-        const newBarcode = extractBarcode(upRec['cod_barras'] ?? upRec['codigo_de_barras'] ?? upRec['codigos'] ?? upRec['codigo']);
-        const newSku = (typeof upRec['sku'] === 'string' || typeof upRec['sku'] === 'number') ? String(upRec['sku']) : pv.sku;
-        return { ...pv, estoque: newEst ?? pv.estoque, codigo_de_barras: newBarcode ?? pv.codigo_de_barras, sku: newSku ?? pv.sku } as Variacao;
-      }) : prev);
-      setStatusMsg({ type: 'success', text: 'Valores importados do upstream.' });
-    } catch (e) {
-      console.error('importUpstreamValues error', e);
-      setStatusMsg({ type: 'error', text: 'Falha ao importar upstream.' });
-    }
+    // Disabled: upstream values are synced automatically by the server-side sync job.
+    setStatusMsg({ type: 'info', text: 'Importação upstream desativada — os valores são atualizados automaticamente pelo sync.' });
+    return;
   }
 
   // removed inline expansion; variants are shown inside the Details modal
@@ -439,36 +401,11 @@ export default function ProdutosPage() {
   const [saving, setSaving] = useState(false);
 
   async function saveVariacoes() {
-    if (!modalProduto) return;
-    if (!modalVariacoes) return;
+    // Saving variations via the UI is disabled. The sync process updates variacoes_meta and estoque.
     setSaving(true);
-    try {
-      // build variacoes_meta payload: keep id, estoque, codigo_de_barras
-      const variacoes_meta = modalVariacoes.map(v => ({ id: v.id ?? null, estoque: v.estoque ?? null, codigo_de_barras: v.codigo_de_barras ?? null }));
-      // compute aggregated estoque
-      const totalEstoque = modalVariacoes.reduce((acc, v) => acc + (typeof v.estoque === 'number' ? v.estoque : 0), 0);
-
-      const payload: Record<string, unknown> = { variacoes_meta };
-      // also update produto.estoque and ativo based on total
-      payload.estoque = totalEstoque;
-      payload.ativo = totalEstoque > 0;
-
-      const resp = await axiosClient.patch(`/api/produtos/${modalProduto.id}`, payload, { headers: { 'Content-Type': 'application/json', 'x-admin-token': process.env.NEXT_PUBLIC_SYNC_PRODUCTS_TOKEN ?? '' } });
-      if (resp.status >= 200 && resp.status < 300) {
-        setStatusMsg({ type: 'success', text: 'Variações salvas.' });
-        // update local list
-        setProdutos(prev => prev.map(p => p.id === modalProduto.id ? { ...p, estoque: totalEstoque, ativo: totalEstoque > 0 } : p));
-        closeModal();
-      } else {
-        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Falha ao salvar.' });
-      }
-    } catch (err: unknown) {
-      console.error('[saveVariacoes] error', err);
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar variações.';
-      setStatusMsg({ type: 'error', text: msg });
-    } finally {
-      setSaving(false);
-    }
+    setStatusMsg({ type: 'info', text: 'Salvar variações desativado — alterações são feitas automaticamente pelo sync.' });
+    setSaving(false);
+    return;
   }
 
   function closeModal() {
@@ -606,37 +543,20 @@ export default function ProdutosPage() {
                   <th className="p-2">Variante</th>
                   <th className="p-2">SKU</th>
                   <th className="p-2">Estoque</th>
-                  <th className="p-2">Preço</th>
-                  <th className="p-2">Código de Barras</th>
                 </tr></thead>
                 <tbody>
                   {modalVariacoes.map((v, idx) => (
                     <tr key={String(v.id ?? idx)} className="border-b">
                       <td className="p-2 align-top">{v.displayName && String(v.displayName).trim() !== '' ? String(v.displayName) : `Var ${idx+1}`}</td>
                       <td className="p-2 text-sm text-gray-700">{v.sku ?? v.id ?? '—'}</td>
-                      <td className="p-2">
-                        <input type="number" className="w-24 border rounded px-2 py-1" value={v.estoque ?? ''} onChange={(e) => {
-                          const val = e.target.value === '' ? null : Number(e.target.value);
-                          setModalVariacoes(prev => prev ? prev.map((pv, pi) => pi === idx ? { ...pv, estoque: val } : pv) : prev);
-                        }} />
-                      </td>
-                      <td className="p-2">{typeof v.preco === 'number' ? `R$ ${v.preco.toFixed ? v.preco.toFixed(2) : Number(v.preco).toFixed(2)}` : (v.preco ?? '—')}</td>
-                      <td className="p-2">
-                          <div className="flex items-center gap-2">
-                          <input type="text" className="w-44 border rounded px-2 py-1" value={v.codigo_de_barras ?? ''} onChange={(e) => {
-                            const val = e.target.value || null;
-                            setModalVariacoes(prev => prev ? prev.map((pv, pi) => pi === idx ? { ...pv, codigo_de_barras: val } : pv) : prev);
-                          }} />
-                          { Boolean(v.overridden) && <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Override</span> }
-                        </div>
-                      </td>
+                      <td className="p-2 text-gray-700">{typeof v.estoque === 'number' ? v.estoque : (v.estoque ?? '—')}</td>
+                      {/* Price and barcode columns removed per UI simplification */}
                     </tr>
                   ))}
                 </tbody>
               </table>
               <div className="flex justify-end gap-2 mt-4">
-                <button onClick={closeModal} className="px-4 py-2 rounded bg-white border">Cancelar</button>
-                <button onClick={saveVariacoes} disabled={saving} className="px-4 py-2 rounded bg-pink-600 text-white">{saving ? 'Salvando...' : 'Salvar'}</button>
+                <button onClick={closeModal} className="px-4 py-2 rounded bg-white border">Fechar</button>
               </div>
             </div>
           ) : (
