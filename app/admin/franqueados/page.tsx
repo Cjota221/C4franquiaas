@@ -22,10 +22,70 @@ export default function FranqueadosPage() {
   const [data, setData] = useState<Franqueado[]>([]);
   const [selected, setSelected] = useState<Franqueado | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<Franqueado | null>(null);
   const [summary, setSummary] = useState({ ativos: 0, inativos: 0, total: 0 });
 
-  function toggleAtivo(id: string) {
-    setData(prev => prev.map(f => f.id === id ? { ...f, status: f.status === 'ativo' ? 'inativo' : 'ativo' } : f));
+
+
+  // Action handlers that call the server action endpoint
+  async function toggleStatusServer(f: Franqueado) {
+    try {
+      const newStatus = f.status === 'ativo' ? 'inativo' : 'ativo';
+      const res = await fetch('/api/admin/franqueados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle-status', franqueado_id: f.id, updates: { status: newStatus } })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setData(prev => prev.map(p => p.id === f.id ? { ...p, status: newStatus } : p));
+    } catch (err) {
+      console.error('toggleStatusServer', err);
+      alert('Erro ao atualizar status');
+    }
+  }
+
+  async function deleteFranqueado(f: Franqueado) {
+    if (!confirm(`Deseja excluir ${f.nome}?`)) return;
+    try {
+      const res = await fetch('/api/admin/franqueados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', franqueado_id: f.id })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setData(prev => prev.filter(p => p.id !== f.id));
+      if (selected?.id === f.id) setSelected(null);
+    } catch (err) {
+      console.error('deleteFranqueado', err);
+      alert('Erro ao deletar franqueado');
+    }
+  }
+
+  function startEdit(f: Franqueado) {
+    setEditForm({ ...f });
+    setEditMode(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editForm) return;
+    try {
+      const res = await fetch('/api/admin/franqueados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', franqueado_id: editForm.id, updates: editForm })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json();
+      const updated = json.data ?? editForm;
+      setData(prev => prev.map(p => p.id === updated.id ? updated : p));
+      setSelected(updated);
+      setEditMode(false);
+      setEditForm(null);
+    } catch (err) {
+      console.error('handleSaveEdit', err);
+      alert('Erro ao salvar alterações');
+    }
   }
 
   const query = `/api/admin/franqueados/list?page=${page}&per_page=${perPage}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`;
@@ -117,9 +177,13 @@ export default function FranqueadosPage() {
                 <td className="p-3">{f.criado_em ? new Date(f.criado_em).toLocaleDateString() : '—'}</td>
                 <td className="p-3 flex gap-2">
                   <button onClick={() => setSelected(f)} className="px-3 py-2 border rounded">Ver Detalhes</button>
-                  {f.status === 'inativo' ? <button className="px-3 py-2 bg-green-600 text-white rounded">Ativar</button> : <button className="px-3 py-2 bg-red-600 text-white rounded">Desativar</button>}
-                  <button className="px-3 py-2 bg-[#F8B81F] rounded">Editar</button>
-                  <button className="px-3 py-2 border rounded">Excluir</button>
+                  {f.status === 'inativo' ? (
+                    <button onClick={() => toggleStatusServer(f)} className="px-3 py-2 bg-green-600 text-white rounded">Ativar</button>
+                  ) : (
+                    <button onClick={() => toggleStatusServer(f)} className="px-3 py-2 bg-red-600 text-white rounded">Desativar</button>
+                  )}
+                  <button onClick={() => startEdit(f)} className="px-3 py-2 bg-[#F8B81F] rounded">Editar</button>
+                  <button onClick={() => deleteFranqueado(f)} className="px-3 py-2 border rounded text-red-600">Excluir</button>
                 </td>
               </tr>
             ))}
@@ -157,13 +221,13 @@ export default function FranqueadosPage() {
                 {openMenuId === f.id && (
                   <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-50">
                     <button onClick={() => { setSelected(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ver Detalhes</button>
-                    <button onClick={() => { /* placeholder: editar */ setOpenMenuId(null); alert('Editar: ' + f.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Editar</button>
+                    <button onClick={() => { startEdit(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Editar</button>
                     {f.status === 'inativo' ? (
-                      <button onClick={() => { toggleAtivo(f.id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
+                      <button onClick={() => { toggleStatusServer(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
                     ) : (
-                      <button onClick={() => { toggleAtivo(f.id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
+                      <button onClick={() => { toggleStatusServer(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
                     )}
-                    <button onClick={() => { /* placeholder: excluir */ setOpenMenuId(null); alert('Excluir: ' + f.nome); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
+                    <button onClick={() => { deleteFranqueado(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
                   </div>
                 )}
               </div>
@@ -232,6 +296,42 @@ export default function FranqueadosPage() {
           </div>
         </div>
       )}
+
+        {/* Edit modal */}
+        {editMode && editForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-start">
+            <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-bold">Editar Franqueada</h2>
+                <button onClick={() => { setEditMode(false); setEditForm(null); }} className="text-gray-600">Fechar</button>
+              </div>
+
+              <section className="mt-4 space-y-3">
+                <label className="block">
+                  <div className="text-sm text-gray-600">Nome</div>
+                  <input className="w-full p-2 border rounded" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} />
+                </label>
+                <label className="block">
+                  <div className="text-sm text-gray-600">E-mail</div>
+                  <input className="w-full p-2 border rounded" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                </label>
+                <label className="block">
+                  <div className="text-sm text-gray-600">Telefone</div>
+                  <input className="w-full p-2 border rounded" value={editForm.telefone ?? ''} onChange={e => setEditForm({ ...editForm, telefone: e.target.value })} />
+                </label>
+                <label className="block">
+                  <div className="text-sm text-gray-600">Cidade</div>
+                  <input className="w-full p-2 border rounded" value={editForm.cidade ?? ''} onChange={e => setEditForm({ ...editForm, cidade: e.target.value })} />
+                </label>
+              </section>
+
+              <div className="mt-6 flex gap-3">
+                <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#DB1472] text-white rounded">Salvar</button>
+                <button onClick={() => { setEditMode(false); setEditForm(null); }} className="px-4 py-2 border rounded">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

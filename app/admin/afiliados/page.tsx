@@ -21,6 +21,8 @@ export default function AfiliadosPage() {
   const [data, setData] = useState<Afiliado[]>([]);
   const [selected, setSelected] = useState<Afiliado | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<Afiliado | null>(null);
   const [summary, setSummary] = useState({ ativos: 0, inativos: 0, total: 0 });
 
   const query = `/api/admin/afiliados/list?page=${page}&per_page=${perPage}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`;
@@ -43,6 +45,66 @@ export default function AfiliadosPage() {
     const id = setInterval(load, 5000);
     return () => { mounted = false; clearInterval(id); };
   }, [query]);
+
+  // Handlers
+  async function toggleAfiliadoStatus(a: Afiliado) {
+    try {
+      const newStatus = a.status === 'ativo' ? 'inativo' : 'ativo';
+      const res = await fetch('/api/admin/afiliados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle-status', afiliado_id: a.id, updates: { status: newStatus } })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setData(prev => prev.map(p => p.id === a.id ? { ...p, status: newStatus } : p));
+    } catch (err) {
+      console.error('toggleAfiliadoStatus', err);
+      alert('Erro ao alterar status');
+    }
+  }
+
+  async function deleteAfiliado(a: Afiliado) {
+    if (!confirm(`Deseja excluir ${a.nome}?`)) return;
+    try {
+      const res = await fetch('/api/admin/afiliados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', afiliado_id: a.id })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setData(prev => prev.filter(p => p.id !== a.id));
+      if (selected?.id === a.id) setSelected(null);
+    } catch (err) {
+      console.error('deleteAfiliado', err);
+      alert('Erro ao deletar afiliado');
+    }
+  }
+
+  function startEditAfiliado(a: Afiliado) {
+    setEditForm({ ...a });
+    setEditMode(true);
+  }
+
+  async function handleSaveEditAfiliado() {
+    if (!editForm) return;
+    try {
+      const res = await fetch('/api/admin/afiliados/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', afiliado_id: editForm.id, updates: editForm })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json();
+      const updated = json.data ?? editForm;
+      setData(prev => prev.map(p => p.id === updated.id ? updated : p));
+      setSelected(updated);
+      setEditMode(false);
+      setEditForm(null);
+    } catch (err) {
+      console.error('handleSaveEditAfiliado', err);
+      alert('Erro ao salvar alterações');
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF5FA] p-4 sm:p-6 lg:p-8">
@@ -114,9 +176,9 @@ export default function AfiliadosPage() {
                 <td className="p-3">{a.criado_em ? new Date(a.criado_em).toLocaleDateString() : '—'}</td>
                 <td className="p-3 flex gap-2">
                   <button onClick={() => setSelected(a)} className="px-3 py-2 border rounded">Ver Detalhes</button>
-                  {a.status === 'inativo' ? <button className="px-3 py-2 bg-green-600 text-white rounded">Ativar</button> : <button className="px-3 py-2 bg-red-600 text-white rounded">Desativar</button>}
-                  <button className="px-3 py-2 bg-[#F8B81F] rounded">Editar</button>
-                  <button className="px-3 py-2 border rounded">Excluir</button>
+                  {a.status === 'inativo' ? <button onClick={() => toggleAfiliadoStatus(a)} className="px-3 py-2 bg-green-600 text-white rounded">Ativar</button> : <button onClick={() => toggleAfiliadoStatus(a)} className="px-3 py-2 bg-red-600 text-white rounded">Desativar</button>}
+                  <button onClick={() => startEditAfiliado(a)} className="px-3 py-2 bg-[#F8B81F] rounded">Editar</button>
+                  <button onClick={() => deleteAfiliado(a)} className="px-3 py-2 border rounded">Excluir</button>
                 </td>
               </tr>
             ))}
@@ -156,11 +218,11 @@ export default function AfiliadosPage() {
                     <button onClick={() => { setSelected(a); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ver Detalhes</button>
                     <button onClick={() => { navigator.clipboard?.writeText(a.link_afiliado ?? ''); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Copiar link</button>
                     {a.status === 'inativo' ? (
-                      <button onClick={() => { /* placeholder: ativar */ setOpenMenuId(null); alert('Ativar: ' + a.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
+                 <button onClick={() => { toggleAfiliadoStatus(a); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
                     ) : (
-                      <button onClick={() => { /* placeholder: desativar */ setOpenMenuId(null); alert('Desativar: ' + a.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
+                 <button onClick={() => { toggleAfiliadoStatus(a); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
                     )}
-                    <button onClick={() => { /* placeholder: excluir */ setOpenMenuId(null); alert('Excluir: ' + a.nome); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
+                <button onClick={() => { deleteAfiliado(a); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
                   </div>
                 )}
               </div>
@@ -235,6 +297,42 @@ export default function AfiliadosPage() {
               </table>
             </section>
 
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editMode && editForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-start">
+          <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">Editar Afiliado</h2>
+              <button onClick={() => { setEditMode(false); setEditForm(null); }} className="text-gray-600">Fechar</button>
+            </div>
+
+            <section className="mt-4 space-y-3">
+              <label className="block">
+                <div className="text-sm text-gray-600">Nome</div>
+                <input className="w-full p-2 border rounded" value={editForm.nome} onChange={e => setEditForm({ ...editForm, nome: e.target.value })} />
+              </label>
+              <label className="block">
+                <div className="text-sm text-gray-600">E-mail</div>
+                <input className="w-full p-2 border rounded" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              </label>
+              <label className="block">
+                <div className="text-sm text-gray-600">Telefone</div>
+                <input className="w-full p-2 border rounded" value={editForm.telefone ?? ''} onChange={e => setEditForm({ ...editForm, telefone: e.target.value })} />
+              </label>
+              <label className="block">
+                <div className="text-sm text-gray-600">Link de Afiliado</div>
+                <input className="w-full p-2 border rounded" value={editForm.link_afiliado ?? ''} onChange={e => setEditForm({ ...editForm, link_afiliado: e.target.value })} />
+              </label>
+            </section>
+
+            <div className="mt-6 flex gap-3">
+              <button onClick={handleSaveEditAfiliado} className="px-4 py-2 bg-[#DB1472] text-white rounded">Salvar</button>
+              <button onClick={() => { setEditMode(false); setEditForm(null); }} className="px-4 py-2 border rounded">Cancelar</button>
+            </div>
           </div>
         </div>
       )}
