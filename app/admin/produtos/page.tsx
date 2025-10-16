@@ -85,6 +85,8 @@ export default function ProdutosPage() {
   const [sortBy, setSortBy] = useState<'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old'>('none');
   const [categories, setCategories] = useState<{ id?: number; nome: string }[]>([]);
   const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
+  const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
+  const [categoriaNome, setCategoriaNome] = useState('');
 
   async function fetchPage(page: number) {
     setLoading(true);
@@ -453,6 +455,45 @@ export default function ProdutosPage() {
     }
   }
 
+  // Category management handlers
+  async function refreshCategorias() {
+    try {
+      const res = await axiosClient.get('/api/admin/categorias/list');
+      if (res.status === 200) setCategories(res.data.items || []);
+    } catch (e) { console.error('refreshCategorias', e); }
+  }
+
+  async function handleCreateCategoria() {
+    try {
+      const res = await axiosClient.post('/api/admin/categorias/action', { action: 'create', nome: categoriaNome, slug: categoriaNome.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
+      if (res.status === 200) {
+        setCategoriaNome('');
+        await refreshCategorias();
+      }
+    } catch (e) { console.error('create categoria', e); }
+  }
+
+  async function handleDeleteCategoria(id: string) {
+    if (!confirm('Deseja excluir esta categoria?')) return;
+    try {
+      const res = await axiosClient.post('/api/admin/categorias/action', { action: 'delete', id });
+      if (res.status === 200) await refreshCategorias();
+    } catch (e) { console.error('delete categoria', e); }
+  }
+
+  async function applyCategoriaToSelected(categoria_id: string) {
+    const produto_ids = Object.keys(selectedIds).filter(k => selectedIds[Number(k)]).map(k => Number(k));
+    if (produto_ids.length === 0) { alert('Nenhum produto selecionado'); return; }
+    try {
+      const res = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id, produto_ids });
+      if (res.status === 200) {
+        alert('Categoria aplicada');
+        setSelectedIds({});
+        await fetchPage(pagina);
+      }
+    } catch (e) { console.error('apply categoria', e); alert('Erro ao aplicar categoria'); }
+  }
+
   // Import and manual save removed; estoque is synchronized automatically by the server-side sync job.
 
   function closeModal() {
@@ -540,6 +581,7 @@ export default function ProdutosPage() {
             <RefreshCw className={`h-5 w-5 ${statusMsg?.type === 'loading' ? 'animate-spin' : ''}`} />
             {statusMsg?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
           </button>
+          <button onClick={() => { setCategoriesPanelOpen(true); refreshCategorias(); }} className="px-4 py-2 border rounded">Categorias</button>
         </div>
       </div>
 
@@ -593,6 +635,8 @@ export default function ProdutosPage() {
               {loading ? (
                 <tr><td colSpan={7} className="p-8 text-center text-gray-500">Carregando...</td></tr>
               ) : produtos.length > 0 ? (
+
+      
                 visibleProdutos.map((p) => (
                   <React.Fragment key={p.id}>
                   <tr className="border-b border-gray-200 hover:bg-gray-50">
@@ -705,9 +749,43 @@ export default function ProdutosPage() {
         </div>
       </div>
     )}
+      {/* Categories side panel */}
+      {categoriesPanelOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-start">
+          <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">Categorias</h2>
+              <button onClick={() => setCategoriesPanelOpen(false)} className="text-gray-600">Fechar</button>
+            </div>
+
+            <section className="mt-4">
+              <div className="flex gap-2">
+                <input className="flex-1 p-2 border rounded" placeholder="Nova categoria" value={categoriaNome} onChange={e => setCategoriaNome(e.target.value)} />
+                <button onClick={handleCreateCategoria} className="px-4 py-2 bg-[#DB1472] text-white rounded">Criar</button>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {categories.map(c => (
+                  <div key={c.id} className="flex items-center justify-between p-2 border rounded">
+                    <div>{c.nome}</div>
+                    <div className="flex gap-2">
+                      <button onClick={() => applyCategoriaToSelected(String(c.id))} className="px-2 py-1 border rounded">Aplicar aos selecionados</button>
+                      <button onClick={() => handleDeleteCategoria(String(c.id))} className="px-2 py-1 text-red-600">Excluir</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
     </>
   );
 }
+
+// Categories side panel appended to ensure handlers/vars are used (rendered by state)
+// Note: this is outside the component return, but will be rendered conditionally via portal if needed.
+
 
 function extractOriginalFromProxy(src: string): string | null {
   try {
