@@ -121,7 +121,7 @@ export default function AdminVendasPage() {
   return (
     <div className="min-h-screen bg-[#FFF5FA] text-gray-800">
       <div className="flex">
-        <aside className="w-64 p-4 border-r bg-white">
+        <aside className="hidden md:block md:w-64 md:p-4 md:border-r md:bg-white">
           <h2 className="text-xl font-bold">Filtros</h2>
           <div className="mt-4">
             <select value={filter} onChange={e => setFilter(e.target.value)} className="w-full p-2 border rounded">
@@ -137,7 +137,7 @@ export default function AdminVendasPage() {
           </div>
         </aside>
 
-        <main className="flex-1 p-6">
+  <main className="flex-1 p-4 sm:p-6">
           <header className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold">Vendas</h1>
@@ -172,10 +172,10 @@ export default function AdminVendasPage() {
                     <td className={`p-3 w-40 ${statusColor(p.status)}`}><span className="px-2 py-1 rounded">{p.status}</span></td>
                     <td className="p-3">{new Date(p.criado_em).toLocaleString()}</td>
                     <td className="p-3 flex gap-2">
-                      <button onClick={() => openDetalhes(p)} className="px-2 py-1 bg-white border rounded">Ver Detalhes</button>
-                      <button onClick={() => startSeparacao(p)} className="px-2 py-1 bg-[#F8B81F] rounded">Iniciar Separação</button>
-                      <button onClick={() => gerarEtiqueta(p, prompt('Código de rastreio:') || '')} className="px-2 py-1 bg-[#DB1472] text-white rounded">Gerar Etiqueta</button>
-                      <button onClick={() => concluirEnvio(p)} className="px-2 py-1 bg-green-600 text-white rounded">Concluir Envio</button>
+                      <button onClick={() => openDetalhes(p)} className="px-3 py-2 bg-white border rounded min-h-[44px]">Ver Detalhes</button>
+                      <button onClick={() => startSeparacao(p)} className="px-3 py-2 bg-[#F8B81F] rounded min-h-[44px]">Iniciar Separação</button>
+                      <button onClick={() => gerarEtiqueta(p, prompt('Código de rastreio:') || '')} className="px-3 py-2 bg-[#DB1472] text-white rounded min-h-[44px]">Gerar Etiqueta</button>
+                      <button onClick={() => concluirEnvio(p)} className="px-3 py-2 bg-green-600 text-white rounded min-h-[44px]">Concluir Envio</button>
                     </td>
                   </tr>
                 ))}
@@ -199,7 +199,7 @@ export default function AdminVendasPage() {
       {/* Detalhes Modal */}
       {selectedPedido && (
         <div className="fixed inset-0 bg-black/40 flex">
-          <div className="ml-auto w-2/5 bg-white p-6 overflow-auto">
+    <div className="fixed inset-0 md:ml-auto md:relative md:w-2/5 bg-white p-4 md:p-6 overflow-auto">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold">Pedido {selectedPedido.id}</h2>
               <button onClick={() => setSelectedPedido(null)} className="text-gray-600">Fechar</button>

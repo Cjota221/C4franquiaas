@@ -99,40 +99,45 @@ export default function AdminComissoesPage() {
 
       {/* Filters */}
       <section className="bg-white p-4 rounded shadow mb-6">
-        <div className="flex gap-3 items-end">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-end gap-3">
+          <div className="w-full md:w-auto">
             <label className="block text-sm">Status</label>
-            <select value={status} onChange={e => setStatus(e.target.value as 'Todos' | 'pendente' | 'aprovada' | 'paga')} className="p-2 border rounded">
+            <select value={status} onChange={e => setStatus(e.target.value as 'Todos' | 'pendente' | 'aprovada' | 'paga')} className="w-full md:w-auto p-2 border rounded">
               <option value="Todos">Todos</option>
               <option value="pendente">pendente</option>
               <option value="aprovada">aprovada</option>
               <option value="paga">paga</option>
             </select>
           </div>
-          <div>
+
+          <div className="w-full md:w-auto">
             <label className="block text-sm">Franqueada</label>
-            <input placeholder="Todas" value={franqueada} onChange={e => setFranqueada(e.target.value)} className="p-2 border rounded" />
+            <input placeholder="Todas" value={franqueada} onChange={e => setFranqueada(e.target.value)} className="w-full p-2 border rounded" />
           </div>
-          <div>
+
+          <div className="w-full md:w-auto">
             <label className="block text-sm">De</label>
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="p-2 border rounded" />
+            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="w-full p-2 border rounded" />
           </div>
-          <div>
+
+          <div className="w-full md:w-auto">
             <label className="block text-sm">Até</label>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="p-2 border rounded" />
+            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="w-full p-2 border rounded" />
           </div>
-          <div className="flex-1">
+
+          <div className="w-full">
             <label className="block text-sm">Buscar</label>
             <input placeholder="Nome ou ID do pedido" value={search} onChange={e => setSearch(e.target.value)} className="w-full p-2 border rounded" />
           </div>
-          <div>
-            <button onClick={() => setPage(1)} className="px-3 py-2 bg-[#DB1472] text-white rounded">Aplicar</button>
+
+          <div className="w-full md:w-auto">
+            <button onClick={() => setPage(1)} className="w-full md:w-auto px-4 py-3 bg-[#DB1472] text-white rounded">Aplicar</button>
           </div>
         </div>
       </section>
 
-      {/* Table */}
-      <div className="bg-white rounded shadow overflow-auto">
+      {/* Table (desktop) */}
+      <div className="bg-white rounded shadow overflow-auto hidden sm:block">
         <table className="min-w-full table-auto">
           <thead>
             <tr className="text-left border-b">
@@ -156,15 +161,43 @@ export default function AdminComissoesPage() {
                 <td className="p-3">R$ {Number(c.valor_comissao).toFixed(2)}</td>
                 <td className={`p-3 ${c.status === 'paga' ? 'text-green-600' : c.status === 'pendente' ? 'text-orange-600' : 'text-blue-600'}`}>{c.status}</td>
                 <td className="p-3">{new Date(c.criado_em).toLocaleString()}</td>
-                <td className="p-3 flex gap-2">
-                  <button onClick={() => setSelected(c)} className="px-2 py-1 border rounded">Ver Detalhes</button>
-                  {c.status === 'pendente' && <button onClick={() => approve(c)} className="px-2 py-1 bg-[#F8B81F] rounded">Aprovar</button>}
-                  {c.status !== 'paga' && <button onClick={() => markPaid(c)} className="px-2 py-1 bg-green-600 text-white rounded">Marcar como Paga</button>}
+                <td className="p-3 flex flex-col sm:flex-row gap-2">
+                  <button onClick={() => setSelected(c)} className="px-3 py-2 border rounded-md text-sm">Ver Detalhes</button>
+                  {c.status === 'pendente' && <button onClick={() => approve(c)} className="px-3 py-2 bg-[#F8B81F] rounded-md text-sm">Aprovar</button>}
+                  {c.status !== 'paga' && <button onClick={() => markPaid(c)} className="px-3 py-2 bg-green-600 text-white rounded-md text-sm">Marcar como Paga</button>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards fallback */}
+      <div className="sm:hidden space-y-3">
+        {(data?.comissoes || []).map(c => (
+          <div key={c.id} className="bg-white rounded shadow p-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-sm text-gray-500">Revendedora</div>
+                <div className="font-medium">{c.franqueada_nome ?? c.franqueada_id}</div>
+                <div className="text-sm text-gray-500 mt-2">Pedido</div>
+                <button className="text-blue-600 underline text-sm" onClick={() => setSelected(c)}>{c.pedido_id}</button>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Status</div>
+                <div className={`${c.status === 'paga' ? 'text-green-600' : c.status === 'pendente' ? 'text-orange-600' : 'text-blue-600'} font-medium`}>{c.status}</div>
+                <div className="text-sm text-gray-500 mt-2">Valor</div>
+                <div className="font-medium">R$ {Number(c.valor_comissao).toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2">
+              {c.status === 'pendente' && <button onClick={() => approve(c)} className="w-full px-3 py-3 bg-[#F8B81F] rounded">Aprovar</button>}
+              {c.status !== 'paga' && <button onClick={() => markPaid(c)} className="w-full px-3 py-3 bg-green-600 text-white rounded">Marcar como Paga</button>}
+              <button onClick={() => setSelected(c)} className="w-full px-3 py-3 border rounded">Ver Detalhes</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="mt-4 flex items-center justify-between">
@@ -177,8 +210,8 @@ export default function AdminComissoesPage() {
 
       {/* Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black/40 flex">
-          <div className="ml-auto w-2/5 bg-white p-6 overflow-auto">
+        <div className="fixed inset-0 bg-black/40 flex items-start">
+          <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold">Comissão {selected.id}</h2>
               <button onClick={() => setSelected(null)} className="text-gray-600">Fechar</button>
@@ -204,10 +237,10 @@ export default function AdminComissoesPage() {
               <p>Pago em: {selected.pago_em ?? '—'}</p>
             </section>
 
-            <div className="mt-6 flex gap-3">
-              {selected.status === 'pendente' && <button onClick={() => approve(selected)} className="px-4 py-2 bg-[#F8B81F] rounded">Aprovar Comissão</button>}
-              {selected.status !== 'paga' && <button onClick={() => markPaid(selected)} className="px-4 py-2 bg-green-600 text-white rounded">Marcar como Paga</button>}
-              <button onClick={() => { window.print(); }} className="px-4 py-2 border rounded">Exportar Recibo</button>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {selected.status === 'pendente' && <button onClick={() => approve(selected)} className="w-full sm:w-auto px-4 py-3 bg-[#F8B81F] rounded">Aprovar Comissão</button>}
+              {selected.status !== 'paga' && <button onClick={() => markPaid(selected)} className="w-full sm:w-auto px-4 py-3 bg-green-600 text-white rounded">Marcar como Paga</button>}
+              <button onClick={() => { window.print(); }} className="w-full sm:w-auto px-4 py-3 border rounded">Exportar Recibo</button>
             </div>
           </div>
         </div>

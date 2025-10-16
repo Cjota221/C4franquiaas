@@ -550,9 +550,9 @@ export default function ProdutosPage() {
       )}
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar produtos..." className="px-3 py-2 border rounded w-64" />
+        <div className="p-3 sm:p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 flex-1">
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar produtos..." className="px-3 py-2 border rounded w-full sm:w-64" />
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Ordenar:</label>
@@ -636,8 +636,8 @@ export default function ProdutosPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openProdutoModal(p)} className="px-3 py-1 text-sm rounded bg-white border hover:bg-gray-50">Detalhes</button>
-                        <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">
+                        <button onClick={() => openProdutoModal(p)} className="px-3 py-2 text-sm rounded bg-white border hover:bg-gray-50 min-h-[44px]">Detalhes</button>
+                        <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200 min-h-[44px]">
                           {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
                         </button>
                       </div>

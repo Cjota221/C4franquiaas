@@ -4,45 +4,42 @@
  */
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import Sidebar from '@/components/Sidebar';
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      {/* Barra Lateral de Navegação */}
-      <aside className="w-64 bg-white shadow-md flex flex-col">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-[#DB1472]">C4 Franquias</h2>
-          <p className="text-sm text-gray-500 mt-1">Painel Admin</p>
-        </div>
-        <nav className="mt-6 flex-1">
-          <a href="/admin/dashboard" className="block px-6 py-3 text-gray-700 bg-gray-200 font-bold">
-            Dashboard
-          </a>
-          <a href="/admin/produtos" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
-            Produtos
-          </a>
-          <a href="/admin/franquias" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
-            Franquias
-          </a>
-          <a href="/admin/vendas" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
-            Vendas
-          </a>
-           <a href="/admin/comissoes" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
-            Comissões
-          </a>
-        </nav>
-        <div className="p-6">
-           <a href="/admin/configuracoes" className="block px-6 py-3 text-gray-700 hover:bg-gray-200">
-            Configurações
-          </a>
-        </div>
-      </aside>
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-      {/* Área de Conteúdo Principal */}
-      <main className="flex-1 flex flex-col p-8 overflow-y-auto">
-        {children}
-      </main>
+  return (
+    <div className="min-h-screen bg-gray-100 font-sans">
+      {/* Mobile top bar */}
+      <header className="md:hidden flex items-center justify-between p-3 bg-white shadow-sm">
+        <button aria-label="Abrir menu" onClick={() => setDrawerOpen(true)} className="p-2">
+          <svg className="w-6 h-6 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div className="font-bold text-lg text-[#DB1472]">C4 Franquias</div>
+        <div className="w-8" />
+      </header>
+
+      <div className="flex">
+        {/* Desktop sidebar */}
+        <Sidebar mobile={false} />
+
+        {/* Mobile drawer overlay */}
+        {drawerOpen && (
+          <div className="fixed inset-0 z-40">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
+            <div className="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 overflow-auto">
+              <Sidebar mobile={true} setView={() => {}} onLogout={() => {}} />
+            </div>
+          </div>
+        )}
+
+        {/* Main content */}
+        <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

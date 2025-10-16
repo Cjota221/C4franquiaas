@@ -9,11 +9,12 @@ import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut } from 'luc
 interface SidebarProps {
   view?: string;
   setView?: (view: string) => void;
-  onLogout: () => void;
+  onLogout?: () => void;
+  mobile?: boolean;
 }
 
 // O componente da barra lateral
-const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, mobile = false }) => {
   // Lista de itens de navegação
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -27,8 +28,12 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout }) => {
   const activeClass = "bg-[#DB1472] text-white";
   const inactiveClass = "text-[#333] hover:bg-[#F8B81F]/20";
 
+  const rootClass = mobile
+    ? 'w-64 bg-white flex flex-col h-full p-4 border-r border-gray-200 shadow-lg'
+    : 'hidden md:flex md:w-64 md:bg-white md:flex-col md:h-screen md:p-4 md:border-r md:border-gray-200 md:shadow-lg';
+
   return (
-    <div className="w-64 bg-white flex flex-col h-screen p-4 border-r border-gray-200 shadow-lg fixed">
+    <div className={rootClass}>
       {/* Logo */}
       <div className="flex items-center mb-10 pl-2">
         <h1 className="text-3xl font-bold text-[#DB1472]">C4 Franquias</h1>
