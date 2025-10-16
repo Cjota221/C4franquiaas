@@ -182,7 +182,7 @@ export default function ProdutosPage() {
             setCategories((resp.data?.items ?? []) as { id?: number; nome: string }[]);
             return;
           }
-        } catch (e) {
+        } catch {
           // fallback to direct supabase client
         }
         const { data, error } = await supabase.from('categorias').select('id,nome').order('nome', { ascending: true }).limit(500);
