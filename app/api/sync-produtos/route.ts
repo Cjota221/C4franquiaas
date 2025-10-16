@@ -80,18 +80,29 @@ export async function POST(request: NextRequest) {
       const slice = produtos.slice(i, i + BATCH_SIZE);
 
       const batch = slice.map((p: ProdutoDB) => {
-        const anyP = p as any;
+        const rec = p as unknown as Record<string, unknown>;
+        const id_externo = (rec['id_externo'] ?? rec['id'] ?? null) as string | null;
+        const nome = (rec['nome'] ?? rec['name'] ?? null) as string | null;
+        const preco_base = (rec['preco_base'] ?? rec['preco'] ?? null) as number | string | null;
+        const estoque = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
+        const ativoVal = rec['ativo'];
+        const ativo = typeof ativoVal === 'boolean' ? ativoVal : (ativoVal ?? true) as boolean;
+        const imagem = (rec['imagem'] ?? null) as string | null;
+        const imagens = Array.isArray(rec['imagens']) ? rec['imagens'] as string[] : (rec['imagens'] ? [String(rec['imagens'])] : [] as string[]);
+        const codigo_barras = (rec['codigo_barras'] ?? rec['barcode'] ?? null) as string | null;
+        const variacoes_meta = (rec['variacoes_meta'] ?? rec['variacoes'] ?? []) as unknown;
+
         return {
-          id_externo: anyP.id_externo ?? anyP.id ?? null,
-          nome: anyP.nome ?? anyP.name ?? null,
-          preco_base: anyP.preco_base ?? anyP.preco ?? null,
-          estoque: anyP.estoque ?? anyP.stock ?? null,
-          ativo: typeof anyP.ativo === 'boolean' ? anyP.ativo : (anyP.ativo ?? true),
-          imagem: anyP.imagem ?? null,
-          imagens: Array.isArray(anyP.imagens) ? anyP.imagens : (anyP.imagens ? [anyP.imagens] : []),
-          codigo_barras: anyP.codigo_barras ?? anyP.barcode ?? null,
-          variacoes_meta: anyP.variacoes_meta ?? anyP.variacoes ?? [],
-          categorias: extractCategoryNames(anyP),
+          id_externo,
+          nome,
+          preco_base,
+          estoque,
+          ativo,
+          imagem,
+          imagens,
+          codigo_barras,
+          variacoes_meta,
+          categorias: extractCategoryNames(rec),
           last_synced_at: new Date().toISOString(),
         };
       });

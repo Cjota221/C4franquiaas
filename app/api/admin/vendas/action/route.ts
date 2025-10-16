@@ -30,10 +30,17 @@ export async function POST(request: NextRequest) {
 
       // decrement stock in produtos table (assumes produtos table with id and estoque)
       try {
-        const { data: prodRows } = await supabase.from('produtos').select('id,estoque').eq('id', item.produto_id).limit(1).maybeSingle();
-        const current = (prodRows as any)?.estoque ?? null;
-        if (current !== null) {
-          const newStock = Number(current) - Number(item.quantidade || 1);
+        const { data: prodRow } = await supabase.from('produtos').select('id,estoque').eq('id', item.produto_id).limit(1).maybeSingle();
+        const row = prodRow as unknown;
+        let current: number | null = null;
+        if (row && typeof row === 'object') {
+          const r = row as Record<string, unknown>;
+          const v = r['estoque'];
+          if (typeof v === 'number') current = v;
+          else if (typeof v === 'string' && v !== '') current = Number(v);
+        }
+        if (current !== null && !Number.isNaN(current)) {
+          const newStock = current - Number(item.quantidade || 1);
           await supabase.from('produtos').update({ estoque: newStock }).eq('id', item.produto_id);
         }
       } catch (e) {

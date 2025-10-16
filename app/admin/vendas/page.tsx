@@ -1,9 +1,15 @@
 "use client";
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
+
+type Cliente = {
+  nome?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+};
 
 type Pedido = {
   id: string;
-  cliente: any;
+  cliente?: Cliente | null;
   franqueada_id: string;
   valor_total: number;
   status: string;
@@ -21,17 +27,21 @@ type ItemPedido = {
   status: string;
 };
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+type ListResponse = {
+  pedidos?: Pedido[];
+  total?: number;
+  itens?: ItemPedido[];
+};
 
-function usePoll(url: string | null, interval = 5000) {
-  const [data, setData] = useState<any>(null);
+function usePoll<T = unknown>(url: string | null, interval = 5000) {
+  const [data, setData] = useState<T | null>(null);
   const fetchData = async () => {
     if (!url) return;
     try {
       const res = await fetch(url);
       if (!res.ok) return;
       const json = await res.json();
-      setData(json);
+      setData(json as T);
     } catch (e) {
       // ignore
     }
@@ -65,7 +75,7 @@ export default function AdminVendasPage() {
   const [perPage] = useState(20);
 
   const apiUrl = `/api/admin/vendas/list?page=${page}&per_page=${perPage}&status=${filter}&q=${encodeURIComponent(search)}`;
-  const { data, mutate } = usePoll(apiUrl, 5000);
+  const { data, mutate } = usePoll<ListResponse>(apiUrl, 5000);
 
   useEffect(() => {
     if (!selectedPedido) return;
