@@ -39,6 +39,7 @@ export default function FranqueadosPage() {
       });
       if (!res.ok) throw new Error(await res.text());
       setData(prev => prev.map(p => p.id === f.id ? { ...p, status: newStatus } : p));
+      setSelected(prev => (prev && prev.id === f.id ? { ...prev, status: newStatus } : prev));
     } catch (err) {
       console.error('toggleStatusServer', err);
       alert('Erro ao atualizar status');
@@ -289,7 +290,12 @@ export default function FranqueadosPage() {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <a className="w-full sm:w-auto px-4 py-3 bg-[#DB1472] text-white rounded" href="#" target="_blank" rel="noreferrer">Ver Loja</a>
-              <button className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded">Desativar / Reativar Acesso</button>
+              <button
+                onClick={() => { if (selected) toggleStatusServer(selected); }}
+                className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded"
+              >
+                {selected?.status === 'inativo' ? 'Ativar' : 'Desativar'}
+              </button>
               <button className="w-full sm:w-auto px-4 py-3 border rounded">Ver Histórico de Pagamentos</button>
             </div>
 

@@ -57,6 +57,7 @@ export default function AfiliadosPage() {
       });
       if (!res.ok) throw new Error(await res.text());
       setData(prev => prev.map(p => p.id === a.id ? { ...p, status: newStatus } : p));
+      setSelected(prev => (prev && prev.id === a.id ? { ...prev, status: newStatus } : prev));
     } catch (err) {
       console.error('toggleAfiliadoStatus', err);
       alert('Erro ao alterar status');
@@ -277,7 +278,12 @@ export default function AfiliadosPage() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button onClick={() => { navigator.clipboard?.writeText(selected.link_afiliado ?? ''); }} className="w-full sm:w-auto px-4 py-3 bg-[#DB1472] text-white rounded">Copiar link de afiliado</button>
               <button className="w-full sm:w-auto px-4 py-3 border rounded">Ver comissões detalhadas</button>
-              <button className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded">Desativar / Reativar conta</button>
+              <button
+                onClick={() => { if (selected) toggleAfiliadoStatus(selected); }}
+                className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded"
+              >
+                {selected?.status === 'inativo' ? 'Ativar' : 'Desativar'}
+              </button>
             </div>
 
             <section className="mt-6">
