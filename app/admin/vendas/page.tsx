@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import useSWR from 'swr';
 
 type Pedido = {
   id: string;
@@ -24,6 +23,28 @@ type ItemPedido = {
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
+function usePoll(url: string | null, interval = 5000) {
+  const [data, setData] = useState<any>(null);
+  const fetchData = async () => {
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const json = await res.json();
+      setData(json);
+    } catch (e) {
+      // ignore
+    }
+  };
+  useEffect(() => {
+    if (!url) return;
+    fetchData();
+    const id = setInterval(fetchData, interval);
+    return () => clearInterval(id);
+  }, [url, interval]);
+  return { data, mutate: fetchData };
+}
+
 function statusColor(status: string) {
   switch (status) {
     case 'em_separacao': return 'bg-yellow-300 text-yellow-900';
@@ -43,7 +64,8 @@ export default function AdminVendasPage() {
   const [scanValue, setScanValue] = useState('');
   const [perPage] = useState(20);
 
-  const { data, mutate } = useSWR(`/api/admin/vendas/list?page=${page}&per_page=${perPage}&status=${filter}&q=${encodeURIComponent(search)}`, fetcher, { refreshInterval: 5000 });
+  const apiUrl = `/api/admin/vendas/list?page=${page}&per_page=${perPage}&status=${filter}&q=${encodeURIComponent(search)}`;
+  const { data, mutate } = usePoll(apiUrl, 5000);
 
   useEffect(() => {
     if (!selectedPedido) return;
