@@ -107,7 +107,7 @@ export default function ProdutosPage() {
         try {
             // Stringify to ensure the full object is visible in minified production consoles
             console.error('[produtos] supabase error', JSON.stringify(info, null, 2));
-          } catch (_err) {
+          } catch {
             console.error('[produtos] supabase raw error', error);
           }
 

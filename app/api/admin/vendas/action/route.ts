@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
           const newStock = current - Number(item.quantidade || 1);
           await supabase.from('produtos').update({ estoque: newStock }).eq('id', item.produto_id);
         }
-      } catch (e) {
+      } catch {
         // best-effort; product stock update may be implemented later
       }
 

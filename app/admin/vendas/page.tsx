@@ -35,23 +35,23 @@ type ListResponse = {
 
 function usePoll<T = unknown>(url: string | null, interval = 5000) {
   const [data, setData] = useState<T | null>(null);
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     if (!url) return;
     try {
       const res = await fetch(url);
       if (!res.ok) return;
       const json = await res.json();
       setData(json as T);
-    } catch (e) {
+    } catch {
       // ignore
     }
-  };
+  }, [url]);
   useEffect(() => {
     if (!url) return;
     fetchData();
     const id = setInterval(fetchData, interval);
     return () => clearInterval(id);
-  }, [url, interval]);
+  }, [url, interval, fetchData]);
   return { data, mutate: fetchData };
 }
 

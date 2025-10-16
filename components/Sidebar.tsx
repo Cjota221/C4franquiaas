@@ -2,8 +2,10 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 // Importa os ícones que vamos usar
-import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut, ShoppingCart, Coins } from 'lucide-react';
 
 // Define os tipos de dados que o componente Sidebar espera receber
 interface SidebarProps {
@@ -17,9 +19,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, mobile = false }) => {
   // Lista de itens de navegação
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'produtos', label: 'Produtos', icon: Package },
-    { id: 'franquias', label: 'Franqueadas', icon: Store },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
+    { id: 'produtos', label: 'Produtos', icon: Package, href: '/admin/produtos' },
+    { id: 'franquias', label: 'Franqueadas', icon: Store, href: '/admin/franquias' },
+    { id: 'vendas', label: 'Vendas', icon: ShoppingCart, href: '/admin/vendas' },
+    { id: 'comissoes', label: 'Comissões', icon: Coins, href: '/admin/comissoes' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart, disabled: true },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, disabled: true },
   ];
@@ -32,6 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
     ? 'w-64 bg-white flex flex-col h-full p-4 border-r border-gray-200 shadow-lg'
     : 'hidden md:flex md:w-64 md:bg-white md:flex-col md:h-screen md:p-4 md:border-r md:border-gray-200 md:shadow-lg';
 
+  const pathname = usePathname();
+
   return (
     <div className={rootClass}>
       {/* Logo */}
@@ -43,16 +49,24 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
       <nav className="flex-grow">
         {navItems.map(item => {
           const Icon = item.icon;
+          const isActive = item.href ? pathname?.startsWith(item.href) : view === item.id;
+
+          const classes = `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-lg transition-all mb-2 ${isActive ? activeClass : inactiveClass} ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+
+          if (item.disabled) {
+            return (
+              <button key={item.id} disabled className={classes}>
+                <Icon className="w-6 h-6" />
+                {item.label}
+              </button>
+            );
+          }
+
           return (
-            <button
-              key={item.id}
-              onClick={() => !item.disabled && setView?.(item.id)}
-              disabled={item.disabled}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-lg transition-all mb-2 ${view === item.id ? activeClass : inactiveClass} ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
+            <Link key={item.id} href={item.href ?? '#'} onClick={() => setView?.(item.id)} className={classes}>
               <Icon className="w-6 h-6" />
               {item.label}
-            </button>
+            </Link>
           );
         })}
       </nav>
