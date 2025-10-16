@@ -21,7 +21,12 @@ export default function FranqueadosPage() {
   const perPage = 20;
   const [data, setData] = useState<Franqueado[]>([]);
   const [selected, setSelected] = useState<Franqueado | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [summary, setSummary] = useState({ ativos: 0, inativos: 0, total: 0 });
+
+  function toggleAtivo(id: string) {
+    setData(prev => prev.map(f => f.id === id ? { ...f, status: f.status === 'ativo' ? 'inativo' : 'ativo' } : f));
+  }
 
   const query = `/api/admin/franqueados/list?page=${page}&per_page=${perPage}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`;
 
@@ -125,7 +130,7 @@ export default function FranqueadosPage() {
       {/* Mobile cards */}
       <div className="sm:hidden space-y-3">
         {data.map(f => (
-          <div key={f.id} className="bg-white rounded shadow p-3">
+          <div key={f.id} className="bg-white rounded shadow p-3 relative">
             <div className="flex justify-between items-start">
               <div>
                 <div className="font-medium">{f.nome}</div>
@@ -139,7 +144,29 @@ export default function FranqueadosPage() {
             </div>
             <div className="mt-3 flex gap-2">
               <button onClick={() => setSelected(f)} className="flex-1 px-3 py-3 border rounded">Ver Detalhes</button>
-              <button className="px-3 py-3 bg-[#DB1472] text-white rounded">⋮</button>
+              <div className="relative">
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={openMenuId === f.id}
+                  onClick={() => setOpenMenuId(openMenuId === f.id ? null : f.id)}
+                  className="px-3 py-3 bg-[#DB1472] text-white rounded"
+                >
+                  ⋮
+                </button>
+
+                {openMenuId === f.id && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-50">
+                    <button onClick={() => { setSelected(f); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ver Detalhes</button>
+                    <button onClick={() => { /* placeholder: editar */ setOpenMenuId(null); alert('Editar: ' + f.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Editar</button>
+                    {f.status === 'inativo' ? (
+                      <button onClick={() => { toggleAtivo(f.id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
+                    ) : (
+                      <button onClick={() => { toggleAtivo(f.id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
+                    )}
+                    <button onClick={() => { /* placeholder: excluir */ setOpenMenuId(null); alert('Excluir: ' + f.nome); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

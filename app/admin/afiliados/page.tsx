@@ -20,6 +20,7 @@ export default function AfiliadosPage() {
   const perPage = 20;
   const [data, setData] = useState<Afiliado[]>([]);
   const [selected, setSelected] = useState<Afiliado | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [summary, setSummary] = useState({ ativos: 0, inativos: 0, total: 0 });
 
   const query = `/api/admin/afiliados/list?page=${page}&per_page=${perPage}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`;
@@ -126,7 +127,7 @@ export default function AfiliadosPage() {
       {/* Mobile cards */}
       <div className="sm:hidden space-y-3">
         {data.map(a => (
-          <div key={a.id} className="bg-white rounded shadow p-3">
+          <div key={a.id} className="bg-white rounded shadow p-3 relative">
             <div className="flex justify-between items-start">
               <div>
                 <div className="font-medium">{a.nome}</div>
@@ -140,7 +141,29 @@ export default function AfiliadosPage() {
             </div>
             <div className="mt-3 flex gap-2">
               <button onClick={() => setSelected(a)} className="flex-1 px-3 py-3 border rounded">Ver Detalhes</button>
-              <button className="px-3 py-3 bg-[#DB1472] text-white rounded">⋮</button>
+              <div className="relative">
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={openMenuId === a.id}
+                  onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)}
+                  className="px-3 py-3 bg-[#DB1472] text-white rounded"
+                >
+                  ⋮
+                </button>
+
+                {openMenuId === a.id && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-50">
+                    <button onClick={() => { setSelected(a); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ver Detalhes</button>
+                    <button onClick={() => { navigator.clipboard?.writeText(a.link_afiliado ?? ''); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Copiar link</button>
+                    {a.status === 'inativo' ? (
+                      <button onClick={() => { /* placeholder: ativar */ setOpenMenuId(null); alert('Ativar: ' + a.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Ativar</button>
+                    ) : (
+                      <button onClick={() => { /* placeholder: desativar */ setOpenMenuId(null); alert('Desativar: ' + a.nome); }} className="w-full text-left px-3 py-2 hover:bg-gray-50">Desativar</button>
+                    )}
+                    <button onClick={() => { /* placeholder: excluir */ setOpenMenuId(null); alert('Excluir: ' + a.nome); }} className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-50">Excluir</button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
