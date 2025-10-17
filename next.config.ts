@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
     domains: ['cjotarasteirinhas.com.br', 'arquivos.facilzap.app.br', 'placehold.co', 'c4franquiaas.netlify.app'],
     remotePatterns: [
       { protocol: 'https', hostname: 'cjotarasteirinhas.com.br', pathname: '/**' },
-      { protocol: 'https', hostname: 'c4franquiaas.netlify.app', pathname: '/**' },
+      { protocol: 'https', hostname: 'arquivos.facilzap.app.br', pathname: '/**' },
+      { protocol: 'https', hostname: 'c4franquiaas.netlify.app', pathname: '/.netlify/functions/**' },
+      { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
     ],
   },
 };
