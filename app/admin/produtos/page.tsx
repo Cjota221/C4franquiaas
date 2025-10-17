@@ -84,9 +84,13 @@ export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old'>('none');
   const [categories, setCategories] = useState<{ id?: number; nome: string }[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
   const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [categoriaNome, setCategoriaNome] = useState('');
+  const [editingCategoriaId, setEditingCategoriaId] = useState<number | null>(null);
+  const [editingCategoriaNome, setEditingCategoriaNome] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
+  // categoriesPanelOpen and categoriaNome are declared above; duplicates removed after merge
 
   async function fetchPage(page: number) {
     setLoading(true);
@@ -172,6 +176,16 @@ export default function ProdutosPage() {
     // fetch categories once
     (async () => {
       try {
+        // prefer server-side admin route (falls back to direct supabase if env not configured)
+        try {
+          const resp = await axiosClient.get('/api/admin/categorias/list');
+          if (resp.status >= 200 && resp.status < 300) {
+            setCategories((resp.data?.items ?? []) as { id?: number; nome: string }[]);
+            return;
+          }
+        } catch {
+          // fallback to direct supabase client
+        }
         const { data, error } = await supabase.from('categorias').select('id,nome').order('nome', { ascending: true }).limit(500);
         if (!error && data) setCategories(data as { id?: number; nome: string }[]);
       } catch (err) {
@@ -179,6 +193,98 @@ export default function ProdutosPage() {
       }
     })();
   }, []);
+
+  async function refreshCategorias() {
+    try {
+      const resp = await axiosClient.get('/api/admin/categorias/list');
+      if (resp.status >= 200 && resp.status < 300) {
+        setCategories(resp.data?.items ?? []);
+      }
+    } catch (err) {
+      console.error('refreshCategorias', err);
+    }
+  }
+
+  async function handleCreateCategoria() {
+    const nome = (categoriaNome || '').trim();
+    if (!nome) return alert('Nome da categoria é obrigatório');
+    try {
+      const resp = await axiosClient.post('/api/admin/categorias/action', { action: 'create', nome });
+      if (resp.status >= 200 && resp.status < 300) {
+        setCategoriaNome('');
+        await refreshCategorias();
+        setStatusMsg({ type: 'success', text: 'Categoria criada.' });
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao criar categoria.' });
+      }
+    } catch (err) {
+      console.error('create categoria', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao criar categoria.' });
+    }
+  }
+
+  async function handleUpdateCategoria() {
+    if (!editingCategoriaId) return;
+    const nome = (editingCategoriaNome || '').trim();
+    if (!nome) return alert('Nome da categoria é obrigatório');
+    try {
+      const resp = await axiosClient.post('/api/admin/categorias/action', { action: 'update', id: editingCategoriaId, updates: { nome } });
+      if (resp.status >= 200 && resp.status < 300) {
+        setEditingCategoriaId(null);
+        setEditingCategoriaNome('');
+        await refreshCategorias();
+        setStatusMsg({ type: 'success', text: 'Categoria atualizada.' });
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao atualizar.' });
+      }
+    } catch (err) {
+      console.error('update categoria', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao atualizar categoria.' });
+    }
+  }
+
+  async function handleDeleteCategoria(id?: number) {
+    if (!id) return;
+    if (!confirm('Deseja excluir esta categoria?')) return;
+    try {
+      const resp = await axiosClient.post('/api/admin/categorias/action', { action: 'delete', id });
+      if (resp.status >= 200 && resp.status < 300) {
+        await refreshCategorias();
+        setStatusMsg({ type: 'success', text: 'Categoria excluída.' });
+        // if selected category was deleted, clear
+        if (selectedCategoryId === id) setSelectedCategoryId(null);
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao excluir.' });
+      }
+    } catch (err) {
+      console.error('delete categoria', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao excluir categoria.' });
+    }
+  }
+
+  async function applyCategoriaToSelected() {
+    if (!selectedCategoryId) return alert('Selecione uma categoria para aplicar.');
+    const ids = Object.keys(selectedIds).map(k => Number(k));
+    if (ids.length === 0) return alert('Nenhum produto selecionado.');
+    try {
+      const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: selectedCategoryId, produto_ids: ids });
+      if (resp.status >= 200 && resp.status < 300) {
+        setStatusMsg({ type: 'success', text: 'Categoria aplicada aos produtos selecionados.' });
+        // optimistic update: add categoria name to visibleProdutos and produtos
+        const cat = categories.find(c => c.id === selectedCategoryId);
+        if (cat) {
+          setProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: selectedCategoryId, nome: cat.nome }])) : [{ id: selectedCategoryId, nome: cat.nome }] }) : p));
+          setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: selectedCategoryId, nome: cat.nome }])) : [{ id: selectedCategoryId, nome: cat.nome }] }) : p));
+        }
+        setSelectedIds({});
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao aplicar categoria.' });
+      }
+    } catch (err) {
+      console.error('apply categoria', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao aplicar categoria.' });
+    }
+  }
 
   async function handleSync() {
     setStatusMsg({ type: 'loading', text: 'Sincronizando produtos...' });
@@ -455,45 +561,6 @@ export default function ProdutosPage() {
     }
   }
 
-  // Category management handlers
-  async function refreshCategorias() {
-    try {
-      const res = await axiosClient.get('/api/admin/categorias/list');
-      if (res.status === 200) setCategories(res.data.items || []);
-    } catch (e) { console.error('refreshCategorias', e); }
-  }
-
-  async function handleCreateCategoria() {
-    try {
-      const res = await axiosClient.post('/api/admin/categorias/action', { action: 'create', nome: categoriaNome, slug: categoriaNome.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
-      if (res.status === 200) {
-        setCategoriaNome('');
-        await refreshCategorias();
-      }
-    } catch (e) { console.error('create categoria', e); }
-  }
-
-  async function handleDeleteCategoria(id: string) {
-    if (!confirm('Deseja excluir esta categoria?')) return;
-    try {
-      const res = await axiosClient.post('/api/admin/categorias/action', { action: 'delete', id });
-      if (res.status === 200) await refreshCategorias();
-    } catch (e) { console.error('delete categoria', e); }
-  }
-
-  async function applyCategoriaToSelected(categoria_id: string) {
-    const produto_ids = Object.keys(selectedIds).filter(k => selectedIds[Number(k)]).map(k => Number(k));
-    if (produto_ids.length === 0) { alert('Nenhum produto selecionado'); return; }
-    try {
-      const res = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id, produto_ids });
-      if (res.status === 200) {
-        alert('Categoria aplicada');
-        setSelectedIds({});
-        await fetchPage(pagina);
-      }
-    } catch (e) { console.error('apply categoria', e); alert('Erro ao aplicar categoria'); }
-  }
-
   // Import and manual save removed; estoque is synchronized automatically by the server-side sync job.
 
   function closeModal() {
@@ -581,7 +648,6 @@ export default function ProdutosPage() {
             <RefreshCw className={`h-5 w-5 ${statusMsg?.type === 'loading' ? 'animate-spin' : ''}`} />
             {statusMsg?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
           </button>
-          <button onClick={() => { setCategoriesPanelOpen(true); refreshCategorias(); }} className="px-4 py-2 border rounded">Categorias</button>
         </div>
       </div>
 
@@ -706,6 +772,66 @@ export default function ProdutosPage() {
         </div>
       </div>
     </div>
+    {/* Categories panel */}
+    {categoriesPanelOpen && (
+      <div className="fixed inset-0 z-60 flex">
+        <div className="flex-1" onClick={() => setCategoriesPanelOpen(false)} />
+        <div className="w-full sm:w-96 bg-white p-4 shadow-lg overflow-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Categorias</h3>
+            <button onClick={() => setCategoriesPanelOpen(false)} className="text-gray-600">Fechar</button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-gray-600">Criar nova</label>
+              <div className="flex gap-2 mt-2">
+                <input value={categoriaNome} onChange={(e) => setCategoriaNome(e.target.value)} className="flex-1 p-2 border rounded" placeholder="Nome da categoria" />
+                <button onClick={handleCreateCategoria} className="px-3 py-2 bg-[#DB1472] text-white rounded">Criar</button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-600">Aplicar categoria aos selecionados</label>
+              <div className="flex gap-2 mt-2">
+                <select value={selectedCategoryId ?? ''} onChange={(e) => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null)} className="flex-1 p-2 border rounded">
+                  <option value="">Escolha uma categoria</option>
+                  {categories.map(c => <option key={c.id ?? c.nome} value={c.id ?? ''}>{c.nome}</option>)}
+                </select>
+                <button onClick={applyCategoriaToSelected} className="px-3 py-2 bg-green-600 text-white rounded" disabled={Object.keys(selectedIds).length === 0}>Aplicar</button>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium">Todas as categorias</h4>
+              <div className="mt-2 space-y-2">
+                {categories.map(c => (
+                  <div key={c.id ?? c.nome} className="flex items-center justify-between p-2 border rounded">
+                    <div>{c.nome}</div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => { setEditingCategoriaId(c.id ?? null); setEditingCategoriaNome(c.nome); }} className="px-2 py-1 text-sm bg-yellow-300 rounded">Editar</button>
+                      <button onClick={() => handleDeleteCategoria(c.id)} className="px-2 py-1 text-sm text-red-600 border rounded">Excluir</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {editingCategoriaId && (
+              <div className="pt-3 border-t">
+                <label className="text-sm text-gray-600">Editar categoria</label>
+                <div className="flex gap-2 mt-2">
+                  <input value={editingCategoriaNome} onChange={(e) => setEditingCategoriaNome(e.target.value)} className="flex-1 p-2 border rounded" />
+                  <button onClick={handleUpdateCategoria} className="px-3 py-2 bg-[#DB1472] text-white rounded">Salvar</button>
+                  <button onClick={() => { setEditingCategoriaId(null); setEditingCategoriaNome(''); }} className="px-3 py-2 border rounded">Cancelar</button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+    )}
     {/* Modal */}
     {modalOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
