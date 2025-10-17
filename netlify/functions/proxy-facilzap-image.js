@@ -25,16 +25,38 @@ exports.handler = async function (event) {
   const encoded = event.queryStringParameters && (event.queryStringParameters.facilzap ?? event.queryStringParameters.url);
   if (!encoded) return { statusCode: 400, body: 'url query parameter is required' };
 
-  let normalized = '';
-  try {
-    // decode and normalize (be permissive)
+  // Defensive decoding: handle double-encoded params like https%253A%252F%252F...
+  function defensiveDecode(v) {
+    if (!v) return '';
+    let s = String(v);
+    // try decode once or twice
     try {
-      normalized = decodeURIComponent(encoded);
+      const once = decodeURIComponent(s);
+      if (/^https?%3A%2F%2F/i.test(s)) {
+        // double-encoded: decode again
+        try {
+          const twice = decodeURIComponent(once);
+          return twice;
+        } catch {
+          return once;
+        }
+      }
+      // if result looks like encoded (%) still and contains %3A, decode again
+      if (/%3A/i.test(once) && /%2F/i.test(once)) {
+        try { return decodeURIComponent(once); } catch { return once; }
+      }
+      return once;
     } catch {
-      // try raw if decode fails
-      normalized = encoded;
+      return s;
     }
+  }
 
+  const rawParam = encoded;
+  const decoded = defensiveDecode(rawParam);
+  console.debug('proxy-facilzap-image: raw param', { raw: rawParam, decodedSnippet: String(decoded).slice(0, 200) });
+
+  let normalized = decoded;
+  try {
     // replace stray spaces and control chars
     normalized = normalized.replace(/\s+/g, '%20');
     // fix common malformed patterns
@@ -63,11 +85,13 @@ exports.handler = async function (event) {
       }
     }
     if (!parsed) {
-      console.warn('proxy-facilzap-image: invalid url after normalization', { original: encoded, lastError: lastErr instanceof Error ? lastErr.message : String(lastErr) });
+      console.warn('proxy-facilzap-image: invalid url after normalization', { original: rawParam, normalized, lastError: lastErr instanceof Error ? lastErr.message : String(lastErr) });
       return { statusCode: 400, body: 'invalid url' };
     }
+    // replace normalized with parsed.toString() to have canonical form
+    normalized = parsed.toString();
   } catch (err) {
-    console.warn('proxy-facilzap-image: normalization failure', { original: encoded, err: err instanceof Error ? err.message : String(err) });
+    console.warn('proxy-facilzap-image: normalization failure', { original: rawParam, err: err instanceof Error ? err.message : String(err) });
     return { statusCode: 400, body: 'invalid url' };
   }
 
