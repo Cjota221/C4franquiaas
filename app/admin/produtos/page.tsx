@@ -705,6 +705,16 @@ export default function ProdutosPage() {
         <div className="p-3 sm:p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-1">
             <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar produtos..." className="px-3 py-2 border rounded w-full sm:w-64" />
+            <div className="hidden sm:flex items-center gap-2">
+              <button onClick={() => {
+                // select all visible
+                const ids = visibleProdutos.map(p => p.id);
+                const newSel = { ...selectedIds };
+                for (const id of ids) newSel[id] = true;
+                setSelectedIds(newSel);
+              }} className="px-2 py-2 bg-gray-100 rounded">Selecionar tudo</button>
+              <button onClick={() => setSelectedIds({})} className="px-2 py-2 bg-white border rounded">Limpar seleção</button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Ordenar:</label>
@@ -734,7 +744,25 @@ export default function ProdutosPage() {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-gray-600">
-                <th className="p-4 font-semibold">Imagem</th>
+                <th className="p-4 font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={visibleProdutos.length > 0 && visibleProdutos.every(p => !!selectedIds[p.id])}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        const ids = visibleProdutos.map(p => p.id);
+                        const newSel: Record<number, boolean> = { ...selectedIds };
+                        for (const id of ids) newSel[id] = true;
+                        setSelectedIds(newSel);
+                      } else {
+                        // uncheck visible
+                        const newSel = { ...selectedIds };
+                        for (const p of visibleProdutos) delete newSel[p.id];
+                        setSelectedIds(newSel);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="p-4 font-semibold">Nome</th>
                 <th className="p-4 font-semibold">Estoque</th>
                 <th className="p-4 font-semibold">Preço</th>
