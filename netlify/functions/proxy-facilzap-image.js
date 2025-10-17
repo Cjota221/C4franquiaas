@@ -92,8 +92,8 @@ exports.handler = async function (event) {
         if (u.pathname && u.pathname.includes(PROXY_PATH_FRAGMENT)) {
           const host = (u.hostname || '').toLowerCase();
           if (host !== OUR_PROXY_HOST) {
-            console.warn('proxy-facilzap-image: nested proxy detected on other host, rejecting', { host });
-            return { statusCode: 400, body: 'nested proxy to external host is not allowed' };
+            // Allow nested proxies on external hosts but log a warning: this reduces security
+            console.warn('proxy-facilzap-image: nested proxy detected on external host; attempting to extract inner target', { host });
           }
           // extract inner parameter (prefer 'facilzap', fallback to 'url')
           const inner = u.searchParams.get('facilzap') || u.searchParams.get('url');
