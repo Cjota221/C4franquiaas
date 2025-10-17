@@ -47,6 +47,23 @@ export default function ProdutosPage(): React.JSX.Element {
           if (error) {
             console.error('[admin/produtos] supabase list error', error);
           } else {
+            // helper to defensively decode possibly double-encoded URLs
+            function safeDecodeUrl(v?: unknown) {
+              if (!v) return null;
+              const s = String(v);
+              try {
+                // first decode
+                let d = decodeURIComponent(s);
+                // if still contains %25 (encoded %), try decode again
+                if (/%25/.test(d) || /%3A/i.test(d) && /%2F/i.test(d)) {
+                  try { d = decodeURIComponent(d); } catch {}
+                }
+                return d;
+              } catch {
+                return s;
+              }
+            }
+
             const mapped: ProdutoType[] = (data ?? []).map((r: Record<string, unknown>) => {
               const id = Number(r['id'] ?? 0);
               const id_externo = typeof r['id_externo'] === 'string' ? (r['id_externo'] as string) : undefined;
@@ -54,7 +71,8 @@ export default function ProdutosPage(): React.JSX.Element {
               const estoque = typeof r['estoque'] === 'number' ? (r['estoque'] as number) : Number(r['estoque'] ?? 0);
               const preco_base = typeof r['preco_base'] === 'number' ? (r['preco_base'] as number) : (r['preco_base'] == null ? null : Number(r['preco_base']));
               const ativo = typeof r['ativo'] === 'boolean' ? (r['ativo'] as boolean) : Boolean(r['ativo'] ?? false);
-              const imagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
+              const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
+              const imagem = safeDecodeUrl(rawImagem);
               return {
                 id,
                 id_externo,
