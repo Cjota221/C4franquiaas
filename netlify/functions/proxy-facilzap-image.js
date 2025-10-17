@@ -102,7 +102,11 @@ exports.handler = async function (event) {
   if (!allowed) return { statusCode: 403, body: 'host not allowed' };
 
   // fetch the image with conservative headers; some hosts block unknown UAs or missing referer
-  const defaultHeaders = { 'User-Agent': 'Mozilla/5.0 (compatible; cjotarasteirinhas-proxy/1.0)', Referer: 'https://app.facilzap.app.br' };
+  // include Accept and try multiple Referer/Origin variants to work around hotlink protection
+  const defaultHeaders = {
+    'User-Agent': 'Mozilla/5.0 (compatible; cjotarasteirinhas-proxy/1.0)',
+    Accept: 'image/*,*/*;q=0.8',
+  };
 
   // small helper to fetch with timeout
   async function fetchWithTimeout(url, options = {}, timeout = 10000) {
@@ -116,29 +120,50 @@ exports.handler = async function (event) {
     }
   }
 
-  // Try multiple attempts to avoid transient network errors
-  const MAX_RETRIES = 2;
+  // Try multiple attempts to avoid transient network errors and to vary Referer/Origin
+  const MAX_RETRIES = 3;
   const token = process.env.FACILZAP_TOKEN || process.env.NEXT_PUBLIC_FACILZAP_TOKEN || process.env.SYNC_PRODUCTS_TOKEN;
+
+  // Candidate referers/origins to try when a host is blocking hotlinking. We try in order.
+  const incomingOrigin = (event && event.headers && event.headers.origin) ? String(event.headers.origin) : null;
+  const headerVariants = [
+    // prefer the incoming origin (if any) so some CDNs accept it
+    incomingOrigin ? { Referer: incomingOrigin, Origin: incomingOrigin } : null,
+    // a friendly referer commonly used by the app
+    { Referer: 'https://app.facilzap.app.br', Origin: 'https://app.facilzap.app.br' },
+    // the target host origin (may satisfy host-based checks)
+    { Referer: parsed.origin, Origin: parsed.origin },
+    // an empty referer (some hotlink protections accept empty referer)
+    { Referer: '' },
+  ].filter(Boolean);
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.debug('proxy-facilzap-image: fetching', { url: parsed.toString(), attempt });
-      const headers = { ...defaultHeaders };
+      const variant = headerVariants[(attempt - 1) % headerVariants.length] || {};
+      console.debug('proxy-facilzap-image: fetching', { url: parsed.toString(), attempt, variantSnippet: variant.Referer || variant.Origin || null });
+      const headers = { ...defaultHeaders, ...variant };
       let res = await fetchWithTimeout(parsed.toString(), { headers }, 10000);
 
-      // If upstream forbids us (403) and we have a token, retry with Authorization
+      // If upstream forbids us (403) and we have a token, retry once with Authorization
       if (res.status === 403 && token) {
-        console.debug('proxy-facilzap-image: retrying with token (403 received)');
+        console.debug('proxy-facilzap-image: received 403; retrying with Authorization token');
         headers.Authorization = `Bearer ${token}`;
+        // small backoff
+        await new Promise((r) => setTimeout(r, 150));
         res = await fetchWithTimeout(parsed.toString(), { headers }, 10000);
       }
 
       if (!res.ok) {
         // Log details but avoid echoing full upstream URL to clients
         console.warn('proxy-facilzap-image: upstream responded with error', { status: res.status, host: parsed.hostname, attempt });
-        // For 5xx/4xx respond with the same status so Netlify logs are informative
         const text = await res.text().catch(() => '');
-        console.debug('proxy-facilzap-image: upstream body snippet', { snippet: text.slice(0, 200) });
+        console.debug('proxy-facilzap-image: upstream body snippet', { snippet: text.slice(0, 400) });
+        // If this was a 403, try the next iteration with a different referer/origin
+        if (res.status === 403 && attempt < MAX_RETRIES) {
+          // continue to next attempt with different header variant
+          await new Promise((r) => setTimeout(r, 200 * attempt));
+          continue;
+        }
         return { statusCode: res.status, body: `upstream returned status ${res.status}` };
       }
 
