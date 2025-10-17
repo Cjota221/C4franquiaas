@@ -56,6 +56,7 @@ exports.handler = async function (event) {
   console.debug('proxy-facilzap-image: raw param', { raw: rawParam, decodedSnippet: String(decoded).slice(0, 200) });
 
   let normalized = decoded;
+  let parsed = null;
   try {
     // replace stray spaces and control chars
     normalized = normalized.replace(/\s+/g, '%20');
@@ -69,7 +70,7 @@ exports.handler = async function (event) {
     }
 
     // try multiple parsing strategies before failing
-    let parsed = null;
+  parsed = null;
     const parsers = [
       (s) => new URL(s),
       (s) => new URL(encodeURI(s)),
