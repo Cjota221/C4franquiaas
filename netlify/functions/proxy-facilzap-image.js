@@ -11,10 +11,14 @@
 const ALLOWED_HOSTS = [
   'arquivos.facilzap.app.br',
   'facilzap.app.br',
+  // allow images that still point to the old site
+  'cjotarasteirinhas.com.br',
+  // allow calls to our own netlify-hosted proxy
+  'c4franquiaas.netlify.app',
 ];
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const CORS_ORIGIN = 'https://c4franquiaas.netlify.app';
+const ALLOWED_ORIGINS = ['https://c4franquiaas.netlify.app', 'https://cjotarasteirinhas.com.br'];
 
 exports.handler = async function (event) {
   // Prefer explicit 'facilzap' param (original URL) when provided, fall back to 'url'
@@ -126,17 +130,23 @@ exports.handler = async function (event) {
         return { statusCode: 413, body: 'image too large' };
       }
 
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': contentType,
-          'Access-Control-Allow-Origin': CORS_ORIGIN,
-          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-        },
-        body: base64,
-        isBase64Encoded: true,
-      };
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        // determine allowed origin dynamically
+        let corsOrigin = ALLOWED_ORIGINS[0];
+        try {
+          const reqOrigin = (event && event.headers && event.headers.origin) ? String(event.headers.origin) : null;
+          if (reqOrigin && ALLOWED_ORIGINS.includes(reqOrigin)) corsOrigin = reqOrigin;
+        } catch {}
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': contentType,
+            'Access-Control-Allow-Origin': corsOrigin,
+            'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+          },
+          body: base64,
+          isBase64Encoded: true,
+        };
     } catch (err) {
       // AbortError or network error
       const msg = err && err.message ? err.message : String(err);
