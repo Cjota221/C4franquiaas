@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type Produto = {
+export type Produto = {
   id: number;
   id_externo?: string;
   nome: string;
