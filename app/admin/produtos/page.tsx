@@ -38,6 +38,8 @@ export default function ProdutosPage(): React.JSX.Element {
   const setStatusMsg = useStatusStore((s) => s.setStatusMsg);
   const setToggling = useStatusStore((s) => s.setToggling);
   const clearToggling = useStatusStore((s) => s.clearToggling);
+  // subscribe once to the toggling map and read per-item below
+  const toggling = useStatusStore((s) => s.toggling);
   const openModal = useModalStore((s) => s.openModal);
   const setModalLoading = useModalStore((s) => s.setModalLoading);
   const setModalVariacoes = useModalStore((s) => s.setModalVariacoes);
@@ -191,8 +193,10 @@ export default function ProdutosPage(): React.JSX.Element {
             </div>
           </div>
         ))}
-        {visibleProdutos.map((p: ProdutoType) => (
-          <div key={p.id} className="bg-white rounded-lg shadow p-4">
+        {visibleProdutos.map((p: ProdutoType) => {
+          const isToggling = Boolean(toggling[p.id]);
+          return (
+            <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} />
               {/* Render unoptimized to avoid Next.js image optimization wrapping the proxy URL */}
@@ -222,6 +226,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
                 {/* Toggle active */}
                 <button
+                  disabled={isToggling}
                   onClick={async () => {
                     setToggling(p.id, true);
                     try {
@@ -244,13 +249,14 @@ export default function ProdutosPage(): React.JSX.Element {
                     } finally {
                       clearToggling(p.id);
                     }
-                  }} className={`px-2 py-1 rounded text-xs ${p.ativo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}`}>
-                  {p.ativo ? 'Ativo' : 'Inativo'}
+                  }} className={`px-2 py-1 rounded text-xs ${p.ativo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  {isToggling ? 'Atualizando...' : (p.ativo ? 'Ativo' : 'Inativo')}
                 </button>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-6 flex justify-between items-center">
@@ -258,6 +264,8 @@ export default function ProdutosPage(): React.JSX.Element {
         <span>Página {pagina} de {Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}</span>
         <button onClick={() => setPagina(pagina + 1)} className="px-3 py-1 border rounded">Próxima </button>
       </div>
+      {/* modal rendered at root so it can overlay the page */}
+      <ProductDetailsModal />
     </div>
   );
 }
