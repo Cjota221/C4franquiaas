@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import dynamic from 'next/dynamic';
+
+const ClientErrorLogger = dynamic(() => import('@/components/ClientErrorLogger'), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <ClientErrorLogger />
       </body>
     </html>
   );
