@@ -8,26 +8,13 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page') || '1');
     const per_page = Number(url.searchParams.get('per_page') || '20');
-<<<<<<< HEAD
-    const status = url.searchParams.get('status');
-    const q = url.searchParams.get('q') || '';
-
-    // Try to query Supabase; if table not present or env not configured, return empty list gracefully
-=======
     const status = (url.searchParams.get('status') || '').toLowerCase();
     const q = url.searchParams.get('q') ?? '';
 
     // If Supabase not configured, return empty result (avoid throwing in production)
->>>>>>> feature/sidebar-franqueados-afiliados
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ items: [], resumo: { ativos: 0, inativos: 0, total: 0 } });
     }
-
-<<<<<<< HEAD
-    let query = supabase.from('franqueados').select('*', { count: 'exact' }).order('criado_em', { ascending: false });
-    if (status && status !== 'todos') query = query.eq('status', status);
-    if (q) query = query.ilike('nome', `%${q}%`);
-=======
     // Build base query
     let query = supabase.from('franqueados').select('*', { count: 'exact' }).order('criado_em', { ascending: false });
 
@@ -41,26 +28,11 @@ export async function GET(request: NextRequest) {
     if (q && q.trim().length > 0) {
       query = query.ilike('nome', `%${q.trim()}%`);
     }
->>>>>>> feature/sidebar-franqueados-afiliados
 
     const from = (page - 1) * per_page;
     const to = from + per_page - 1;
 
     const { data, count, error } = await query.range(from, to);
-<<<<<<< HEAD
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    // resumo counts
-    const { data: resumoData } = await supabase.rpc('resumo_franqueados');
-    // If RPC doesn't exist, compute basic counts
-    let resumo = { ativos: 0, inativos: 0, total: count ?? 0 };
-    if (Array.isArray(resumoData) && resumoData.length) {
-      resumo = { ativos: resumoData[0].ativos ?? 0, inativos: resumoData[0].inativos ?? 0, total: resumoData[0].total ?? (count ?? 0) };
-    }
-
-    return NextResponse.json({ items: data ?? [], resumo });
-  } catch (err) {
-=======
     if (error) {
       console.error('[franqueados/list] supabase error', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -79,7 +51,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: data ?? [], resumo });
   } catch (err) {
     console.error('[franqueados/list] unexpected error', err);
->>>>>>> feature/sidebar-franqueados-afiliados
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

@@ -262,8 +262,9 @@ export default function ProdutosPage() {
     }
   }
 
-  async function applyCategoriaToSelected() {
-    if (!selectedCategoryId) return alert('Selecione uma categoria para aplicar.');
+  async function applyCategoriaToSelected(categoriaId?: number) {
+    const targetCategoryId = categoriaId ?? selectedCategoryId;
+    if (!targetCategoryId) return alert('Selecione uma categoria para aplicar.');
     const ids = Object.keys(selectedIds).map(k => Number(k));
     if (ids.length === 0) return alert('Nenhum produto selecionado.');
     try {
@@ -271,10 +272,10 @@ export default function ProdutosPage() {
       if (resp.status >= 200 && resp.status < 300) {
         setStatusMsg({ type: 'success', text: 'Categoria aplicada aos produtos selecionados.' });
         // optimistic update: add categoria name to visibleProdutos and produtos
-        const cat = categories.find(c => c.id === selectedCategoryId);
+      const cat = categories.find(c => c.id === targetCategoryId);
         if (cat) {
-          setProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: selectedCategoryId, nome: cat.nome }])) : [{ id: selectedCategoryId, nome: cat.nome }] }) : p));
-          setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: selectedCategoryId, nome: cat.nome }])) : [{ id: selectedCategoryId, nome: cat.nome }] }) : p));
+        setProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: targetCategoryId, nome: cat.nome }])) : [{ id: targetCategoryId, nome: cat.nome }] }) : p));
+        setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: targetCategoryId, nome: cat.nome }])) : [{ id: targetCategoryId, nome: cat.nome }] }) : p));
         }
         setSelectedIds({});
       } else {
@@ -798,7 +799,7 @@ export default function ProdutosPage() {
                   <option value="">Escolha uma categoria</option>
                   {categories.map(c => <option key={c.id ?? c.nome} value={c.id ?? ''}>{c.nome}</option>)}
                 </select>
-                <button onClick={applyCategoriaToSelected} className="px-3 py-2 bg-green-600 text-white rounded" disabled={Object.keys(selectedIds).length === 0}>Aplicar</button>
+                <button onClick={() => applyCategoriaToSelected()} className="px-3 py-2 bg-green-600 text-white rounded" disabled={Object.keys(selectedIds).length === 0}>Aplicar</button>
               </div>
             </div>
 
@@ -895,8 +896,8 @@ export default function ProdutosPage() {
                   <div key={c.id} className="flex items-center justify-between p-2 border rounded">
                     <div>{c.nome}</div>
                     <div className="flex gap-2">
-                      <button onClick={() => applyCategoriaToSelected(String(c.id))} className="px-2 py-1 border rounded">Aplicar aos selecionados</button>
-                      <button onClick={() => handleDeleteCategoria(String(c.id))} className="px-2 py-1 text-red-600">Excluir</button>
+                      <button onClick={() => applyCategoriaToSelected(c.id)} className="px-2 py-1 border rounded">Aplicar aos selecionados</button>
+                      <button onClick={() => handleDeleteCategoria(c.id)} className="px-2 py-1 text-red-600">Excluir</button>
                     </div>
                   </div>
                 ))}
