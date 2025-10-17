@@ -93,6 +93,8 @@ export default function ProdutosPage() {
   const [editingCategoriaNome, setEditingCategoriaNome] = useState('');
   const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
   // categoriesPanelOpen and categoriaNome are declared above; duplicates removed after merge
+  // visibleProdutos moved up to be available to all handlers
+  const [visibleProdutos, setVisibleProdutos] = React.useState<Produto[]>([]);
 
   async function fetchPage(page: number) {
     setLoading(true);
@@ -663,7 +665,6 @@ export default function ProdutosPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   // derive visible products applying search and sort; when searchTerm present use server-side search
-  const [visibleProdutos, setVisibleProdutos] = React.useState<Produto[]>([]);
   React.useEffect(() => {
     let mounted = true;
     (async () => {
@@ -767,8 +768,12 @@ export default function ProdutosPage() {
             <div className="hidden sm:flex items-center gap-2">
               <button onClick={() => {
                 // select all visible
+                if (visibleProdutos.length === 0) {
+                  alert('Nenhum produto para selecionar');
+                  return;
+                }
                 const ids = visibleProdutos.map(p => p.id);
-                const newSel = { ...selectedIds };
+                const newSel: Record<number, boolean> = { ...selectedIds };
                 for (const id of ids) newSel[id] = true;
                 setSelectedIds(newSel);
               }} className="px-2 py-2 bg-gray-100 rounded">Selecionar tudo</button>

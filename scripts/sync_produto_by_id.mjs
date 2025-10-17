@@ -1,21 +1,9 @@
 #!/usr/bin/env node
-/**
- * scripts/sync_produto_by_id.js
- *
- * Usage:
- *  Dry-run (default):
- *    FACILZAP_TOKEN=... node scripts/sync_produto_by_id.js --id=3420758
- *
- *  Apply:
- *    FACILZAP_TOKEN=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/sync_produto_by_id.js --id=3420758 --apply
- *
- * This script fetches a single product from FácilZap by id, computes variacoes_meta and aggregated estoque,
- * shows the planned update (dry-run) or applies it to Supabase when --apply is passed.
- */
+import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
+import minimist from 'minimist';
 
-const axios = require('axios');
-const { createClient } = require('@supabase/supabase-js');
-const argv = require('minimist')(process.argv.slice(2));
+const argv = minimist(process.argv.slice(2));
 
 const ID = argv.id || argv.i || argv.id_externo;
 const APPLY = Boolean(argv.apply || argv.a);
@@ -86,7 +74,6 @@ function extractBarcode(item) {
 
 async function run() {
   const apiResp = await fetchProdutoFacilzap(ID);
-  // The API returns { produto: {...} } or the product object directly depending on endpoint
   const produto = apiResp?.produto ?? (apiResp && typeof apiResp === 'object' ? apiResp : null);
   if (!produto) {
     console.error('Produto not found in API response');
@@ -100,11 +87,10 @@ async function run() {
     const v = variacoes[i];
     const id = (v && (v.id ?? v.codigo)) ? String(v.id ?? v.codigo) : null;
     const sku = v && v.sku ? String(v.sku) : null;
-    const nomeVar = v && v.nome ? String(v.nome) : null;
     const est = normalizeEstoque(v && v.estoque ? v.estoque : null);
     estoqueTotal += est;
     const barcode = extractBarcode(v || {});
-    variacoes_meta.push({ id, sku, estoque: est, codigo_barras: barcode, nome: nomeVar });
+    variacoes_meta.push({ id, sku, estoque: est, codigo_barras: barcode });
   }
   if (variacoes.length === 0) estoqueTotal = normalizeEstoque(produto.estoque);
 

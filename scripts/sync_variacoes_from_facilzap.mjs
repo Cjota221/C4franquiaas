@@ -1,23 +1,13 @@
 #!/usr/bin/env node
 /**
- * scripts/sync_variacoes_from_facilzap.js
- *
- * Usage:
- *  DRY RUN (default):
- *    FACILZAP_TOKEN=... node scripts/sync_variacoes_from_facilzap.js --page=1 --length=50
- *
- *  APPLY (writes to Supabase):
- *    FACILZAP_TOKEN=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/sync_variacoes_from_facilzap.js --page=1 --length=50 --apply
- *
- * The script fetches products from FácilZap (one page by default), computes `variacoes_meta` and aggregated `estoque`, and either prints the planned updates (dry-run) or performs upserts via Supabase using the service role key.
+ * ESM version
  */
+import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
+// path and fs not required in this script
+import minimist from 'minimist';
 
-const axios = require('axios');
-const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
-const fs = require('fs');
-
-const argv = require('minimist')(process.argv.slice(2));
+const argv = minimist(process.argv.slice(2));
 const PAGE = Number(argv.page || argv.p || 1);
 const LENGTH = Number(argv.length || argv.l || 50);
 const APPLY = Boolean(argv.apply || argv.a);
@@ -33,27 +23,7 @@ async function fetchPageFromFacilzap(page = 1, length = 50) {
   return [];
 }
 
-function normalizeNumberLike(val) {
-  if (typeof val === 'number' && Number.isFinite(val)) return val;
-  if (typeof val === 'string') {
-    const n = Number(String(val).replace(/[^0-9\-.,]/g, '').replace(',', '.'));
-    return Number.isFinite(n) ? n : 0;
-  }
-  if (val && typeof val === 'object') {
-    const keys = ['estoque', 'disponivel', 'quantity', 'qtd', 'available'];
-    for (const k of keys) {
-      if (typeof val[k] !== 'undefined') {
-        const n = normalizeNumberLike(val[k]);
-        if (n !== null) return n;
-      }
-    }
-    for (const k of Object.keys(val)) {
-      const n = normalizeNumberLike(val[k]);
-      if (n !== null) return n;
-    }
-  }
-  return 0;
-}
+// normalizeNumberLike not used in this script
 
 function normalizeEstoque(estoqueField) {
   if (typeof estoqueField === 'number') return Number.isFinite(estoqueField) ? estoqueField : 0;
@@ -133,7 +103,7 @@ async function run() {
       const v = variacoes[i];
       const id = v && (v.id ?? v.codigo) ? String(v.id ?? v.codigo) : null;
       const sku = v && v.sku ? String(v.sku) : null;
-      const nomeVar = v && v.nome ? String(v.nome) : null;
+  // nomeVar intentionally omitted (not used)
       const est = normalizeEstoque(v && v.estoque ? v.estoque : v && v.quantity ? v.quantity : null);
       estoqueTotal += est;
       const barcode = extractBarcode(v || {});
@@ -157,7 +127,7 @@ async function run() {
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required to apply changes');
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { fetch });
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   for (const p of planned) {
     const updates = { variacoes_meta: p.variacoes_meta, estoque: p.estoque };

@@ -1,16 +1,5 @@
 #!/usr/bin/env node
-/**
- * scripts/replace_proxy_host.js
- *
- * Replace occurrences of the old proxy host in produtos.imagem and produtos.imagens
- * with the new Netlify host. Safe to run with --dry-run first.
- *
- * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/replace_proxy_host.js --dry-run
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/replace_proxy_host.js
- */
-
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const OLD_HOST = 'https://cjotarasteirinhas.com.br';
 const NEW_HOST = 'https://c4franquiaas.netlify.app';
@@ -46,7 +35,6 @@ async function main() {
 
     if (Array.isArray(p.imagens)) {
       const mapped = p.imagens.map((it) => (typeof it === 'string' ? it.replace(OLD_HOST, NEW_HOST) : it));
-      // simple compare
       if (JSON.stringify(mapped) !== JSON.stringify(p.imagens)) {
         newImagens = mapped;
         changed = true;

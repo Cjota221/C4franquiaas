@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-const { Client } = require('pg');
-const fs = require('fs');
-const path = require('path');
+import pg from 'pg';
+import fs from 'fs';
+import path from 'path';
+
+const { Client } = pg;
 
 async function main() {
   const url = process.env.SUPABASE_DB_URL || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_URL;

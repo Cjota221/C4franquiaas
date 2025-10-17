@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "apply-migrations": "node scripts/apply_migrations.js",
+  "dev": "next dev",
+  "build": "next build",
+  "apply-migrations": "node scripts/apply_migrations.mjs",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix"

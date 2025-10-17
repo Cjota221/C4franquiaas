@@ -1,7 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const { createClient } = require('@supabase/supabase-js');
+#!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 
 function readEnvLocal() {
   const p = path.join(process.cwd(), '.env.local');
