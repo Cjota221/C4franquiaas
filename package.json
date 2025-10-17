@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-  "build": "next build --turbopack",
-  "apply-migrations": "node scripts/apply_migrations.js",
+    "build": "next build --turbopack",
+    "apply-migrations": "node scripts/apply_migrations.js",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix"
   },
   "dependencies": {
