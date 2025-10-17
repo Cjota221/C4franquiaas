@@ -691,6 +691,7 @@ export default function ProdutosPage() {
             <RefreshCw className={`h-5 w-5 ${statusMsg?.type === 'loading' ? 'animate-spin' : ''}`} />
             {statusMsg?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
           </button>
+          <button onClick={() => setCategoriesPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
         </div>
       </div>
 
