@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect } from 'react';
-// using native <img> as a temporary workaround for proxy-hosted images
+import Image from 'next/image';
 
 import { useProdutoStore, Produto as ProdutoType } from '@/lib/store/produtoStore';
 import { useCategoriaStore } from '@/lib/store/categoriaStore';
@@ -103,7 +103,7 @@ export default function ProdutosPage(): React.JSX.Element {
           <div key={p.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={!!selectedIds[p.id]} onChange={() => toggleSelected(p.id)} />
-              <img src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} className="object-cover rounded" />
+              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} className="object-cover rounded" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{p.nome}</h3>
                 <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
