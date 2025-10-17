@@ -69,6 +69,53 @@ exports.handler = async function (event) {
       normalized = `https://arquivos.facilzap.app.br/${normalized.replace(/^\/+/, '')}`;
     }
 
+    // Prevent chained proxies: if the incoming URL points to our proxy
+    // unwrap it and extract the final `facilzap`/`url` parameter. Reject
+    // nested proxies that belong to other hosts to avoid cross-domain chaining.
+    const OUR_PROXY_HOST = 'c4franquiaas.netlify.app';
+    const PROXY_PATH_FRAGMENT = '/.netlify/functions/proxy-facilzap-image';
+    const MAX_UNWRAP = 3;
+    try {
+      let unwrapCount = 0;
+      let candidate = normalized;
+      while (unwrapCount < MAX_UNWRAP) {
+        // quick check for the proxy path fragment before trying to parse as URL
+        if (!String(candidate).includes(PROXY_PATH_FRAGMENT) && !/proxy-facilzap-image/.test(candidate)) break;
+        let u;
+        try {
+          u = new URL(candidate);
+        } catch {
+          // if parsing fails, stop trying to unwrap
+          break;
+        }
+        // if the URL points to a proxy path, handle accordingly
+        if (u.pathname && u.pathname.includes(PROXY_PATH_FRAGMENT)) {
+          const host = (u.hostname || '').toLowerCase();
+          if (host !== OUR_PROXY_HOST) {
+            console.warn('proxy-facilzap-image: nested proxy detected on other host, rejecting', { host });
+            return { statusCode: 400, body: 'nested proxy to external host is not allowed' };
+          }
+          // extract inner parameter (prefer 'facilzap', fallback to 'url')
+          const inner = u.searchParams.get('facilzap') || u.searchParams.get('url');
+          if (!inner) {
+            console.warn('proxy-facilzap-image: nested proxy missing inner target', { url: candidate });
+            return { statusCode: 400, body: 'nested proxy missing target' };
+          }
+          // decode and continue unwrapping
+          candidate = defensiveDecode(inner);
+          console.debug('proxy-facilzap-image: unwrapped nested proxy to', { snippet: String(candidate).slice(0, 200) });
+          unwrapCount += 1;
+          normalized = candidate;
+          // continue loop to catch deeper nesting
+          continue;
+        }
+        break;
+      }
+    } catch (err) {
+      // don't hard-fail normalization for unwrap helper errors; fall back to original
+      console.warn('proxy-facilzap-image: unwrap helper failed', { err: err instanceof Error ? err.message : String(err) });
+    }
+
     // try multiple parsing strategies before failing
   parsed = null;
     const parsers = [
