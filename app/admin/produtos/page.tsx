@@ -72,7 +72,11 @@ export default function ProdutosPage(): React.JSX.Element {
               const preco_base = typeof r['preco_base'] === 'number' ? (r['preco_base'] as number) : (r['preco_base'] == null ? null : Number(r['preco_base']));
               const ativo = typeof r['ativo'] === 'boolean' ? (r['ativo'] as boolean) : Boolean(r['ativo'] ?? false);
               const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
-              const imagem = safeDecodeUrl(rawImagem);
+              const decodedImagem = safeDecodeUrl(rawImagem);
+              // force images to go through our Netlify proxy to avoid cross-host issues
+              const imagem = decodedImagem
+                ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}&url=${encodeURIComponent(decodedImagem)}`
+                : null;
               return {
                 id,
                 id_externo,
