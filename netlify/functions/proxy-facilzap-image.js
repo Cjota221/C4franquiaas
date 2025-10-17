@@ -74,53 +74,79 @@ exports.handler = async function (event) {
 
   // fetch the image with conservative headers; some hosts block unknown UAs or missing referer
   const defaultHeaders = { 'User-Agent': 'Mozilla/5.0 (compatible; cjotarasteirinhas-proxy/1.0)', Referer: 'https://app.facilzap.app.br' };
-  async function tryFetch(url, extraHeaders = {}) {
-    const h = { ...defaultHeaders, ...(extraHeaders || {}) };
-    const res = await fetch(url, { headers: h });
-    return res;
+
+  // small helper to fetch with timeout
+  async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { signal: controller.signal, ...options });
+      return res;
+    } finally {
+      clearTimeout(id);
+    }
   }
 
-  try {
-    let res = await tryFetch(parsed.toString());
+  // Try multiple attempts to avoid transient network errors
+  const MAX_RETRIES = 2;
+  const token = process.env.FACILZAP_TOKEN || process.env.NEXT_PUBLIC_FACILZAP_TOKEN || process.env.SYNC_PRODUCTS_TOKEN;
 
-    // If upstream forbids us (403) and we have a FACILZAP_TOKEN configured, retry with Authorization
-    const token = process.env.FACILZAP_TOKEN || process.env.NEXT_PUBLIC_FACILZAP_TOKEN || process.env.SYNC_PRODUCTS_TOKEN;
-    if (res.status === 403 && token) {
-      try {
-        res = await tryFetch(parsed.toString(), { Authorization: `Bearer ${token}` });
-      } catch {
-        // swallow and continue to error handling below
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.debug('proxy-facilzap-image: fetching', { url: parsed.toString(), attempt });
+      const headers = { ...defaultHeaders };
+      let res = await fetchWithTimeout(parsed.toString(), { headers }, 10000);
+
+      // If upstream forbids us (403) and we have a token, retry with Authorization
+      if (res.status === 403 && token) {
+        console.debug('proxy-facilzap-image: retrying with token (403 received)');
+        headers.Authorization = `Bearer ${token}`;
+        res = await fetchWithTimeout(parsed.toString(), { headers }, 10000);
       }
+
+      if (!res.ok) {
+        // Log details but avoid echoing full upstream URL to clients
+        console.warn('proxy-facilzap-image: upstream responded with error', { status: res.status, host: parsed.hostname, attempt });
+        // For 5xx/4xx respond with the same status so Netlify logs are informative
+        const text = await res.text().catch(() => '');
+        console.debug('proxy-facilzap-image: upstream body snippet', { snippet: text.slice(0, 200) });
+        return { statusCode: res.status, body: `upstream returned status ${res.status}` };
+      }
+
+      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      if (!/^image\//i.test(contentType)) {
+        const txt = await res.text().catch(() => '');
+        console.warn('proxy-facilzap-image: upstream returned non-image content', { contentType, snippet: txt.slice(0, 200) });
+        return { statusCode: 415, body: 'unsupported media type' };
+      }
+
+      const arrayBuffer = await res.arrayBuffer();
+      if (arrayBuffer.byteLength > MAX_BYTES) {
+        console.warn('proxy-facilzap-image: image too large', { length: arrayBuffer.byteLength });
+        return { statusCode: 413, body: 'image too large' };
+      }
+
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Access-Control-Allow-Origin': CORS_ORIGIN,
+          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+        },
+        body: base64,
+        isBase64Encoded: true,
+      };
+    } catch (err) {
+      // AbortError or network error
+      const msg = err && err.message ? err.message : String(err);
+      console.error('proxy-facilzap-image: fetch attempt failed', { attempt, err: msg });
+      if (attempt === MAX_RETRIES) {
+        // Final failure — return a 502 to indicate gateway problem
+        return { statusCode: 502, body: `gateway error: ${msg}` };
+      }
+      // otherwise retry after small delay
+      await new Promise((res) => setTimeout(res, 300 * attempt));
     }
-
-    if (!res.ok) {
-      // don't leak upstream URLs in the response. Log a short message and return upstream status.
-      console.warn('proxy-facilzap-image: upstream fetch failed', { status: res.status, host: parsed.hostname });
-      return { statusCode: res.status, body: 'failed to fetch image' };
-    }
-
-    const contentType = res.headers.get('content-type') || 'application/octet-stream';
-    if (!/^image\//i.test(contentType)) {
-      return { statusCode: 415, body: 'unsupported media type' };
-    }
-
-    const buffer = await res.arrayBuffer();
-    if (buffer.byteLength > MAX_BYTES) return { statusCode: 413, body: 'image too large' };
-
-    const base64 = Buffer.from(buffer).toString('base64');
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Access-Control-Allow-Origin': CORS_ORIGIN,
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-      },
-      body: base64,
-      isBase64Encoded: true,
-    };
-  } catch (err) {
-  console.error('proxy-facilzap-image error', { message: err instanceof Error ? err.message : String(err) });
-  return { statusCode: 500, body: 'internal proxy error' };
   }
 };
