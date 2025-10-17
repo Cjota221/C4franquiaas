@@ -321,6 +321,48 @@ export default function ProdutosPage() {
     }
   }
 
+  // per-product category selection state
+  const [productCategorySelection, setProductCategorySelection] = useState<Record<number, number | null>>({});
+
+  async function attachCategoriaToProduct(produtoId: number, categoriaId?: number | null) {
+    const target = categoriaId ?? productCategorySelection[produtoId];
+    if (!target) return alert('Selecione uma categoria para aplicar.');
+    try {
+      const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: target, produto_ids: [produtoId] });
+      if (resp.status >= 200 && resp.status < 300) {
+        const cat = categories.find(c => c.id === target);
+        if (cat) {
+          setProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.some(x => Number(x.id) === Number(target)) ? p.categorias : p.categorias!.concat([{ id: target, nome: cat.nome }]) ) : [{ id: target, nome: cat.nome }] }) : p));
+          setVisibleProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.some(x => Number(x.id) === Number(target)) ? p.categorias : p.categorias!.concat([{ id: target, nome: cat.nome }]) ) : [{ id: target, nome: cat.nome }] }) : p));
+        }
+        setStatusMsg({ type: 'success', text: 'Categoria aplicada ao produto.' });
+        setProductCategorySelection(prev => ({ ...prev, [produtoId]: null }));
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao aplicar categoria.' });
+      }
+    } catch (err) {
+      console.error('attach categoria product', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao aplicar categoria.' });
+    }
+  }
+
+  async function detachCategoriaFromProduct(produtoId: number, categoriaId?: number | null) {
+    if (!categoriaId) return;
+    try {
+      const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'detach', categoria_id: categoriaId, produto_ids: [produtoId] });
+      if (resp.status >= 200 && resp.status < 300) {
+        setProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? p.categorias!.filter(c => Number(c.id) !== Number(categoriaId)) : [] }) : p));
+        setVisibleProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? p.categorias!.filter(c => Number(c.id) !== Number(categoriaId)) : [] }) : p));
+        setStatusMsg({ type: 'success', text: 'Categoria removida do produto.' });
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao remover categoria.' });
+      }
+    } catch (err) {
+      console.error('detach categoria product', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao remover categoria.' });
+    }
+  }
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProduto, setModalProduto] = useState<Produto | null>(null);
   const [modalVariacoes, setModalVariacoes] = useState<Variacao[] | null>(null);
@@ -747,11 +789,34 @@ export default function ProdutosPage() {
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${p.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{p.ativo ? 'Ativo' : 'Inativo'}</span>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => openProdutoModal(p)} className="px-3 py-2 text-sm rounded bg-white border hover:bg-gray-50 min-h-[44px]">Detalhes</button>
-                        <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200 min-h-[44px]">
-                          {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
-                        </button>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => openProdutoModal(p)} className="px-3 py-2 text-sm rounded bg-white border hover:bg-gray-50 min-h-[44px]">Detalhes</button>
+                          <button onClick={() => toggleAtivo(p)} disabled={!!toggling[p.id]} className="px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200 min-h-[44px]">
+                            {toggling[p.id] ? '...' : p.ativo ? 'Desativar' : 'Ativar'}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <select value={productCategorySelection[p.id] ?? ''} onChange={(e) => setProductCategorySelection(prev => ({ ...prev, [p.id]: e.target.value ? Number(e.target.value) : null }))} className="px-2 py-1 border rounded">
+                            <option value="">Categoria...</option>
+                            {categories.map(c => <option key={c.id ?? c.nome} value={c.id ?? ''}>{c.nome}</option>)}
+                          </select>
+                          <button onClick={() => attachCategoriaToProduct(p.id)} className="px-2 py-1 bg-green-600 text-white rounded" title="Aplicar categoria a este produto">Aplicar</button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {Array.isArray(p.categorias) && p.categorias.map((c) => {
+                            const cat = c as { id?: number; nome: string };
+                            const catId = cat.id ?? null;
+                            return (
+                              <div key={String(catId ?? cat.nome)} className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded">
+                                <span className="text-sm">{cat.nome}</span>
+                                {catId ? <button onClick={() => detachCategoriaFromProduct(p.id, catId)} className="text-xs text-red-600">Remover</button> : null}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </td>
                   </tr>
