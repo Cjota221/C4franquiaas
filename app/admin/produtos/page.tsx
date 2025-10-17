@@ -86,6 +86,8 @@ export default function ProdutosPage() {
   const [categories, setCategories] = useState<{ id?: number; nome: string }[]>([]);
   const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  // filtro persistente de categoria para a lista (não confundir com selectedCategoryId usado para aplicar)
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
   const [categoriaNome, setCategoriaNome] = useState('');
   const [editingCategoriaId, setEditingCategoriaId] = useState<number | null>(null);
   const [editingCategoriaNome, setEditingCategoriaNome] = useState('');
@@ -264,25 +266,57 @@ export default function ProdutosPage() {
 
   async function applyCategoriaToSelected(categoriaId?: number) {
     const targetCategoryId = categoriaId ?? selectedCategoryId;
-    if (!targetCategoryId) return alert('Selecione uma categoria para aplicar.');
-    const ids = Object.keys(selectedIds).map(k => Number(k));
-    if (ids.length === 0) return alert('Nenhum produto selecionado.');
+    // Validação
+    if (!targetCategoryId) {
+      alert('Selecione uma categoria para aplicar.');
+      return;
+    }
+
+    const ids = Object.keys(selectedIds)
+      .map(k => Number(k))
+      .filter(n => Number.isFinite(n));
+
+    if (ids.length === 0) {
+      alert('Nenhum produto selecionado.');
+      return;
+    }
+
     try {
-  const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: targetCategoryId, produto_ids: ids });
+      const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: targetCategoryId, produto_ids: ids });
       if (resp.status >= 200 && resp.status < 300) {
-        setStatusMsg({ type: 'success', text: 'Categoria aplicada aos produtos selecionados.' });
-        // optimistic update: add categoria name to visibleProdutos and produtos
-      const cat = categories.find(c => c.id === targetCategoryId);
+        // Otimistic update SEGURO
+        const cat = categories.find(c => Number(c.id) === Number(targetCategoryId));
         if (cat) {
-        setProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: targetCategoryId, nome: cat.nome }])) : [{ id: targetCategoryId, nome: cat.nome }] }) : p));
-        setVisibleProdutos(prev => prev.map(p => ids.includes(p.id) ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.concat([{ id: targetCategoryId, nome: cat.nome }])) : [{ id: targetCategoryId, nome: cat.nome }] }) : p));
+          const updatedProdutos = produtos.map(p =>
+            ids.includes(p.id)
+              ? {
+                  ...p,
+                  categorias: Array.isArray(p.categorias)
+                    ? p.categorias!.some(x => Number(x.id) === Number(targetCategoryId))
+                      ? p.categorias
+                      : [...p.categorias!, { id: Number(targetCategoryId), nome: cat.nome }]
+                    : [{ id: Number(targetCategoryId), nome: cat.nome }],
+                }
+              : p
+          );
+
+          setProdutos(updatedProdutos);
+
+          // Atualiza visibleProdutos preservando filtro ativo
+          if (selectedCategoryFilter !== null && selectedCategoryFilter !== targetCategoryId) {
+            setVisibleProdutos(prev => prev.map(p => (ids.includes(p.id) ? updatedProdutos.find(up => up.id === p.id) || p : p)));
+          } else {
+            setVisibleProdutos(updatedProdutos);
+          }
         }
+
+        setStatusMsg({ type: 'success', text: `Categoria adicionada a ${ids.length} produtos.` });
         setSelectedIds({});
       } else {
         setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao aplicar categoria.' });
       }
     } catch (err) {
-      console.error('apply categoria', err);
+      console.error('applyCategoriaToSelected error', err);
       setStatusMsg({ type: 'error', text: 'Erro ao aplicar categoria.' });
     }
   }
@@ -326,17 +360,31 @@ export default function ProdutosPage() {
 
   async function attachCategoriaToProduct(produtoId: number, categoriaId?: number | null) {
     const target = categoriaId ?? productCategorySelection[produtoId];
-    if (!target) return alert('Selecione uma categoria para aplicar.');
+    if (!target) {
+      alert('Selecione uma categoria para aplicar.');
+      return;
+    }
+
     try {
       const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: target, produto_ids: [produtoId] });
       if (resp.status >= 200 && resp.status < 300) {
-        const cat = categories.find(c => c.id === target);
+        const cat = categories.find(c => Number(c.id) === Number(target));
+
         if (cat) {
-          setProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.some(x => Number(x.id) === Number(target)) ? p.categorias : p.categorias!.concat([{ id: target, nome: cat.nome }]) ) : [{ id: target, nome: cat.nome }] }) : p));
-          setVisibleProdutos(prev => prev.map(p => p.id === produtoId ? ({ ...p, categorias: Array.isArray(p.categorias) ? (p.categorias!.some(x => Number(x.id) === Number(target)) ? p.categorias : p.categorias!.concat([{ id: target, nome: cat.nome }]) ) : [{ id: target, nome: cat.nome }] }) : p));
+          const existing = produtos.find(p => p.id === produtoId);
+          const updatedProduct = {
+            ...existing!,
+            categorias: Array.isArray(existing?.categorias)
+              ? (existing!.categorias!.some(x => Number(x.id) === Number(target)) ? existing!.categorias : [...existing!.categorias!, { id: Number(target), nome: cat.nome }])
+              : [{ id: Number(target), nome: cat.nome }],
+          };
+
+          setProdutos(prev => prev.map(p => p.id === produtoId ? updatedProduct : p));
+          setVisibleProdutos(prev => prev.map(p => p.id === produtoId ? updatedProduct : p));
         }
+
         setStatusMsg({ type: 'success', text: 'Categoria aplicada ao produto.' });
-        setProductCategorySelection(prev => ({ ...prev, [produtoId]: null }));
+        // NÃO LIMPAR productCategorySelection aqui para preservar seleção do usuário
       } else {
         setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao aplicar categoria.' });
       }
@@ -634,7 +682,13 @@ export default function ProdutosPage() {
             case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
             default: break;
           }
-          setVisibleProdutos(arr);
+          // aplica filtro de categoria se houver
+          if (selectedCategoryFilter !== null) {
+            const filtered = arr.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => Number((c && typeof c === 'object' && 'id' in c ? (c as { id?: number }).id ?? null : null)) === selectedCategoryFilter));
+            setVisibleProdutos(filtered);
+          } else {
+            setVisibleProdutos(arr);
+          }
         } else {
           // use paginated products loaded in state
           const arr = produtos.slice();
@@ -645,14 +699,19 @@ export default function ProdutosPage() {
             case 'date_old': arr.sort((a,b) => (a.id ?? 0) - (b.id ?? 0)); break;
             default: break;
           }
-          setVisibleProdutos(arr);
+          if (selectedCategoryFilter !== null) {
+            const filtered = arr.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => Number((c && typeof c === 'object' && 'id' in c ? (c as { id?: number }).id ?? null : null)) === selectedCategoryFilter));
+            setVisibleProdutos(filtered);
+          } else {
+            setVisibleProdutos(arr);
+          }
         }
       } catch (e) {
         console.error('[produtos] search error', e);
       }
     })();
     return () => { mounted = false; };
-  }, [produtos, searchTerm, sortBy]);
+  }, [produtos, searchTerm, sortBy, selectedCategoryFilter]);
 
   return (
     <>
@@ -725,15 +784,10 @@ export default function ProdutosPage() {
               <option value="date_new">Data: novo → antigo</option>
               <option value="date_old">Data: antigo → novo</option>
             </select>
-            <select onChange={(e) => {
+            <select value={selectedCategoryFilter ?? ''} onChange={(e) => {
               const v = e.target.value;
-              if (!v) {
-                // reset to original pagination
-                setVisibleProdutos(produtos.slice());
-                return;
-              }
-              const targetId = Number(v);
-              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => Number((c && typeof c === 'object' && 'id' in c ? (c as { id?: number }).id ?? null : null)) === targetId)));
+              setSelectedCategoryFilter(v ? Number(v) : null);
+              // O useEffect cuidará de recalcular visibleProdutos
             }} className="px-2 py-2 border rounded">
               <option value="">Todas categorias</option>
               {categories.map(c => <option key={c.id ?? c.nome} value={c.id ?? ''}>{c.nome}</option>)}
@@ -972,35 +1026,7 @@ export default function ProdutosPage() {
       </div>
     )}
       {/* Categories side panel */}
-      {categoriesPanelOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-start">
-          <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold">Categorias</h2>
-              <button onClick={() => setCategoriesPanelOpen(false)} className="text-gray-600">Fechar</button>
-            </div>
-
-            <section className="mt-4">
-              <div className="flex gap-2">
-                <input className="flex-1 p-2 border rounded" placeholder="Nova categoria" value={categoriaNome} onChange={e => setCategoriaNome(e.target.value)} />
-                <button onClick={handleCreateCategoria} className="px-4 py-2 bg-[#DB1472] text-white rounded">Criar</button>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                {categories.map(c => (
-                  <div key={c.id} className="flex items-center justify-between p-2 border rounded">
-                    <div>{c.nome}</div>
-                    <div className="flex gap-2">
-                      <button onClick={() => applyCategoriaToSelected(c.id)} className="px-2 py-1 border rounded">Aplicar aos selecionados</button>
-                      <button onClick={() => handleDeleteCategoria(c.id)} className="px-2 py-1 text-red-600">Excluir</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-        </div>
-      )}
+      {/* categories panel is rendered above; duplicate removed */}
     </>
   );
 }
