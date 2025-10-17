@@ -92,6 +92,10 @@ export default function ProdutosPage() {
   const [editingCategoriaId, setEditingCategoriaId] = useState<number | null>(null);
   const [editingCategoriaNome, setEditingCategoriaNome] = useState('');
   const [selectedIds, setSelectedIds] = useState<Record<number, boolean>>({});
+  const [priceModalOpen, setPriceModalOpen] = useState(false);
+  const [priceMode, setPriceMode] = useState<'fixo' | 'percentual'>('fixo');
+  const [priceValue, setPriceValue] = useState<number>(0);
+  const [pricePreview, setPricePreview] = useState<Array<{ id: number; nome: string; antes: number; depois: number }>>([]);
   // categoriesPanelOpen and categoriaNome are declared above; duplicates removed after merge
   // visibleProdutos moved up to be available to all handlers
   const [visibleProdutos, setVisibleProdutos] = React.useState<Produto[]>([]);
@@ -714,6 +718,41 @@ export default function ProdutosPage() {
     return () => { mounted = false; };
   }, [produtos, searchTerm, sortBy, selectedCategoryFilter]);
 
+  // Price modal helpers
+  function computePricePreview() {
+    const ids = Object.keys(selectedIds).map(k => Number(k));
+    const selected = produtos.filter(p => ids.includes(p.id));
+    const preview = selected.map(p => {
+      const antes = typeof p.preco_base === 'number' && Number.isFinite(p.preco_base) ? p.preco_base : 0;
+      let depois = antes;
+      if (priceMode === 'fixo') depois = Math.round((antes + priceValue) * 100) / 100;
+      else depois = Math.round((antes * (1 + priceValue / 100)) * 100) / 100;
+      return { id: p.id, nome: p.nome, antes, depois };
+    });
+    setPricePreview(preview);
+    return preview;
+  }
+
+  async function applyPriceBatch() {
+    try {
+      setStatusMsg({ type: 'loading', text: 'Aplicando preços...' });
+      const ids = Object.keys(selectedIds).map(k => Number(k));
+      const resp = await axiosClient.post('/api/admin/produtos/preco-batch', { acao: 'atualizar', produto_ids: ids, tipo: priceMode, valor: priceValue });
+      if (resp.status >= 200 && resp.status < 300 && resp.data?.sucesso) {
+        setStatusMsg({ type: 'success', text: 'Preços atualizados com sucesso.' });
+        // refresh list
+        await fetchPage(pagina);
+        setSelectedIds({});
+        setPriceModalOpen(false);
+      } else {
+        setStatusMsg({ type: 'error', text: resp.data?.error ?? 'Erro ao atualizar preços.' });
+      }
+    } catch (err) {
+      console.error('applyPriceBatch error', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao atualizar preços.' });
+    }
+  }
+
   return (
     <>
     <div className="p-8 font-sans">
@@ -751,6 +790,7 @@ export default function ProdutosPage() {
             <RefreshCw className={`h-5 w-5 ${statusMsg?.type === 'loading' ? 'animate-spin' : ''}`} />
             {statusMsg?.type === 'loading' ? 'Sincronizando...' : 'Sincronizar Produtos'}
           </button>
+          <button disabled={Object.keys(selectedIds).length === 0} onClick={() => setPriceModalOpen(true)} className="px-3 py-2 bg-yellow-500 text-white rounded">💰 Atualizar Preços</button>
           <button onClick={() => setCategoriesPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
         </div>
       </div>
@@ -799,6 +839,7 @@ export default function ProdutosPage() {
             </select>
           </div>
         </div>
+        {/* Price update modal trigger is added in header; modal implementation below */}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -1027,6 +1068,48 @@ export default function ProdutosPage() {
           ) : (
             <div className="text-center py-6 text-gray-600">Nenhuma variação encontrada para este produto.</div>
           )}
+        </div>
+      </div>
+    )}
+    {/* Price Update Modal */}
+    {priceModalOpen && (
+      <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-lg w-11/12 max-w-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">💰 Atualizar Preços</h2>
+            <button onClick={() => setPriceModalOpen(false)} className="text-gray-600">Fechar</button>
+          </div>
+          <div className="space-y-3">
+            <div>Produtos selecionados: {Object.keys(selectedIds).length}</div>
+            <div className="flex gap-2 items-center">
+              <label className="text-sm">Tipo:</label>
+              <select value={priceMode} onChange={(e) => { setPriceMode(e.target.value as 'fixo'|'percentual'); }} className="p-2 border rounded">
+                <option value="fixo">Valor Fixo (R$)</option>
+                <option value="percentual">Porcentagem (%)</option>
+              </select>
+              <input type="number" step="0.01" value={priceValue} onChange={(e) => { setPriceValue(Number(e.target.value)); }} className="p-2 border rounded w-32" />
+              <button onClick={() => computePricePreview()} className="px-3 py-2 bg-gray-100 rounded">Preview</button>
+            </div>
+            <div>
+              <h4 className="font-medium">Preview</h4>
+              <div className="mt-2 max-h-40 overflow-auto">
+                {pricePreview.length === 0 ? <div className="text-sm text-gray-600">Nenhum preview - clique em Preview</div> : (
+                  <ul className="space-y-1">
+                    {pricePreview.map(p => (
+                      <li key={p.id} className="flex justify-between">
+                        <span className="truncate pr-2">{p.nome}</span>
+                        <span className="text-sm">R$ {p.antes.toFixed(2)} → R$ {p.depois.toFixed(2)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setPriceModalOpen(false)} className="px-4 py-2 border rounded">Cancelar</button>
+              <button onClick={() => applyPriceBatch()} disabled={Object.keys(selectedIds).length === 0} className="px-4 py-2 bg-green-600 text-white rounded">Aplicar</button>
+            </div>
+          </div>
         </div>
       </div>
     )}
