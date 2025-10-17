@@ -74,8 +74,11 @@ export default function ProdutosPage(): React.JSX.Element {
               const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
               const decodedImagem = safeDecodeUrl(rawImagem);
               // force images to go through our Netlify proxy to avoid cross-host issues
+              // Build a single canonical proxy URL. Avoid sending a redundant `url` param.
+              // We will render the image unoptimized so Next.js won't re-wrap it with /_next/image
+              // (which caused double-encoding issues).
               const imagem = decodedImagem
-                ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}&url=${encodeURIComponent(decodedImagem)}`
+                ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
                 : null;
               return {
                 id,
@@ -125,7 +128,8 @@ export default function ProdutosPage(): React.JSX.Element {
           <div key={p.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={!!selectedIds[p.id]} onChange={() => toggleSelected(p.id)} />
-              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} className="object-cover rounded" />
+              {/* Render unoptimized to avoid Next.js image optimization wrapping the proxy URL */}
+              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} unoptimized className="object-cover rounded" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{p.nome}</h3>
                 <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
