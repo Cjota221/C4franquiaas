@@ -268,7 +268,7 @@ export default function ProdutosPage() {
     const ids = Object.keys(selectedIds).map(k => Number(k));
     if (ids.length === 0) return alert('Nenhum produto selecionado.');
     try {
-      const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: selectedCategoryId, produto_ids: ids });
+  const resp = await axiosClient.post('/api/admin/produtos/categorias/action', { action: 'attach', categoria_id: targetCategoryId, produto_ids: ids });
       if (resp.status >= 200 && resp.status < 300) {
         setStatusMsg({ type: 'success', text: 'Categoria aplicada aos produtos selecionados.' });
         // optimistic update: add categoria name to visibleProdutos and produtos
@@ -679,10 +679,11 @@ export default function ProdutosPage() {
                 setVisibleProdutos(produtos.slice());
                 return;
               }
-              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => (c && typeof c === 'object' && 'nome' in c ? (c as { nome?: string }).nome ?? '' : '') === v)));
+              const targetId = Number(v);
+              setVisibleProdutos(prev => prev.filter(p => Array.isArray(p.categorias) && p.categorias.some(c => Number((c && typeof c === 'object' && 'id' in c ? (c as { id?: number }).id ?? null : null)) === targetId)));
             }} className="px-2 py-2 border rounded">
               <option value="">Todas categorias</option>
-              {categories.map(c => <option key={c.id ?? c.nome} value={c.nome}>{c.nome}</option>)}
+              {categories.map(c => <option key={c.id ?? c.nome} value={c.id ?? ''}>{c.nome}</option>)}
             </select>
           </div>
         </div>
