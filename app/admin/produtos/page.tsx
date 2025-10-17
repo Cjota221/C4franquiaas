@@ -9,7 +9,10 @@ import { useStatusStore } from '@/lib/store/statusStore';
 import { supabase } from '@/lib/supabaseClient';
 import { useProductFilters } from '@/hooks/useProductFilters';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 30;
+
+// simple in-memory page cache to avoid refetching when navigating back/forth
+const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
 type Produto = { id: number; nome: string; preco_base?: number | null; estoque?: number; imagem?: string | null; estoque_display?: number };
 
@@ -33,14 +36,55 @@ export default function ProdutosPage(): React.JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     (async () => {
+      // debounce quick page flips
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {}, 0);
       setLoading(true);
       try {
         const from = (pagina - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
+        // serve from cache when available
+        const cached = pageCache.get(pagina);
+        if (cached) {
+          setProdutos(cached.items);
+          setTotal(cached.total);
+          // prefetch next page in background
+          void (async () => {
+            const next = pagina + 1;
+            if (!pageCache.has(next)) {
+              const f = (next - 1) * PAGE_SIZE;
+              const t = f + PAGE_SIZE - 1;
+              try {
+                const { data, error, count } = await supabase
+                  .from('produtos')
+                  .select('id,id_externo,nome,estoque,preco_base,ativo,imagem', { count: 'exact' })
+                  .range(f, t)
+                  .order('nome', { ascending: true });
+                if (!error) {
+                  const mapped = (data ?? []).map((r: Record<string, unknown>) => {
+                    const id = Number(r['id'] ?? 0);
+                    const nome = typeof r['nome'] === 'string' ? (r['nome'] as string) : String(r['nome'] ?? '');
+                    const estoque = typeof r['estoque'] === 'number' ? (r['estoque'] as number) : Number(r['estoque'] ?? 0);
+                    const preco_base = typeof r['preco_base'] === 'number' ? (r['preco_base'] as number) : (r['preco_base'] == null ? null : Number(r['preco_base']));
+                    const ativo = typeof r['ativo'] === 'boolean' ? (r['ativo'] as boolean) : Boolean(r['ativo'] ?? false);
+                    const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
+                    const decodedImagem = rawImagem ? decodeURIComponent(rawImagem) : null;
+                    const imagem = decodedImagem ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}` : null;
+                    return { id, nome, estoque, preco_base, ativo, imagem } as ProdutoType;
+                  });
+                  pageCache.set(next, { items: mapped, total: count ?? 0 });
+                }
+              } catch {}
+            }
+          })();
+          setLoading(false);
+          return;
+        }
         const { data, error, count } = await supabase
           .from('produtos')
-          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,variacoes_meta,codigo_barras,categorias', { count: 'exact' })
+          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem', { count: 'exact' })
           .range(from, to)
           .order('nome', { ascending: true });
         if (!cancelled) {
@@ -91,6 +135,8 @@ export default function ProdutosPage(): React.JSX.Element {
                 estoque_display: estoque,
               } as ProdutoType;
             });
+            // cache this page for quick back/forward navigation
+            pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
             setTotal(count ?? 0);
           }
@@ -124,12 +170,25 @@ export default function ProdutosPage(): React.JSX.Element {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visibleProdutos.length === 0 && Array.from({ length: PAGE_SIZE }).map((_, i) => (
+          <div key={`skeleton-${i}`} className="bg-white rounded-lg shadow p-4 animate-pulse">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-gray-200 rounded" />
+              <div className="w-24 h-24 bg-gray-200 rounded" />
+              <div className="flex-1 space-y-2 py-1">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="h-3 bg-gray-200 rounded w-1/3" />
+              </div>
+            </div>
+          </div>
+        ))}
         {visibleProdutos.map((p: Produto) => (
           <div key={p.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={!!selectedIds[p.id]} onChange={() => toggleSelected(p.id)} />
               {/* Render unoptimized to avoid Next.js image optimization wrapping the proxy URL */}
-              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} unoptimized className="object-cover rounded" />
+              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{p.nome}</h3>
                 <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
