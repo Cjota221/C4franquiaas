@@ -1,10 +1,5 @@
 import { create } from 'zustand';
-
-type Produto = {
-  id: number;
-  nome: string;
-  [k: string]: unknown;
-};
+import { Produto } from '@/lib/store/produtoStore';
 
 type Variacao = {
   id?: string | number;

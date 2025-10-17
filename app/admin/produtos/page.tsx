@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useProdutoStore, Produto as ProdutoType } from '@/lib/store/produtoStore';
 import { useCategoriaStore } from '@/lib/store/categoriaStore';
 import { useStatusStore } from '@/lib/store/statusStore';
+import { useModalStore } from '@/lib/store/modalStore';
+import ProductDetailsModal from '@/components/ProductDetailsModal';
 import { supabase } from '@/lib/supabaseClient';
 import { useProductFilters } from '@/hooks/useProductFilters';
 
@@ -14,7 +16,7 @@ const PAGE_SIZE = 30;
 // simple in-memory page cache to avoid refetching when navigating back/forth
 const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
-type Produto = { id: number; nome: string; preco_base?: number | null; estoque?: number; imagem?: string | null; estoque_display?: number };
+// use ProdutoType from store for typing
 
 export default function ProdutosPage(): React.JSX.Element {
   // ensure filters hook runs and populates visibleProdutos from produtos
@@ -27,12 +29,18 @@ export default function ProdutosPage(): React.JSX.Element {
   const setProdutos = useProdutoStore((s) => s.setProdutos);
   const setTotal = useProdutoStore((s) => s.setTotal);
   const setLoading = useProdutoStore((s) => s.setLoading);
-  const toggleSelected = useProdutoStore((s) => s.toggleSelected);
   const selectedIds = useProdutoStore((s) => s.selectedIds);
+  const setSelectedId = useProdutoStore((s) => s.setSelectedId);
   const getSelectedCount = useProdutoStore((s) => s.getSelectedCount);
 
   const setCategoryPanelOpen = useCategoriaStore((s) => s.setCategoryPanelOpen);
   const statusMsg = useStatusStore((s) => s.statusMsg);
+  const setStatusMsg = useStatusStore((s) => s.setStatusMsg);
+  const setToggling = useStatusStore((s) => s.setToggling);
+  const clearToggling = useStatusStore((s) => s.clearToggling);
+  const openModal = useModalStore((s) => s.openModal);
+  const setModalLoading = useModalStore((s) => s.setModalLoading);
+  const setModalVariacoes = useModalStore((s) => s.setModalVariacoes);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,16 +191,62 @@ export default function ProdutosPage(): React.JSX.Element {
             </div>
           </div>
         ))}
-        {visibleProdutos.map((p: Produto) => (
+        {visibleProdutos.map((p: ProdutoType) => (
           <div key={p.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-start gap-3">
-              <input type="checkbox" checked={!!selectedIds[p.id]} onChange={() => toggleSelected(p.id)} />
+              <input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} />
               {/* Render unoptimized to avoid Next.js image optimization wrapping the proxy URL */}
               <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{p.nome}</h3>
                 <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
                 <p className="text-sm text-gray-500">Est: {p.estoque_display}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2 ml-2">
+                <button onClick={async () => {
+                  // open modal and load details
+                  openModal(p as ProdutoType);
+                  setModalLoading(true);
+                  try {
+                    const id = p.id_externo ?? p.id;
+                    const res = await fetch(`/api/produtos/${encodeURIComponent(String(id))}`);
+                    const json = await res.json();
+                    setModalVariacoes((json && json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
+                  } catch (err) {
+                    console.error('failed to load product details', err);
+                    setModalVariacoes(null);
+                  } finally {
+                    setModalLoading(false);
+                  }
+                }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Ver Mais Detalhes</button>
+
+                {/* Toggle active */}
+                <button
+                  onClick={async () => {
+                    setToggling(p.id, true);
+                    try {
+                      const res = await fetch('/api/produtos/batch', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: [p.id], ativo: !p.ativo }),
+                      });
+                      const json = await res.json();
+                      if (res.ok && json.ok) {
+                        // immediate UI feedback
+                        useProdutoStore.getState().updateProduto(p.id, { ativo: !p.ativo });
+                        setStatusMsg({ type: 'success', text: `Produto ${!p.ativo ? 'ativado' : 'desativado'} com sucesso` });
+                      } else {
+                        setStatusMsg({ type: 'error', text: `Falha ao atualizar produto: ${json.error ?? 'erro'}` });
+                      }
+                    } catch (err) {
+                      console.error('toggle error', err);
+                      setStatusMsg({ type: 'error', text: 'Erro de rede ao atualizar produto' });
+                    } finally {
+                      clearToggling(p.id);
+                    }
+                  }} className={`px-2 py-1 rounded text-xs ${p.ativo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}`}>
+                  {p.ativo ? 'Ativo' : 'Inativo'}
+                </button>
               </div>
             </div>
           </div>

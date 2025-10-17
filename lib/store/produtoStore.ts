@@ -42,6 +42,8 @@ type ProdutoStore = {
   setSelected: (ids: Record<number, boolean>) => void;
   clearSelected: () => void;
   selectAll: (ids: number[]) => void;
+  setSelectedId: (id: number, checked: boolean) => void;
+  updateProduto: (id: number, patch: Partial<Produto>) => void;
 
   getFilteredProducts: () => Produto[];
   getSelectedCount: () => number;
@@ -78,6 +80,16 @@ export const useProdutoStore = create<ProdutoStore>((set, get) => ({
       },
     })),
 
+  // Set or clear a single selected id
+  // helper to set one id explicitly
+  setSelectedId: (id: number, checked: boolean) =>
+    set((state) => ({
+      selectedIds: {
+        ...state.selectedIds,
+        [id]: checked,
+      },
+    })),
+
   setSelected: (selectedIds) => set({ selectedIds }),
 
   clearSelected: () => set({ selectedIds: {} }),
@@ -89,6 +101,13 @@ export const useProdutoStore = create<ProdutoStore>((set, get) => ({
     });
     set({ selectedIds: newSelected });
   },
+
+  // update a single produto in the store by id (partial update)
+  updateProduto: (id: number, patch: Partial<Produto>) =>
+    set((state) => ({
+      produtos: state.produtos.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      visibleProdutos: state.visibleProdutos.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    })),
 
   getFilteredProducts: () => {
     const { visibleProdutos } = get();
