@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "npm rebuild lightningcss || true",
     "apply-migrations": "node scripts/apply_migrations.mjs",
     "prepare": "husky install",
     "start": "next start",
