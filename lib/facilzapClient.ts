@@ -220,7 +220,6 @@ function processVariacoes(produto: ExternalProduct) {
     });
   } else {
     estoqueTotal = normalizeEstoque(produto.estoque);
-    primeiro_barcode = extractBarcode(produto as Record<string, unknown>);
   }
 
   return { estoque: estoqueTotal, variacoes_meta, primeiro_barcode };
