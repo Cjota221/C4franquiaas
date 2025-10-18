@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "echo \"Test script to force git update\"",
     "apply-migrations": "node scripts/apply_migrations.mjs",
     "prepare": "husky install",
     "start": "next start",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "autoprefixer": "^10.4.19",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -39,3 +41,4 @@
     "typescript": "^5"
   }
 }
+
