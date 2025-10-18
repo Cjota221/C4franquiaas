@@ -1,4 +1,13 @@
-import { createThemes } from 'tailwindcss-theme';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+let createThemes;
+try {
+  const themePkg = require('tailwindcss-theme');
+  createThemes = themePkg?.createThemes ?? themePkg?.default?.createThemes ?? themePkg;
+} catch {
+  // package not installed or failed to load; leave createThemes undefined
+  createThemes = undefined;
+}
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -10,11 +19,13 @@ const config = {
   theme: {
     extend: {},
   },
-  plugins: [
-    createThemes({
-      inline: {},
-    }),
-  ],
+  plugins: createThemes
+    ? [
+        createThemes({
+          inline: {},
+        }),
+      ]
+    : [],
 };
 
 export default config;
