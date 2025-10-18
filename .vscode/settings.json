@@ -1,0 +1,14 @@
+{
+  "css.validate": true,
+  "scss.validate": true,
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html",
+    "javascript": "javascript",
+    "typescript": "typescriptreact",
+    "css": "css",
+    "scss": "scss",
+    "html": "html"
+  },
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore"
+}
