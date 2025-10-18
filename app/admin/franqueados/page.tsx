@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import PageWrapper from '@/components/PageWrapper';
 
 type Franqueado = {
   id: string;
@@ -111,18 +112,12 @@ export default function FranqueadosPage() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-[#FFF5FA] p-4 sm:p-6 lg:p-8">
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Franqueados</h1>
-          <p className="text-sm text-gray-600">Gerencie as franqueadas cadastradas</p>
-        </div>
-        <div>
-          <button className="px-4 py-2 bg-[#DB1472] text-white rounded">+ Novo</button>
-        </div>
-      </header>
-
-      <section className="grid grid-cols-3 gap-4 mb-6">
+    <PageWrapper
+      title="Franqueados"
+      description="Gerencie as franqueadas cadastradas"
+      actionButton={<button className="px-4 py-2 bg-[#DB1472] text-white rounded">+ Novo</button>}
+    >
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded shadow">
           <h3 className="text-sm text-gray-500">Ativos</h3>
           <div className="text-lg font-bold">{summary.ativos}</div>
@@ -247,7 +242,7 @@ export default function FranqueadosPage() {
 
       {/* Modal lateral */}
       {selected && (
-        <div className="fixed inset-0 bg-black/40 flex items-start">
+        <div className="fixed inset-0 bg-black/40 flex items-start z-50">
           <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold">Franqueada {selected.nome}</h2>
@@ -305,7 +300,7 @@ export default function FranqueadosPage() {
 
         {/* Edit modal */}
         {editMode && editForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-start">
+          <div className="fixed inset-0 bg-black/50 flex items-start z-50">
             <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold">Editar Franqueada</h2>
@@ -338,6 +333,6 @@ export default function FranqueadosPage() {
             </div>
           </div>
         )}
-    </div>
+    </PageWrapper>
   );
 }

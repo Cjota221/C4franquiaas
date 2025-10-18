@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { PlusCircle } from 'lucide-react';
 import ModalFranquia from '@/components/ModalFranquia'; // Importa nosso modal
+import PageWrapper from '@/components/PageWrapper';
 
 // Interface para definir o tipo de dados de uma franquia
 interface Franquia {
@@ -47,13 +48,10 @@ export default function FranquiasPage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Cabeçalho com título e botão de ação */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-[#333]">Gerenciamento de Franquias</h1>
-          <p className="text-lg text-gray-500 mt-1">Cadastre e gerencie as franquias da rede.</p>
-        </div>
+    <PageWrapper
+      title="Gerenciamento de Franquias"
+      description="Cadastre e gerencie as franquias da rede."
+      actionButton={
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 bg-[#DB1472] text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-pink-600 transition-colors"
@@ -61,8 +59,8 @@ export default function FranquiasPage() {
           <PlusCircle size={20} />
           Nova Franqueada
         </button>
-      </header>
-
+      }
+    >
       {/* Tabela de franquias */}
       <div className="bg-white p-6 rounded-2xl shadow-lg">
         <div className="overflow-x-auto">
@@ -108,6 +106,6 @@ export default function FranquiasPage() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveFranquia}
       />
-    </div>
+    </PageWrapper>
   );
 }

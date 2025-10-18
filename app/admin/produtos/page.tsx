@@ -10,13 +10,26 @@ import { useModalStore } from '@/lib/store/modalStore';
 import ProductDetailsModal from '@/components/ProductDetailsModal';
 import { supabase } from '@/lib/supabaseClient';
 import { useProductFilters } from '@/hooks/useProductFilters';
+import PageWrapper from '@/components/PageWrapper';
 
 const PAGE_SIZE = 30;
 
+// Tipagem para a linha de dados vinda do Supabase
+type ProdutoRow = {
+    id: number;
+    id_externo: string | null;
+    nome: string | null;
+    estoque: number | null;
+    preco_base: number | null;
+    ativo: boolean | null;
+    imagem: string | null;
+    imagens: string[] | null;
+    categorias: { id: number; nome: string }[] | null;
+};
+
+
 // simple in-memory page cache to avoid refetching when navigating back/forth
 const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
-
-// use ProdutoType from store for typing
 
 export default function ProdutosPage(): React.JSX.Element {
   // ensure filters hook runs and populates visibleProdutos from produtos
@@ -46,69 +59,35 @@ export default function ProdutosPage(): React.JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    setLoading(true);
     (async () => {
-      // debounce quick page flips
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {}, 0);
-      setLoading(true);
       try {
         const from = (pagina - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
-        // serve from cache when available
+        
         const cached = pageCache.get(pagina);
         if (cached) {
           setProdutos(cached.items);
           setTotal(cached.total);
-          // prefetch next page in background
-          void (async () => {
-            const next = pagina + 1;
-            if (!pageCache.has(next)) {
-              const f = (next - 1) * PAGE_SIZE;
-              const t = f + PAGE_SIZE - 1;
-              try {
-                const { data, error, count } = await supabase
-                  .from('produtos')
-                  .select('id,id_externo,nome,estoque,preco_base,ativo,imagem', { count: 'exact' })
-                  .range(f, t)
-                  .order('nome', { ascending: true });
-                if (!error) {
-                  const mapped = (data ?? []).map((r: Record<string, unknown>) => {
-                    const id = Number(r['id'] ?? 0);
-                    const nome = typeof r['nome'] === 'string' ? (r['nome'] as string) : String(r['nome'] ?? '');
-                    const estoque = typeof r['estoque'] === 'number' ? (r['estoque'] as number) : Number(r['estoque'] ?? 0);
-                    const preco_base = typeof r['preco_base'] === 'number' ? (r['preco_base'] as number) : (r['preco_base'] == null ? null : Number(r['preco_base']));
-                    const ativo = typeof r['ativo'] === 'boolean' ? (r['ativo'] as boolean) : Boolean(r['ativo'] ?? false);
-                    const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
-                    const decodedImagem = rawImagem ? decodeURIComponent(rawImagem) : null;
-                    const imagem = decodedImagem ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}` : null;
-                    return { id, nome, estoque, preco_base, ativo, imagem } as ProdutoType;
-                  });
-                  pageCache.set(next, { items: mapped, total: count ?? 0 });
-                }
-              } catch {}
-            }
-          })();
           setLoading(false);
           return;
         }
+
         const { data, error, count } = await supabase
           .from('produtos')
-          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem', { count: 'exact' })
+          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,categorias(id,nome)', { count: 'exact' })
           .range(from, to)
           .order('nome', { ascending: true });
+
         if (!cancelled) {
           if (error) {
             console.error('[admin/produtos] supabase list error', error);
           } else {
-            // helper to defensively decode possibly double-encoded URLs
             function safeDecodeUrl(v?: unknown) {
               if (!v) return null;
               const s = String(v);
               try {
-                // first decode
                 let d = decodeURIComponent(s);
-                // if still contains %25 (encoded %), try decode again
                 if (/%25/.test(d) || /%3A/i.test(d) && /%2F/i.test(d)) {
                   try { d = decodeURIComponent(d); } catch {}
                 }
@@ -118,22 +97,20 @@ export default function ProdutosPage(): React.JSX.Element {
               }
             }
 
-            const mapped: ProdutoType[] = (data ?? []).map((r: Record<string, unknown>) => {
-              const id = Number(r['id'] ?? 0);
-              const id_externo = typeof r['id_externo'] === 'string' ? (r['id_externo'] as string) : undefined;
-              const nome = typeof r['nome'] === 'string' ? (r['nome'] as string) : String(r['nome'] ?? '');
-              const estoque = typeof r['estoque'] === 'number' ? (r['estoque'] as number) : Number(r['estoque'] ?? 0);
-              const preco_base = typeof r['preco_base'] === 'number' ? (r['preco_base'] as number) : (r['preco_base'] == null ? null : Number(r['preco_base']));
-              const ativo = typeof r['ativo'] === 'boolean' ? (r['ativo'] as boolean) : Boolean(r['ativo'] ?? false);
-              const rawImagem = typeof r['imagem'] === 'string' ? (r['imagem'] as string) : null;
+            const mapped: ProdutoType[] = (data ?? []).map((r: ProdutoRow) => {
+              const id = Number(r.id ?? 0);
+              const id_externo = r.id_externo ?? undefined;
+              const nome = r.nome ?? '';
+              const estoque = r.estoque ?? 0;
+              const preco_base = r.preco_base ?? null;
+              const ativo = r.ativo ?? false;
+              const rawImagem = r.imagem;
               const decodedImagem = safeDecodeUrl(rawImagem);
-              // force images to go through our Netlify proxy to avoid cross-host issues
-              // Build a single canonical proxy URL. Avoid sending a redundant `url` param.
-              // We will render the image unoptimized so Next.js won't re-wrap it with /_next/image
-              // (which caused double-encoding issues).
               const imagem = decodedImagem
                 ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
                 : null;
+              const categorias = Array.isArray(r.categorias) ? r.categorias : null;
+              
               return {
                 id,
                 id_externo,
@@ -142,10 +119,11 @@ export default function ProdutosPage(): React.JSX.Element {
                 preco_base,
                 ativo,
                 imagem,
+                imagens: r.imagens || undefined,
                 estoque_display: estoque,
-              } as ProdutoType;
+                categorias,
+              };
             });
-            // cache this page for quick back/forward navigation
             pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
             setTotal(count ?? 0);
@@ -161,17 +139,16 @@ export default function ProdutosPage(): React.JSX.Element {
   }, [pagina, setProdutos, setTotal, setLoading]);
 
   return (
-    <div className="p-8 font-sans">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Catálogo de Produtos</h1>
-          <p className="text-gray-500 mt-1">Gerencie os produtos da sua loja.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button disabled={getSelectedCount() === 0} className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Ações ({getSelectedCount()})</button>
-          <button onClick={() => setCategoryPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
-        </div>
-      </div>
+     <PageWrapper
+            title="Catálogo de Produtos"
+            description="Gerencie os produtos da sua loja."
+            actionButton={
+                <>
+                    <button disabled={getSelectedCount() === 0} className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Ações ({getSelectedCount()})</button>
+                    <button onClick={() => setCategoryPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
+                </>
+            }
+        >
 
       {statusMsg && (
         <div className={`p-3 mb-6 rounded ${statusMsg.type === 'success' ? 'bg-green-500 text-white' : statusMsg.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
@@ -199,8 +176,7 @@ export default function ProdutosPage(): React.JSX.Element {
             <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} />
-              {/* Render unoptimized to avoid Next.js image optimization wrapping the proxy URL */}
-              <Image src={p.imagem ?? '/placeholder-100.png'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
+              <Image src={p.imagem ?? 'https://placehold.co/96x96/f0f0f0/a0a0a0?text=Sem+Imagem'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{p.nome}</h3>
                 <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
@@ -208,7 +184,6 @@ export default function ProdutosPage(): React.JSX.Element {
               </div>
               <div className="flex flex-col items-end gap-2 ml-2">
                 <button onClick={async () => {
-                  // open modal and load details
                   openModal(p as ProdutoType);
                   setModalLoading(true);
                   try {
@@ -222,9 +197,8 @@ export default function ProdutosPage(): React.JSX.Element {
                   } finally {
                     setModalLoading(false);
                   }
-                }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Ver Mais Detalhes</button>
+                }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Ver Detalhes</button>
 
-                {/* Toggle active */}
                 <button
                   disabled={isToggling}
                   onClick={async () => {
@@ -237,7 +211,6 @@ export default function ProdutosPage(): React.JSX.Element {
                       });
                       const json = await res.json();
                       if (res.ok && json.ok) {
-                        // immediate UI feedback
                         useProdutoStore.getState().updateProduto(p.id, { ativo: !p.ativo });
                         setStatusMsg({ type: 'success', text: `Produto ${!p.ativo ? 'ativado' : 'desativado'} com sucesso` });
                       } else {
@@ -264,9 +237,8 @@ export default function ProdutosPage(): React.JSX.Element {
         <span>Página {pagina} de {Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}</span>
         <button onClick={() => setPagina(pagina + 1)} className="px-3 py-1 border rounded">Próxima </button>
       </div>
-      {/* modal rendered at root so it can overlay the page */}
       <ProductDetailsModal />
-    </div>
+    </PageWrapper>
   );
 }
 
