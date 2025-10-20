@@ -7,8 +7,12 @@ export async function GET(req: NextRequest) {
     const q = url.searchParams.get('query') ?? '';
     const limit = Math.min(500, Number(url.searchParams.get('limit') ?? '200'));
     if (!q || q.trim() === '') return NextResponse.json({ produtos: [] });
-
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return NextResponse.json({ produtos: [], error: 'supabase_config_missing' }, { status: 500 });
+    }
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     // search by name (ilike) or id_externo
     const term = `%${q}%`;
     const { data, error } = await supabase

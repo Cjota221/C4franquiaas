@@ -6,10 +6,12 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
   try {
     const { id } = await context.params;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-    );
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration.' }, { status: 500 });
+    }
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Busca o produto na nossa base de dados pelo ID interno ou externo
     const { data, error } = await supabase
@@ -58,10 +60,12 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return NextResponse.json({ error: 'Nenhum campo para atualizar.' }, { status: 400 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-    );
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration.' }, { status: 500 });
+    }
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     const { data, error } = await supabase
       .from('produtos')

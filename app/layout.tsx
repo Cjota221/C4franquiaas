@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientErrorLoggerWrapper from '@/components/ClientErrorLoggerWrapper';
+import Script from 'next/script';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,16 +21,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  searchParams,
 }: Readonly<{
   children: React.ReactNode;
+  searchParams?: { [key: string]: string | string[] | undefined };
 }>) {
+  const isDebugMode = searchParams?.debug_layout === '1';
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-  {children}
-  <ClientErrorLoggerWrapper />
+        {children}
+        <ClientErrorLoggerWrapper />
+        {isDebugMode && (
+          <Script src="/debug-tools/debug-layout.js" strategy="lazyOnload" />
+        )}
       </body>
     </html>
   );

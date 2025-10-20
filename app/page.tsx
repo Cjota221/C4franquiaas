@@ -1,25 +1,24 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 /**
- * Componente da página inicial que redireciona automaticamente
- * para a página de login.
+ * A página inicial agora é um Client Component.
+ * Sua única responsabilidade é redirecionar o usuário para a página de login.
+ * O redirecionamento foi movido para dentro de um `useEffect` para garantir
+ * que ele só seja executado no lado do cliente, evitando erros de renderização no servidor.
  */
-export default function HomePage() {
+export default function Home() {
   useEffect(() => {
-    // Redireciona o usuário para a página de login assim que o componente for montado.
     // Usamos 'window.location.replace' para garantir a compatibilidade e
-    // para que o usuário não possa voltar para esta página em branco.
-    window.location.replace('/login');
-  }, []); // O array de dependências vazio garante que isso execute apenas uma vez.
+    // evitar que o usuário possa voltar para esta página no histórico do navegador.
+    window.location.replace("/login");
+  }, []);
 
-  // Exibe uma mensagem de carregamento enquanto o redirecionamento ocorre.
+  // Renderiza um loader ou uma página em branco enquanto o redirecionamento ocorre.
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center">
-        <p className="text-lg text-gray-600">Redirecionando para o painel...</p>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <p className="text-gray-600">Redirecionando para a página de login...</p>
     </div>
   );
 }

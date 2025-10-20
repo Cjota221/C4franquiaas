@@ -10,7 +10,7 @@ export type ExternalProduct = {
   ativo?: boolean;
   imagens?: Array<string | number | Record<string, unknown>>;
   fotos?: Array<string | number | Record<string, unknown>>;
-  variacoes?: Array<{ 
+  variacoes?: Array<{
     id?: string | number;
     codigo?: string;
     sku?: string;
@@ -61,7 +61,7 @@ function normalizeToProxy(u: string): string {
   if (!u) return u;
   let s = String(u).trim();
 
-  if (s.includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image') || 
+  if (s.includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image') ||
       s.includes('c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image')) return s;
 
   try {
@@ -94,12 +94,6 @@ function asString(v?: unknown): string | undefined {
   return undefined;
 }
 
-/**
- * FUNÇÃO CRÍTICA: Normaliza estoque em qualquer formato da API
- * Formato 1: number → 10
- * Formato 2: string → "10"
- * Formato 3: objeto → { estoque: 10 } ou { estoque: "10" }
- */
 function normalizeEstoque(estoqueField: unknown): number {
   if (typeof estoqueField === 'number' && Number.isFinite(estoqueField)) {
     return estoqueField;
@@ -114,7 +108,7 @@ function normalizeEstoque(estoqueField: unknown): number {
 
   if (estoqueField && typeof estoqueField === 'object' && !Array.isArray(estoqueField)) {
     const obj = estoqueField as Record<string, unknown>;
-    
+
     if ('estoque' in obj) {
       const est = obj['estoque'];
       if (typeof est === 'number' && Number.isFinite(est)) return est;
@@ -145,7 +139,7 @@ function normalizeEstoque(estoqueField: unknown): number {
 
 function extractBarcode(item: Record<string, unknown>): string | null {
   if (!item) return null;
-  
+
   const arrKeys = ['cod_barras', 'codigos', 'codigos_de_barras', 'codigos_barras'];
   for (const k of arrKeys) {
     const v = item[k];
@@ -156,14 +150,14 @@ function extractBarcode(item: Record<string, unknown>): string | null {
       }
     }
   }
-  
+
   const candidates = ['codigo_barras', 'codigoBarras', 'codigo', 'ean', 'gtin', 'barcode', 'cod_barras'];
   for (const k of candidates) {
     const v = item[k];
     if (typeof v === 'string' && v.trim() !== '') return v.trim();
     if (typeof v === 'number') return String(v);
   }
-  
+
   for (const key of Object.keys(item)) {
     const lk = key.toLowerCase();
     if (lk.includes('cod') || lk.includes('ean') || lk.includes('bar') || lk.includes('gtin')) {
@@ -172,7 +166,7 @@ function extractBarcode(item: Record<string, unknown>): string | null {
       if (typeof v === 'number') return String(v);
     }
   }
-  
+
   return null;
 }
 
@@ -181,19 +175,19 @@ function processVariacoes(produto: ExternalProduct) {
   const variacoes_meta: VariacaoMeta[] = [];
   let primeiro_barcode: string | null = null;
 
-  const productBarcodes = Array.isArray((produto as Record<string, unknown>)['cod_barras']) 
-    ? (produto as Record<string, unknown>)['cod_barras'] as unknown[] 
+  const productBarcodes = Array.isArray((produto as Record<string, unknown>)['cod_barras'])
+    ? (produto as Record<string, unknown>)['cod_barras'] as unknown[]
     : undefined;
 
   if (Array.isArray(produto.variacoes) && produto.variacoes.length > 0) {
     produto.variacoes.forEach((variacao, idx) => {
       const rec = (variacao && typeof variacao === 'object') ? variacao as Record<string, unknown> : {};
-      
+
       const estoqueVal = normalizeEstoque(rec['estoque']);
       estoqueTotal += estoqueVal;
 
       let barcode = extractBarcode(rec);
-      
+
       if ((!barcode || barcode === '') && Array.isArray(productBarcodes) && productBarcodes[idx]) {
         const cand = productBarcodes[idx];
         if (typeof cand === 'string' && cand.trim() !== '') barcode = cand.trim();
@@ -207,7 +201,7 @@ function processVariacoes(produto: ExternalProduct) {
         if (typeof cand === 'string' || typeof cand === 'number') return cand as string | number;
         return undefined;
       })();
-      
+
       const nome = asString(rec['nome']);
 
       variacoes_meta.push({
@@ -237,7 +231,7 @@ function extractPrecoBase(produto: ExternalProduct): number | null {
       }
     }
   }
-  
+
   if (Array.isArray(produto.variacoes) && produto.variacoes.length > 0) {
     const p0 = produto.variacoes[0];
     if (p0) {
@@ -249,13 +243,13 @@ function extractPrecoBase(produto: ExternalProduct): number | null {
       }
     }
   }
-  
+
   if (typeof produto.preco === 'number') return produto.preco as number;
   if (typeof produto.preco === 'string') {
     const n = Number(produto.preco);
     if (Number.isFinite(n)) return n;
   }
-  
+
   return null;
 }
 
@@ -275,10 +269,10 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
   const token = process.env.FACILZAP_TOKEN;
   if (!token) throw new Error('FACILZAP_TOKEN não configurado');
 
-  const client = axios.create({ 
-    baseURL: FACILZAP_API, 
-    timeout: TIMEOUT, 
-    headers: { Authorization: `Bearer ${token}` } 
+  const client = axios.create({
+    baseURL: FACILZAP_API,
+    timeout: TIMEOUT,
+    headers: { Authorization: `Bearer ${token}` }
   });
 
   const result: ProdutoDB[] = [];
@@ -288,7 +282,7 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
   while (true) {
     const path = `/produtos?page=${page}&length=${PAGE_SIZE}`;
     let data: unknown;
-    
+
     try {
       const resp = await client.get(path);
       data = resp.data;
@@ -303,13 +297,13 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
         : Array.isArray(data)
         ? (data as ExternalProduct[])
         : [];
-        
+
     if (!items || items.length === 0) break;
 
     for (const p of items) {
       const id = asString(p.id ?? p.codigo);
       if (!id) continue;
-      
+
       const nome = asString(p.nome) ?? 'Sem nome';
       const ativo = typeof p.ativado === 'boolean' ? p.ativado : typeof p.ativo === 'boolean' ? p.ativo : true;
 
@@ -336,7 +330,7 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
     }
 
     pagesConsumed++;
-    
+
     if (process.env.DEBUG_SYNC === 'true') {
       console.log(`[facilzap] page ${page} fetched, items=${items.length}`);
     }
@@ -348,22 +342,22 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
 }
 
 export async function fetchProdutosFacilZapPage(
-  page = 1, 
+  page = 1,
   length = PAGE_SIZE
 ): Promise<{ produtos: ProdutoDB[]; page: number; count: number }> {
   const token = process.env.FACILZAP_TOKEN;
   if (!token) throw new Error('FACILZAP_TOKEN não configurado');
 
-  const client = axios.create({ 
-    baseURL: FACILZAP_API, 
-    timeout: TIMEOUT, 
-    headers: { Authorization: `Bearer ${token}` } 
+  const client = axios.create({
+    baseURL: FACILZAP_API,
+    timeout: TIMEOUT,
+    headers: { Authorization: `Bearer ${token}` }
   });
-  
+
   const result: ProdutoDB[] = [];
   const path = `/produtos?page=${page}&length=${length}`;
   let data: unknown;
-  
+
   try {
     const resp = await client.get(path);
     data = resp.data;
@@ -382,7 +376,7 @@ export async function fetchProdutosFacilZapPage(
   for (const p of items) {
     const id = asString(p.id ?? p.codigo);
     if (!id) continue;
-    
+
     const nome = asString(p.nome) ?? 'Sem nome';
     const ativo = typeof p.ativado === 'boolean' ? p.ativado : typeof p.ativo === 'boolean' ? p.ativo : true;
 
@@ -415,21 +409,21 @@ export async function fetchProdutoFacilZapById(id: string): Promise<ExternalProd
   const token = process.env.FACILZAP_TOKEN;
   if (!token) throw new Error('FACILZAP_TOKEN não configurado');
 
-  const client = axios.create({ 
-    baseURL: FACILZAP_API, 
-    timeout: TIMEOUT, 
-    headers: { Authorization: `Bearer ${token}` } 
+  const client = axios.create({
+    baseURL: FACILZAP_API,
+    timeout: TIMEOUT,
+    headers: { Authorization: `Bearer ${token}` }
   });
-  
+
   try {
     const resp = await client.get(`/produtos/${encodeURIComponent(id)}`);
     const data = resp.data;
     if (!data) return null;
-    
-    const prod = (typeof data === 'object' && data !== null && (data as Record<string, unknown>)['data']) 
-      ? (data as Record<string, unknown>)['data'] as ExternalProduct 
+
+    const prod = (typeof data === 'object' && data !== null && (data as Record<string, unknown>)['data'])
+      ? (data as Record<string, unknown>)['data'] as ExternalProduct
       : data as ExternalProduct;
-      
+
     return prod ?? null;
   } catch (err: unknown) {
     console.error('[facilzap] erro ao buscar produto detalhe', id, err instanceof Error ? err.message : String(err));

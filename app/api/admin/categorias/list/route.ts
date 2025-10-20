@@ -9,6 +9,9 @@ export async function GET() {
     return NextResponse.json({ items: [], total: 0 }, { status: 200 });
   }
 
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).');
+  }
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const { data, error, count } = await supabase.from('categorias').select('*', { count: 'exact' }).order('nome', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

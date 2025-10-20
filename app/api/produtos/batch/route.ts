@@ -21,6 +21,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Server misconfiguration: missing Supabase credentials' }, { status: 500 });
     }
 
+    if (!url || !serviceKey) {
+      return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration.' }, { status: 500 });
+    }
     const supabase = createClient(url, serviceKey);
     try {
       const { data, error } = await supabase.from('produtos').update({ ativo }).in('id', ids).select('id,ativo');

@@ -15,7 +15,12 @@ export async function POST(req: Request) {
     if (!['fixo', 'percentual'].includes(tipo)) return NextResponse.json({ error: 'tipo must be fixed or percentual' }, { status: 400 });
     if (!Number.isFinite(valor)) return NextResponse.json({ error: 'valor must be a number' }, { status: 400 });
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration.' }, { status: 500 });
+    }
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Fetch current totals and products
     const { data: produtos, error: fetchErr } = await supabase.from('produtos').select('id,preco_base').in('id', produto_ids as unknown[]);

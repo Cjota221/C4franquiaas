@@ -5,7 +5,12 @@ import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '
 // extractCategoryNames removed: categories should be managed manually in admin panel
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).' }, { status: 500 });
+  }
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
   const parsed = await request.json().catch(() => ({} as unknown));
   const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {} as Record<string, unknown>;
   const page = Number(body?.page) > 0 ? Number(body.page) : undefined;
