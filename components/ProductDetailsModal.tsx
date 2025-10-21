@@ -136,18 +136,33 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
               {!modalLoading && (!modalVariacoes || modalVariacoes.length === 0) && <div className="text-sm text-gray-500">Sem variações</div>}
               {!modalLoading && modalVariacoes && modalVariacoes.length > 0 && (
                 <div className="space-y-2">
-                  {modalVariacoes.map((v: Variacao, idx: number) => (
-                    <div key={idx} className="p-2 border rounded flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium">{v.nome ?? v.sku ?? `Var ${idx + 1}`}</div>
-                        <div className="text-xs text-gray-500">SKU: {v.sku ?? '—'}</div>
+                  {modalVariacoes.map((v: Variacao, idx: number) => {
+                    // Normalizar estoque da variação
+                    let estoqueVariacao = '—';
+                    if (v.estoque !== null && v.estoque !== undefined) {
+                      if (typeof v.estoque === 'number') {
+                        estoqueVariacao = String(v.estoque);
+                      } else if (typeof v.estoque === 'object') {
+                        const estoqueObj = v.estoque as Record<string, unknown>;
+                        if ('estoque' in estoqueObj) {
+                          estoqueVariacao = String(estoqueObj.estoque ?? '—');
+                        }
+                      }
+                    }
+                    
+                    return (
+                      <div key={idx} className="p-2 border rounded flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium">{v.nome ?? v.sku ?? `Var ${idx + 1}`}</div>
+                          <div className="text-xs text-gray-500">SKU: {v.sku ?? '—'}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm">Est: {estoqueVariacao}</div>
+                          <div className="text-sm">R$ {v.preco != null ? Number(v.preco).toFixed(2) : '—'}</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm">Est: {v.estoque ?? '—'}</div>
-                        <div className="text-sm">R$ {v.preco != null ? Number(v.preco).toFixed(2) : '—'}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
