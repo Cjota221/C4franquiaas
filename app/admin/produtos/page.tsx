@@ -573,23 +573,37 @@ export default function ProdutosPage(): React.JSX.Element {
               <div className="flex flex-col items-end gap-2 ml-2">
                 <button onClick={async () => {
                   try {
-                    openModal(p as ProdutoType);
                     setModalLoading(true);
                     const id = p.id_externo ?? produtoId;
                     if (!id) {
                       console.error('[detalhes] produto sem ID');
-                      setModalVariacoes(null);
+                      alert('Erro: Produto sem ID válido.');
                       setModalLoading(false);
                       return;
                     }
+                    
                     const res = await fetch(`/api/produtos/${encodeURIComponent(String(id))}`);
                     if (!res.ok) {
                       throw new Error(`HTTP ${res.status}`);
                     }
+                    
                     const json = await res.json();
-                    setModalVariacoes((json && json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
+                    
+                    // VALIDAÇÃO: Verificar se o produto foi encontrado
+                    if (!json || !json.produto) {
+                      console.error('[detalhes] Produto não encontrado na API:', json);
+                      alert(`Erro: Produto ID ${id} não encontrado no banco de dados.`);
+                      setModalLoading(false);
+                      return;
+                    }
+                    
+                    // Só abre o modal se tiver dados válidos
+                    openModal(json.produto as ProdutoType);
+                    setModalVariacoes((json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
+                    
                   } catch (err) {
                     console.error('[detalhes] erro ao carregar:', err);
+                    alert('Erro ao carregar detalhes do produto. Veja o console para mais informações.');
                     setModalVariacoes(null);
                   } finally {
                     setModalLoading(false);
