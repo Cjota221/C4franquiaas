@@ -572,41 +572,92 @@ export default function ProdutosPage(): React.JSX.Element {
               </div>
               <div className="flex flex-col items-end gap-2 ml-2">
                 <button onClick={async () => {
+                  console.group('🔍 [DEBUG] Ver Detalhes - Início');
+                  console.log('Produto clicado:', {
+                    produtoId,
+                    id_externo: p.id_externo,
+                    nome: p.nome,
+                    produto_completo: p
+                  });
+                  
                   try {
+                    console.log('⏳ Abrindo modal loading...');
                     setModalLoading(true);
+                    
                     const id = p.id_externo ?? produtoId;
+                    console.log('🔑 ID para busca:', id, 'Tipo:', typeof id);
+                    
                     if (!id) {
-                      console.error('[detalhes] produto sem ID');
+                      console.error('❌ [detalhes] produto sem ID');
                       alert('Erro: Produto sem ID válido.');
                       setModalLoading(false);
+                      console.groupEnd();
                       return;
                     }
                     
-                    const res = await fetch(`/api/produtos/${encodeURIComponent(String(id))}`);
+                    const url = `/api/produtos/${encodeURIComponent(String(id))}`;
+                    console.log('🌐 Fazendo fetch para:', url);
+                    
+                    const res = await fetch(url);
+                    console.log('📡 Response recebida:', {
+                      status: res.status,
+                      statusText: res.statusText,
+                      ok: res.ok,
+                      headers: Object.fromEntries(res.headers.entries())
+                    });
+                    
                     if (!res.ok) {
                       throw new Error(`HTTP ${res.status}`);
                     }
                     
+                    console.log('📦 Parseando JSON...');
                     const json = await res.json();
+                    console.log('✅ JSON recebido:', {
+                      temProduto: !!json?.produto,
+                      temFacilzap: !!json?.facilzap,
+                      produto: json?.produto,
+                      facilzap: json?.facilzap,
+                      json_completo: json
+                    });
                     
                     // VALIDAÇÃO: Verificar se o produto foi encontrado
                     if (!json || !json.produto) {
-                      console.error('[detalhes] Produto não encontrado na API:', json);
+                      console.error('❌ [detalhes] Produto não encontrado na API:', json);
                       alert(`Erro: Produto ID ${id} não encontrado no banco de dados.`);
                       setModalLoading(false);
+                      console.groupEnd();
                       return;
                     }
                     
+                    console.log('🎯 Abrindo modal com produto:', json.produto);
                     // Só abre o modal se tiver dados válidos
                     openModal(json.produto as ProdutoType);
-                    setModalVariacoes((json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
+                    
+                    const variacoes = (json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null;
+                    console.log('📊 Definindo variações:', {
+                      temVariacoes: !!variacoes,
+                      quantidade: variacoes?.length ?? 0,
+                      variacoes
+                    });
+                    setModalVariacoes(variacoes);
+                    
+                    console.log('✅ Modal aberto com sucesso!');
                     
                   } catch (err) {
-                    console.error('[detalhes] erro ao carregar:', err);
+                    console.error('💥 [detalhes] ERRO ao carregar:', {
+                      error: err,
+                      message: err instanceof Error ? err.message : String(err),
+                      stack: err instanceof Error ? err.stack : undefined,
+                      tipo: typeof err,
+                      produtoId,
+                      id_externo: p.id_externo
+                    });
                     alert('Erro ao carregar detalhes do produto. Veja o console para mais informações.');
                     setModalVariacoes(null);
                   } finally {
+                    console.log('🏁 Finalizando, fechando loading...');
                     setModalLoading(false);
+                    console.groupEnd();
                   }
                 }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Ver Detalhes</button>
 

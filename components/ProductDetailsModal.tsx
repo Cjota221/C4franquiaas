@@ -29,19 +29,44 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
     return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen, closeModal]);
 
-  if (!modalOpen || !modalProduto) return null;
+  console.log('🔍 [DEBUG] ProductDetailsModal render:', {
+    modalOpen,
+    modalProduto,
+    modalVariacoes,
+    modalLoading
+  });
+
+  if (!modalOpen || !modalProduto) {
+    console.log('⏭️ Modal não renderizado (closed ou sem produto)');
+    return null;
+  }
 
   // Validação extra: garantir que modalProduto é um objeto válido
   if (typeof modalProduto !== 'object' || modalProduto === null) {
-    console.error('[ProductDetailsModal] modalProduto inválido:', modalProduto);
+    console.error('❌ [ProductDetailsModal] modalProduto inválido:', {
+      tipo: typeof modalProduto,
+      valor: modalProduto
+    });
     return null;
   }
 
   const product = modalProduto as Produto;
   
+  console.log('📦 [DEBUG] Produto no modal:', {
+    id: product.id,
+    id_externo: product.id_externo,
+    nome: product.nome,
+    preco_base: product.preco_base,
+    estoque: product.estoque,
+    estoque_display: product.estoque_display,
+    imagem: product.imagem,
+    imagens: product.imagens,
+    produto_completo: product
+  });
+  
   // Validação: garantir que product tem pelo menos um nome
   if (!product.nome && !product.id) {
-    console.error('[ProductDetailsModal] produto sem nome e sem ID:', product);
+    console.error('❌ [ProductDetailsModal] produto sem nome e sem ID:', product);
     return null;
   }
   
