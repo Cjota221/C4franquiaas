@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { useProdutoStore, Produto as ProdutoType } from '@/lib/store/produtoStore';
@@ -24,6 +24,7 @@ type ProdutoRow = {
     imagem: string | null;
     imagens: string[] | null;
     categorias: { id: number; nome: string }[] | null;
+    variacoes_meta?: { sku?: string; codigo_barras?: string }[] | null;
 };
 
 
@@ -43,6 +44,8 @@ export default function ProdutosPage(): React.JSX.Element {
   const selectedIds = useProdutoStore((s) => s.selectedIds);
   const setSelectedId = useProdutoStore((s) => s.setSelectedId);
   const getSelectedCount = useProdutoStore((s) => s.getSelectedCount);
+  const selectAll = useProdutoStore((s) => s.selectAll);
+  const clearSelected = useProdutoStore((s) => s.clearSelected);
 
   const setCategoryPanelOpen = useCategoriaStore((s) => s.setCategoryPanelOpen);
   const statusMsg = useStatusStore((s) => s.statusMsg);
@@ -54,6 +57,10 @@ export default function ProdutosPage(): React.JSX.Element {
   const openModal = useModalStore((s) => s.openModal);
   const setModalLoading = useModalStore((s) => s.setModalLoading);
   const setModalVariacoes = useModalStore((s) => s.setModalVariacoes);
+
+  // Estados locais para filtros e ações
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showActions, setShowActions] = useState(false);
 
   useEffect(() => {
     console.log('[admin/produtos] useEffect triggered, pagina:', pagina);
@@ -190,6 +197,110 @@ export default function ProdutosPage(): React.JSX.Element {
     return () => { cancelled = true; };
   }, [pagina, setProdutos, setVisibleProdutos, setTotal, setLoading, setStatusMsg]);
 
+  // useEffect para aplicar filtros
+  useEffect(() => {
+    const stored = useProdutoStore.getState().produtos;
+    let filtered = [...stored];
+
+    // Filtro por termo de busca (nome, SKU, código de barras)
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => {
+        // Buscar no nome
+        if (p.nome.toLowerCase().includes(lowerSearch)) return true;
+        
+        // Buscar em variacoes_meta (SKU e código de barras)
+        if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
+          return p.variacoes_meta.some(v => {
+            const variacao = v as { sku?: string; codigo_barras?: string };
+            return (
+              (variacao.sku && variacao.sku.toLowerCase().includes(lowerSearch)) ||
+              (variacao.codigo_barras && variacao.codigo_barras.includes(lowerSearch))
+            );
+          });
+        }
+        
+        return false;
+      });
+    }
+
+    setVisibleProdutos(filtered);
+  }, [searchTerm, setVisibleProdutos]);
+
+  // Função para selecionar/desselecionar todos
+  const handleSelectAll = () => {
+    const selectedCount = getSelectedCount();
+    if (selectedCount === visibleProdutos.length && visibleProdutos.length > 0) {
+      clearSelected();
+    } else {
+      selectAll(visibleProdutos.map(p => p.id));
+    }
+  };
+
+  // Função para ações em massa
+  const handleBatchAction = async (action: 'activate' | 'deactivate') => {
+    const selected = Object.keys(selectedIds)
+      .filter(k => selectedIds[Number(k)])
+      .map(Number);
+    
+    if (selected.length === 0) {
+      setStatusMsg({ type: 'error', text: 'Nenhum produto selecionado' });
+      setTimeout(() => setStatusMsg(null), 3000);
+      return;
+    }
+
+    const novoStatus = action === 'activate';
+    
+    try {
+      if (!supabase) throw new Error('Supabase não configurado');
+      
+      const { error } = await supabase
+        .from('produtos')
+        .update({ ativo: novoStatus })
+        .in('id', selected);
+
+      if (error) {
+        setStatusMsg({ type: 'error', text: `Erro: ${error.message}` });
+      } else {
+        // Atualizar localmente
+        const stored = useProdutoStore.getState().produtos;
+        const updated = stored.map(p => 
+          selected.includes(Number(p.id)) ? { ...p, ativo: novoStatus } : p
+        );
+        setProdutos(updated);
+        setVisibleProdutos(updated.filter(p => {
+          if (!searchTerm.trim()) return true;
+          const lowerSearch = searchTerm.toLowerCase();
+          if (p.nome.toLowerCase().includes(lowerSearch)) return true;
+          if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
+            return p.variacoes_meta.some(v => {
+              const variacao = v as { sku?: string; codigo_barras?: string };
+              return (
+                (variacao.sku && variacao.sku.toLowerCase().includes(lowerSearch)) ||
+                (variacao.codigo_barras && variacao.codigo_barras.includes(lowerSearch))
+              );
+            });
+          }
+          return false;
+        }));
+        
+        setStatusMsg({ 
+          type: 'success', 
+          text: `${selected.length} produto(s) ${novoStatus ? 'ativado(s)' : 'desativado(s)'}!` 
+        });
+        clearSelected();
+        setShowActions(false);
+        setTimeout(() => setStatusMsg(null), 3000);
+      }
+    } catch (err) {
+      console.error('[batchAction] erro:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao processar ação em massa' });
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
+  };
+
+  const selectedCount = getSelectedCount();
+
   console.log('[admin/produtos] Render state:', {
     visibleProdutosCount: visibleProdutos.length,
     loading,
@@ -201,19 +312,74 @@ export default function ProdutosPage(): React.JSX.Element {
      <PageWrapper
             title="Catálogo de Produtos"
             description="Gerencie os produtos da sua loja."
-            actionButton={
-                <>
-                    <button disabled={getSelectedCount() === 0} className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Ações ({getSelectedCount()})</button>
-                    <button onClick={() => setCategoryPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
-                </>
-            }
         >
+
+      {/* Barra de Filtros e Ações */}
+      <div className="mb-6 flex flex-wrap gap-3 items-center">
+        <input
+          type="text"
+          placeholder="🔎 Buscar por nome, SKU ou código de barras..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-3 py-2 border rounded flex-1 min-w-[200px]"
+        />
+        
+        {/* Botão de Ações em Massa */}
+        <div className="relative">
+          <button 
+            disabled={selectedCount === 0}
+            onClick={() => setShowActions(!showActions)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            Ações ({selectedCount}) <span className="text-xs">▼</span>
+          </button>
+          {showActions && selectedCount > 0 && (
+            <div className="absolute z-10 mt-2 w-56 bg-white rounded-md shadow-lg border">
+              <button 
+                onClick={() => handleBatchAction('activate')} 
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                ✅ Ativar Selecionados
+              </button>
+              <button 
+                onClick={() => handleBatchAction('deactivate')} 
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                ❌ Desativar Selecionados
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button 
+          onClick={() => setCategoryPanelOpen(true)} 
+          className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
+        >
+          📁 Categorias
+        </button>
+      </div>
 
       {statusMsg && (
         <div className={`p-3 mb-6 rounded ${statusMsg.type === 'success' ? 'bg-green-500 text-white' : statusMsg.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
           {statusMsg.text}
         </div>
       )}
+
+      {/* Header do Grid com Checkbox Selecionar Todos */}
+      <div className="mb-3 flex items-center gap-3 px-2">
+        <input 
+          type="checkbox" 
+          onChange={handleSelectAll} 
+          checked={selectedCount === visibleProdutos.length && visibleProdutos.length > 0}
+          className="w-4 h-4 cursor-pointer"
+        />
+        <span className="text-sm text-gray-600">
+          {selectedCount > 0 
+            ? `${selectedCount} produto(s) selecionado(s)` 
+            : `${visibleProdutos.length} produto(s)`
+          }
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading && visibleProdutos.length === 0 && Array.from({ length: PAGE_SIZE }).map((_, i) => (
