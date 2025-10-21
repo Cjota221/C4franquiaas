@@ -21,9 +21,10 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
     { id: 'produtos', label: 'Produtos', icon: Package, href: '/admin/produtos' },
-  { id: 'franquias', label: 'Franqueadas', icon: Store, href: '/admin/franquias' },
-  { id: 'franqueados', label: 'Franqueados', icon: Users, href: '/admin/franqueados' },
-  { id: 'afiliados', label: 'Afiliados', icon: UserPlus, href: '/admin/afiliados' },
+    { id: 'franqueadas', label: 'Franqueadas', icon: Store, href: '/admin/franqueadas' },
+    { id: 'franquias', label: 'Franquias', icon: Store, href: '/admin/franquias' },
+    { id: 'franqueados', label: 'Franqueados', icon: Users, href: '/admin/franqueados' },
+    { id: 'afiliados', label: 'Afiliados', icon: UserPlus, href: '/admin/afiliados' },
     { id: 'vendas', label: 'Vendas', icon: ShoppingCart, href: '/admin/vendas' },
     { id: 'comissoes', label: 'Comissões', icon: Coins, href: '/admin/comissoes' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart, disabled: true },

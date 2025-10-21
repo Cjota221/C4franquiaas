@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import PageWrapper from '@/components/PageWrapper';
 
 type Franqueado = {
@@ -15,6 +16,15 @@ type Franqueado = {
   loja?: { nome?: string; logo?: string | null; cores?: string[]; produtos_ativos?: number } | null;
 };
 
+type ProdutoVinculado = {
+  id: number;
+  nome: string;
+  preco_base?: number | null;
+  imagem?: string | null;
+  ativo: boolean;
+  vinculado_em?: string;
+};
+
 export default function FranqueadosPage() {
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'ativo' | 'inativo'>('todos');
@@ -26,8 +36,29 @@ export default function FranqueadosPage() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState<Franqueado | null>(null);
   const [summary, setSummary] = useState({ ativos: 0, inativos: 0, total: 0 });
+  
+  // Estados para aba de produtos
+  const [abaAtiva, setAbaAtiva] = useState<'info' | 'produtos'>('info');
+  const [produtosVinculados, setProdutosVinculados] = useState<ProdutoVinculado[]>([]);
+  const [loadingProdutos, setLoadingProdutos] = useState(false);
 
 
+
+  // Carregar produtos vinculados
+  async function carregarProdutosVinculados(franqueadaId: string) {
+    setLoadingProdutos(true);
+    try {
+      const res = await fetch(`/api/admin/franqueados/${franqueadaId}/produtos`);
+      if (!res.ok) throw new Error('Erro ao carregar produtos');
+      const json = await res.json();
+      setProdutosVinculados(json.data || []);
+    } catch (err) {
+      console.error('Erro ao carregar produtos:', err);
+      setProdutosVinculados([]);
+    } finally {
+      setLoadingProdutos(false);
+    }
+  }
 
   // Action handlers that call the server action endpoint
   async function toggleStatusServer(f: Franqueado) {
@@ -246,53 +277,127 @@ export default function FranqueadosPage() {
           <div className="ml-auto w-full md:w-2/5 bg-white p-4 md:p-6 overflow-auto h-full">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold">Franqueada {selected.nome}</h2>
-              <button onClick={() => setSelected(null)} className="text-gray-600">Fechar</button>
+              <button onClick={() => { setSelected(null); setAbaAtiva('info'); }} className="text-gray-600">Fechar</button>
             </div>
 
-            <section className="mt-4">
-              <h3 className="font-semibold">Dados</h3>
-              <p><strong>Nome:</strong> {selected.nome}</p>
-              <p><strong>E-mail:</strong> {selected.email}</p>
-              <p><strong>Telefone:</strong> {selected.telefone ?? '—'}</p>
-              <p><strong>Cidade:</strong> {selected.cidade ?? '—'}</p>
-              <p><strong>Cadastrado em:</strong> {selected.criado_em ? new Date(selected.criado_em).toLocaleString() : '—'}</p>
-            </section>
-
-            <section className="mt-4">
-              <h3 className="font-semibold">Loja</h3>
-              <p><strong>Nome da loja:</strong> {selected.loja?.nome ?? '—'}</p>
-              <p><strong>Produtos ativos:</strong> {selected.loja?.produtos_ativos ?? 0}</p>
-            </section>
-
-            <section className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-3 rounded">
-                <h4 className="text-sm text-gray-500">Total de Vendas</h4>
-                <div className="font-bold">{selected.vendas_total ?? 0}</div>
+            {/* Abas */}
+            <div className="border-b border-gray-300 mt-4 mb-4">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setAbaAtiva('info')}
+                  className={`px-4 py-2 font-medium ${
+                    abaAtiva === 'info'
+                      ? 'border-b-2 border-indigo-600 text-indigo-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  ℹ️ Informações
+                </button>
+                <button
+                  onClick={() => {
+                    setAbaAtiva('produtos');
+                    carregarProdutosVinculados(selected.id);
+                  }}
+                  className={`px-4 py-2 font-medium ${
+                    abaAtiva === 'produtos'
+                      ? 'border-b-2 border-indigo-600 text-indigo-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  📦 Produtos
+                </button>
               </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <h4 className="text-sm text-gray-500">Total de Clientes</h4>
-                <div className="font-bold">—</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <h4 className="text-sm text-gray-500">Comissão Acumulada</h4>
-                <div className="font-bold">R$ {Number(selected.comissao_acumulada ?? 0).toFixed(2)}</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <h4 className="text-sm text-gray-500">Último Acesso</h4>
-                <div className="font-bold">—</div>
-              </div>
-            </section>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <a className="w-full sm:w-auto px-4 py-3 bg-[#DB1472] text-white rounded" href="#" target="_blank" rel="noreferrer">Ver Loja</a>
-              <button
-                onClick={() => { if (selected) toggleStatusServer(selected); }}
-                className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded"
-              >
-                {selected?.status === 'inativo' ? 'Ativar' : 'Desativar'}
-              </button>
-              <button className="w-full sm:w-auto px-4 py-3 border rounded">Ver Histórico de Pagamentos</button>
             </div>
+
+            {/* Conteúdo da aba Info */}
+            {abaAtiva === 'info' && (
+              <div>
+                <section className="mt-4">
+                  <h3 className="font-semibold">Dados</h3>
+                  <p><strong>Nome:</strong> {selected.nome}</p>
+                  <p><strong>E-mail:</strong> {selected.email}</p>
+                  <p><strong>Telefone:</strong> {selected.telefone ?? '—'}</p>
+                  <p><strong>Cidade:</strong> {selected.cidade ?? '—'}</p>
+                  <p><strong>Cadastrado em:</strong> {selected.criado_em ? new Date(selected.criado_em).toLocaleString() : '—'}</p>
+                </section>
+
+                <section className="mt-4">
+                  <h3 className="font-semibold">Loja</h3>
+                  <p><strong>Nome da loja:</strong> {selected.loja?.nome ?? '—'}</p>
+                  <p><strong>Produtos ativos:</strong> {selected.loja?.produtos_ativos ?? 0}</p>
+                </section>
+
+                <section className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <h4 className="text-sm text-gray-500">Total de Vendas</h4>
+                    <div className="font-bold">{selected.vendas_total ?? 0}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <h4 className="text-sm text-gray-500">Total de Clientes</h4>
+                    <div className="font-bold">—</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <h4 className="text-sm text-gray-500">Comissão Acumulada</h4>
+                    <div className="font-bold">R$ {Number(selected.comissao_acumulada ?? 0).toFixed(2)}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <h4 className="text-sm text-gray-500">Último Acesso</h4>
+                    <div className="font-bold">—</div>
+                  </div>
+                </section>
+
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <a className="w-full sm:w-auto px-4 py-3 bg-[#DB1472] text-white rounded" href="#" target="_blank" rel="noreferrer">Ver Loja</a>
+                  <button
+                    onClick={() => { if (selected) toggleStatusServer(selected); }}
+                    className="w-full sm:w-auto px-4 py-3 bg-red-600 text-white rounded"
+                  >
+                    {selected?.status === 'inativo' ? 'Ativar' : 'Desativar'}
+                  </button>
+                  <button className="w-full sm:w-auto px-4 py-3 border rounded">Ver Histórico de Pagamentos</button>
+                </div>
+              </div>
+            )}
+
+            {/* Conteúdo da aba Produtos */}
+            {abaAtiva === 'produtos' && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4">📦 Produtos Vinculados</h3>
+                {loadingProdutos ? (
+                  <div className="text-center py-8 text-gray-500">Carregando produtos...</div>
+                ) : produtosVinculados.length === 0 ? (
+                  <p className="text-gray-500 text-sm py-8 text-center">Nenhum produto vinculado ainda.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {produtosVinculados.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                        <div className="flex items-center gap-3 flex-1">
+                          {p.imagem && (
+                            <Image src={p.imagem} alt={p.nome} width={48} height={48} className="w-12 h-12 object-cover rounded" />
+                          )}
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{p.nome}</div>
+                            <div className="text-xs text-gray-500">
+                              R$ {p.preco_base?.toFixed(2) ?? '0.00'}
+                              {p.vinculado_em && (
+                                <span className="ml-2">• Vinculado em {new Date(p.vinculado_em).toLocaleDateString('pt-BR')}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          p.ativo
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {p.ativo ? '✓ Ativo' : '✕ Inativo'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         </div>
