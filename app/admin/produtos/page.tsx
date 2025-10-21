@@ -241,7 +241,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
   return (
     <PageWrapper title="Produtos">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">📦 Gerenciar Produtos</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#333]">Gerenciar Produtos</h1>
 
       {/* Barra de Ferramentas */}
       <div className="mb-6 space-y-3">
@@ -250,14 +250,14 @@ export default function ProdutosPage(): React.JSX.Element {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="🔍 Buscar por nome ou ID (mostra todos os resultados)..."
+              placeholder="Buscar por nome ou ID (mostra todos os resultados)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all pr-10"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#DB1472] focus:ring-2 focus:ring-[#DB1472]/20 transition-all pr-10"
             />
             {isSearching && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#DB1472] border-t-transparent"></div>
               </div>
             )}
           </div>
@@ -266,9 +266,9 @@ export default function ProdutosPage(): React.JSX.Element {
           <select
             value={filtroCategoria || ''}
             onChange={(e) => setFiltroCategoria(e.target.value ? Number(e.target.value) : null)}
-            className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#DB1472] focus:ring-2 focus:ring-[#DB1472]/20 transition-all"
           >
-            <option value="">🏷️ Todas as categorias</option>
+            <option value="">Todas as categorias</option>
             {categorias.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.nome}</option>
             ))}
@@ -279,40 +279,40 @@ export default function ProdutosPage(): React.JSX.Element {
         <div className="flex gap-3 items-center flex-wrap">
           <button 
             onClick={() => setCategoryPanelOpen(true)} 
-            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md font-medium"
+            className="px-4 py-2 bg-[#DB1472] text-white rounded-lg hover:bg-[#DB1472]/90 transition-all shadow-md font-medium"
           >
-            📁 Gerenciar Categorias
+            Gerenciar Categorias
           </button>
 
           <button
             onClick={() => setModalVincularOpen(true)}
             disabled={selectedCount === 0}
-            className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
+            className="px-4 py-2 bg-[#F8B81F] text-[#333] rounded-lg hover:bg-[#F8B81F]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
           >
-            🔗 Vincular/Desvincular ({selectedCount})
+            Vincular/Desvincular ({selectedCount})
           </button>
 
           <div className="relative">
             <button 
               disabled={selectedCount === 0}
               onClick={() => setShowActions(!showActions)}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg disabled:opacity-50 hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md flex items-center gap-2 font-medium"
+              className="px-4 py-2 bg-[#333] text-white rounded-lg disabled:opacity-50 hover:bg-[#333]/90 transition-all shadow-md flex items-center gap-2 font-medium"
             >
-              ⚡ Ações ({selectedCount}) <span className="text-xs">▼</span>
+              Ações ({selectedCount}) <span className="text-xs">▼</span>
             </button>
             {showActions && selectedCount > 0 && (
               <div className="absolute z-10 mt-2 w-56 bg-white rounded-lg shadow-xl border-2 border-gray-200">
                 <button 
                   onClick={() => handleBatchAction('activate')} 
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 font-medium transition-colors"
+                  className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-[#F8B81F]/20 font-medium transition-colors"
                 >
-                  ✅ Ativar Selecionados
+                  Ativar Selecionados
                 </button>
                 <button 
                   onClick={() => handleBatchAction('deactivate')} 
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
+                  className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
                 >
-                  ❌ Desativar Selecionados
+                  Desativar Selecionados
                 </button>
               </div>
             )}
@@ -321,7 +321,7 @@ export default function ProdutosPage(): React.JSX.Element {
           {selectedCount > 0 && (
             <button
               onClick={() => clearSelected()}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              className="px-4 py-2 bg-gray-200 text-[#333] rounded-lg hover:bg-gray-300 transition-colors font-medium"
             >
               Limpar Seleção
             </button>
@@ -345,18 +345,18 @@ export default function ProdutosPage(): React.JSX.Element {
         <span className="text-sm font-medium text-gray-600">
           {loading ? (
             <span className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#DB1472] border-t-transparent"></div>
               Carregando...
             </span>
           ) : temBusca ? (
-            `🔍 ${produtosFiltrados.length} resultado(s) encontrado(s)`
+            `${produtosFiltrados.length} resultado(s) encontrado(s)`
           ) : (
-            `📊 Mostrando ${produtosFiltrados.length} de ${totalProdutos} produto(s)`
+            `Mostrando ${produtosFiltrados.length} de ${totalProdutos} produto(s)`
           )}
         </span>
         {selectedCount > 0 && (
-          <span className="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-            ✓ {selectedCount} selecionado(s)
+          <span className="text-sm font-medium text-[#DB1472] bg-[#DB1472]/10 px-3 py-1 rounded-full">
+            {selectedCount} selecionado(s)
           </span>
         )}
       </div>
@@ -390,7 +390,7 @@ export default function ProdutosPage(): React.JSX.Element {
               <div
                 key={produtoId}
                 className={`bg-white rounded-lg shadow-md hover:shadow-xl transition-all ${
-                  isSelected ? 'ring-4 ring-indigo-500' : ''
+                  isSelected ? 'ring-4 ring-[#DB1472]' : ''
                 } ${!produtoAtivo ? 'opacity-60' : ''}`}
               >
                 <div className="p-4">
@@ -421,12 +421,12 @@ export default function ProdutosPage(): React.JSX.Element {
                   </div>
 
                   {/* Info */}
-                  <h3 className="font-bold text-gray-800 mb-2 line-clamp-2">{p.nome}</h3>
+                  <h3 className="font-bold text-[#333] mb-2 line-clamp-2">{p.nome}</h3>
                   
                   <div className="space-y-1 text-sm mb-3">
                     <p className="text-gray-600">
                       <span className="font-medium">Estoque:</span>{' '}
-                      <span className={p.estoque === 0 ? 'text-red-600 font-bold' : 'text-blue-600 font-bold'}>
+                      <span className={p.estoque === 0 ? 'text-red-600 font-bold' : 'text-[#DB1472] font-bold'}>
                         {p.estoque}
                       </span>
                     </p>
@@ -438,7 +438,7 @@ export default function ProdutosPage(): React.JSX.Element {
                     {p.categorias && p.categorias.length > 0 && (
                       <p className="text-gray-600">
                         <span className="font-medium">Categorias:</span>{' '}
-                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                        <span className="text-xs bg-[#F8B81F]/20 text-[#333] px-2 py-1 rounded font-medium">
                           {p.categorias.map(c => c.nome).join(', ')}
                         </span>
                       </p>
@@ -470,9 +470,9 @@ export default function ProdutosPage(): React.JSX.Element {
                           setModalLoading(false);
                         }
                       }}
-                      className="flex-1 px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-sm font-medium"
+                      className="flex-1 px-3 py-2 bg-[#DB1472] text-white rounded hover:bg-[#DB1472]/90 transition-colors text-sm font-medium"
                     >
-                      👁️ Ver Detalhes
+                      Ver Detalhes
                     </button>
                     <button
                       disabled={isToggling}
@@ -507,10 +507,10 @@ export default function ProdutosPage(): React.JSX.Element {
                       className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                         produtoAtivo 
                           ? 'bg-green-500 text-white hover:bg-green-600' 
-                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                          : 'bg-gray-400 text-white hover:bg-gray-500'
                       } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {isToggling ? '⏳' : produtoAtivo ? '✓ Ativo' : '✕ Inativo'}
+                      {isToggling ? 'Atualizando...' : produtoAtivo ? 'Ativo' : 'Inativo'}
                     </button>
                   </div>
                 </div>

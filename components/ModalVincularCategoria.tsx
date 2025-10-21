@@ -104,8 +104,8 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-xl max-w-md w-full shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
-          <h2 className="text-xl font-bold">🔗 Gerenciar Categorias</h2>
+        <div className="bg-[#DB1472] text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
+          <h2 className="text-xl font-bold">Gerenciar Categorias</h2>
           <button
             className="text-white hover:bg-white/20 transition-colors px-3 py-1 rounded"
             onClick={onClose}
@@ -125,33 +125,33 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
               onClick={() => setModo('vincular')}
               className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${
                 modo === 'vincular'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-[#DB1472] text-white'
+                  : 'bg-gray-200 text-[#333] hover:bg-gray-300'
               }`}
             >
-              ➕ Vincular
+              Vincular
             </button>
             <button
               onClick={() => setModo('desvincular')}
               className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${
                 modo === 'desvincular'
                   ? 'bg-red-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-[#333] hover:bg-gray-300'
               }`}
             >
-              ➖ Desvincular
+              Desvincular
             </button>
           </div>
 
           {/* Selecionar categoria */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#333] mb-2">
               Selecione a categoria:
             </label>
             <select
               value={categoriaSelecionada || ''}
               onChange={(e) => setCategoriaSelecionada(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
             >
               <option value="">-- Escolha uma categoria --</option>
               {categorias.map((cat) => (
@@ -169,7 +169,7 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
               disabled={loading || !categoriaSelecionada}
               className={`flex-1 py-2 px-4 rounded font-medium text-white transition-colors ${
                 modo === 'vincular'
-                  ? 'bg-green-500 hover:bg-green-600'
+                  ? 'bg-[#DB1472] hover:bg-[#DB1472]/90'
                   : 'bg-red-500 hover:bg-red-600'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
@@ -187,7 +187,7 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-gray-300 text-[#333] rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               Cancelar
             </button>
