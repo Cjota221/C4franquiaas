@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { useProdutoStore, Produto as ProdutoType } from '@/lib/store/produtoStore';
@@ -13,7 +13,6 @@ import PageWrapper from '@/components/PageWrapper';
 
 const PAGE_SIZE = 30;
 
-// Tipagem para a linha de dados vinda do Supabase
 type ProdutoRow = {
     id: number;
     id_externo: string | null;
@@ -24,63 +23,33 @@ type ProdutoRow = {
     imagem: string | null;
     imagens: string[] | null;
     categorias: { id: number; nome: string }[] | null;
+    variacoes_meta: { sku?: string; codigo_barras?: string }[] | null;
 };
 
-
-// simple in-memory page cache to avoid refetching when navigating back/forth
 const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
 export default function ProdutosPage(): React.JSX.Element {
-  const visibleProdutos = useProdutoStore((s) => s.visibleProdutos);
-  const pagina = useProdutoStore((s) => s.pagina);
-  const total = useProdutoStore((s) => s.total);
-  const loading = useProdutoStore((s) => s.loading);
-  const setPagina = useProdutoStore((s) => s.setPagina);
-  const setProdutos = useProdutoStore((s) => s.setProdutos);
-  const setVisibleProdutos = useProdutoStore((s) => s.setVisibleProdutos);
-  const setTotal = useProdutoStore((s) => s.setTotal);
-  const setLoading = useProdutoStore((s) => s.setLoading);
-  const selectedIds = useProdutoStore((s) => s.selectedIds);
-  const setSelectedId = useProdutoStore((s) => s.setSelectedId);
-  const getSelectedCount = useProdutoStore((s) => s.getSelectedCount);
+  const { 
+    produtos, setProdutos, visibleProdutos, setVisibleProdutos, 
+    pagina, setPagina, total, setTotal, loading, setLoading, 
+    selectedIds, setSelectedId, getSelectedCount, selectAll, clearSelected 
+  } = useProdutoStore();
+  
+  const { setCategoryPanelOpen } = useCategoriaStore();
+  const { statusMsg, setStatusMsg, toggling, setToggling, clearToggling } = useStatusStore();
+  const { openModal, setModalLoading, setModalVariacoes } = useModalStore();
 
-  const setCategoryPanelOpen = useCategoriaStore((s) => s.setCategoryPanelOpen);
-  const statusMsg = useStatusStore((s) => s.statusMsg);
-  const setStatusMsg = useStatusStore((s) => s.setStatusMsg);
-  const setToggling = useStatusStore((s) => s.setToggling);
-  const clearToggling = useStatusStore((s) => s.clearToggling);
-  // subscribe once to the toggling map and read per-item below
-  const toggling = useStatusStore((s) => s.toggling);
-  const openModal = useModalStore((s) => s.openModal);
-  const setModalLoading = useModalStore((s) => s.setModalLoading);
-  const setModalVariacoes = useModalStore((s) => s.setModalVariacoes);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
+  const [showActions, setShowActions] = useState(false);
 
   useEffect(() => {
-    console.log('[admin/produtos] useEffect triggered, pagina:', pagina);
     let cancelled = false;
     setLoading(true);
     (async () => {
       try {
-        console.log('[admin/produtos] Starting fetch...');
-        // Verifica se o Supabase está configurado de forma segura
-        try {
-          if (!supabase) {
-            throw new Error('Supabase não está inicializado.');
-          }
-          
-          // Tenta acessar o método 'from' de forma segura
-          const testAccess = supabase.from;
-          if (typeof testAccess !== 'function') {
-            throw new Error('Cliente Supabase inválido.');
-          }
-        } catch (proxyError) {
-          // Captura erro do Proxy quando variáveis de ambiente estão ausentes
-          const errorMsg = proxyError instanceof Error ? proxyError.message : String(proxyError);
-          throw new Error(
-            errorMsg.includes('not configured') || errorMsg.includes('NEXT_PUBLIC_SUPABASE')
-              ? '❌ Configuração Ausente: Por favor, configure as variáveis de ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no Netlify. Vá em: Site settings → Environment variables.'
-              : `Erro ao acessar Supabase: ${errorMsg}`
-          );
+        if (!supabase) {
+          throw new Error('Supabase não configurado. Verifique as variáveis de ambiente.');
         }
 
         const from = (pagina - 1) * PAGE_SIZE;
@@ -96,208 +65,194 @@ export default function ProdutosPage(): React.JSX.Element {
 
         const { data, error, count } = await supabase
           .from('produtos')
-          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,categorias(id,nome)', { count: 'exact' })
+          .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,variacoes_meta,categorias(id,nome)', { count: 'exact' })
           .range(from, to)
           .order('nome', { ascending: true });
 
-        console.log('[admin/produtos] Query result:', { 
-          dataLength: data?.length, 
-          error, 
-          count,
-          hasData: !!data 
-        });
-
         if (!cancelled) {
           if (error) {
-            console.error('[admin/produtos] supabase list error', error);
-            setStatusMsg({ type: 'error', text: `Erro ao carregar produtos: ${error.message}` });
+            console.error('[admin/produtos] erro supabase:', error);
+            setStatusMsg({ type: 'error', text: Erro:  });
           } else {
-            function safeDecodeUrl(v?: unknown) {
-              if (!v) return null;
-              const s = String(v);
-              try {
-                let d = decodeURIComponent(s);
-                if (/%25/.test(d) || /%3A/i.test(d) && /%2F/i.test(d)) {
-                  try { d = decodeURIComponent(d); } catch {}
-                }
-                return d;
-              } catch {
-                return s;
-              }
-            }
-
-            const mapped: ProdutoType[] = (data ?? [])
-              .map((r: ProdutoRow) => {
-                // Mantém o ID como está (pode ser number ou string/UUID)
-                const id = r.id;
-                
-                // Valida se o ID existe
-                if (!id || id === null || id === undefined) {
-                  console.warn('[admin/produtos] Produto sem ID ignorado:', r);
-                  return null;
-                }
-                
-                const id_externo = r.id_externo ?? undefined;
-                const nome = r.nome ?? '';
-                const estoque = r.estoque ?? 0;
-                const preco_base = r.preco_base ?? null;
-                const ativo = r.ativo ?? false;
-                const rawImagem = r.imagem;
-                const decodedImagem = safeDecodeUrl(rawImagem);
-                const imagem = decodedImagem
-                  ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
-                  : null;
-                const categorias = Array.isArray(r.categorias) ? r.categorias : null;
-              
-              return {
-                id,
-                id_externo,
-                nome,
-                estoque,
-                preco_base,
-                ativo,
-                imagem,
-                imagens: r.imagens || undefined,
-                estoque_display: estoque,
-                categorias,
-              };
-            })
-            .filter(p => p !== null) as ProdutoType[]; // Remove produtos com ID inválido
-            
-            console.log('[admin/produtos] Mapped products:', {
-              originalCount: data?.length,
-              mappedCount: mapped.length,
-              sampleProduct: mapped[0]
-            });
-            
+            const mapped: ProdutoType[] = (data ?? []).map((r: ProdutoRow) => ({
+              id: Number(r.id ?? 0),
+              id_externo: r.id_externo ?? undefined,
+              nome: r.nome ?? '',
+              estoque: r.estoque ?? 0,
+              preco_base: r.preco_base ?? null,
+              ativo: r.ativo ?? false,
+              imagem: r.imagem,
+              imagens: r.imagens || undefined,
+              categorias: r.categorias || null,
+              variacoes_meta: r.variacoes_meta || undefined,
+            }));
             pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
-            setVisibleProdutos(mapped);
             setTotal(count ?? 0);
           }
         }
       } catch (err) {
-        console.error('[admin/produtos] fetch error', err);
-        if (err instanceof Error) {
-          setStatusMsg({ type: 'error', text: `Erro inesperado: ${err.message}` });
-        } else {
-          setStatusMsg({ type: 'error', text: 'Ocorreu um erro inesperado ao buscar os produtos.' });
-        }
+        console.error('[admin/produtos] erro fetch:', err);
+        const message = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
+        setStatusMsg({ type: 'error', text: message });
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [pagina, setProdutos, setVisibleProdutos, setTotal, setLoading, setStatusMsg]);
+  }, [pagina, setProdutos, setTotal, setLoading, setStatusMsg]);
 
-  console.log('[admin/produtos] Render state:', {
-    visibleProdutosCount: visibleProdutos.length,
-    loading,
-    pagina,
-    total
-  });
+  useEffect(() => {
+    let filtered = [...produtos];
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.nome.toLowerCase().includes(lowerSearch) ||
+        p.variacoes_meta?.some(v => v.sku?.toLowerCase().includes(lowerSearch) || v.codigo_barras?.includes(lowerSearch))
+      );
+    }
+    if (selectedCategoryFilter) {
+      filtered = filtered.filter(p => p.categorias?.some(c => c.id === selectedCategoryFilter));
+    }
+    setVisibleProdutos(filtered);
+  }, [searchTerm, selectedCategoryFilter, produtos, setVisibleProdutos]);
+
+  const selectedCount = getSelectedCount();
+
+  const handleSelectAll = () => {
+    if (selectedCount === visibleProdutos.length) {
+      clearSelected();
+    } else {
+      selectAll(visibleProdutos.map(p => p.id));
+    }
+  };
+
+  const handleToggleAtivo = async (produto: ProdutoType) => {
+    const id = produto.id;
+    const novoStatus = !produto.ativo;
+    setToggling(id, true);
+    try {
+      if (!supabase) throw new Error('Supabase não configurado');
+      const { error } = await supabase.from('produtos').update({ ativo: novoStatus }).eq('id', id);
+      if (error) {
+        console.error('[toggleAtivo] erro:', error);
+        setStatusMsg({ type: 'error', text: Erro ao alterar status:  });
+      } else {
+        const updated = produtos.map(p => p.id === id ? { ...p, ativo: novoStatus } : p);
+        setProdutos(updated);
+        setStatusMsg({ type: 'success', text: Produto  com sucesso! });
+        setTimeout(() => setStatusMsg(null), 3000);
+      }
+    } catch (err) {
+      console.error('[toggleAtivo] erro:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao alterar status do produto' });
+    } finally {
+      clearToggling(id);
+    }
+  };
+
+  const handleBatchAction = async (action: 'activate' | 'deactivate' | 'price' | 'category') => {
+    const selected = Object.keys(selectedIds).filter(k => selectedIds[Number(k)]).map(Number);
+    if (selected.length === 0) {
+      setStatusMsg({ type: 'error', text: 'Nenhum produto selecionado' });
+      return;
+    }
+    switch (action) {
+      case 'activate':
+      case 'deactivate':
+        const novoStatus = action === 'activate';
+        try {
+          if (!supabase) throw new Error('Supabase não configurado');
+          const { error } = await supabase.from('produtos').update({ ativo: novoStatus }).in('id', selected);
+          if (error) {
+            setStatusMsg({ type: 'error', text: Erro:  });
+          } else {
+            const updated = produtos.map(p => selected.includes(p.id) ? { ...p, ativo: novoStatus } : p);
+            setProdutos(updated);
+            setStatusMsg({ type: 'success', text: ${selected.length} produto(s) ! });
+            clearSelected();
+            setShowActions(false);
+            setTimeout(() => setStatusMsg(null), 3000);
+          }
+        } catch (err) {
+          setStatusMsg({ type: 'error', text: 'Erro ao processar ação em massa' });
+        }
+        break;
+      case 'price':
+        alert('Modal de alteração de preço em desenvolvimento');
+        break;
+      case 'category':
+        alert('Modal de seleção de categoria em desenvolvimento');
+        break;
+    }
+  };
 
   return (
-     <PageWrapper
-            title="Catálogo de Produtos"
-            description="Gerencie os produtos da sua loja."
-            actionButton={
-                <>
-                    <button disabled={getSelectedCount() === 0} className="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50">Ações ({getSelectedCount()})</button>
-                    <button onClick={() => setCategoryPanelOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded">Categorias</button>
-                </>
-            }
-        >
-
-      {statusMsg && (
-        <div className={`p-3 mb-6 rounded ${statusMsg.type === 'success' ? 'bg-green-500 text-white' : statusMsg.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
-          {statusMsg.text}
+    <PageWrapper title="Catálogo de Produtos" description="Gerencie os produtos da sua loja.">
+      <div className="mb-6 flex flex-wrap gap-4 items-center">
+        <input type="text" placeholder=" Filtrar por nome, SKU ou cód. de barras..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="px-3 py-2 border rounded w-full md:w-1/3" />
+        <div className="relative">
+          <button disabled={selectedCount === 0} onClick={() => setShowActions(!showActions)} className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50 flex items-center gap-2 hover:bg-indigo-700 transition-colors">Ações ({selectedCount}) <span className="text-xs"></span></button>
+          {showActions && selectedCount > 0 && (
+            <div className="absolute z-10 mt-2 w-56 bg-white rounded-md shadow-lg border">
+              <button onClick={() => handleBatchAction('activate')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"> Ativar Selecionados</button>
+              <button onClick={() => handleBatchAction('deactivate')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"> Desativar Selecionados</button>
+              <button onClick={() => handleBatchAction('price')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"> Alterar Preço</button>
+              <button onClick={() => handleBatchAction('category')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"> Adicionar a Categoria</button>
+            </div>
+          )}
         </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {loading && visibleProdutos.length === 0 && Array.from({ length: PAGE_SIZE }).map((_, i) => (
-          <div key={`skeleton-${i}`} className="bg-white rounded-lg shadow p-4 animate-pulse">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-gray-200 rounded" />
-              <div className="w-24 h-24 bg-gray-200 rounded" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-1/3" />
-              </div>
-            </div>
-          </div>
-        ))}
-        {visibleProdutos.map((p: ProdutoType) => {
-          const isToggling = Boolean(toggling[p.id]);
-          return (
-            <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
-            <div className="flex items-start gap-3">
-              <input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} />
-              <Image src={p.imagem ?? 'https://placehold.co/96x96/f0f0f0/a0a0a0?text=Sem+Imagem'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm">{p.nome}</h3>
-                <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
-                <p className="text-sm text-gray-500">Est: {p.estoque_display}</p>
-              </div>
-              <div className="flex flex-col items-end gap-2 ml-2">
-                <button onClick={async () => {
-                  openModal(p as ProdutoType);
-                  setModalLoading(true);
-                  try {
-                    const id = p.id_externo ?? p.id;
-                    const res = await fetch(`/api/produtos/${encodeURIComponent(String(id))}`);
-                    const json = await res.json();
-                    setModalVariacoes((json && json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
-                  } catch (err) {
-                    console.error('failed to load product details', err);
-                    setModalVariacoes(null);
-                  } finally {
-                    setModalLoading(false);
-                  }
-                }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Ver Detalhes</button>
-
-                <button
-                  disabled={isToggling}
-                  onClick={async () => {
-                    setToggling(p.id, true);
-                    try {
-                      const res = await fetch('/api/produtos/batch', {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ids: [p.id], ativo: !p.ativo }),
-                      });
-                      const json = await res.json();
-                      if (res.ok && json.ok) {
-                        useProdutoStore.getState().updateProduto(p.id, { ativo: !p.ativo });
-                        setStatusMsg({ type: 'success', text: `Produto ${!p.ativo ? 'ativado' : 'desativado'} com sucesso` });
-                      } else {
-                        setStatusMsg({ type: 'error', text: `Falha ao atualizar produto: ${json.error ?? 'erro'}` });
-                      }
-                    } catch (err) {
-                      console.error('toggle error', err);
-                      setStatusMsg({ type: 'error', text: 'Erro de rede ao atualizar produto' });
-                    } finally {
-                      clearToggling(p.id);
-                    }
-                  }} className={`px-2 py-1 rounded text-xs ${p.ativo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  {isToggling ? 'Atualizando...' : (p.ativo ? 'Ativo' : 'Inativo')}
-                </button>
-              </div>
-            </div>
-          </div>
-          );
-        })}
+        <button onClick={() => setCategoryPanelOpen(true)} className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"> Gerenciar Categorias</button>
       </div>
-
+      {statusMsg && (<div className={p-3 mb-6 rounded }>{statusMsg.text}</div>)}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left"><input type="checkbox" onChange={handleSelectAll} checked={selectedCount === visibleProdutos.length && visibleProdutos.length > 0} /></th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estoque</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading && Array.from({ length: 10 }).map((_, i) => (<tr key={skeleton-}><td colSpan={6} className="p-4"><div className="h-8 bg-gray-200 rounded animate-pulse"></div></td></tr>))}
+            {!loading && visibleProdutos.map((p: ProdutoType) => {
+              const isToggling = Boolean(toggling[p.id]);
+              return (
+                <tr key={p.id} className={${p.ativo ? '' : 'bg-gray-50 opacity-70'}}>
+                  <td className="px-4 py-3"><input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <Image src={p.imagem ?? 'https://placehold.co/40x40/f0f0f0/a0a0a0?text=S/I'} alt={p.nome} width={40} height={40} unoptimized className="object-cover rounded" />
+                      <div>
+                        <span className="font-medium text-sm">{p.nome}</span>
+                        {p.variacoes_meta && p.variacoes_meta.length > 0 && (<div className="text-xs text-gray-500">{p.variacoes_meta.length} variação(ões)</div>)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">{p.estoque}</td>
+                  <td className="px-4 py-3 text-sm">R$ {(p.preco_base ?? 0).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm"><span className={px-2 inline-flex text-xs leading-5 font-semibold rounded-full }>{p.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                  <td className="px-4 py-3 text-sm flex gap-2">
+                    <button onClick={() => openModal(p)} className="text-indigo-600 hover:text-indigo-900 font-medium"> Detalhes</button>
+                    <button onClick={() => handleToggleAtivo(p)} disabled={isToggling} className={ont-medium  disabled:opacity-50}>{isToggling ? '' : p.ativo ? ' Desativar' : ' Ativar'}</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {!loading && visibleProdutos.length === 0 && (<tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">{searchTerm || selectedCategoryFilter ? 'Nenhum produto encontrado com os filtros aplicados.' : 'Nenhum produto cadastrado.'}</td></tr>)}
+          </tbody>
+        </table>
+      </div>
       <div className="mt-6 flex justify-between items-center">
-        <button onClick={() => setPagina(Math.max(1, pagina - 1))} className="px-3 py-1 border rounded"> Anterior</button>
-        <span>Página {pagina} de {Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}</span>
-        <button onClick={() => setPagina(pagina + 1)} className="px-3 py-1 border rounded">Próxima </button>
+        <button onClick={() => setPagina(Math.max(1, pagina - 1))} className="px-3 py-1 border rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={pagina === 1}> Anterior</button>
+        <span className="text-sm text-gray-600">Página {pagina} de {Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}  {total} produto(s)</span>
+        <button onClick={() => setPagina(pagina + 1)} className="px-3 py-1 border rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={pagina * PAGE_SIZE >= (total ?? 0)}>Próxima </button>
       </div>
       <ProductDetailsModal />
     </PageWrapper>
   );
 }
-
