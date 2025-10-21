@@ -66,10 +66,14 @@ export default function ProdutosPage(): React.JSX.Element {
         .select('id, nome')
         .order('nome', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase ao carregar categorias:', error);
+        throw error;
+      }
       setCategorias(data || []);
     } catch (err) {
       console.error('Erro ao carregar categorias:', err);
+      // Silencioso - categorias são opcionais
     }
   }, []);
 
@@ -85,7 +89,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       let query = supabase
         .from('produtos')
-        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,categorias(id,nome)', { count: 'exact' })
+        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens', { count: 'exact' })
         .order('nome', { ascending: true });
 
       // Aplicar filtro de busca no servidor
@@ -93,10 +97,10 @@ export default function ProdutosPage(): React.JSX.Element {
         query = query.or(`nome.ilike.%${termo}%,id_externo.ilike.%${termo}%`);
       }
 
-      // Aplicar filtro de categoria
-      if (filtroCategoria) {
-        query = query.contains('categorias', [{ id: filtroCategoria }]);
-      }
+      // TODO: Aplicar filtro de categoria quando a tabela existir
+      // if (filtroCategoria) {
+      //   query = query.contains('categorias', [{ id: filtroCategoria }]);
+      // }
 
       const { data, error, count } = await query.range(from, to);
 
@@ -130,7 +134,6 @@ export default function ProdutosPage(): React.JSX.Element {
         const imagem = decodedImagem
           ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
           : null;
-        const categorias = Array.isArray(r.categorias) ? r.categorias : null;
       
         return {
           id,
@@ -142,7 +145,7 @@ export default function ProdutosPage(): React.JSX.Element {
           imagem,
           imagens: r.imagens || undefined,
           estoque_display: estoque,
-          categorias,
+          categorias: null, // Será carregado depois da migração
         };
       });
 
@@ -150,11 +153,27 @@ export default function ProdutosPage(): React.JSX.Element {
       setTotalProdutos(count || 0);
     } catch (err) {
       console.error('Erro ao carregar produtos:', err);
-      setStatusMsg({ type: 'error', text: 'Erro ao carregar produtos' });
+      
+      // Mensagens específicas para erros comuns
+      let errorMessage = 'Erro ao carregar produtos';
+      
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errMsg = String((err as Error).message || '');
+        
+        if (errMsg.includes('relation') && errMsg.includes('does not exist')) {
+          errorMessage = 'Tabela de categorias não encontrada. Execute a migração do banco de dados.';
+        } else if (errMsg.includes('permission denied')) {
+          errorMessage = 'Sem permissão para acessar os dados. Verifique as configurações de RLS.';
+        } else if (errMsg) {
+          errorMessage = `Erro: ${errMsg}`;
+        }
+      }
+      
+      setStatusMsg({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
-  }, [filtroCategoria, setStatusMsg]);
+  }, [setStatusMsg]);
 
   function safeDecodeUrl(v?: unknown) {
     if (!v) return null;

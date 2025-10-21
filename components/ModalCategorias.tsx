@@ -86,7 +86,18 @@ export default function ModalCategorias(): React.JSX.Element | null {
         .from('categorias')
         .insert({ nome: nome.trim(), pai_id: paiSelecionado });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase ao criar categoria:', error);
+        
+        // Mensagens específicas para erros comuns
+        if (error.message.includes('relation') && error.message.includes('does not exist')) {
+          throw new Error('A tabela de categorias não existe. Por favor, execute a migração do banco de dados.');
+        } else if (error.message.includes('permission denied')) {
+          throw new Error('Sem permissão para criar categorias. Verifique as configurações de RLS no Supabase.');
+        } else {
+          throw error;
+        }
+      }
 
       setStatusMsg({ type: 'success', text: `${paiSelecionado ? 'Subcategoria' : 'Categoria'} criada com sucesso` });
       setNovaCategoria('');
@@ -94,8 +105,11 @@ export default function ModalCategorias(): React.JSX.Element | null {
       setPaiSelecionado(null);
       await carregarCategorias();
     } catch (err) {
-      console.error('Erro ao criar:', err);
-      setStatusMsg({ type: 'error', text: 'Erro ao criar categoria' });
+      console.error('Erro ao criar categoria:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Erro desconhecido ao criar categoria';
+      setStatusMsg({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
