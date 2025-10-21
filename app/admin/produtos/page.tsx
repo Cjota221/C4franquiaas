@@ -146,7 +146,35 @@ export default function ProdutosPage(): React.JSX.Element {
                 
                 const id_externo = r.id_externo ?? undefined;
                 const nome = r.nome ?? '';
-                const estoque = r.estoque ?? 0;
+                
+                // Normalizar estoque - garantir que seja número, não objeto
+                let estoque = 0;
+                if (r.estoque !== null && r.estoque !== undefined) {
+                  if (typeof r.estoque === 'number') {
+                    estoque = r.estoque;
+                  } else if (typeof r.estoque === 'object' && r.estoque !== null) {
+                    // Se for objeto (ex: {estoque: 3, estoque_minimo: 1, localizacao: "..."}),
+                    // extrair o valor numérico
+                    const estoqueObj = r.estoque as Record<string, unknown>;
+                    if ('estoque' in estoqueObj && typeof estoqueObj.estoque === 'number') {
+                      estoque = estoqueObj.estoque;
+                      console.warn('[admin/produtos] Estoque veio como objeto, extraído:', {
+                        produtoId: id,
+                        objeto: estoqueObj,
+                        valorExtraido: estoque
+                      });
+                    } else {
+                      console.error('[admin/produtos] Estoque como objeto sem campo "estoque":', {
+                        produtoId: id,
+                        objeto: estoqueObj
+                      });
+                    }
+                  } else if (typeof r.estoque === 'string') {
+                    const parsed = parseFloat(r.estoque);
+                    estoque = isNaN(parsed) ? 0 : parsed;
+                  }
+                }
+                
                 const preco_base = r.preco_base ?? null;
                 const ativo = r.ativo ?? false;
                 const rawImagem = r.imagem;
@@ -165,7 +193,7 @@ export default function ProdutosPage(): React.JSX.Element {
                 ativo,
                 imagem,
                 imagens: r.imagens || undefined,
-                estoque_display: estoque,
+                estoque_display: estoque, // Manter como número (tipo correto)
                 categorias,
               };
             })
@@ -490,7 +518,28 @@ export default function ProdutosPage(): React.JSX.Element {
           const produtoNome = (p.nome && typeof p.nome === 'string') ? p.nome : 'Produto sem nome';
           const produtoImagem = (p.imagem && typeof p.imagem === 'string') ? p.imagem : 'https://placehold.co/96x96/f0f0f0/a0a0a0?text=Sem+Imagem';
           const produtoPreco = typeof p.preco_base === 'number' ? p.preco_base : 0;
-          const produtoEstoque = (p.estoque_display && typeof p.estoque_display === 'string') ? p.estoque_display : '0';
+          
+          // Normalizar estoque_display - pode vir como número, string ou até objeto
+          let produtoEstoque = '0';
+          if (p.estoque_display !== null && p.estoque_display !== undefined) {
+            if (typeof p.estoque_display === 'number') {
+              produtoEstoque = String(p.estoque_display);
+            } else if (typeof p.estoque_display === 'string') {
+              produtoEstoque = p.estoque_display;
+            } else if (typeof p.estoque_display === 'object') {
+              // Se for objeto, tentar extrair o valor
+              const estoqueObj = p.estoque_display as Record<string, unknown>;
+              if ('estoque' in estoqueObj) {
+                produtoEstoque = String(estoqueObj.estoque ?? '0');
+              }
+              console.warn('[render] estoque_display veio como objeto:', {
+                produtoId,
+                objeto: estoqueObj,
+                valorUsado: produtoEstoque
+              });
+            }
+          }
+          
           const produtoAtivo = Boolean(p.ativo);
 
           return (
