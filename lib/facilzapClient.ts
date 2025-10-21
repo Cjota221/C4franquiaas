@@ -215,6 +215,27 @@ function extractBarcode(item: Record<string, unknown>): string | null {
   const arrKeys = ['cod_barras', 'codigos', 'codigos_de_barras', 'codigos_barras', 'barcodes', 'eans'];
   for (const k of arrKeys) {
     const v = item[k];
+    
+    // Verificar se é um objeto com 'numero' (estrutura FácilZap)
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const obj = v as Record<string, unknown>;
+      if ('numero' in obj) {
+        const numero = obj['numero'];
+        if (typeof numero === 'string' && numero.trim() !== '') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.numero': ${numero}`);
+          }
+          return numero.trim();
+        }
+        if (typeof numero === 'number') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.numero': ${numero}`);
+          }
+          return String(numero);
+        }
+      }
+    }
+    
     if (Array.isArray(v) && v.length > 0) {
       if (process.env.DEBUG_SYNC === 'true') {
         console.log(`[extractBarcode] Encontrado array em '${k}':`, v);
@@ -222,6 +243,15 @@ function extractBarcode(item: Record<string, unknown>): string | null {
       for (const it of v) {
         if (typeof it === 'string' && it.trim() !== '') return it.trim();
         if (typeof it === 'number') return String(it);
+        // Verificar objetos dentro do array
+        if (it && typeof it === 'object') {
+          const itObj = it as Record<string, unknown>;
+          if ('numero' in itObj) {
+            const numero = itObj['numero'];
+            if (typeof numero === 'string' && numero.trim() !== '') return numero.trim();
+            if (typeof numero === 'number') return String(numero);
+          }
+        }
       }
     }
   }
@@ -229,6 +259,43 @@ function extractBarcode(item: Record<string, unknown>): string | null {
   const candidates = ['codigo_barras', 'codigoBarras', 'codigo', 'ean', 'gtin', 'barcode', 'cod_barras', 'ean13', 'ean8', 'upc'];
   for (const k of candidates) {
     const v = item[k];
+    
+    // Verificar se é um objeto com 'numero'
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const obj = v as Record<string, unknown>;
+      if ('numero' in obj) {
+        const numero = obj['numero'];
+        if (typeof numero === 'string' && numero.trim() !== '') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.numero': ${numero}`);
+          }
+          return numero.trim();
+        }
+        if (typeof numero === 'number') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.numero': ${numero}`);
+          }
+          return String(numero);
+        }
+      }
+      // Verificar outras propriedades do objeto
+      if ('number' in obj) {
+        const number = obj['number'];
+        if (typeof number === 'string' && number.trim() !== '') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.number': ${number}`);
+          }
+          return number.trim();
+        }
+        if (typeof number === 'number') {
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[extractBarcode] ✅ Encontrado em '${k}.number': ${number}`);
+          }
+          return String(number);
+        }
+      }
+    }
+    
     if (typeof v === 'string' && v.trim() !== '') {
       if (process.env.DEBUG_SYNC === 'true') {
         console.log(`[extractBarcode] ✅ Encontrado em '${k}': ${v}`);
@@ -247,6 +314,42 @@ function extractBarcode(item: Record<string, unknown>): string | null {
     const lk = key.toLowerCase();
     if (lk.includes('cod') || lk.includes('ean') || lk.includes('bar') || lk.includes('gtin')) {
       const v = item[key];
+      
+      // Verificar se é um objeto com 'numero' ou 'number'
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        const obj = v as Record<string, unknown>;
+        if ('numero' in obj) {
+          const numero = obj['numero'];
+          if (typeof numero === 'string' && numero.trim() !== '') {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log(`[extractBarcode] ✅ Encontrado em busca genérica '${key}.numero': ${numero}`);
+            }
+            return numero.trim();
+          }
+          if (typeof numero === 'number') {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log(`[extractBarcode] ✅ Encontrado em busca genérica '${key}.numero': ${numero}`);
+            }
+            return String(numero);
+          }
+        }
+        if ('number' in obj) {
+          const number = obj['number'];
+          if (typeof number === 'string' && number.trim() !== '') {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log(`[extractBarcode] ✅ Encontrado em busca genérica '${key}.number': ${number}`);
+            }
+            return number.trim();
+          }
+          if (typeof number === 'number') {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log(`[extractBarcode] ✅ Encontrado em busca genérica '${key}.number': ${number}`);
+            }
+            return String(number);
+          }
+        }
+      }
+      
       if (typeof v === 'string' && v.trim() !== '') {
         if (process.env.DEBUG_SYNC === 'true') {
           console.log(`[extractBarcode] ✅ Encontrado em busca genérica '${key}': ${v}`);
