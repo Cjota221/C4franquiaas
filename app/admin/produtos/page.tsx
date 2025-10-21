@@ -59,9 +59,25 @@ export default function ProdutosPage(): React.JSX.Element {
     setLoading(true);
     (async () => {
       try {
-        // Verifica se o Supabase está configurado
-        if (!supabase || typeof supabase.from !== 'function') {
-          throw new Error('Supabase não está configurado corretamente. Verifique as variáveis de ambiente.');
+        // Verifica se o Supabase está configurado de forma segura
+        try {
+          if (!supabase) {
+            throw new Error('Supabase não está inicializado.');
+          }
+          
+          // Tenta acessar o método 'from' de forma segura
+          const testAccess = supabase.from;
+          if (typeof testAccess !== 'function') {
+            throw new Error('Cliente Supabase inválido.');
+          }
+        } catch (proxyError) {
+          // Captura erro do Proxy quando variáveis de ambiente estão ausentes
+          const errorMsg = proxyError instanceof Error ? proxyError.message : String(proxyError);
+          throw new Error(
+            errorMsg.includes('not configured') || errorMsg.includes('NEXT_PUBLIC_SUPABASE')
+              ? '❌ Configuração Ausente: Por favor, configure as variáveis de ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no Netlify. Vá em: Site settings → Environment variables.'
+              : `Erro ao acessar Supabase: ${errorMsg}`
+          );
         }
 
         const from = (pagina - 1) * PAGE_SIZE;
