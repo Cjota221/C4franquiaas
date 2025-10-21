@@ -3,6 +3,10 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  
+  // Habilita source maps em produção para melhor debugging
+  productionBrowserSourceMaps: true,
+  
   images: {
     domains: ['cjotarasteirinhas.com.br', 'arquivos.facilzap.app.br', 'placehold.co', 'c4franquiaas.netlify.app'],
     remotePatterns: [

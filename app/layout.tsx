@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientErrorLoggerWrapper from '@/components/ClientErrorLoggerWrapper';
 import DebugScriptInjector from "@/components/DebugScriptInjector";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -38,7 +39,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
         <ClientErrorLoggerWrapper />
         <Suspense fallback={null}>
           <DebugScriptInjector />
