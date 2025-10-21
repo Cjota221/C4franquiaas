@@ -98,11 +98,36 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
               <h3 className="font-semibold">Informações</h3>
               <p className="text-sm text-gray-600">Código: {product.id_externo ?? product.id ?? '—'}</p>
               <p className="text-sm text-gray-600">Preço base: R$ {typeof product.preco_base === 'number' ? product.preco_base.toFixed(2) : '0.00'}</p>
-              <p className="text-sm text-gray-600">Estoque: {
-                typeof product.estoque_display === 'number' ? String(product.estoque_display) :
-                typeof product.estoque_display === 'string' ? product.estoque_display :
-                typeof product.estoque === 'number' ? String(product.estoque) : '—'
-              }</p>
+              <p className="text-sm text-gray-600">Estoque: {(() => {
+                // Tratar estoque_display
+                if (typeof product.estoque_display === 'number') {
+                  return String(product.estoque_display);
+                }
+                if (typeof product.estoque_display === 'string') {
+                  return product.estoque_display;
+                }
+                if (typeof product.estoque_display === 'object' && product.estoque_display !== null) {
+                  // Se for objeto, extrair o valor numérico
+                  const estoqueObj = product.estoque_display as Record<string, unknown>;
+                  if ('estoque' in estoqueObj) {
+                    return String(estoqueObj.estoque ?? '—');
+                  }
+                }
+                
+                // Fallback para product.estoque
+                if (typeof product.estoque === 'number') {
+                  return String(product.estoque);
+                }
+                if (typeof product.estoque === 'object' && product.estoque !== null) {
+                  // Se for objeto, extrair o valor numérico
+                  const estoqueObj = product.estoque as Record<string, unknown>;
+                  if ('estoque' in estoqueObj) {
+                    return String(estoqueObj.estoque ?? '—');
+                  }
+                }
+                
+                return '—';
+              })()}</p>
             </div>
 
             <div>
