@@ -664,17 +664,43 @@ export default function ProdutosPage(): React.JSX.Element {
                 <button
                   disabled={isToggling}
                   onClick={async () => {
+                    console.group('🔄 [DEBUG] Toggle Ativo/Inativo');
+                    console.log('Produto ID:', produtoId, 'Tipo:', typeof produtoId);
+                    console.log('Ativo atual:', produtoAtivo, 'Novo valor:', !produtoAtivo);
+                    
                     try {
                       setToggling(produtoId, true);
+                      
+                      // Garantir que o ID é numérico
+                      const numericId = typeof produtoId === 'number' ? produtoId : Number(produtoId);
+                      
+                      if (isNaN(numericId)) {
+                        console.error('❌ ID não é numérico:', produtoId);
+                        setStatusMsg({ type: 'error', text: 'Erro: ID do produto inválido' });
+                        console.groupEnd();
+                        return;
+                      }
+                      
+                      const payload = { ids: [numericId], ativo: !produtoAtivo };
+                      console.log('📤 Payload:', payload);
+                      
                       const res = await fetch('/api/produtos/batch', {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ids: [produtoId], ativo: !produtoAtivo }),
+                        body: JSON.stringify(payload),
                       });
+                      
+                      console.log('📡 Response status:', res.status);
+                      
                       if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}`);
+                        const errorText = await res.text();
+                        console.error('❌ Response error:', errorText);
+                        throw new Error(`HTTP ${res.status}: ${errorText}`);
                       }
+                      
                       const json = await res.json();
+                      console.log('✅ Response JSON:', json);
+                      
                       if (json.ok) {
                         useProdutoStore.getState().updateProduto(produtoId, { ativo: !produtoAtivo });
                         setStatusMsg({ type: 'success', text: `Produto ${!produtoAtivo ? 'ativado' : 'desativado'} com sucesso` });
@@ -682,11 +708,12 @@ export default function ProdutosPage(): React.JSX.Element {
                         setStatusMsg({ type: 'error', text: `Falha ao atualizar produto: ${json.error ?? 'erro'}` });
                       }
                     } catch (err) {
-                      console.error('[toggle] erro:', err);
+                      console.error('💥 [toggle] erro:', err);
                       const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
                       setStatusMsg({ type: 'error', text: `Erro ao atualizar produto: ${errorMsg}` });
                     } finally {
                       clearToggling(produtoId);
+                      console.groupEnd();
                     }
                   }} className={`px-2 py-1 rounded text-xs ${produtoAtivo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   {isToggling ? 'Atualizando...' : (produtoAtivo ? 'Ativo' : 'Inativo')}
