@@ -199,33 +199,66 @@ export default function ProdutosPage(): React.JSX.Element {
 
   // useEffect para aplicar filtros
   useEffect(() => {
-    const stored = useProdutoStore.getState().produtos;
-    let filtered = [...stored];
+    try {
+      const stored = useProdutoStore.getState().produtos;
+      
+      // Validação defensiva: garantir que stored é um array
+      if (!Array.isArray(stored)) {
+        console.warn('[admin/produtos] produtos não é um array:', stored);
+        setVisibleProdutos([]);
+        return;
+      }
+      
+      let filtered = [...stored];
 
-    // Filtro por termo de busca (nome, SKU, código de barras)
-    if (searchTerm.trim()) {
-      const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(p => {
-        // Buscar no nome
-        if (p.nome.toLowerCase().includes(lowerSearch)) return true;
-        
-        // Buscar em variacoes_meta (SKU e código de barras)
-        if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
-          return p.variacoes_meta.some(v => {
-            const variacao = v as { sku?: string; codigo_barras?: string };
-            return (
-              (variacao.sku && variacao.sku.toLowerCase().includes(lowerSearch)) ||
-              (variacao.codigo_barras && variacao.codigo_barras.includes(lowerSearch))
-            );
-          });
-        }
-        
-        return false;
-      });
+      // Filtro por termo de busca (nome, SKU, código de barras)
+      if (searchTerm && searchTerm.trim()) {
+        const lowerSearch = searchTerm.toLowerCase();
+        filtered = filtered.filter(p => {
+          // Validação: garantir que p existe e tem propriedades
+          if (!p || typeof p !== 'object') {
+            console.warn('[admin/produtos] Produto inválido encontrado:', p);
+            return false;
+          }
+          
+          // Buscar no nome (com validação)
+          if (p.nome && typeof p.nome === 'string' && p.nome.toLowerCase().includes(lowerSearch)) {
+            return true;
+          }
+          
+          // Buscar em variacoes_meta (SKU e código de barras)
+          if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
+            try {
+              return p.variacoes_meta.some(v => {
+                if (!v || typeof v !== 'object') return false;
+                
+                const variacao = v as { sku?: string; codigo_barras?: string };
+                const skuMatch = variacao.sku && typeof variacao.sku === 'string' 
+                  ? variacao.sku.toLowerCase().includes(lowerSearch) 
+                  : false;
+                const barcodeMatch = variacao.codigo_barras && typeof variacao.codigo_barras === 'string'
+                  ? variacao.codigo_barras.includes(lowerSearch)
+                  : false;
+                  
+                return skuMatch || barcodeMatch;
+              });
+            } catch (err) {
+              console.error('[admin/produtos] Erro ao filtrar variações:', err);
+              return false;
+            }
+          }
+          
+          return false;
+        });
+      }
+
+      setVisibleProdutos(filtered);
+    } catch (err) {
+      console.error('[admin/produtos] Erro ao aplicar filtros:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao filtrar produtos' });
+      setVisibleProdutos([]);
     }
-
-    setVisibleProdutos(filtered);
-  }, [searchTerm, setVisibleProdutos]);
+  }, [searchTerm, setVisibleProdutos, setStatusMsg]);
 
   // Função para selecionar/desselecionar todos
   const handleSelectAll = () => {
@@ -239,20 +272,31 @@ export default function ProdutosPage(): React.JSX.Element {
 
   // Função para ações em massa
   const handleBatchAction = async (action: 'activate' | 'deactivate') => {
-    const selected = Object.keys(selectedIds)
-      .filter(k => selectedIds[Number(k)])
-      .map(Number);
-    
-    if (selected.length === 0) {
-      setStatusMsg({ type: 'error', text: 'Nenhum produto selecionado' });
-      setTimeout(() => setStatusMsg(null), 3000);
-      return;
-    }
-
-    const novoStatus = action === 'activate';
-    
     try {
-      if (!supabase) throw new Error('Supabase não configurado');
+      // Validação: garantir que selectedIds existe
+      if (!selectedIds || typeof selectedIds !== 'object') {
+        console.error('[batchAction] selectedIds inválido:', selectedIds);
+        setStatusMsg({ type: 'error', text: 'Erro: seleção inválida' });
+        setTimeout(() => setStatusMsg(null), 3000);
+        return;
+      }
+      
+      const selected = Object.keys(selectedIds)
+        .filter(k => selectedIds[Number(k)])
+        .map(Number)
+        .filter(id => !isNaN(id)); // Filtrar IDs inválidos
+      
+      if (selected.length === 0) {
+        setStatusMsg({ type: 'error', text: 'Nenhum produto selecionado' });
+        setTimeout(() => setStatusMsg(null), 3000);
+        return;
+      }
+
+      const novoStatus = action === 'activate';
+      
+      if (!supabase) {
+        throw new Error('Supabase não configurado');
+      }
       
       const { error } = await supabase
         .from('produtos')
@@ -260,29 +304,60 @@ export default function ProdutosPage(): React.JSX.Element {
         .in('id', selected);
 
       if (error) {
+        console.error('[batchAction] Erro do Supabase:', error);
         setStatusMsg({ type: 'error', text: `Erro: ${error.message}` });
+        setTimeout(() => setStatusMsg(null), 3000);
       } else {
-        // Atualizar localmente
+        // Atualizar localmente com validação
         const stored = useProdutoStore.getState().produtos;
-        const updated = stored.map(p => 
-          selected.includes(Number(p.id)) ? { ...p, ativo: novoStatus } : p
-        );
-        setProdutos(updated);
-        setVisibleProdutos(updated.filter(p => {
-          if (!searchTerm.trim()) return true;
-          const lowerSearch = searchTerm.toLowerCase();
-          if (p.nome.toLowerCase().includes(lowerSearch)) return true;
-          if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
-            return p.variacoes_meta.some(v => {
-              const variacao = v as { sku?: string; codigo_barras?: string };
-              return (
-                (variacao.sku && variacao.sku.toLowerCase().includes(lowerSearch)) ||
-                (variacao.codigo_barras && variacao.codigo_barras.includes(lowerSearch))
-              );
-            });
+        
+        if (!Array.isArray(stored)) {
+          console.error('[batchAction] produtos não é array:', stored);
+          throw new Error('Dados de produtos inválidos');
+        }
+        
+        const updated = stored.map(p => {
+          if (!p || typeof p !== 'object' || !('id' in p)) {
+            console.warn('[batchAction] Produto inválido:', p);
+            return p;
           }
+          
+          return selected.includes(Number(p.id)) ? { ...p, ativo: novoStatus } : p;
+        });
+        
+        setProdutos(updated);
+        
+        // Reaplicar filtros com validação
+        const filtered = updated.filter(p => {
+          if (!p || typeof p !== 'object') return false;
+          
+          if (!searchTerm || !searchTerm.trim()) return true;
+          
+          const lowerSearch = searchTerm.toLowerCase();
+          
+          if (p.nome && typeof p.nome === 'string' && p.nome.toLowerCase().includes(lowerSearch)) {
+            return true;
+          }
+          
+          if (p.variacoes_meta && Array.isArray(p.variacoes_meta)) {
+            try {
+              return p.variacoes_meta.some(v => {
+                if (!v || typeof v !== 'object') return false;
+                const variacao = v as { sku?: string; codigo_barras?: string };
+                return (
+                  (variacao.sku && typeof variacao.sku === 'string' && variacao.sku.toLowerCase().includes(lowerSearch)) ||
+                  (variacao.codigo_barras && typeof variacao.codigo_barras === 'string' && variacao.codigo_barras.includes(lowerSearch))
+                );
+              });
+            } catch {
+              return false;
+            }
+          }
+          
           return false;
-        }));
+        });
+        
+        setVisibleProdutos(filtered);
         
         setStatusMsg({ 
           type: 'success', 
@@ -294,7 +369,8 @@ export default function ProdutosPage(): React.JSX.Element {
       }
     } catch (err) {
       console.error('[batchAction] erro:', err);
-      setStatusMsg({ type: 'error', text: 'Erro ao processar ação em massa' });
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setStatusMsg({ type: 'error', text: `Erro ao processar ação: ${errorMessage}` });
       setTimeout(() => setStatusMsg(null), 3000);
     }
   };
@@ -395,29 +471,76 @@ export default function ProdutosPage(): React.JSX.Element {
             </div>
           </div>
         ))}
-        {visibleProdutos.map((p: ProdutoType) => {
-          const isToggling = Boolean(toggling[p.id]);
+        {Array.isArray(visibleProdutos) && visibleProdutos.map((p: ProdutoType) => {
+          // Validação defensiva do produto
+          if (!p || typeof p !== 'object') {
+            console.warn('[render] produto inválido ignorado:', p);
+            return null;
+          }
+
+          // Garantir que temos um ID válido
+          const produtoId = p.id;
+          if (!produtoId) {
+            console.warn('[render] produto sem ID ignorado:', p);
+            return null;
+          }
+
+          // Validações de propriedades com fallbacks seguros
+          const isToggling = Boolean(toggling && toggling[produtoId]);
+          const produtoNome = (p.nome && typeof p.nome === 'string') ? p.nome : 'Produto sem nome';
+          const produtoImagem = (p.imagem && typeof p.imagem === 'string') ? p.imagem : 'https://placehold.co/96x96/f0f0f0/a0a0a0?text=Sem+Imagem';
+          const produtoPreco = typeof p.preco_base === 'number' ? p.preco_base : 0;
+          const produtoEstoque = (p.estoque_display && typeof p.estoque_display === 'string') ? p.estoque_display : '0';
+          const produtoAtivo = Boolean(p.ativo);
+
           return (
-            <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
+            <div key={produtoId} className={`rounded-lg shadow p-4 ${produtoAtivo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
             <div className="flex items-start gap-3">
-              <input type="checkbox" checked={!!selectedIds[p.id]} onChange={(e) => setSelectedId(p.id, e.target.checked)} />
-              <Image src={p.imagem ?? 'https://placehold.co/96x96/f0f0f0/a0a0a0?text=Sem+Imagem'} alt={p.nome} width={96} height={96} unoptimized loading="lazy" className="object-cover rounded" />
+              <input 
+                type="checkbox" 
+                checked={!!(selectedIds && selectedIds[produtoId])} 
+                onChange={(e) => {
+                  try {
+                    setSelectedId(produtoId, e.target.checked);
+                  } catch (err) {
+                    console.error('[render] erro ao alterar seleção:', err);
+                  }
+                }} 
+              />
+              <Image 
+                src={produtoImagem} 
+                alt={produtoNome} 
+                width={96} 
+                height={96} 
+                unoptimized 
+                loading="lazy" 
+                className="object-cover rounded" 
+              />
               <div className="flex-1">
-                <h3 className="font-semibold text-sm">{p.nome}</h3>
-                <p className="text-sm text-gray-600">R$ {(p.preco_base ?? 0).toFixed(2)}</p>
-                <p className="text-sm text-gray-500">Est: {p.estoque_display}</p>
+                <h3 className="font-semibold text-sm">{produtoNome}</h3>
+                <p className="text-sm text-gray-600">R$ {produtoPreco.toFixed(2)}</p>
+                <p className="text-sm text-gray-500">Est: {produtoEstoque}</p>
               </div>
               <div className="flex flex-col items-end gap-2 ml-2">
                 <button onClick={async () => {
-                  openModal(p as ProdutoType);
-                  setModalLoading(true);
                   try {
-                    const id = p.id_externo ?? p.id;
+                    openModal(p as ProdutoType);
+                    setModalLoading(true);
+                    const id = p.id_externo ?? produtoId;
+                    if (!id) {
+                      console.error('[detalhes] produto sem ID');
+                      setModalVariacoes(null);
+                      setModalLoading(false);
+                      return;
+                    }
                     const res = await fetch(`/api/produtos/${encodeURIComponent(String(id))}`);
+                    if (!res.ok) {
+                      throw new Error(`HTTP ${res.status}`);
+                    }
                     const json = await res.json();
                     setModalVariacoes((json && json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
                   } catch (err) {
-                    console.error('failed to load product details', err);
+                    console.error('[detalhes] erro ao carregar:', err);
                     setModalVariacoes(null);
                   } finally {
                     setModalLoading(false);
@@ -427,28 +550,32 @@ export default function ProdutosPage(): React.JSX.Element {
                 <button
                   disabled={isToggling}
                   onClick={async () => {
-                    setToggling(p.id, true);
                     try {
+                      setToggling(produtoId, true);
                       const res = await fetch('/api/produtos/batch', {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ids: [p.id], ativo: !p.ativo }),
+                        body: JSON.stringify({ ids: [produtoId], ativo: !produtoAtivo }),
                       });
+                      if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}`);
+                      }
                       const json = await res.json();
-                      if (res.ok && json.ok) {
-                        useProdutoStore.getState().updateProduto(p.id, { ativo: !p.ativo });
-                        setStatusMsg({ type: 'success', text: `Produto ${!p.ativo ? 'ativado' : 'desativado'} com sucesso` });
+                      if (json.ok) {
+                        useProdutoStore.getState().updateProduto(produtoId, { ativo: !produtoAtivo });
+                        setStatusMsg({ type: 'success', text: `Produto ${!produtoAtivo ? 'ativado' : 'desativado'} com sucesso` });
                       } else {
                         setStatusMsg({ type: 'error', text: `Falha ao atualizar produto: ${json.error ?? 'erro'}` });
                       }
                     } catch (err) {
-                      console.error('toggle error', err);
-                      setStatusMsg({ type: 'error', text: 'Erro de rede ao atualizar produto' });
+                      console.error('[toggle] erro:', err);
+                      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
+                      setStatusMsg({ type: 'error', text: `Erro ao atualizar produto: ${errorMsg}` });
                     } finally {
-                      clearToggling(p.id);
+                      clearToggling(produtoId);
                     }
-                  }} className={`px-2 py-1 rounded text-xs ${p.ativo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  {isToggling ? 'Atualizando...' : (p.ativo ? 'Ativo' : 'Inativo')}
+                  }} className={`px-2 py-1 rounded text-xs ${produtoAtivo ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  {isToggling ? 'Atualizando...' : (produtoAtivo ? 'Ativo' : 'Inativo')}
                 </button>
               </div>
             </div>
