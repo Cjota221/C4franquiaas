@@ -671,17 +671,15 @@ export default function ProdutosPage(): React.JSX.Element {
                     try {
                       setToggling(produtoId, true);
                       
-                      // Garantir que o ID é numérico
-                      const numericId = typeof produtoId === 'number' ? produtoId : Number(produtoId);
-                      
-                      if (isNaN(numericId)) {
-                        console.error('❌ ID não é numérico:', produtoId);
+                      // Validar que o ID existe (pode ser number ou UUID string)
+                      if (!produtoId) {
+                        console.error('❌ ID do produto não existe');
                         setStatusMsg({ type: 'error', text: 'Erro: ID do produto inválido' });
                         console.groupEnd();
                         return;
                       }
                       
-                      const payload = { ids: [numericId], ativo: !produtoAtivo };
+                      const payload = { ids: [produtoId], ativo: !produtoAtivo };
                       console.log('📤 Payload:', payload);
                       
                       const res = await fetch('/api/produtos/batch', {

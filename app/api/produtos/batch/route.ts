@@ -8,9 +8,18 @@ export async function PATCH(req: NextRequest) {
 
     // basic payload validation
     if (!Array.isArray(body.ids)) return NextResponse.json({ error: 'ids must be an array' }, { status: 400 });
-    const ids = (body.ids as unknown[]).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+    
+    // Aceitar tanto IDs numéricos quanto UUIDs (strings)
+    const ids = (body.ids as unknown[]).filter((v) => {
+      // Aceitar números válidos
+      if (typeof v === 'number' && Number.isFinite(v)) return true;
+      // Aceitar strings (UUIDs)
+      if (typeof v === 'string' && v.length > 0) return true;
+      return false;
+    }) as (number | string)[];
+    
     const ativo = typeof body.ativo === 'boolean' ? body.ativo : undefined;
-    if (ids.length === 0) return NextResponse.json({ error: 'ids must contain at least one numeric id' }, { status: 400 });
+    if (ids.length === 0) return NextResponse.json({ error: 'ids must contain at least one valid id (number or UUID string)' }, { status: 400 });
     if (typeof ativo === 'undefined') return NextResponse.json({ error: 'ativo (boolean) is required' }, { status: 400 });
 
     // env validation
