@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useProdutoStore } from '@/lib/store/produtoStore';
 
 export function useProductFilters() {
@@ -10,11 +10,16 @@ export function useProductFilters() {
   const getSelectedCount = useProdutoStore((s) => s.getSelectedCount);
   const setSelectedCategoryFilter = useProdutoStore((s) => s.setSelectedCategoryFilter);
   const setSortBy = useProdutoStore((s) => s.setSortBy);
+  
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Evita atualizar se produtos ainda está vazio (estado inicial)
-    if (produtos.length === 0 && visibleProdutos.length === 0) {
-      return;
+    // Na primeira renderização, só atualiza se produtos já tem dados
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      if (produtos.length === 0) {
+        return;
+      }
     }
 
     let arr = produtos.slice();
@@ -43,7 +48,7 @@ export function useProductFilters() {
     }
 
     setVisibleProdutos(arr);
-  }, [produtos, selectedCategoryFilter, sortBy, setVisibleProdutos, visibleProdutos.length]);
+  }, [produtos, selectedCategoryFilter, sortBy, setVisibleProdutos]);
 
   return {
     produtos: visibleProdutos,
