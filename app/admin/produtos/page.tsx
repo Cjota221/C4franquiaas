@@ -10,6 +10,7 @@ import { useModalStore } from '@/lib/store/modalStore';
 import ProductDetailsModal from '@/components/ProductDetailsModal';
 import { supabase } from '@/lib/supabaseClient';
 import PageWrapper from '@/components/PageWrapper';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const PAGE_SIZE = 30;
 
@@ -61,6 +62,10 @@ export default function ProdutosPage(): React.JSX.Element {
   // Estados locais para filtros e ações
   const [searchTerm, setSearchTerm] = useState('');
   const [showActions, setShowActions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Debounce do termo de busca para evitar muitas operações
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     console.log('[admin/produtos] useEffect triggered, pagina:', pagina);
@@ -226,22 +231,25 @@ export default function ProdutosPage(): React.JSX.Element {
   }, [pagina, setProdutos, setVisibleProdutos, setTotal, setLoading, setStatusMsg]);
 
   // useEffect para aplicar filtros
+  // Usa debouncedSearchTerm para melhor performance
   useEffect(() => {
     try {
+      setIsSearching(true);
       const stored = useProdutoStore.getState().produtos;
       
       // Validação defensiva: garantir que stored é um array
       if (!Array.isArray(stored)) {
         console.warn('[admin/produtos] produtos não é um array:', stored);
         setVisibleProdutos([]);
+        setIsSearching(false);
         return;
       }
       
       let filtered = [...stored];
 
       // Filtro por termo de busca (nome, SKU, código de barras)
-      if (searchTerm && searchTerm.trim()) {
-        const lowerSearch = searchTerm.toLowerCase();
+      if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
+        const lowerSearch = debouncedSearchTerm.toLowerCase();
         filtered = filtered.filter(p => {
           // Validação: garantir que p existe e tem propriedades
           if (!p || typeof p !== 'object') {
@@ -281,12 +289,14 @@ export default function ProdutosPage(): React.JSX.Element {
       }
 
       setVisibleProdutos(filtered);
+      setIsSearching(false);
     } catch (err) {
       console.error('[admin/produtos] Erro ao aplicar filtros:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao filtrar produtos' });
       setVisibleProdutos([]);
+      setIsSearching(false);
     }
-  }, [searchTerm, setVisibleProdutos, setStatusMsg]);
+  }, [debouncedSearchTerm, setVisibleProdutos, setStatusMsg]);
 
   // Função para selecionar/desselecionar todos
   const handleSelectAll = () => {
@@ -420,13 +430,20 @@ export default function ProdutosPage(): React.JSX.Element {
 
       {/* Barra de Filtros e Ações */}
       <div className="mb-6 flex flex-wrap gap-3 items-center">
-        <input
-          type="text"
-          placeholder="🔎 Buscar por nome, SKU ou código de barras..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-3 py-2 border rounded flex-1 min-w-[200px]"
-        />
+        <div className="relative flex-1 min-w-[200px]">
+          <input
+            type="text"
+            placeholder="🔎 Buscar por nome, SKU ou código de barras..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border rounded pr-10"
+          />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
+            </div>
+          )}
+        </div>
         
         {/* Botão de Ações em Massa */}
         <div className="relative">
@@ -723,10 +740,40 @@ export default function ProdutosPage(): React.JSX.Element {
         })}
       </div>
 
+      {/* Paginação com Loading State */}
       <div className="mt-6 flex justify-between items-center">
-        <button onClick={() => setPagina(Math.max(1, pagina - 1))} className="px-3 py-1 border rounded"> Anterior</button>
-        <span>Página {pagina} de {Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}</span>
-        <button onClick={() => setPagina(pagina + 1)} className="px-3 py-1 border rounded">Próxima </button>
+        <button 
+          onClick={() => setPagina(Math.max(1, pagina - 1))} 
+          disabled={loading || pagina === 1}
+          className="px-4 py-2 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          {loading && pagina > 1 ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent"></div>
+          ) : null}
+          ← Anterior
+        </button>
+        
+        <span className="text-sm text-gray-600">
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
+              Carregando página {pagina}...
+            </span>
+          ) : (
+            `Página ${pagina} de ${Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))}`
+          )}
+        </span>
+        
+        <button 
+          onClick={() => setPagina(pagina + 1)} 
+          disabled={loading || pagina >= Math.ceil((total ?? 0) / PAGE_SIZE)}
+          className="px-4 py-2 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          Próxima →
+          {loading && pagina < Math.ceil((total ?? 0) / PAGE_SIZE) ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent"></div>
+          ) : null}
+        </button>
       </div>
       <ProductDetailsModal />
     </PageWrapper>

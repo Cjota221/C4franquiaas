@@ -70,7 +70,47 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
     return null;
   }
   
-  const imagens: string[] = Array.isArray(product.imagens) ? product.imagens as string[] : (product.imagem ? [product.imagem] : []);
+  // Processar imagens para garantir que usem o proxy
+  const processarImagens = (rawImagens: unknown): string[] => {
+    let imagensArray: string[] = [];
+    
+    if (Array.isArray(rawImagens)) {
+      imagensArray = rawImagens.filter(img => typeof img === 'string' && img.length > 0);
+    } else if (product.imagem && typeof product.imagem === 'string') {
+      imagensArray = [product.imagem];
+    }
+    
+    // Se as imagens já têm o proxy, retornar como estão
+    // Caso contrário, processar para adicionar o proxy
+    return imagensArray.map(img => {
+      if (img.includes('proxy-facilzap-image')) {
+        return img; // Já tem proxy
+      }
+      
+      // Decodificar URL se necessário
+      let decodedImagem = img;
+      try {
+        decodedImagem = decodeURIComponent(img);
+        if (/%25/.test(decodedImagem) || (/%3A/i.test(decodedImagem) && /%2F/i.test(decodedImagem))) {
+          try { 
+            decodedImagem = decodeURIComponent(decodedImagem); 
+          } catch {}
+        }
+      } catch {
+        decodedImagem = img;
+      }
+      
+      // Construir URL do proxy
+      return `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`;
+    });
+  };
+  
+  const imagens: string[] = processarImagens(product.imagens);
+  
+  console.log('🖼️ [DEBUG] Imagens processadas:', {
+    raw: product.imagens,
+    processed: imagens
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
