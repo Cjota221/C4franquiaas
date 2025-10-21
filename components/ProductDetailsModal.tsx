@@ -31,7 +31,20 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
 
   if (!modalOpen || !modalProduto) return null;
 
+  // Validação extra: garantir que modalProduto é um objeto válido
+  if (typeof modalProduto !== 'object' || modalProduto === null) {
+    console.error('[ProductDetailsModal] modalProduto inválido:', modalProduto);
+    return null;
+  }
+
   const product = modalProduto as Produto;
+  
+  // Validação: garantir que product tem pelo menos um nome
+  if (!product.nome && !product.id) {
+    console.error('[ProductDetailsModal] produto sem nome e sem ID:', product);
+    return null;
+  }
+  
   const imagens: string[] = Array.isArray(product.imagens) ? product.imagens as string[] : (product.imagem ? [product.imagem] : []);
 
   return (
@@ -58,9 +71,13 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
           <div>
             <div className="mb-4">
               <h3 className="font-semibold">Informações</h3>
-              <p className="text-sm text-gray-600">Código: {product.id_externo ?? product.id}</p>
-              <p className="text-sm text-gray-600">Preço base: R$ {(product.preco_base ?? 0).toFixed(2)}</p>
-              <p className="text-sm text-gray-600">Estoque: {product.estoque_display ?? product.estoque ?? '—'}</p>
+              <p className="text-sm text-gray-600">Código: {product.id_externo ?? product.id ?? '—'}</p>
+              <p className="text-sm text-gray-600">Preço base: R$ {typeof product.preco_base === 'number' ? product.preco_base.toFixed(2) : '0.00'}</p>
+              <p className="text-sm text-gray-600">Estoque: {
+                typeof product.estoque_display === 'number' ? String(product.estoque_display) :
+                typeof product.estoque_display === 'string' ? product.estoque_display :
+                typeof product.estoque === 'number' ? String(product.estoque) : '—'
+              }</p>
             </div>
 
             <div>
