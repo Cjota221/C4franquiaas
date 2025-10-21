@@ -9,7 +9,6 @@ import { useStatusStore } from '@/lib/store/statusStore';
 import { useModalStore } from '@/lib/store/modalStore';
 import ProductDetailsModal from '@/components/ProductDetailsModal';
 import { supabase } from '@/lib/supabaseClient';
-import { useProductFilters } from '@/hooks/useProductFilters';
 import PageWrapper from '@/components/PageWrapper';
 
 const PAGE_SIZE = 30;
@@ -32,15 +31,12 @@ type ProdutoRow = {
 const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
 export default function ProdutosPage(): React.JSX.Element {
-  // ensure filters hook runs and populates visibleProdutos from produtos
-  // IMPORTANTE: Hooks devem SEMPRE ser chamados na mesma ordem, nunca condicionalmente
-  useProductFilters();
-
   const visibleProdutos = useProdutoStore((s) => s.visibleProdutos);
   const pagina = useProdutoStore((s) => s.pagina);
   const total = useProdutoStore((s) => s.total);
   const setPagina = useProdutoStore((s) => s.setPagina);
   const setProdutos = useProdutoStore((s) => s.setProdutos);
+  const setVisibleProdutos = useProdutoStore((s) => s.setVisibleProdutos);
   const setTotal = useProdutoStore((s) => s.setTotal);
   const setLoading = useProdutoStore((s) => s.setLoading);
   const selectedIds = useProdutoStore((s) => s.selectedIds);
@@ -133,6 +129,7 @@ export default function ProdutosPage(): React.JSX.Element {
             });
             pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
+            setVisibleProdutos(mapped);
             setTotal(count ?? 0);
           }
         }
@@ -148,7 +145,7 @@ export default function ProdutosPage(): React.JSX.Element {
       }
     })();
     return () => { cancelled = true; };
-  }, [pagina, setProdutos, setTotal, setLoading, setStatusMsg]);
+  }, [pagina, setProdutos, setVisibleProdutos, setTotal, setLoading, setStatusMsg]);
 
   return (
      <PageWrapper
