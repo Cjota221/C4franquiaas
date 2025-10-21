@@ -15,13 +15,23 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // Verificar se o ID é um UUID ou um ID externo (numérico)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
     // Busca o produto na nossa base de dados pelo ID interno ou externo
-    console.log(`[api/produtos/:id] Querying database for id: ${id}`);
-    const { data, error } = await supabase
-      .from('produtos')
-      .select('*')
-      .or(`id.eq.${id},id_externo.eq.${id}`)
-      .limit(1);
+    console.log(`[api/produtos/:id] Querying database for id: ${id} (isUUID: ${isUUID})`);
+    
+    let query = supabase.from('produtos').select('*');
+    
+    if (isUUID) {
+      // Se for UUID, buscar por id OU id_externo
+      query = query.or(`id.eq.${id},id_externo.eq.${id}`);
+    } else {
+      // Se não for UUID, buscar apenas por id_externo
+      query = query.eq('id_externo', id);
+    }
+    
+    const { data, error } = await query.limit(1);
 
     if (error) {
       console.error('[api/produtos/:id] Erro no Supabase:', error);
@@ -73,12 +83,22 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const { data, error } = await supabase
+    // Verificar se o ID é um UUID ou um ID externo (numérico)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
+    let query = supabase
       .from('produtos')
-      .update({ ...updates, last_synced_at: new Date().toISOString() })
-      .or(`id.eq.${id},id_externo.eq.${id}`)
-      .select()
-      .limit(1);
+      .update({ ...updates, last_synced_at: new Date().toISOString() });
+    
+    if (isUUID) {
+      // Se for UUID, buscar por id OU id_externo
+      query = query.or(`id.eq.${id},id_externo.eq.${id}`);
+    } else {
+      // Se não for UUID, buscar apenas por id_externo
+      query = query.eq('id_externo', id);
+    }
+    
+    const { data, error } = await query.select().limit(1);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
