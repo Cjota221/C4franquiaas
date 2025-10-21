@@ -33,7 +33,11 @@ const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
 export default function ProdutosPage(): React.JSX.Element {
   // ensure filters hook runs and populates visibleProdutos from produtos
-  useProductFilters();
+  try {
+    useProductFilters();
+  } catch (err) {
+    console.error('[ProdutosPage] Error in useProductFilters:', err);
+  }
 
   const visibleProdutos = useProdutoStore((s) => s.visibleProdutos);
   const pagina = useProdutoStore((s) => s.pagina);
@@ -62,6 +66,11 @@ export default function ProdutosPage(): React.JSX.Element {
     setLoading(true);
     (async () => {
       try {
+        // Verifica se o Supabase está configurado
+        if (!supabase || typeof supabase.from !== 'function') {
+          throw new Error('Supabase não está configurado corretamente. Verifique as variáveis de ambiente.');
+        }
+
         const from = (pagina - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
         
