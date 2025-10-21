@@ -116,19 +116,26 @@ export default function ProdutosPage(): React.JSX.Element {
               }
             }
 
-            const mapped: ProdutoType[] = (data ?? []).map((r: ProdutoRow) => {
-              const id = Number(r.id ?? 0);
-              const id_externo = r.id_externo ?? undefined;
-              const nome = r.nome ?? '';
-              const estoque = r.estoque ?? 0;
-              const preco_base = r.preco_base ?? null;
-              const ativo = r.ativo ?? false;
-              const rawImagem = r.imagem;
-              const decodedImagem = safeDecodeUrl(rawImagem);
-              const imagem = decodedImagem
-                ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
-                : null;
-              const categorias = Array.isArray(r.categorias) ? r.categorias : null;
+            const mapped: ProdutoType[] = (data ?? [])
+              .map((r: ProdutoRow) => {
+                const id = Number(r.id ?? 0);
+                // Valida se o ID é um número válido e maior que 0
+                if (!id || isNaN(id) || id <= 0) {
+                  console.warn('[admin/produtos] Produto com ID inválido ignorado:', r);
+                  return null;
+                }
+                
+                const id_externo = r.id_externo ?? undefined;
+                const nome = r.nome ?? '';
+                const estoque = r.estoque ?? 0;
+                const preco_base = r.preco_base ?? null;
+                const ativo = r.ativo ?? false;
+                const rawImagem = r.imagem;
+                const decodedImagem = safeDecodeUrl(rawImagem);
+                const imagem = decodedImagem
+                  ? `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?facilzap=${encodeURIComponent(decodedImagem)}`
+                  : null;
+                const categorias = Array.isArray(r.categorias) ? r.categorias : null;
               
               return {
                 id,
@@ -142,7 +149,9 @@ export default function ProdutosPage(): React.JSX.Element {
                 estoque_display: estoque,
                 categorias,
               };
-            });
+            })
+            .filter(p => p !== null) as ProdutoType[]; // Remove produtos com ID inválido
+            
             pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
             setVisibleProdutos(mapped);
@@ -195,7 +204,9 @@ export default function ProdutosPage(): React.JSX.Element {
             </div>
           </div>
         ))}
-        {visibleProdutos.map((p: ProdutoType) => {
+        {visibleProdutos
+          .filter((p: ProdutoType) => p.id && !isNaN(Number(p.id))) // Filtra produtos com IDs válidos
+          .map((p: ProdutoType) => {
           const isToggling = Boolean(toggling[p.id]);
           return (
             <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
