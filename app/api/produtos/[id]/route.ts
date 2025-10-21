@@ -5,15 +5,18 @@ import { fetchProdutoFacilZapById } from '@/lib/facilzapClient';
 export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+    console.log(`[api/produtos/:id] GET request for id: ${id}`);
 
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!SUPABASE_URL || !SERVICE_KEY) {
+      console.error('[api/produtos/:id] Supabase config missing');
       return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration.' }, { status: 500 });
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Busca o produto na nossa base de dados pelo ID interno ou externo
+    console.log(`[api/produtos/:id] Querying database for id: ${id}`);
     const { data, error } = await supabase
       .from('produtos')
       .select('*')
@@ -22,17 +25,20 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
 
     if (error) {
       console.error('[api/produtos/:id] Erro no Supabase:', error);
-      return NextResponse.json({ error: 'Erro ao buscar produto no banco de dados.' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao buscar produto no banco de dados.', details: error.message }, { status: 500 });
     }
 
     const produtoDoBanco = Array.isArray(data) && data.length > 0 ? data[0] : null;
+    console.log(`[api/produtos/:id] Produto encontrado no banco:`, produtoDoBanco ? 'SIM' : 'NÃO');
 
     // Se encontrarmos o produto, busca os detalhes mais recentes na FácilZap para comparação
     let detalhesDaFacilzap: unknown = null;
     const idExterno = produtoDoBanco?.id_externo ?? id;
     if (idExterno) {
+      console.log(`[api/produtos/:id] Tentando buscar detalhes na FácilZap para id_externo: ${idExterno}`);
       try {
         detalhesDaFacilzap = await fetchProdutoFacilZapById(String(idExterno));
+        console.log(`[api/produtos/:id] Detalhes da FácilZap:`, detalhesDaFacilzap ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
       } catch (err) {
         console.error('[api/produtos/:id] falha ao buscar facilzap', err);
       }
@@ -41,8 +47,8 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
     return NextResponse.json({ produto: produtoDoBanco, facilzap: detalhesDaFacilzap }, { status: 200 });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erro inesperado.';
-    console.error('[api/produtos/:id] Erro geral:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error('[api/produtos/:id] Erro geral:', msg, err);
+    return NextResponse.json({ error: msg, stack: err instanceof Error ? err.stack : undefined }, { status: 500 });
   }
 }
 

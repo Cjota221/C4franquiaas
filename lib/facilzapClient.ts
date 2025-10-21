@@ -407,7 +407,10 @@ export async function fetchProdutosFacilZapPage(
 
 export async function fetchProdutoFacilZapById(id: string): Promise<ExternalProduct | null> {
   const token = process.env.FACILZAP_TOKEN;
-  if (!token) throw new Error('FACILZAP_TOKEN não configurado');
+  if (!token) {
+    console.warn('[facilzap] FACILZAP_TOKEN não configurado, pulando busca de detalhes da API');
+    return null;
+  }
 
   const client = axios.create({
     baseURL: FACILZAP_API,
