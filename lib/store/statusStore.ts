@@ -7,11 +7,11 @@ type StatusMessage = {
 
 type StatusStore = {
   statusMsg: StatusMessage;
-  toggling: Record<number, boolean>;
+  toggling: Record<number | string, boolean>;
 
   setStatusMsg: (msg: StatusMessage) => void;
-  setToggling: (id: number, toggling: boolean) => void;
-  clearToggling: (id: number) => void;
+  setToggling: (id: number | string, toggling: boolean) => void;
+  clearToggling: (id: number | string) => void;
 };
 
 export const useStatusStore = create<StatusStore>((set) => ({

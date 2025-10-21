@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type Produto = {
-  id: number;
+  id: number | string;  // Aceita tanto number quanto UUID string
   id_externo?: string;
   nome: string;
   estoque: number;
@@ -26,7 +26,7 @@ type ProdutoStore = {
   selectedCategoryFilter: number | null;
   sortBy: 'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old';
 
-  selectedIds: Record<number, boolean>;
+  selectedIds: Record<number | string, boolean>;
 
   setProdutos: (produtos: Produto[]) => void;
   setVisibleProdutos: (produtos: Produto[]) => void;
@@ -38,12 +38,12 @@ type ProdutoStore = {
   setSelectedCategoryFilter: (c: number | null) => void;
   setSortBy: (s: 'none' | 'price_desc' | 'price_asc' | 'date_new' | 'date_old') => void;
 
-  toggleSelected: (id: number) => void;
-  setSelected: (ids: Record<number, boolean>) => void;
+  toggleSelected: (id: number | string) => void;
+  setSelected: (ids: Record<number | string, boolean>) => void;
   clearSelected: () => void;
-  selectAll: (ids: number[]) => void;
-  setSelectedId: (id: number, checked: boolean) => void;
-  updateProduto: (id: number, patch: Partial<Produto>) => void;
+  selectAll: (ids: (number | string)[]) => void;
+  setSelectedId: (id: number | string, checked: boolean) => void;
+  updateProduto: (id: number | string, patch: Partial<Produto>) => void;
 
   getFilteredProducts: () => Produto[];
   getSelectedCount: () => number;

@@ -34,6 +34,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const visibleProdutos = useProdutoStore((s) => s.visibleProdutos);
   const pagina = useProdutoStore((s) => s.pagina);
   const total = useProdutoStore((s) => s.total);
+  const loading = useProdutoStore((s) => s.loading);
   const setPagina = useProdutoStore((s) => s.setPagina);
   const setProdutos = useProdutoStore((s) => s.setProdutos);
   const setVisibleProdutos = useProdutoStore((s) => s.setVisibleProdutos);
@@ -55,10 +56,12 @@ export default function ProdutosPage(): React.JSX.Element {
   const setModalVariacoes = useModalStore((s) => s.setModalVariacoes);
 
   useEffect(() => {
+    console.log('[admin/produtos] useEffect triggered, pagina:', pagina);
     let cancelled = false;
     setLoading(true);
     (async () => {
       try {
+        console.log('[admin/produtos] Starting fetch...');
         // Verifica se o Supabase está configurado de forma segura
         try {
           if (!supabase) {
@@ -97,6 +100,13 @@ export default function ProdutosPage(): React.JSX.Element {
           .range(from, to)
           .order('nome', { ascending: true });
 
+        console.log('[admin/produtos] Query result:', { 
+          dataLength: data?.length, 
+          error, 
+          count,
+          hasData: !!data 
+        });
+
         if (!cancelled) {
           if (error) {
             console.error('[admin/produtos] supabase list error', error);
@@ -118,10 +128,12 @@ export default function ProdutosPage(): React.JSX.Element {
 
             const mapped: ProdutoType[] = (data ?? [])
               .map((r: ProdutoRow) => {
-                const id = Number(r.id ?? 0);
-                // Valida se o ID é um número válido e maior que 0
-                if (!id || isNaN(id) || id <= 0) {
-                  console.warn('[admin/produtos] Produto com ID inválido ignorado:', r);
+                // Mantém o ID como está (pode ser number ou string/UUID)
+                const id = r.id;
+                
+                // Valida se o ID existe
+                if (!id || id === null || id === undefined) {
+                  console.warn('[admin/produtos] Produto sem ID ignorado:', r);
                   return null;
                 }
                 
@@ -152,6 +164,12 @@ export default function ProdutosPage(): React.JSX.Element {
             })
             .filter(p => p !== null) as ProdutoType[]; // Remove produtos com ID inválido
             
+            console.log('[admin/produtos] Mapped products:', {
+              originalCount: data?.length,
+              mappedCount: mapped.length,
+              sampleProduct: mapped[0]
+            });
+            
             pageCache.set(pagina, { items: mapped, total: count ?? 0 });
             setProdutos(mapped);
             setVisibleProdutos(mapped);
@@ -172,6 +190,13 @@ export default function ProdutosPage(): React.JSX.Element {
     return () => { cancelled = true; };
   }, [pagina, setProdutos, setVisibleProdutos, setTotal, setLoading, setStatusMsg]);
 
+  console.log('[admin/produtos] Render state:', {
+    visibleProdutosCount: visibleProdutos.length,
+    loading,
+    pagina,
+    total
+  });
+
   return (
      <PageWrapper
             title="Catálogo de Produtos"
@@ -191,7 +216,7 @@ export default function ProdutosPage(): React.JSX.Element {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleProdutos.length === 0 && Array.from({ length: PAGE_SIZE }).map((_, i) => (
+        {loading && visibleProdutos.length === 0 && Array.from({ length: PAGE_SIZE }).map((_, i) => (
           <div key={`skeleton-${i}`} className="bg-white rounded-lg shadow p-4 animate-pulse">
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-gray-200 rounded" />
@@ -204,9 +229,7 @@ export default function ProdutosPage(): React.JSX.Element {
             </div>
           </div>
         ))}
-        {visibleProdutos
-          .filter((p: ProdutoType) => p.id && !isNaN(Number(p.id))) // Filtra produtos com IDs válidos
-          .map((p: ProdutoType) => {
+        {visibleProdutos.map((p: ProdutoType) => {
           const isToggling = Boolean(toggling[p.id]);
           return (
             <div key={p.id} className={`rounded-lg shadow p-4 ${p.ativo ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
