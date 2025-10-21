@@ -12,6 +12,11 @@ export function useProductFilters() {
   const setSortBy = useProdutoStore((s) => s.setSortBy);
 
   useEffect(() => {
+    // Evita atualizar se produtos ainda está vazio (estado inicial)
+    if (produtos.length === 0 && visibleProdutos.length === 0) {
+      return;
+    }
+
     let arr = produtos.slice();
 
     if (selectedCategoryFilter !== null) {
@@ -38,7 +43,7 @@ export function useProductFilters() {
     }
 
     setVisibleProdutos(arr);
-  }, [produtos, selectedCategoryFilter, sortBy, setVisibleProdutos]);
+  }, [produtos, selectedCategoryFilter, sortBy, setVisibleProdutos, visibleProdutos.length]);
 
   return {
     produtos: visibleProdutos,
