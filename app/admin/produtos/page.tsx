@@ -33,11 +33,8 @@ const pageCache = new Map<number, { items: ProdutoType[]; total: number }>();
 
 export default function ProdutosPage(): React.JSX.Element {
   // ensure filters hook runs and populates visibleProdutos from produtos
-  try {
-    useProductFilters();
-  } catch (err) {
-    console.error('[ProdutosPage] Error in useProductFilters:', err);
-  }
+  // IMPORTANTE: Hooks devem SEMPRE ser chamados na mesma ordem, nunca condicionalmente
+  useProductFilters();
 
   const visibleProdutos = useProdutoStore((s) => s.visibleProdutos);
   const pagina = useProdutoStore((s) => s.pagina);
