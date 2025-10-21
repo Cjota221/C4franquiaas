@@ -14,13 +14,12 @@ type Variacao = {
 };
 
 export default function ProductDetailsModal(): React.JSX.Element | null {
-  const { modalOpen, modalProduto, modalVariacoes, modalLoading, closeModal } = useModalStore((s) => ({
-    modalOpen: s.modalOpen,
-    modalProduto: s.modalProduto as Produto | null,
-    modalVariacoes: s.modalVariacoes as Variacao[] | null,
-    modalLoading: s.modalLoading,
-    closeModal: s.closeModal,
-  }));
+  // Separa os selectors para evitar criar novo objeto a cada render
+  const modalOpen = useModalStore((s) => s.modalOpen);
+  const modalProduto = useModalStore((s) => s.modalProduto as Produto | null);
+  const modalVariacoes = useModalStore((s) => s.modalVariacoes as Variacao[] | null);
+  const modalLoading = useModalStore((s) => s.modalLoading);
+  const closeModal = useModalStore((s) => s.closeModal);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
