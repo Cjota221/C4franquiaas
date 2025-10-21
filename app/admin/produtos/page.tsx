@@ -82,6 +82,7 @@ export default function ProdutosPage(): React.JSX.Element {
         if (!cancelled) {
           if (error) {
             console.error('[admin/produtos] supabase list error', error);
+            setStatusMsg({ type: 'error', text: `Erro ao carregar produtos: ${error.message}` });
           } else {
             function safeDecodeUrl(v?: unknown) {
               if (!v) return null;
@@ -131,12 +132,17 @@ export default function ProdutosPage(): React.JSX.Element {
         }
       } catch (err) {
         console.error('[admin/produtos] fetch error', err);
+        if (err instanceof Error) {
+          setStatusMsg({ type: 'error', text: `Erro inesperado: ${err.message}` });
+        } else {
+          setStatusMsg({ type: 'error', text: 'Ocorreu um erro inesperado ao buscar os produtos.' });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [pagina, setProdutos, setTotal, setLoading]);
+  }, [pagina, setProdutos, setTotal, setLoading, setStatusMsg]);
 
   return (
      <PageWrapper

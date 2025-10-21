@@ -10,7 +10,7 @@ interface PageWrapperProps {
 
 export default function PageWrapper({ title, description, children, actionButton }: PageWrapperProps) {
   return (
-    <div className="font-sans">
+    <div className="font-sans min-h-screen">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
