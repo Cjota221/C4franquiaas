@@ -1,25 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  throw new Error('Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).');
+function getSupabaseClientOrNull() {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+  return createClient(SUPABASE_URL, SERVICE_KEY);
 }
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClientOrNull();
+    // If Supabase not configured, return empty result (avoid build-time throws)
+    if (!supabase) {
+      return NextResponse.json({ items: [], resumo: { ativos: 0, inativos: 0, total: 0 } });
+    }
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page') || '1');
     const per_page = Number(url.searchParams.get('per_page') || '20');
     const status = (url.searchParams.get('status') || '').toLowerCase();
     const q = url.searchParams.get('q') ?? '';
-
-    // If Supabase not configured, return empty result (avoid throwing in production)
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json({ items: [], resumo: { ativos: 0, inativos: 0, total: 0 } });
-    }
     // Build base query
     let query = supabase.from('franqueados').select('*', { count: 'exact' }).order('criado_em', { ascending: false });
 

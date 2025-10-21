@@ -38,10 +38,20 @@ export function useProductFilters() {
         arr.sort((a, b) => (a.preco_base ?? 0) - (b.preco_base ?? 0));
         break;
       case 'date_new':
-        arr.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+        arr.sort((a, b) => {
+          // Converte IDs para string para comparação lexicográfica
+          const idA = String(a.id ?? '');
+          const idB = String(b.id ?? '');
+          return idB.localeCompare(idA);
+        });
         break;
       case 'date_old':
-        arr.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+        arr.sort((a, b) => {
+          // Converte IDs para string para comparação lexicográfica
+          const idA = String(a.id ?? '');
+          const idB = String(b.id ?? '');
+          return idA.localeCompare(idB);
+        });
         break;
       default:
         break;

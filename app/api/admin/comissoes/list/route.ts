@@ -1,15 +1,19 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  throw new Error('Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).');
+function getSupabaseClientOrError() {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+  return createClient(SUPABASE_URL, SERVICE_KEY);
 }
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 export async function GET(req: NextRequest) {
   try {
+    const supabase = getSupabaseClientOrError();
+    if (!supabase) {
+      return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).' }, { status: 500 });
+    }
     const url = new URL(req.url);
     const page = Number(url.searchParams.get('page') || '1');
     const per_page = Number(url.searchParams.get('per_page') || '20');
