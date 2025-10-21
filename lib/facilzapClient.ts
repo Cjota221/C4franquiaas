@@ -100,16 +100,23 @@ function normalizeEstoque(estoqueField: unknown): number {
     console.log('[normalizeEstoque] Entrada:', typeof estoqueField, estoqueField);
   }
 
+  // Verificar se é number direto
   if (typeof estoqueField === 'number' && Number.isFinite(estoqueField)) {
     if (process.env.DEBUG_SYNC === 'true') {
-      console.log('[normalizeEstoque] ✅ Retornando number:', estoqueField);
+      console.log('[normalizeEstoque] ✅ Retornando number direto:', estoqueField);
     }
     return estoqueField;
   }
 
+  // Verificar se é string
   if (typeof estoqueField === 'string') {
     const cleaned = estoqueField.trim().replace(/[^0-9.-]/g, '');
-    if (cleaned === '') return 0;
+    if (cleaned === '') {
+      if (process.env.DEBUG_SYNC === 'true') {
+        console.log('[normalizeEstoque] ⚠️ String vazia após limpeza');
+      }
+      return 0;
+    }
     const num = Number(cleaned);
     if (process.env.DEBUG_SYNC === 'true') {
       console.log('[normalizeEstoque] ✅ Retornando string convertida:', num);
@@ -117,14 +124,20 @@ function normalizeEstoque(estoqueField: unknown): number {
     return Number.isFinite(num) && num >= 0 ? num : 0;
   }
 
+  // Verificar se é objeto
   if (estoqueField && typeof estoqueField === 'object' && !Array.isArray(estoqueField)) {
     const obj = estoqueField as Record<string, unknown>;
+    
+    if (process.env.DEBUG_SYNC === 'true') {
+      console.log('[normalizeEstoque] 📦 Objeto recebido com campos:', Object.keys(obj));
+    }
 
+    // Prioridade 1: estoque.estoque
     if ('estoque' in obj) {
       const est = obj['estoque'];
       if (typeof est === 'number' && Number.isFinite(est)) {
         if (process.env.DEBUG_SYNC === 'true') {
-          console.log('[normalizeEstoque] ✅ Retornando obj.estoque:', est);
+          console.log('[normalizeEstoque] ✅ Retornando obj.estoque (number):', est);
         }
         return est;
       }
@@ -142,11 +155,12 @@ function normalizeEstoque(estoqueField: unknown): number {
       }
     }
 
+    // Prioridade 2: estoque.disponivel
     if ('disponivel' in obj) {
       const disp = obj['disponivel'];
       if (typeof disp === 'number' && Number.isFinite(disp)) {
         if (process.env.DEBUG_SYNC === 'true') {
-          console.log('[normalizeEstoque] ✅ Retornando obj.disponivel:', disp);
+          console.log('[normalizeEstoque] ✅ Retornando obj.disponivel (number):', disp);
         }
         return disp;
       }
@@ -164,7 +178,7 @@ function normalizeEstoque(estoqueField: unknown): number {
       }
     }
 
-    // Adicionar busca em campos alternativos
+    // Prioridade 3: quantidade
     if ('quantidade' in obj) {
       const qty = obj['quantidade'];
       if (typeof qty === 'number' && Number.isFinite(qty)) {
@@ -173,8 +187,21 @@ function normalizeEstoque(estoqueField: unknown): number {
         }
         return qty;
       }
+      if (typeof qty === 'string') {
+        const cleaned = qty.trim().replace(/[^0-9.-]/g, '');
+        if (cleaned !== '') {
+          const num = Number(cleaned);
+          if (Number.isFinite(num) && num >= 0) {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log('[normalizeEstoque] ✅ Retornando obj.quantidade (string):', num);
+            }
+            return num;
+          }
+        }
+      }
     }
 
+    // Prioridade 4: qty
     if ('qty' in obj) {
       const qty = obj['qty'];
       if (typeof qty === 'number' && Number.isFinite(qty)) {
@@ -183,8 +210,21 @@ function normalizeEstoque(estoqueField: unknown): number {
         }
         return qty;
       }
+      if (typeof qty === 'string') {
+        const cleaned = qty.trim().replace(/[^0-9.-]/g, '');
+        if (cleaned !== '') {
+          const num = Number(cleaned);
+          if (Number.isFinite(num) && num >= 0) {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log('[normalizeEstoque] ✅ Retornando obj.qty (string):', num);
+            }
+            return num;
+          }
+        }
+      }
     }
 
+    // Prioridade 5: stock
     if ('stock' in obj) {
       const stock = obj['stock'];
       if (typeof stock === 'number' && Number.isFinite(stock)) {
@@ -193,12 +233,24 @@ function normalizeEstoque(estoqueField: unknown): number {
         }
         return stock;
       }
+      if (typeof stock === 'string') {
+        const cleaned = stock.trim().replace(/[^0-9.-]/g, '');
+        if (cleaned !== '') {
+          const num = Number(cleaned);
+          if (Number.isFinite(num) && num >= 0) {
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log('[normalizeEstoque] ✅ Retornando obj.stock (string):', num);
+            }
+            return num;
+          }
+        }
+      }
     }
   }
 
   // LOG: Se não encontrou
   if (process.env.DEBUG_SYNC === 'true') {
-    console.log('[normalizeEstoque] ❌ Retornando 0 (não encontrado)');
+    console.log('[normalizeEstoque] ❌ Retornando 0 (nenhum campo válido encontrado)');
   }
 
   return 0;
@@ -380,71 +432,120 @@ function processVariacoes(produto: ExternalProduct) {
 
   // LOG: Verificar se o produto tem variações
   if (process.env.DEBUG_SYNC === 'true') {
-    console.log('[processVariacoes] Produto:', produto.id ?? produto.codigo);
-    console.log('[processVariacoes] Tem campo variacoes?', 'variacoes' in produto);
-    console.log('[processVariacoes] É array?', Array.isArray(produto.variacoes));
-    console.log('[processVariacoes] Quantidade:', produto.variacoes?.length ?? 0);
+    console.log('[processVariacoes] ==========================================');
+    console.log('[processVariacoes] 📦 Produto:', produto.id ?? produto.codigo);
+    console.log('[processVariacoes] Nome:', produto.nome);
+    console.log('[processVariacoes] Campos disponíveis no produto:', Object.keys(produto));
   }
 
+  // Extrair array de códigos de barras do produto (pode ser usado como fallback)
   const productBarcodes = Array.isArray((produto as Record<string, unknown>)['cod_barras'])
     ? (produto as Record<string, unknown>)['cod_barras'] as unknown[]
     : undefined;
 
-  // Procurar variações em diferentes campos
-  const prodObj = produto as Record<string, unknown>;
-  const variacoesArray = 
-    Array.isArray(produto.variacoes) ? produto.variacoes :
-    Array.isArray(prodObj.variations) ? prodObj.variations as unknown[] :
-    Array.isArray(prodObj.skus) ? prodObj.skus as unknown[] :
-    Array.isArray(prodObj.opcoes) ? prodObj.opcoes as unknown[] :
-    [];
+  if (process.env.DEBUG_SYNC === 'true' && productBarcodes) {
+    console.log('[processVariacoes] 🏷️ Array de códigos de barras do produto:', productBarcodes);
+  }
 
-  if (process.env.DEBUG_SYNC === 'true' && variacoesArray.length === 0) {
-    console.log('[processVariacoes] ⚠️ Nenhuma variação encontrada. Campos disponíveis:', Object.keys(produto));
+  // Procurar variações em diferentes campos (TODOS OS NOMES POSSÍVEIS)
+  const prodObj = produto as Record<string, unknown>;
+  
+  let variacoesArray: unknown[] = [];
+  let campoEncontrado = '';
+  
+  // Ordem de prioridade na busca
+  if (Array.isArray(produto.variacoes)) {
+    variacoesArray = produto.variacoes;
+    campoEncontrado = 'variacoes';
+  } else if (Array.isArray(prodObj.variations)) {
+    variacoesArray = prodObj.variations as unknown[];
+    campoEncontrado = 'variations';
+  } else if (Array.isArray(prodObj.skus)) {
+    variacoesArray = prodObj.skus as unknown[];
+    campoEncontrado = 'skus';
+  } else if (Array.isArray(prodObj.opcoes)) {
+    variacoesArray = prodObj.opcoes as unknown[];
+    campoEncontrado = 'opcoes';
+  } else if (Array.isArray(prodObj.items)) {
+    variacoesArray = prodObj.items as unknown[];
+    campoEncontrado = 'items';
+  }
+
+  if (process.env.DEBUG_SYNC === 'true') {
+    if (variacoesArray.length > 0) {
+      console.log(`[processVariacoes] ✅ Variações encontradas em '${campoEncontrado}': ${variacoesArray.length} itens`);
+    } else {
+      console.log('[processVariacoes] ⚠️ Nenhuma variação encontrada nos campos: variacoes, variations, skus, opcoes, items');
+    }
   }
 
   if (variacoesArray.length > 0) {
-    if (process.env.DEBUG_SYNC === 'true') {
-      console.log(`[processVariacoes] ✅ Processando ${variacoesArray.length} variações`);
-    }
-
     variacoesArray.forEach((variacao, idx) => {
       const rec = (variacao && typeof variacao === 'object') ? variacao as Record<string, unknown> : {};
 
       // LOG: Mostrar campos da variação
       if (process.env.DEBUG_SYNC === 'true') {
-        console.log(`[processVariacoes] Variação ${idx + 1} campos:`, Object.keys(rec));
+        console.log(`[processVariacoes] ------------------------------------------`);
+        console.log(`[processVariacoes] 🔍 Variação ${idx + 1}/${variacoesArray.length}`);
+        console.log(`[processVariacoes] Campos disponíveis:`, Object.keys(rec));
       }
 
+      // Extrair estoque
       const estoqueVal = normalizeEstoque(rec['estoque']);
       estoqueTotal += estoqueVal;
 
+      // Extrair código de barras
       let barcode = extractBarcode(rec);
 
+      // Fallback: usar código de barras do array do produto (índice correspondente)
       if ((!barcode || barcode === '') && Array.isArray(productBarcodes) && productBarcodes[idx]) {
         const cand = productBarcodes[idx];
-        if (typeof cand === 'string' && cand.trim() !== '') barcode = cand.trim();
-        if (typeof cand === 'number') barcode = String(cand);
+        if (typeof cand === 'string' && cand.trim() !== '') {
+          barcode = cand.trim();
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[processVariacoes] 🏷️ Usando código de barras do array do produto [${idx}]: ${barcode}`);
+          }
+        }
+        if (typeof cand === 'number') {
+          barcode = String(cand);
+          if (process.env.DEBUG_SYNC === 'true') {
+            console.log(`[processVariacoes] 🏷️ Usando código de barras do array do produto [${idx}]: ${barcode}`);
+          }
+        }
+        // Se for objeto com 'numero'
+        if (cand && typeof cand === 'object') {
+          const candObj = cand as Record<string, unknown>;
+          if ('numero' in candObj && candObj['numero']) {
+            barcode = String(candObj['numero']);
+            if (process.env.DEBUG_SYNC === 'true') {
+              console.log(`[processVariacoes] 🏷️ Usando código de barras do array do produto [${idx}].numero: ${barcode}`);
+            }
+          }
+        }
       }
 
       if (!primeiro_barcode && barcode) primeiro_barcode = barcode;
 
+      // Extrair ID (prioridade: id → codigo)
       const resolvedId = (() => {
         const cand = rec['id'] ?? rec['codigo'];
         if (typeof cand === 'string' || typeof cand === 'number') return cand as string | number;
         return undefined;
       })();
 
-      const nome = asString(rec['nome']);
+      // Extrair nome
+      const nome = asString(rec['nome'] ?? rec['name'] ?? rec['titulo']);
+
+      // Extrair SKU (prioridade: sku → codigo → id)
       const sku = asString(rec['sku'] ?? rec['codigo'] ?? rec['id']) ?? undefined;
 
       // LOG: Mostrar dados extraídos da variação
       if (process.env.DEBUG_SYNC === 'true') {
-        console.log(`[processVariacoes] Variação ${idx + 1} extraída:`, {
+        console.log(`[processVariacoes] ✅ Dados extraídos da variação ${idx + 1}:`, {
           id: resolvedId,
-          sku,
-          nome,
-          codigo_barras: barcode,
+          sku: sku || 'null',
+          nome: nome || 'null',
+          codigo_barras: barcode || 'null',
           estoque: estoqueVal
         });
       }
@@ -458,20 +559,30 @@ function processVariacoes(produto: ExternalProduct) {
       });
     });
   } else {
+    // Produto sem variações - usar estoque direto
     estoqueTotal = normalizeEstoque(produto.estoque);
     
     if (process.env.DEBUG_SYNC === 'true') {
-      console.log('[processVariacoes] ⚠️ Produto sem variações, usando estoque do produto:', estoqueTotal);
+      console.log('[processVariacoes] ⚠️ Produto SEM variações');
+      console.log('[processVariacoes] Usando estoque direto do produto:', estoqueTotal);
+    }
+    
+    // Tentar extrair código de barras do produto
+    primeiro_barcode = extractBarcode(produto as unknown as Record<string, unknown>);
+    
+    if (process.env.DEBUG_SYNC === 'true') {
+      console.log('[processVariacoes] Código de barras do produto:', primeiro_barcode || 'null');
     }
   }
 
   // LOG: Resultado final
   if (process.env.DEBUG_SYNC === 'true') {
-    console.log('[processVariacoes] Resultado final:', {
-      estoqueTotal,
-      variacoes_count: variacoes_meta.length,
-      primeiro_barcode
-    });
+    console.log('[processVariacoes] ==========================================');
+    console.log('[processVariacoes] 📊 RESULTADO FINAL:');
+    console.log('[processVariacoes] Estoque total:', estoqueTotal);
+    console.log('[processVariacoes] Número de variações:', variacoes_meta.length);
+    console.log('[processVariacoes] Primeiro código de barras:', primeiro_barcode || 'null');
+    console.log('[processVariacoes] ==========================================');
   }
 
   return { estoque: estoqueTotal, variacoes_meta, primeiro_barcode };
