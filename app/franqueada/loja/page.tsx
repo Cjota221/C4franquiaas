@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Store, Copy, ExternalLink, Save, Upload, AlertCircle } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 type Loja = {
   id: string;
@@ -54,7 +55,7 @@ export default function LojaPage() {
 
   async function loadLoja() {
     try {
-      const res = await fetch('/api/franqueada/loja');
+      const res = await authenticatedFetch('/api/franqueada/loja');
       if (!res.ok) throw new Error('Erro ao carregar loja');
       const json = await res.json();
 
@@ -94,7 +95,7 @@ export default function LojaPage() {
       const url = loja ? '/api/franqueada/loja/update' : '/api/franqueada/loja';
       const method = loja ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await authenticatedFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,7 +136,7 @@ export default function LojaPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/franqueada/loja/upload-logo', {
+      const res = await authenticatedFetch('/api/franqueada/loja/upload-logo', {
         method: 'POST',
         body: formData
       });

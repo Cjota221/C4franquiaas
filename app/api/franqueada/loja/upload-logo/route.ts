@@ -1,12 +1,15 @@
 import { supabase } from '@/lib/supabaseClient';
+import { getAuthUser } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    // Buscar franqueada logada
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    const authHeader = req.headers.get('authorization');
+    
+    // Buscar usuário logado
+    const { user, error: authError } = await getAuthUser(authHeader);
+    if (authError || !user) {
+      return NextResponse.json({ error: authError || 'Não autenticado' }, { status: 401 });
     }
 
     const formData = await req.formData();

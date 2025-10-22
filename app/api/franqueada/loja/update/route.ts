@@ -1,24 +1,16 @@
 import { supabase } from '@/lib/supabaseClient';
+import { getAuthFranqueada } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
+    const authHeader = req.headers.get('authorization');
 
     // Buscar franqueada logada
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const { data: franqueada } = await supabase
-      .from('franqueadas')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!franqueada) {
-      return NextResponse.json({ error: 'Franqueada não encontrada' }, { status: 404 });
+    const { franqueada, error: authError } = await getAuthFranqueada(authHeader);
+    if (authError || !franqueada) {
+      return NextResponse.json({ error: authError || 'Não autenticado' }, { status: 401 });
     }
 
     // Validar domínio
