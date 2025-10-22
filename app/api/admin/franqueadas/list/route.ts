@@ -1,6 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
 
+type Loja = {
+  id: string;
+  nome: string;
+  dominio: string;
+  logo: string | null;
+  cor_primaria: string;
+  cor_secundaria: string;
+  ativo: boolean;
+  produtos_ativos: number;
+  criado_em: string;
+};
+
+type FranqueadaComLojas = {
+  id: string;
+  nome: string;
+  email: string;
+  status: string;
+  criado_em: string;
+  lojas?: Loja | Loja[] | null;
+  telefone?: string | null;
+  cpf?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  aprovado_em?: string | null;
+  observacoes?: string | null;
+  vendas_total?: number;
+  comissao_acumulada?: number;
+};
+
 export async function GET(request: NextRequest) {
   try {
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -64,17 +93,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtrar manualmente ativa/inativa se necessário (apenas se lojas existe)
-    let franqueadas = data || [];
+    let franqueadas = (data || []) as unknown as FranqueadaComLojas[];
     if (lojasExists) {
       if (statusFilter === 'ativa') {
         franqueadas = franqueadas.filter(f => {
           const lojas = Array.isArray(f.lojas) ? f.lojas[0] : f.lojas;
-          return lojas && lojas.ativo;
+          return lojas && (lojas as Loja).ativo;
         });
       } else if (statusFilter === 'inativa') {
         franqueadas = franqueadas.filter(f => {
           const lojas = Array.isArray(f.lojas) ? f.lojas[0] : f.lojas;
-          return lojas && !lojas.ativo;
+          return lojas && !(lojas as Loja).ativo;
         });
       }
     }
