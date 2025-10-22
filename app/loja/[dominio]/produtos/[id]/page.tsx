@@ -21,28 +21,32 @@ type LojaInfo = {
   cor_secundaria: string;
 };
 
-export default function ProdutoDetalhePage({ params }: { params: { dominio: string; id: string } }) {
+export default function ProdutoDetalhePage({ params }: { params: Promise<{ dominio: string; id: string }> }) {
   const [produto, setProduto] = useState<Produto | null>(null);
   const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantidade, setQuantidade] = useState(1);
   const [imagemAtual, setImagemAtual] = useState(0);
   const [adicionado, setAdicionado] = useState(false);
+  const [dominio, setDominio] = useState<string>('');
 
   const addItem = useCarrinhoStore(state => state.addItem);
 
   useEffect(() => {
     async function loadData() {
       try {
+        const { dominio: dom, id: prodId } = await params;
+        setDominio(dom);
+        
         // Carregar informações da loja
-        const infoRes = await fetch(`/api/loja/${params.dominio}/info`);
+        const infoRes = await fetch(`/api/loja/${dom}/info`);
         if (infoRes.ok) {
           const infoJson = await infoRes.json();
           setLojaInfo(infoJson.loja);
         }
 
         // Carregar produto específico
-        const prodRes = await fetch(`/api/loja/${params.dominio}/produtos/${params.id}`);
+        const prodRes = await fetch(`/api/loja/${dom}/produtos/${prodId}`);
         if (prodRes.ok) {
           const prodJson = await prodRes.json();
           setProduto(prodJson.produto);
@@ -55,7 +59,7 @@ export default function ProdutoDetalhePage({ params }: { params: { dominio: stri
     }
     
     loadData();
-  }, [params.dominio, params.id]);
+  }, [params]);
 
   const handleAddToCart = () => {
     if (!produto) return;
@@ -101,7 +105,7 @@ export default function ProdutoDetalhePage({ params }: { params: { dominio: stri
         <h2 className="text-2xl font-bold mb-2">Produto não encontrado</h2>
         <p className="text-gray-600 mb-6">Este produto não está disponível</p>
         <Link 
-          href={`/loja/${params.dominio}/produtos`}
+          href={`/loja/${dominio}/produtos`}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white transition hover:opacity-90"
           style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
         >
@@ -118,7 +122,7 @@ export default function ProdutoDetalhePage({ params }: { params: { dominio: stri
     <div className="container mx-auto px-4 py-8">
       {/* Voltar */}
       <Link 
-        href={`/loja/${params.dominio}/produtos`}
+        href={`/loja/${dominio}/produtos`}
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
       >
         <ArrowLeft size={20} />
@@ -269,7 +273,7 @@ export default function ProdutoDetalhePage({ params }: { params: { dominio: stri
           {/* Botão Ver Carrinho (após adicionar) */}
           {adicionado && (
             <Link
-              href={`/loja/${params.dominio}/carrinho`}
+              href={`/loja/${dominio}/carrinho`}
               className="block w-full mt-4 py-3 rounded-lg font-bold text-center border-2 transition hover:bg-gray-50"
               style={{ 
                 borderColor: lojaInfo?.cor_primaria || '#DB1472',

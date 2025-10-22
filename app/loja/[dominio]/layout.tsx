@@ -16,18 +16,21 @@ export default function LojaLayout({
   params
 }: {
   children: React.ReactNode;
-  params: { dominio: string };
+  params: Promise<{ dominio: string }>;
 }) {
   const [loja, setLoja] = useState<Loja | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dominio, setDominio] = useState<string>('');
 
   useEffect(() => {
     async function loadLoja() {
       try {
-        console.log(`[Loja Layout] Carregando loja: ${params.dominio}`);
+        const { dominio: dom } = await params;
+        setDominio(dom);
+        console.log(`[Loja Layout] Carregando loja: ${dom}`);
         
-        const res = await fetch(`/api/loja/${params.dominio}/info`);
+        const res = await fetch(`/api/loja/${dom}/info`);
         
         if (!res.ok) {
           const json = await res.json();
@@ -46,7 +49,7 @@ export default function LojaLayout({
     }
     
     loadLoja();
-  }, [params.dominio]);
+  }, [params]);
 
   if (loading) {
     return (
@@ -88,7 +91,7 @@ export default function LojaLayout({
         }
       `}</style>
 
-      <LojaHeader loja={loja} dominio={params.dominio} />
+      <LojaHeader loja={loja} dominio={dominio} />
       
       <main className="flex-1">
         {children}

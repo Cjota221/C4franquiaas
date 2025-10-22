@@ -11,9 +11,10 @@ type LojaInfo = {
   cor_secundaria: string;
 };
 
-export default function CarrinhoPage({ params }: { params: { dominio: string } }) {
+export default function CarrinhoPage({ params }: { params: Promise<{ dominio: string }> }) {
   const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [dominio, setDominio] = useState<string>('');
   
   const itens = useCarrinhoStore(state => state.items);
   const updateQuantidade = useCarrinhoStore(state => state.updateQuantidade);
@@ -22,11 +23,13 @@ export default function CarrinhoPage({ params }: { params: { dominio: string } }
   const getTotal = useCarrinhoStore(state => state.getTotal);
 
   useEffect(() => {
-    setMounted(true);
-    
-    async function loadLojaInfo() {
+    async function init() {
+      const { dominio: dom } = await params;
+      setDominio(dom);
+      setMounted(true);
+      
       try {
-        const res = await fetch(`/api/loja/${params.dominio}/info`);
+        const res = await fetch(`/api/loja/${dom}/info`);
         if (res.ok) {
           const json = await res.json();
           setLojaInfo(json.loja);
@@ -36,8 +39,8 @@ export default function CarrinhoPage({ params }: { params: { dominio: string } }
       }
     }
     
-    loadLojaInfo();
-  }, [params.dominio]);
+    init();
+  }, [params]);
 
   // Evitar hydration error
   if (!mounted) {
@@ -77,7 +80,7 @@ export default function CarrinhoPage({ params }: { params: { dominio: string } }
           <h2 className="text-2xl font-bold mb-2 text-gray-800">Seu carrinho está vazio</h2>
           <p className="text-gray-600 mb-6">Adicione produtos para continuar comprando</p>
           <Link
-            href={`/loja/${params.dominio}/produtos`}
+            href={`/loja/${dominio}/produtos`}
             className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-white transition hover:opacity-90"
             style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
           >
@@ -197,7 +200,7 @@ export default function CarrinhoPage({ params }: { params: { dominio: string } }
                 </button>
 
                 <Link
-                  href={`/loja/${params.dominio}/produtos`}
+                  href={`/loja/${dominio}/produtos`}
                   className="w-full py-3 rounded-lg font-bold text-center border-2 transition hover:bg-gray-50 flex items-center justify-center gap-2"
                   style={{ 
                     borderColor: lojaInfo?.cor_primaria || '#DB1472',

@@ -17,25 +17,29 @@ type LojaInfo = {
   cor_primaria: string;
 };
 
-export default function ProdutosPage({ params }: { params: { dominio: string } }) {
+export default function ProdutosPage({ params }: { params: Promise<{ dominio: string }> }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [produtosFiltrados, setProdutosFiltrados] = useState<Produto[]>([]);
   const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dominio, setDominio] = useState<string>('');
 
   useEffect(() => {
     async function loadData() {
       try {
+        const { dominio: dom } = await params;
+        setDominio(dom);
+        
         // Carregar informações da loja
-        const infoRes = await fetch(`/api/loja/${params.dominio}/info`);
+        const infoRes = await fetch(`/api/loja/${dom}/info`);
         if (infoRes.ok) {
           const infoJson = await infoRes.json();
           setLojaInfo(infoJson.loja);
         }
 
         // Carregar todos os produtos
-        const prodRes = await fetch(`/api/loja/${params.dominio}/produtos`);
+        const prodRes = await fetch(`/api/loja/${dom}/produtos`);
         if (prodRes.ok) {
           const prodJson = await prodRes.json();
           setProdutos(prodJson.produtos);
@@ -49,7 +53,7 @@ export default function ProdutosPage({ params }: { params: { dominio: string } }
     }
     
     loadData();
-  }, [params.dominio]);
+  }, [params]);
 
   // Filtrar produtos quando o termo de busca mudar
   useEffect(() => {
@@ -134,7 +138,7 @@ export default function ProdutosPage({ params }: { params: { dominio: string } }
             <ProdutoCard 
               key={produto.id} 
               produto={produto} 
-              dominio={params.dominio}
+              dominio={dominio}
               corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
             />
           ))}

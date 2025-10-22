@@ -19,23 +19,27 @@ type LojaInfo = {
   produtos_ativos: number;
 };
 
-export default function LojaHomePage({ params }: { params: { dominio: string } }) {
+export default function LojaHomePage({ params }: { params: Promise<{ dominio: string }> }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dominio, setDominio] = useState<string>('');
 
   useEffect(() => {
     async function loadData() {
       try {
+        const { dominio: dom } = await params;
+        setDominio(dom);
+        
         // Carregar informações da loja
-        const infoRes = await fetch(`/api/loja/${params.dominio}/info`);
+        const infoRes = await fetch(`/api/loja/${dom}/info`);
         if (infoRes.ok) {
           const infoJson = await infoRes.json();
           setLojaInfo(infoJson.loja);
         }
 
         // Carregar produtos em destaque (primeiros 6)
-        const prodRes = await fetch(`/api/loja/${params.dominio}/produtos`);
+        const prodRes = await fetch(`/api/loja/${dom}/produtos`);
         if (prodRes.ok) {
           const prodJson = await prodRes.json();
           setProdutos(prodJson.produtos.slice(0, 6));
@@ -48,7 +52,7 @@ export default function LojaHomePage({ params }: { params: { dominio: string } }
     }
     
     loadData();
-  }, [params.dominio]);
+  }, [params]);
 
   if (loading) {
     return (
@@ -74,7 +78,7 @@ export default function LojaHomePage({ params }: { params: { dominio: string } }
             Os melhores cosméticos com preços especiais para você
           </p>
           <Link 
-            href={`/loja/${params.dominio}/produtos`}
+            href={`/loja/${dominio}/produtos`}
             className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition hover:opacity-90"
             style={{ backgroundColor: lojaInfo?.cor_secundaria || '#F8B81F' }}
           >
@@ -150,7 +154,7 @@ export default function LojaHomePage({ params }: { params: { dominio: string } }
                   <ProdutoCard 
                     key={produto.id} 
                     produto={produto} 
-                    dominio={params.dominio}
+                    dominio={dominio}
                     corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
                   />
                 ))}
@@ -158,7 +162,7 @@ export default function LojaHomePage({ params }: { params: { dominio: string } }
 
               <div className="text-center mt-12">
                 <Link
-                  href={`/loja/${params.dominio}/produtos`}
+                  href={`/loja/${dominio}/produtos`}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-white transition hover:opacity-90"
                   style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
                 >
