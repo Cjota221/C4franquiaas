@@ -132,19 +132,53 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
             <div>
               <div className="space-y-4">
                 {imagens.length === 0 && (
-                  <div className="w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                    Sem imagens disponíveis
+                  <div className="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400">
+                    <svg className="w-24 h-24 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span className="text-lg font-medium">Sem imagens disponíveis</span>
                   </div>
                 )}
                 {imagens.map((src, i) => (
-                  <div key={i} className="w-full h-96 relative bg-gray-50 rounded-lg overflow-hidden">
+                  <div key={i} className="w-full h-96 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-lg group">
                     <Image 
                       src={src} 
                       alt={`${product.nome} - imagem ${i + 1}`} 
                       fill 
-                      className="object-contain p-4" 
-                      unoptimized 
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-contain p-4 transition-transform duration-300 group-hover:scale-105" 
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      priority={i === 0}
+                      quality={90}
+                      placeholder="blur"
+                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+                      unoptimized
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector('.error-placeholder')) {
+                          const errorDiv = document.createElement('div');
+                          errorDiv.className = 'error-placeholder flex flex-col items-center justify-center h-full text-gray-400';
+                          errorDiv.innerHTML = `
+                            <svg class="w-20 h-20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-base font-medium">Erro ao carregar imagem ${i + 1}</span>
+                            <span class="text-sm mt-1">Tente recarregar a página</span>
+                          `;
+                          parent.appendChild(errorDiv);
+                        }
+                      }}
                     />
+                    {/* Badge com número da imagem */}
+                    {imagens.length > 1 && (
+                      <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        {i + 1} / {imagens.length}
+                      </div>
+                    )}
+                    {/* Loading overlay */}
+                    <div className="absolute inset-0 bg-gray-200 animate-pulse pointer-events-none" style={{zIndex: -1}}></div>
                   </div>
                 ))}
               </div>
