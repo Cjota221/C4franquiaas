@@ -123,11 +123,22 @@ http://localhost:3001/loja/[dominio]
 ```
 **Exemplo**:
 ```
+http://localhost:3001/loja/teste
 http://localhost:3001/loja/maria-bolos
-http://localhost:3001/loja/joana-doces
 ```
 
-⚠️ **Status**: A implementar (próximo passo)
+✅ **Status**: Implementado!
+
+**Funcionalidades**:
+- 🏠 **Home**: Banner + produtos em destaque + diferenciais
+- 📦 **Catálogo**: Busca + grid responsivo de produtos
+- 🔍 **Produto Individual**: Galeria + seletor quantidade + add carrinho
+- 🛒 **Carrinho**: Lista itens + controles + resumo + finalizar
+- 🎨 **Tema Dinâmico**: Cores da tabela `lojas` aplicadas automaticamente
+- 💾 **Persistência**: Carrinho salvo no localStorage
+
+**Como criar loja de teste**:
+Ver arquivo: `docs/LOJA_FRANQUEADA.md`
 
 ---
 
@@ -339,8 +350,10 @@ http://localhost:3001/cadastro/franqueada
 ---
 
 ## 📅 Última atualização
-21 de outubro de 2025
+22 de outubro de 2025
 
 ## 🎉 Status
 ✅ Sistema funcionando
+✅ Site da franqueada implementado (/loja/[dominio])
 ⚠️ Aplicar migration 010 antes de usar filtros "Ativas/Inativas"
+⚠️ Aplicar migration 011 para fix de UUID em produtos_franqueadas
