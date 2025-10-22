@@ -52,9 +52,7 @@ export async function GET(
           estoque,
           imagem,
           imagens,
-          codigo_barras,
-          sku,
-          categorias
+          codigo_barras
         )
       `)
       .eq('franqueada_id', loja.franqueada_id)
@@ -106,9 +104,7 @@ export async function GET(
           estoque: produto.estoque || 0,
           imagem: produto.imagem || null,
           imagens: produto.imagens || [],
-          codigo_barras: produto.codigo_barras || null,
-          sku: produto.sku || null,
-          categorias: produto.categorias || []
+          codigo_barras: produto.codigo_barras || null
         };
       })
       .filter((p): p is NonNullable<typeof p> => p !== null);
