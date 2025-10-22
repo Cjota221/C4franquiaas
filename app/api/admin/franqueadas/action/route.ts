@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     
     const body = await request.json();
-    const { action, franqueada_id, observacoes } = body;
+    const { action, franqueada_id, observacoes, ativo } = body;
 
     if (!action || !franqueada_id) {
       return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 });
@@ -84,6 +84,32 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ success: true, message: 'Franqueada rejeitada' }, { status: 200 });
+    }
+    
+    else if (action === 'toggle-loja') {
+      // Ativar/desativar loja da franqueada
+      if (ativo === undefined) {
+        return NextResponse.json({ error: 'Parâmetro ativo é obrigatório' }, { status: 400 });
+      }
+
+      const { error } = await supabase
+        .from('lojas')
+        .update({ 
+          ativo: ativo,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('franqueada_id', franqueada_id);
+
+      if (error) {
+        console.error('[api/admin/franqueadas/action] Erro ao atualizar loja:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      console.log(`[api/admin/franqueadas/action] Loja ${ativo ? 'ativada' : 'desativada'}`);
+      return NextResponse.json({ 
+        success: true, 
+        message: `Loja ${ativo ? 'ativada' : 'desativada'} com sucesso` 
+      }, { status: 200 });
     }
 
     return NextResponse.json({ error: 'Ação inválida' }, { status: 400 });
