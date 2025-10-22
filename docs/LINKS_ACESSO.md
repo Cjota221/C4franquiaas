@@ -117,20 +117,67 @@ http://localhost:3001/franqueada/perfil
 ```
 http://localhost:3001/franqueada/loja
 ```
-**Funcionalidades** (✨ ATUALIZADO):
-- 🏪 Criar/editar loja online
-- 🎯 Nome da loja (domínio gerado **automaticamente**)
+**Funcionalidades** (✨ NOVO PAINEL AVANÇADO):
+
+**5 ABAS DE CUSTOMIZAÇÃO COMPLETA**:
+
+**🎨 Aba 1 - Identidade Visual**:
+- � Nome da loja (domínio gerado **automaticamente**)
   - Ex: "CJ Rasteninhas" → domínio: `cjrasteninhas`
   - Ex: "Maria Cosméticos" → domínio: `mariacosmeticos`
 - 📸 Upload de logo (PNG, JPG, WEBP, SVG - max 2MB)
-- 🎨 Escolher cores primária e secundária
+- 🎨 7 cores customizáveis:
+  - Cor Primária (header, títulos)
+  - Cor Secundária (badges, destaques)
+  - Cor do Texto
+  - Cor de Fundo
+  - Cor do Botão
+  - Cor Botão Hover
+  - Cor dos Links
+- 🔤 Escolha de fontes (Principal e Secundária):
+  - Inter, Poppins, Roboto, Open Sans, Montserrat
+
+**📝 Aba 2 - Conteúdo**:
+- Slogan da loja
+- Descrição completa da loja
+- Texto principal do banner (Hero)
+- Subtexto do banner
+
+**📱 Aba 3 - Redes Sociais**:
+- WhatsApp (formato internacional)
+- Instagram
+- Facebook
+- E-mail de contato
+- Telefone
+- Endereço completo
+
+**🔍 Aba 4 - SEO & Analytics**:
+- Meta Title (título SEO)
+- Meta Description (descrição SEO)
+- Google Analytics ID
+- Facebook Pixel ID
+- Contador de caracteres em tempo real
+
+**⚙️ Aba 5 - Configurações**:
+- ✅ Loja Ativa/Inativa
+- 📊 Mostrar Estoque
+- 🏷️ Mostrar Código de Barras
+- 🛒 Permitir Carrinho
+- 📋 Modo Catálogo (apenas exibição)
+- 💬 Mensagem padrão WhatsApp personalizada
+
+**Recursos Gerais**:
 - 👁️ Preview em tempo real
 - 🔗 Copiar link da loja
-- ✅ Ativar/desativar loja
+- 🌐 Abrir loja em nova aba
+- 💾 Salvar todas as alterações de uma vez
+- ✨ Interface com tabs modernas
 
 **✨ Domínio Automático**: Sistema remove acentos, espaços e caracteres especiais automaticamente!
 
-**⚠️ Antes de usar**: Criar bucket `logos` no Supabase Storage (ver `docs/BUCKET_LOGOS.md`)
+**⚠️ Antes de usar**: 
+- Aplicar migrations 012 e 013 no Supabase (ver `docs/APLICAR_MIGRATIONS_012_013.md`)
+- Criar bucket `logos` no Supabase Storage (ver `docs/BUCKET_LOGOS.md`)
 
 ---
 
@@ -374,7 +421,8 @@ http://localhost:3001/cadastro/franqueada
 ## 🎉 Status
 ✅ Sistema funcionando
 ✅ Site da franqueada implementado (/loja/[dominio])
-✅ Página de customização da loja (/franqueada/loja)
+✅ Página de customização da loja (/franqueada/loja) - PAINEL AVANÇADO COM 5 ABAS
+✅ Migrations 012 e 013 aplicadas (descricao + 28 campos customização)
 ⚠️ Aplicar migration 010 antes de usar filtros "Ativas/Inativas"
 ⚠️ Aplicar migration 011 para fix de UUID em produtos_franqueadas
 ⚠️ Criar bucket 'logos' no Supabase Storage (ver docs/BUCKET_LOGOS.md)
