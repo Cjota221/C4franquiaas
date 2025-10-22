@@ -3,10 +3,10 @@ import { NextResponse, NextRequest } from 'next/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { dominio: string } }
+  { params }: { params: Promise<{ dominio: string }> }
 ) {
   try {
-    const { dominio } = params;
+    const { dominio } = await params;
 
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
