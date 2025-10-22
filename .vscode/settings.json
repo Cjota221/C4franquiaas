@@ -10,5 +10,63 @@
     "html": "html"
   },
   "css.lint.unknownAtRules": "ignore",
-  "scss.lint.unknownAtRules": "ignore"
+  "scss.lint.unknownAtRules": "ignore",
+
+  // ===== OTIMIZAÇÕES DE PERFORMANCE =====
+  
+  // Reduzir monitoramento de arquivos (economiza RAM)
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.next/**": true,
+    "**/build/**": true,
+    "**/.cache/**": true
+  },
+  
+  // Limitar memória do TypeScript Server
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  
+  // Desabilitar telemetria (economiza CPU)
+  "telemetry.telemetryLevel": "off",
+  
+  // Otimizar ESLint
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  
+  // Limitar histórico do Git
+  "git.maxGitHistoryItems": 50,
+  "git.autofetch": false,
+  
+  // Desabilitar minimap (economiza RAM)
+  "editor.minimap.enabled": false,
+  
+  // Reduzir sugestões automáticas
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": false
+  },
+  
+  // Otimizar busca
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/build": true,
+    "**/.cache": true
+  },
+  
+  // Otimizar renderização
+  "editor.renderWhitespace": "selection",
+  "editor.renderControlCharacters": false,
+  
+  // Salvamento automático otimizado
+  "files.autoSave": "onFocusChange"
 }
