@@ -113,6 +113,21 @@ http://localhost:3001/franqueada/perfil
 - Status da conta
 - Data de aprovação
 
+### 🎨 Customização da Loja
+```
+http://localhost:3001/franqueada/loja
+```
+**Funcionalidades** (✨ NOVO):
+- 🏪 Criar/editar loja online
+- 🎯 Definir nome e domínio único (ex: mariacosmeticos)
+- 📸 Upload de logo (PNG, JPG, WEBP, SVG - max 2MB)
+- 🎨 Escolher cores primária e secundária
+- 👁️ Preview em tempo real
+- 🔗 Copiar link da loja
+- ✅ Ativar/desativar loja
+
+**⚠️ Antes de usar**: Criar bucket `logos` no Supabase Storage (ver `docs/BUCKET_LOGOS.md`)
+
 ---
 
 ## 🛒 LOJAS PÚBLICAS (Clientes)
@@ -355,5 +370,7 @@ http://localhost:3001/cadastro/franqueada
 ## 🎉 Status
 ✅ Sistema funcionando
 ✅ Site da franqueada implementado (/loja/[dominio])
+✅ Página de customização da loja (/franqueada/loja)
 ⚠️ Aplicar migration 010 antes de usar filtros "Ativas/Inativas"
 ⚠️ Aplicar migration 011 para fix de UUID em produtos_franqueadas
+⚠️ Criar bucket 'logos' no Supabase Storage (ver docs/BUCKET_LOGOS.md)
