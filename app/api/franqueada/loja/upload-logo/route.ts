@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const buffer = new Uint8Array(arrayBuffer);
 
     // Upload para Supabase Storage
-    const { error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -47,9 +47,21 @@ export async function POST(req: Request) {
         contentType: file.type
       });
 
-    if (error) {
-      console.error('Erro no upload:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (uploadError) {
+      console.error('Erro no upload:', uploadError);
+      
+      // Mensagem específica para bucket não encontrado
+      if (uploadError.message.includes('not found') || uploadError.message.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: 'Bucket "logos" não existe. Crie o bucket no Supabase Storage primeiro.',
+          details: uploadError.message 
+        }, { status: 500 });
+      }
+      
+      return NextResponse.json({ 
+        error: `Erro ao fazer upload: ${uploadError.message}`,
+        details: uploadError 
+      }, { status: 500 });
     }
 
     // Obter URL pública

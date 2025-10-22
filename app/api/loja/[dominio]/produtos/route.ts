@@ -66,16 +66,15 @@ export async function GET(
     const { data: precos, error: precosError } = await supabase
       .from('produtos_franqueadas_precos')
       .select('*')
-      .in('produto_franqueada_id', vinculacaoIds)
-      .eq('ativo_no_site', true);
+      .in('produto_franqueada_id', vinculacaoIds);
 
     if (precosError) {
       console.error('[API loja/produtos] Erro ao buscar preços:', precosError);
     }
 
-    console.log('[API loja/produtos] Preços ativos encontrados:', precos?.length || 0);
+    console.log('[API loja/produtos] Preços encontrados:', precos?.length || 0);
 
-    // Combinar dados e filtrar apenas produtos ativos no site
+    // Combinar dados - usar campo 'ativo' da vinculação (já filtrado acima)
     const produtos = vinculacoes
       ?.map(v => {
         const produto = Array.isArray(v.produtos) ? v.produtos[0] : v.produtos;
@@ -83,8 +82,9 @@ export async function GET(
 
         const preco = precos?.find(p => p.produto_franqueada_id === v.id);
         
-        // Só retornar se tiver preço E estiver ativo no site
-        if (!preco || !preco.ativo_no_site) {
+        // Produto já está ativo porque filtramos por .eq('ativo', true) acima
+        // Apenas verificar se tem preço definido
+        if (!preco) {
           return null;
         }
 
