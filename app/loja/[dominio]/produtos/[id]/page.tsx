@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { ArrowLeft, Minus, Plus, ShoppingCart, Package, Check } from 'lucide-react';
+import SeletorVariacoes, { Variacao } from '@/components/SeletorVariacoes';
 
 type Produto = {
   id: string;
@@ -13,6 +14,7 @@ type Produto = {
   imagens: string[];
   estoque: number;
   categoria?: string;
+  variacoes_meta?: Variacao[];
 };
 
 type LojaInfo = {
@@ -29,6 +31,7 @@ export default function ProdutoDetalhePage({ params }: { params: Promise<{ domin
   const [imagemAtual, setImagemAtual] = useState(0);
   const [adicionado, setAdicionado] = useState(false);
   const [dominio, setDominio] = useState<string>('');
+  const [variacaoSelecionada, setVariacaoSelecionada] = useState<string | null>(null);
 
   const addItem = useCarrinhoStore(state => state.addItem);
 
@@ -64,13 +67,27 @@ export default function ProdutoDetalhePage({ params }: { params: Promise<{ domin
   const handleAddToCart = () => {
     if (!produto) return;
     
+    // Se o produto tem variações, exigir seleção
+    const temVariacoes = produto.variacoes_meta && produto.variacoes_meta.length > 0;
+    if (temVariacoes && !variacaoSelecionada) {
+      alert('Por favor, selecione um tamanho antes de adicionar ao carrinho');
+      return;
+    }
+    
+    // Encontrar a variação selecionada para pegar o SKU
+    const variacao = temVariacoes 
+      ? produto.variacoes_meta?.find(v => v.id === variacaoSelecionada)
+      : null;
+    
     addItem({
       id: produto.id,
       nome: produto.nome,
       preco: produto.preco_final,
       quantidade,
       imagem: produto.imagens[0] || null,
-      estoque: produto.estoque
+      estoque: produto.estoque,
+      variacaoId: variacaoSelecionada,
+      variacaoSku: variacao?.sku || undefined
     });
 
     setAdicionado(true);
@@ -199,23 +216,21 @@ export default function ProdutoDetalhePage({ params }: { params: Promise<{ domin
             </span>
           </div>
 
-          {/* Estoque */}
-          <div className="mb-6">
-            {produto.estoque > 0 ? (
-              <p className="text-green-600 font-medium">
-                ✓ {produto.estoque} unidades em estoque
-              </p>
-            ) : (
-              <p className="text-red-600 font-medium">✗ Produto indisponível</p>
-            )}
-          </div>
-
           {/* Descrição */}
           {produto.descricao && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-bold mb-2">Descrição</h3>
               <p className="text-gray-700 whitespace-pre-line">{produto.descricao}</p>
             </div>
+          )}
+
+          {/* Seletor de Variações (Tamanhos) */}
+          {produto.variacoes_meta && produto.variacoes_meta.length > 0 && (
+            <SeletorVariacoes
+              variacoes={produto.variacoes_meta}
+              variacaoSelecionada={variacaoSelecionada}
+              onSelecionar={setVariacaoSelecionada}
+            />
           )}
 
           {/* Seletor de Quantidade */}

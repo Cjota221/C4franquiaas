@@ -464,8 +464,8 @@ export default function ProdutosPage(): React.JSX.Element {
                   <div className="space-y-1 text-sm mb-3">
                     <p className="text-gray-600">
                       <span className="font-medium">Estoque:</span>{' '}
-                      <span className={p.estoque === 0 ? 'text-red-600 font-bold' : 'text-[#DB1472] font-bold'}>
-                        {p.estoque}
+                      <span className={p.estoque === 0 ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}>
+                        {p.estoque === 0 ? 'Esgotado' : 'Disponível'}
                       </span>
                     </p>
                     {p.preco_base && (

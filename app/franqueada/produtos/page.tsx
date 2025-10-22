@@ -514,8 +514,12 @@ export default function FranqueadaProdutosPage() {
                               ✓ Ativo na loja
                             </span>
                           )}
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                            Estoque: {produto.estoque}
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            produto.estoque === 0 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {produto.estoque === 0 ? '❌ Esgotado' : '✓ Disponível'}
                           </span>
                         </div>
                       </div>

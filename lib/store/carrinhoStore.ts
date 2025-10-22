@@ -8,6 +8,8 @@ export type ProdutoCarrinho = {
   quantidade: number;
   imagem: string;
   estoque: number;
+  variacaoId?: string | null;
+  variacaoSku?: string;
 };
 
 type CarrinhoStore = {
@@ -26,16 +28,30 @@ export const useCarrinhoStore = create<CarrinhoStore>()(
       items: [],
       
       addItem: (produto) => set((state) => {
-        const existing = state.items.find(i => i.id === produto.id);
+        // Considerar variação ao verificar se produto já existe
+        const chaveUnica = produto.variacaoId 
+          ? `${produto.id}-${produto.variacaoId}`
+          : produto.id;
+        
+        const existing = state.items.find(i => {
+          const chaveItem = i.variacaoId 
+            ? `${i.id}-${i.variacaoId}`
+            : i.id;
+          return chaveItem === chaveUnica;
+        });
         
         if (existing) {
           // Atualizar quantidade se produto já existe
           return {
-            items: state.items.map(i =>
-              i.id === produto.id
+            items: state.items.map(i => {
+              const chaveItem = i.variacaoId 
+                ? `${i.id}-${i.variacaoId}`
+                : i.id;
+              
+              return chaveItem === chaveUnica
                 ? { ...i, quantidade: Math.min(i.quantidade + produto.quantidade, i.estoque) }
-                : i
-            )
+                : i;
+            })
           };
         }
         
