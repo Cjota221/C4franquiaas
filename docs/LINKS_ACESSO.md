@@ -117,14 +117,18 @@ http://localhost:3001/franqueada/perfil
 ```
 http://localhost:3001/franqueada/loja
 ```
-**Funcionalidades** (✨ NOVO):
+**Funcionalidades** (✨ ATUALIZADO):
 - 🏪 Criar/editar loja online
-- 🎯 Definir nome e domínio único (ex: mariacosmeticos)
+- 🎯 Nome da loja (domínio gerado **automaticamente**)
+  - Ex: "CJ Rasteninhas" → domínio: `cjrasteninhas`
+  - Ex: "Maria Cosméticos" → domínio: `mariacosmeticos`
 - 📸 Upload de logo (PNG, JPG, WEBP, SVG - max 2MB)
 - 🎨 Escolher cores primária e secundária
 - 👁️ Preview em tempo real
 - 🔗 Copiar link da loja
 - ✅ Ativar/desativar loja
+
+**✨ Domínio Automático**: Sistema remove acentos, espaços e caracteres especiais automaticamente!
 
 **⚠️ Antes de usar**: Criar bucket `logos` no Supabase Storage (ver `docs/BUCKET_LOGOS.md`)
 

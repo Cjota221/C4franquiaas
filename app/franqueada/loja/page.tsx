@@ -29,9 +29,28 @@ export default function LojaPage() {
   const [corSecundaria, setCorSecundaria] = useState('#F8B81F');
   const [ativo, setAtivo] = useState(true);
 
+  // Função para gerar domínio automaticamente
+  function gerarDominio(nomeLoja: string): string {
+    return nomeLoja
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .replace(/[^a-z0-9]/g, '')       // Remove caracteres especiais e espaços
+      .substring(0, 50);                // Limita a 50 caracteres
+  }
+
   useEffect(() => {
     loadLoja();
   }, []);
+
+  // Atualizar domínio automaticamente quando o nome mudar
+  useEffect(() => {
+    if (nome && !loja) {
+      // Só gera automaticamente quando está criando (não tem loja ainda)
+      const novoDominio = gerarDominio(nome);
+      setDominio(novoDominio);
+    }
+  }, [nome, loja]);
 
   async function loadLoja() {
     try {
@@ -57,8 +76,13 @@ export default function LojaPage() {
   }
 
   async function handleSave() {
-    if (!nome || !dominio) {
-      setError('Preencha todos os campos obrigatórios');
+    if (!nome) {
+      setError('Preencha o nome da loja');
+      return;
+    }
+
+    if (dominio.length < 3) {
+      setError('O nome da loja deve ter pelo menos 3 caracteres válidos');
       return;
     }
 
@@ -202,25 +226,22 @@ export default function LojaPage() {
             />
           </div>
 
-          {/* Domínio */}
+          {/* URL da Loja (Gerada Automaticamente) */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
-              Domínio (URL) <span className="text-red-500">*</span>
+              URL da Loja
             </label>
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={dominio}
-                onChange={(e) => setDominio(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                placeholder="Ex: mariacosmeticos"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-              <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg text-sm text-gray-600 whitespace-nowrap">
-                .c4franquias.com
-              </span>
+            <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+              <p className="text-xs text-gray-600 mb-2">
+                c4franquiaas.netlify.app/loja/
+              </p>
+              <p className="text-xl font-mono font-bold text-pink-600 break-all">
+                {dominio || '(digite o nome acima)'}
+              </p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Apenas letras minúsculas e números, sem espaços (mínimo 3 caracteres)
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <span>✨</span>
+              <span>Gerada automaticamente a partir do nome da loja</span>
             </p>
           </div>
 
@@ -328,12 +349,17 @@ export default function LojaPage() {
           {/* Botão Salvar */}
           <button
             onClick={handleSave}
-            disabled={saving || !nome || !dominio}
+            disabled={saving || !nome || dominio.length < 3}
             className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save size={20} />
             {saving ? 'Salvando...' : 'Salvar Alterações'}
           </button>
+          {nome && dominio.length < 3 && (
+            <p className="text-xs text-red-500 mt-2 text-center">
+              O nome da loja deve ter pelo menos 3 caracteres válidos
+            </p>
+          )}
         </div>
 
         {/* Coluna 2: Preview */}
