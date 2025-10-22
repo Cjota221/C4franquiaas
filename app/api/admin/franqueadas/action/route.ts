@@ -22,12 +22,31 @@ export async function POST(request: NextRequest) {
     console.log(`[api/admin/franqueadas/action] Ação: ${action} | Franqueada: ${franqueada_id}`);
 
     if (action === 'aprovar') {
+      // Buscar dados da franqueada
+      const { data: franqueada, error: franqueadaError } = await supabase
+        .from('franqueadas')
+        .select('id, nome, email, user_id')
+        .eq('id', franqueada_id)
+        .single();
+
+      if (franqueadaError || !franqueada) {
+        console.error('[api/admin/franqueadas/action] Franqueada não encontrada:', franqueadaError);
+        return NextResponse.json({ error: 'Franqueada não encontrada' }, { status: 404 });
+      }
+
+      // Verificar se user_id já existe (criado no cadastro)
+      if (!franqueada.user_id) {
+        return NextResponse.json({ 
+          error: 'Franqueada não tem usuário vinculado. O cadastro pode estar incompleto.' 
+        }, { status: 400 });
+      }
+
       // Atualizar status para aprovada
       const { error: updateError } = await supabase
         .from('franqueadas')
         .update({ 
           status: 'aprovada', 
-          aprovado_em: new Date().toISOString() 
+          aprovado_em: new Date().toISOString()
         })
         .eq('id', franqueada_id);
 
@@ -65,7 +84,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success: true, message: 'Franqueada aprovada' }, { status: 200 });
+      console.log(`[api/admin/franqueadas/action] ✓ Franqueada ${franqueada.nome} aprovada!`);
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Franqueada aprovada com sucesso! Ela já pode fazer login com o email e senha cadastrados.' 
+      }, { status: 200 });
     } 
     
     else if (action === 'rejeitar') {

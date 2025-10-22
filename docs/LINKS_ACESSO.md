@@ -80,12 +80,28 @@ http://localhost:3001/franqueada/dashboard
 ```
 http://localhost:3001/franqueada/produtos
 ```
-**Funcionalidades COMPLETAS**:
+**Funcionalidades COMPLETAS** (✨ MELHORADO):
+- �️ **Galeria de imagens** com carrossel interativo
+  - Navegação por setas (ao passar mouse)
+  - Miniaturas clicáveis
+  - Indicador de posição (1/5, 2/5...)
+- � **Visualização clara de preços**
+  - Preço Base C4 (cinza)
+  - Sua Margem (amarelo #F8B81F)
+  - Preço Final (verde)
+  - Mostra cálculo: +25% = R$ 25,00 (25%)
+- 🎯 **Fluxo em 2 etapas OBRIGATÓRIO**
+  - Passo 1: Definir margem (borda amarela)
+  - Passo 2: Ativar produto (borda azul → verde)
+  - **NÃO permite ativar sem margem!**
+- 📊 **Estatísticas com 4 cards**
+  - Total de produtos
+  - ⚠️ Sem margem (amarelo)
+  - � Prontos p/ ativar (azul)
+  - ✓ Ativos no site (verde)
 - 🔍 Buscar produtos
 - ☑️ Seleção múltipla
 - 💵 Ajuste de preços em massa (% ou fixo)
-- ✅ Ativar/desativar produtos
-- 📊 Ver preço base, ajuste e preço final
 
 ### 👤 Perfil da Franqueada
 ```

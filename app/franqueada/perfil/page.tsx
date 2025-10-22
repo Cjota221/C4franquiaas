@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 
 type Franqueada = {
@@ -20,11 +20,6 @@ type Franqueada = {
 export default function FranqueadaPerfilPage() {
   const [franqueada, setFranqueada] = useState<Franqueada | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const carregarPerfil = useCallback(async () => {
     try {
@@ -48,7 +43,7 @@ export default function FranqueadaPerfilPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     carregarPerfil();

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import { Package, DollarSign, TrendingUp, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,11 +19,6 @@ export default function FranqueadaDashboardPage() {
     comissaoAcumulada: 0
   });
   const [loading, setLoading] = useState(true);
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const carregarDados = useCallback(async () => {
     try {
@@ -71,7 +66,7 @@ export default function FranqueadaDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     carregarDados();

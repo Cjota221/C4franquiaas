@@ -3,16 +3,11 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, User, LogOut } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: string }) {
   const pathname = usePathname();
   const router = useRouter();
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const navItems = [
     { href: '/franqueada/dashboard', label: 'Dashboard', icon: LayoutDashboard },

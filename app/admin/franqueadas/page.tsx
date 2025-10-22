@@ -65,10 +65,14 @@ export default function FranqueadasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'aprovar', franqueada_id: id })
       });
-      if (!res.ok) throw new Error('Erro ao aprovar');
+      
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Erro ao aprovar');
+      
       await loadFranqueadas();
-      setStatusMsg({ type: 'success', text: '✅ Franqueada aprovada com sucesso!' });
-      setTimeout(() => setStatusMsg(null), 3000);
+      setStatusMsg({ type: 'success', text: '✅ ' + data.message });
+      setTimeout(() => setStatusMsg(null), 5000);
     } catch (err) {
       console.error('Erro ao aprovar:', err);
       setStatusMsg({ type: 'error', text: '❌ Erro ao aprovar franqueada' });
@@ -109,6 +113,29 @@ export default function FranqueadasPage() {
     } catch (err) {
       console.error('Erro ao atualizar loja:', err);
       setStatusMsg({ type: 'error', text: '❌ Erro ao atualizar loja' });
+    }
+  }
+
+  async function revincularProdutos(id: string) {
+    if (!confirm('Deseja revincular os produtos ativos a esta franqueada? Isso vai recriar todas as vinculações.')) return;
+    try {
+      setStatusMsg({ type: 'success', text: '⏳ Revinculando produtos...' });
+      const res = await fetch('/api/admin/franqueadas/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'aprovar', franqueada_id: id })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Erro ao revincular');
+      
+      await loadFranqueadas();
+      setStatusMsg({ type: 'success', text: '✅ ' + data.message });
+      setTimeout(() => setStatusMsg(null), 5000);
+    } catch (err) {
+      console.error('Erro ao revincular:', err);
+      setStatusMsg({ type: 'error', text: '❌ Erro ao revincular produtos' });
     }
   }
 
@@ -310,16 +337,24 @@ export default function FranqueadasPage() {
                     )}
                     
                     {f.status === 'aprovada' && f.loja && (
-                      <button
-                        onClick={() => toggleLojaAtiva(f.id, !f.loja.ativo)}
-                        className={`px-3 py-1 rounded text-sm transition whitespace-nowrap ${
-                          f.loja.ativo
-                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                      >
-                        {f.loja.ativo ? '🔴 Desativar' : '🟢 Ativar'}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => toggleLojaAtiva(f.id, !f.loja.ativo)}
+                          className={`px-3 py-1 rounded text-sm transition whitespace-nowrap ${
+                            f.loja.ativo
+                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                          }`}
+                        >
+                          {f.loja.ativo ? '🔴 Desativar' : '🟢 Ativar'}
+                        </button>
+                        <button
+                          onClick={() => revincularProdutos(f.id)}
+                          className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition whitespace-nowrap"
+                        >
+                          🔄 Revincular Produtos
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

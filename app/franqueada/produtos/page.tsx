@@ -1,8 +1,82 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
-import { Search, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { Search, Package, DollarSign, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// Componente de Galeria de Imagens
+function ImageGallery({ imagens, nome }: { imagens: string[]; nome: string }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!imagens || imagens.length === 0) {
+    return (
+      <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Package className="w-12 h-12 text-gray-300" />
+      </div>
+    );
+  }
+
+  const next = () => {
+    setCurrentIndex((prev) => (prev + 1) % imagens.length);
+  };
+
+  const prev = () => {
+    setCurrentIndex((prev) => (prev - 1 + imagens.length) % imagens.length);
+  };
+
+  return (
+    <div className="w-32 flex-shrink-0">
+      <div className="relative w-32 h-32 rounded-lg overflow-hidden group">
+        <Image
+          src={imagens[currentIndex]}
+          alt={`${nome} - Foto ${currentIndex + 1}`}
+          fill
+          className="object-cover"
+        />
+        
+        {imagens.length > 1 && (
+          <>
+            {/* Navegação */}
+            <button
+              onClick={prev}
+              className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-black/70"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-black/70"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            
+            {/* Indicador */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
+              {currentIndex + 1}/{imagens.length}
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* Miniaturas */}
+      {imagens.length > 1 && (
+        <div className="flex gap-1 mt-2 overflow-x-auto">
+          {imagens.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`relative w-8 h-8 rounded border-2 flex-shrink-0 overflow-hidden ${
+                idx === currentIndex ? 'border-pink-600' : 'border-gray-300'
+              }`}
+            >
+              <Image src={img} alt="" fill className="object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Produto = {
   id: string;
@@ -15,6 +89,7 @@ type Produto = {
   ativo_no_site: boolean;
   estoque: number;
   imagem: string | null;
+  imagens: string[];
 };
 
 export default function FranqueadaProdutosPage() {
@@ -26,26 +101,40 @@ export default function FranqueadaProdutosPage() {
   const [ajusteTipo, setAjusteTipo] = useState<'fixo' | 'porcentagem'>('porcentagem');
   const [ajusteValor, setAjusteValor] = useState('');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const carregarProdutos = useCallback(async () => {
+    console.log('[produtos] Iniciando carregamento...');
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('[produtos] Usuário não autenticado');
+        setLoading(false);
+        return;
+      }
 
-      const { data: franqueada } = await supabase
+      console.log('[produtos] Buscando franqueada para user_id:', user.id);
+
+      const { data: franqueada, error: franqueadaError } = await supabase
         .from('franqueadas')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) return;
+      if (franqueadaError) {
+        console.error('[produtos] Erro ao buscar franqueada:', franqueadaError);
+        setLoading(false);
+        return;
+      }
 
-      // Buscar produtos vinculados com preços
-      const { data: vinculacoes } = await supabase
+      if (!franqueada) {
+        console.log('[produtos] Franqueada não encontrada');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[produtos] Franqueada encontrada:', franqueada.id);
+
+      // Buscar produtos vinculados com preços (sem o campo imagens por enquanto)
+      const { data: vinculacoes, error: vinculacoesError } = await supabase
         .from('produtos_franqueadas')
         .select(`
           id,
@@ -61,7 +150,16 @@ export default function FranqueadaProdutosPage() {
         .eq('franqueada_id', franqueada.id)
         .eq('ativo', true);
 
+      if (vinculacoesError) {
+        console.error('[produtos] Erro ao buscar vinculações:', vinculacoesError);
+        setLoading(false);
+        return;
+      }
+
+      console.log('[produtos] Vinculações encontradas:', vinculacoes?.length || 0);
+
       if (!vinculacoes || vinculacoes.length === 0) {
+        console.log('[produtos] Nenhum produto vinculado');
         setProdutos([]);
         setLoading(false);
         return;
@@ -69,10 +167,16 @@ export default function FranqueadaProdutosPage() {
 
       // Buscar preços personalizados
       const vinculacaoIds = vinculacoes.map(v => v.id);
-      const { data: precos } = await supabase
+      const { data: precos, error: precosError } = await supabase
         .from('produtos_franqueadas_precos')
         .select('*')
         .in('produto_franqueada_id', vinculacaoIds);
+
+      if (precosError) {
+        console.error('[produtos] Erro ao buscar preços:', precosError);
+      }
+
+      console.log('[produtos] Preços encontrados:', precos?.length || 0);
 
       // Combinar dados
       const produtosFormatados: Produto[] = vinculacoes.map(v => {
@@ -81,6 +185,12 @@ export default function FranqueadaProdutosPage() {
         const preco = precos?.find(p => p.produto_franqueada_id === v.id);
 
         if (!produto) return null;
+
+        // Processar imagens - por enquanto apenas a imagem principal
+        let imagensArray: string[] = [];
+        if (produto.imagem) {
+          imagensArray = [produto.imagem];
+        }
 
         return {
           id: String(produto.id),
@@ -92,20 +202,34 @@ export default function FranqueadaProdutosPage() {
           preco_final: preco?.preco_final || produto.preco_base || 0,
           ativo_no_site: preco?.ativo_no_site || false,
           estoque: produto.estoque || 0,
-          imagem: produto.imagem
+          imagem: produto.imagem,
+          imagens: imagensArray
         };
       }).filter((p): p is Produto => p !== null);
 
+      console.log('[produtos] Produtos formatados:', produtosFormatados.length);
       setProdutos(produtosFormatados);
     } catch (err) {
-      console.error('Erro ao carregar produtos:', err);
+      console.error('[produtos] Erro FATAL ao carregar produtos:', err);
+      setProdutos([]);
     } finally {
+      console.log('[produtos] Finalizando carregamento, setLoading(false)');
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    carregarProdutos();
+    // Timeout de segurança: se não carregar em 10 segundos, para o loading
+    const timeoutId = setTimeout(() => {
+      console.error('[produtos] TIMEOUT: Forçando setLoading(false)');
+      setLoading(false);
+    }, 10000);
+
+    carregarProdutos().finally(() => {
+      clearTimeout(timeoutId);
+    });
+
+    return () => clearTimeout(timeoutId);
   }, [carregarProdutos]);
 
   const produtosFiltrados = produtos.filter(p =>
@@ -189,15 +313,21 @@ export default function FranqueadaProdutosPage() {
 
   async function toggleAtivo(produtoFranqueadaId: string, ativo: boolean) {
     try {
+      // Verificar se tem margem definida antes de ativar
+      const produto = produtos.find(p => p.produto_franqueada_id === produtoFranqueadaId);
+      if (!produto) return;
+
+      if (ativo && produto.ajuste_tipo === null) {
+        alert('⚠️ Defina a margem de lucro antes de ativar o produto!');
+        return;
+      }
+
       // Buscar ou criar registro de preço
       const { data: precoExistente } = await supabase
         .from('produtos_franqueadas_precos')
         .select('*')
         .eq('produto_franqueada_id', produtoFranqueadaId)
         .single();
-
-      const produto = produtos.find(p => p.produto_franqueada_id === produtoFranqueadaId);
-      if (!produto) return;
 
       if (precoExistente) {
         // Atualizar status
@@ -237,6 +367,7 @@ export default function FranqueadaProdutosPage() {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando produtos...</p>
+          <p className="mt-2 text-xs text-gray-400">Se demorar muito, recarregue a página (F5)</p>
         </div>
       </div>
     );
@@ -303,21 +434,27 @@ export default function FranqueadaProdutosPage() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600">Total de Produtos</div>
           <div className="text-2xl font-bold text-gray-800">{produtos.length}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Ativos no Site</div>
-          <div className="text-2xl font-bold text-green-600">
-            {produtos.filter(p => p.ativo_no_site).length}
+          <div className="text-sm text-yellow-600">⚠️ Sem Margem</div>
+          <div className="text-2xl font-bold text-yellow-600">
+            {produtos.filter(p => p.ajuste_tipo === null).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Com Preço Ajustado</div>
-          <div className="text-2xl font-bold text-indigo-600">
-            {produtos.filter(p => p.ajuste_tipo !== null).length}
+          <div className="text-sm text-blue-600">💎 Prontos p/ Ativar</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {produtos.filter(p => p.ajuste_tipo !== null && !p.ativo_no_site).length}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-green-600">✓ Ativos no Site</div>
+          <div className="text-2xl font-bold text-green-600">
+            {produtos.filter(p => p.ativo_no_site).length}
           </div>
         </div>
       </div>
@@ -331,88 +468,136 @@ export default function FranqueadaProdutosPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {produtosFiltrados.map((produto) => (
-            <div key={produto.produto_franqueada_id} className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition">
-              <div className="flex items-start gap-4">
-                {/* Checkbox */}
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(produto.produto_franqueada_id)}
-                  onChange={() => toggleSelect(produto.produto_franqueada_id)}
-                  className="mt-1 w-4 h-4 text-pink-600 rounded focus:ring-pink-500"
-                />
+        <div className="grid grid-cols-1 gap-6">
+          {produtosFiltrados.map((produto) => {
+            const margemDefinida = produto.ajuste_tipo !== null;
+            const margemValor = produto.preco_final - produto.preco_base;
+            const margemPercentual = produto.preco_base > 0 ? (margemValor / produto.preco_base) * 100 : 0;
 
-                {/* Imagem */}
-                {produto.imagem ? (
-                  <div className="relative w-20 h-20 flex-shrink-0">
-                    <Image
-                      src={produto.imagem}
-                      alt={produto.nome}
-                      fill
-                      className="object-cover rounded"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                    <Package className="w-8 h-8 text-gray-300" />
-                  </div>
-                )}
+            return (
+              <div 
+                key={produto.produto_franqueada_id} 
+                className={`bg-white border-2 rounded-lg p-5 shadow-sm hover:shadow-md transition ${
+                  !margemDefinida ? 'border-yellow-400' : produto.ativo_no_site ? 'border-green-400' : 'border-gray-300'
+                }`}
+              >
+                <div className="flex items-start gap-5">
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(produto.produto_franqueada_id)}
+                    onChange={() => toggleSelect(produto.produto_franqueada_id)}
+                    className="mt-1 w-5 h-5 text-pink-600 rounded focus:ring-pink-500"
+                  />
 
-                {/* Informações */}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-gray-800 mb-2">{produto.nome}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <span className="text-gray-600">Preço Base:</span>
-                      <p className="font-medium text-gray-800">R$ {produto.preco_base.toFixed(2)}</p>
-                    </div>
-                    
-                    {produto.ajuste_tipo && (
+                  {/* Galeria de Imagens */}
+                  <ImageGallery imagens={produto.imagens} nome={produto.nome} />
+
+                  {/* Informações do Produto */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <span className="text-gray-600">Ajuste:</span>
-                        <p className="font-medium text-indigo-600">
-                          {produto.ajuste_tipo === 'porcentagem' 
-                            ? `+${produto.ajuste_valor}%`
-                            : `+R$ ${produto.ajuste_valor?.toFixed(2)}`
-                          }
-                        </p>
+                        <h3 className="font-semibold text-xl text-gray-800 mb-1">{produto.nome}</h3>
+                        <div className="flex gap-2 items-center">
+                          {!margemDefinida && (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
+                              ⚠️ Defina a margem
+                            </span>
+                          )}
+                          {margemDefinida && !produto.ativo_no_site && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                              💎 Pronto para ativar
+                            </span>
+                          )}
+                          {produto.ativo_no_site && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                              ✓ Ativo na loja
+                            </span>
+                          )}
+                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                            Estoque: {produto.estoque}
+                          </span>
+                        </div>
                       </div>
-                    )}
-
-                    <div>
-                      <span className="text-gray-600">Meu Preço:</span>
-                      <p className="font-medium text-green-600">R$ {produto.preco_final.toFixed(2)}</p>
                     </div>
 
-                    <div>
-                      <span className="text-gray-600">Estoque:</span>
-                      <p className="font-medium text-gray-800">{produto.estoque}</p>
+                    {/* Fluxo de Preços - Visual Melhorado */}
+                    <div className="bg-gradient-to-r from-gray-50 to-green-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        {/* Preço Base C4 */}
+                        <div className="flex-1">
+                          <div className="text-xs text-gray-600 mb-1 font-medium">💰 Preço Base C4</div>
+                          <div className="text-2xl font-bold text-gray-700">
+                            R$ {produto.preco_base.toFixed(2)}
+                          </div>
+                        </div>
+
+                        {/* Seta */}
+                        <div className="text-2xl text-gray-400">→</div>
+
+                        {/* Sua Margem */}
+                        <div className="flex-1">
+                          <div className="text-xs text-gray-600 mb-1 font-medium">📈 Sua Margem</div>
+                          {margemDefinida ? (
+                            <>
+                              <div className="text-2xl font-bold" style={{ color: '#F8B81F' }}>
+                                {produto.ajuste_tipo === 'porcentagem' 
+                                  ? `+${produto.ajuste_valor}%`
+                                  : `+R$ ${produto.ajuste_valor?.toFixed(2)}`
+                                }
+                              </div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {`= R$ ${margemValor.toFixed(2)} (${margemPercentual.toFixed(1)}%)`}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-yellow-600 font-medium">
+                              Não definida
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Seta */}
+                        <div className="text-2xl text-gray-400">→</div>
+
+                        {/* Preço Final */}
+                        <div className="flex-1">
+                          <div className="text-xs text-gray-600 mb-1 font-medium">✨ Preço Final</div>
+                          <div className="text-3xl font-bold text-green-600">
+                            R$ {produto.preco_final.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Status e Ações */}
-                <div className="flex flex-col gap-2">
-                  {produto.ativo_no_site ? (
-                    <button
-                      onClick={() => toggleAtivo(produto.produto_franqueada_id, false)}
-                      className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition"
-                    >
-                      ✓ Ativo no Site
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => toggleAtivo(produto.produto_franqueada_id, true)}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition"
-                    >
-                      ✕ Inativo
-                    </button>
-                  )}
+                  {/* Ações */}
+                  <div className="flex flex-col gap-2 w-32">
+                    {!margemDefinida ? (
+                      <div className="text-center text-xs text-yellow-700 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <div className="font-semibold mb-1">Passo 1:</div>
+                        <div>Defina a margem usando o botão &quot;Ajustar Preços&quot;</div>
+                      </div>
+                    ) : produto.ativo_no_site ? (
+                      <button
+                        onClick={() => toggleAtivo(produto.produto_franqueada_id, false)}
+                        className="px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
+                      >
+                        ✓ Ativo no Site
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => toggleAtivo(produto.produto_franqueada_id, true)}
+                        className="px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition animate-pulse"
+                      >
+                        🚀 Ativar Agora
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

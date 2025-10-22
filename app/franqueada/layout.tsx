@@ -1,20 +1,26 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { useRouter, usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 import SidebarFranqueada from '@/components/SidebarFranqueada';
 
 export default function FranqueadaLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [franqueadaNome, setFranqueadaNome] = useState('');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Rotas públicas que não precisam de autenticação
+  const publicRoutes = ['/franqueada/login'];
+  const isPublicRoute = publicRoutes.includes(pathname || '');
 
   const checkAuth = useCallback(async () => {
+    // Se for rota pública, não verifica autenticação
+    if (isPublicRoute) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -50,11 +56,16 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
       console.error('[franqueada/layout] Erro ao verificar autenticação:', err);
       router.push('/franqueada/login');
     }
-  }, [router, supabase]);
+  }, [router, isPublicRoute]);
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Se for rota pública, renderiza sem sidebar
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (

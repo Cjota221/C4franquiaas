@@ -11,7 +11,9 @@ export default function CadastroFranqueadaPage() {
     telefone: '',
     cpf: '',
     cidade: '',
-    estado: ''
+    estado: '',
+    senha: '',
+    confirmarSenha: ''
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -19,6 +21,15 @@ export default function CadastroFranqueadaPage() {
     setLoading(true);
 
     try {
+      // Validar senhas
+      if (form.senha.length < 6) {
+        throw new Error('A senha deve ter no mínimo 6 caracteres');
+      }
+
+      if (form.senha !== form.confirmarSenha) {
+        throw new Error('As senhas não coincidem');
+      }
+
       const res = await fetch('/api/cadastro/franqueada', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,6 +150,37 @@ export default function CadastroFranqueadaPage() {
                 placeholder="SP"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Senha *
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={form.senha}
+              onChange={(e) => setForm({ ...form, senha: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              placeholder="Mínimo 6 caracteres"
+            />
+            <p className="text-xs text-gray-500 mt-1">Crie uma senha segura com no mínimo 6 caracteres</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar Senha *
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={form.confirmarSenha}
+              onChange={(e) => setForm({ ...form, confirmarSenha: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              placeholder="Digite a senha novamente"
+            />
           </div>
 
           <button
