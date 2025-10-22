@@ -30,7 +30,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Este domínio já está em uso' }, { status: 400 });
     }
 
-    // Atualizar loja
+    // Atualizar loja com todos os novos campos
     const { data: loja, error } = await supabase
       .from('lojas')
       .update({
@@ -40,6 +40,35 @@ export async function PUT(req: Request) {
         cor_primaria: body.cor_primaria,
         cor_secundaria: body.cor_secundaria,
         ativo: body.ativo,
+        // Novos campos da migration 013
+        descricao: body.descricao,
+        slogan: body.slogan,
+        banner_hero: body.banner_hero,
+        texto_hero: body.texto_hero,
+        subtexto_hero: body.subtexto_hero,
+        favicon: body.favicon,
+        whatsapp: body.whatsapp,
+        instagram: body.instagram,
+        facebook: body.facebook,
+        email_contato: body.email_contato,
+        telefone: body.telefone,
+        endereco: body.endereco,
+        meta_title: body.meta_title,
+        meta_description: body.meta_description,
+        google_analytics: body.google_analytics,
+        facebook_pixel: body.facebook_pixel,
+        fonte_principal: body.fonte_principal,
+        fonte_secundaria: body.fonte_secundaria,
+        cor_texto: body.cor_texto,
+        cor_fundo: body.cor_fundo,
+        cor_botao: body.cor_botao,
+        cor_botao_hover: body.cor_botao_hover,
+        cor_link: body.cor_link,
+        mostrar_estoque: body.mostrar_estoque,
+        mostrar_codigo_barras: body.mostrar_codigo_barras,
+        permitir_carrinho: body.permitir_carrinho,
+        modo_catalogo: body.modo_catalogo,
+        mensagem_whatsapp: body.mensagem_whatsapp,
         atualizado_em: new Date().toISOString()
       })
       .eq('franqueada_id', franqueada.id)

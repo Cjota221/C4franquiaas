@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
     console.log('[POST /api/franqueada/loja] Criando loja...');
 
-    // Criar loja
+    // Criar loja com todos os campos novos
     const { data: loja, error } = await supabase
       .from('lojas')
       .insert({
@@ -89,7 +89,36 @@ export async function POST(req: Request) {
         logo: body.logo || null,
         cor_primaria: body.cor_primaria || '#DB1472',
         cor_secundaria: body.cor_secundaria || '#F8B81F',
-        ativo: body.ativo !== undefined ? body.ativo : true
+        ativo: body.ativo !== undefined ? body.ativo : true,
+        // Novos campos da migration 013
+        descricao: body.descricao || null,
+        slogan: body.slogan || null,
+        banner_hero: body.banner_hero || null,
+        texto_hero: body.texto_hero || null,
+        subtexto_hero: body.subtexto_hero || null,
+        favicon: body.favicon || null,
+        whatsapp: body.whatsapp || null,
+        instagram: body.instagram || null,
+        facebook: body.facebook || null,
+        email_contato: body.email_contato || null,
+        telefone: body.telefone || null,
+        endereco: body.endereco || null,
+        meta_title: body.meta_title || null,
+        meta_description: body.meta_description || null,
+        google_analytics: body.google_analytics || null,
+        facebook_pixel: body.facebook_pixel || null,
+        fonte_principal: body.fonte_principal || 'Inter',
+        fonte_secundaria: body.fonte_secundaria || 'Poppins',
+        cor_texto: body.cor_texto || '#1F2937',
+        cor_fundo: body.cor_fundo || '#FFFFFF',
+        cor_botao: body.cor_botao || '#DB1472',
+        cor_botao_hover: body.cor_botao_hover || '#B01059',
+        cor_link: body.cor_link || '#F8B81F',
+        mostrar_estoque: body.mostrar_estoque !== undefined ? body.mostrar_estoque : true,
+        mostrar_codigo_barras: body.mostrar_codigo_barras !== undefined ? body.mostrar_codigo_barras : false,
+        permitir_carrinho: body.permitir_carrinho !== undefined ? body.permitir_carrinho : true,
+        modo_catalogo: body.modo_catalogo !== undefined ? body.modo_catalogo : false,
+        mensagem_whatsapp: body.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:'
       })
       .select()
       .single();
