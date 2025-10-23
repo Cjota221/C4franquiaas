@@ -1,0 +1,4 @@
+# Netlify Redirects para Next.js
+/loja/:dominio/produtos  /loja/:dominio/produtos  200
+/loja/:dominio/*         /loja/:dominio/:splat     200
+/*                       /index.html               200

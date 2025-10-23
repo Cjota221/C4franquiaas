@@ -2,9 +2,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Remover 'standalone' para funcionar corretamente no Netlify
-  // output: 'standalone',
-  
   // Habilita source maps em produção para melhor debugging
   productionBrowserSourceMaps: true,
   

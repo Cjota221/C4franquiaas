@@ -7,17 +7,3 @@
 
 [build.environment]
   NODE_VERSION = "20.11.0"
-
-# Configurações para Next.js no Netlify
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-
-# Redireciona rotas para o Next.js
-[[redirects]]
-  from = "/loja/:dominio/produtos"
-  to = "/loja/:dominio/produtos"
-  status = 200
-  force = false
