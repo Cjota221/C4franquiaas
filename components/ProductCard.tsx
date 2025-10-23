@@ -114,7 +114,7 @@ export default function ProductCard({
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
               quality={85}
-              onError={(e) => {
+              onError={() => {
                 console.error(`Erro ao carregar imagem: ${productImages[currentImageIndex]}`);
                 setImageError(true);
               }}
