@@ -31,31 +31,38 @@ export default function ProductCard({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
 
-  // 🔧 FIX: Extrair URL real do proxy APENAS em localhost
+  // 🔧 FIX: Sempre usar URL direta do Facilzap (mais confiável)
   const extractRealUrl = (url: string) => {
-    if (typeof window === 'undefined') return url; // SSR
+    if (!url) return null;
     
-    // Em localhost, extrair URL real do proxy
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      if (url.includes('.netlify/functions/proxy-facilzap-image')) {
-        try {
-          const urlObj = new URL(url);
-          const realUrl = urlObj.searchParams.get('url');
-          if (realUrl) return decodeURIComponent(realUrl);
-        } catch (e) {
-          console.warn('Erro ao extrair URL do proxy:', e);
+    // Se for proxy do Netlify, extrair URL real do Facilzap
+    if (url.includes('.netlify/functions/proxy-facilzap-image')) {
+      try {
+        const urlObj = new URL(url);
+        const realUrl = urlObj.searchParams.get('url') || urlObj.searchParams.get('facilzap');
+        if (realUrl) {
+          const decoded = decodeURIComponent(realUrl);
+          console.log('📸 Extraindo URL real:', decoded);
+          return decoded;
         }
+      } catch {
+        console.warn('⚠️ Erro ao extrair URL do proxy, usando original:', url);
       }
     }
     
-    // Em produção, manter URL original (com proxy se tiver)
+    // Se já for URL direta do Facilzap, usar direto
+    if (url.includes('arquivos.facilzap.app.br') || url.includes('facilzap.app.br')) {
+      return url;
+    }
+    
     return url;
   };
 
   // Processar imagens
   const processedImages = imagens
     .filter(img => img && img.trim() !== '') // Remover vazias/null
-    .map(img => extractRealUrl(img));
+    .map(img => extractRealUrl(img))
+    .filter(Boolean); // Remover null/undefined
 
   // Garantir que temos pelo menos uma imagem
   const productImages = processedImages.length > 0 && !imageError
