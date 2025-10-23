@@ -1,14 +1,10 @@
 "use client";
 import React from 'react';
+import { useLojaInfo } from '@/contexts/LojaContext';
 import { Mail, Phone, MapPin, Instagram, Facebook } from 'lucide-react';
 
-type Loja = {
-  nome: string;
-  cor_primaria: string;
-  cor_secundaria: string;
-};
-
-export default function LojaFooter({ loja }: { loja: Loja }) {
+export default function LojaFooter() {
+  const loja = useLojaInfo();
   const anoAtual = new Date().getFullYear();
 
   return (

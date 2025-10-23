@@ -3,16 +3,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
+import { useLojaInfo } from '@/contexts/LojaContext';
 import { ShoppingCart, Home, Package, Info, Phone } from 'lucide-react';
 
-type Loja = {
-  nome: string;
-  logo: string | null;
-  cor_primaria: string;
-  cor_secundaria: string;
-};
-
-export default function LojaHeader({ loja, dominio }: { loja: Loja; dominio: string }) {
+export default function LojaHeader({ dominio }: { dominio: string }) {
+  const loja = useLojaInfo();
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
 
   return (
