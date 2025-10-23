@@ -10,6 +10,7 @@ export async function GET(
     
     // Parâmetros de busca e filtros
     const searchParams = req.nextUrl.searchParams;
+    const produtoId = searchParams.get('id'); // Para buscar produto específico
     const q = searchParams.get('q') || '';
     const categoriaId = searchParams.get('categoriaId');
     const destaques = searchParams.get('destaques') === 'true';
@@ -44,8 +45,8 @@ export async function GET(
 
     console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
 
-    // Buscar produtos vinculados e ativos (SEM filtros na query inicial)
-    const { data: vinculacoes, error: vinculacoesError } = await supabase
+    // Construir query base
+    let query = supabase
       .from('produtos_franqueadas')
       .select(`
         id,
@@ -66,6 +67,14 @@ export async function GET(
       `)
       .eq('franqueada_id', loja.franqueada_id)
       .eq('ativo', true);
+
+    // Se buscar produto específico por ID
+    if (produtoId) {
+      console.log(`[API loja/produtos] Buscando produto específico: ${produtoId}`);
+      query = query.eq('produto_id', produtoId);
+    }
+
+    const { data: vinculacoes, error: vinculacoesError } = await query;
 
     if (vinculacoesError) {
       console.error('[API loja/produtos] Erro ao buscar vinculações:', vinculacoesError);
