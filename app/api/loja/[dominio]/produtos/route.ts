@@ -50,7 +50,6 @@ export async function GET(
       .select(`
         id,
         produto_id,
-        destaque,
         produtos:produto_id (
           id,
           nome,
@@ -117,9 +116,8 @@ export async function GET(
         const temDesconto = precoFinal < produto.preco_base;
         let tag = null;
         
-        if (v.destaque) {
-          tag = 'Destaque';
-        } else if (temDesconto) {
+        // Remover lógica de destaque pois a coluna não existe
+        if (temDesconto) {
           const desconto = Math.round(((produto.preco_base - precoFinal) / produto.preco_base) * 100);
           tag = `-${desconto}%`;
         }
@@ -147,7 +145,7 @@ export async function GET(
           codigo_barras: produto.codigo_barras || null,
           categoria_id: produto.categoria_id || null,
           variacoes_meta: produto.variacoes_meta || [],
-          destaque: v.destaque || false,
+          destaque: false, // Sempre false pois não temos essa coluna
           tag,
           parcelamento
         };
@@ -163,10 +161,7 @@ export async function GET(
         if (categoriaId && p.categoria_id !== categoriaId) {
           return false;
         }
-        // Filtro de destaques
-        if (destaques && !p.destaque) {
-          return false;
-        }
+        // Remover filtro de destaques pois não existe a coluna
         return true;
       });
 
