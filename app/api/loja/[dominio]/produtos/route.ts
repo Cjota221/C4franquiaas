@@ -118,15 +118,20 @@ export async function GET(
                 return isDev ? decoded : url;
               }
             } catch (e) {
-              console.warn('Erro ao processar URL proxy:', e);
+              console.warn('[processarImagem] Erro ao processar URL proxy:', url, e);
             }
           }
           
           // Se já for uma URL completa do Facilzap, retornar direto
           if (url.startsWith('http')) return url;
           
-          return url;
+          console.warn('[processarImagem] URL inválida ou vazia:', url);
+          return null;
         };
+
+        console.log(`[API loja/produtos] Produto: ${produto.nome}`);
+        console.log(`[API loja/produtos]   - imagem principal:`, produto.imagem);
+        console.log(`[API loja/produtos]   - imagens array:`, produto.imagens);
 
         // Calcular tag e parcelamento
         const precoVenda = precoFinal;
@@ -159,15 +164,29 @@ export async function GET(
           imagens: (() => {
             // Processar array de imagens de forma robusta
             if (!produto.imagens || !Array.isArray(produto.imagens)) {
+              console.log(`[API loja/produtos]   ⚠️ Produto ${produto.nome}: imagens não é array, usando imagem principal`);
               // Se não tem array de imagens mas tem imagem principal, usar ela
               const imgPrincipal = processarImagem(produto.imagem);
               return imgPrincipal ? [imgPrincipal] : [];
             }
             
+            console.log(`[API loja/produtos]   ✓ Produto ${produto.nome}: processando ${produto.imagens.length} imagens`);
+            
             // Filtrar e processar imagens válidas
-            return produto.imagens
-              .map(img => processarImagem(img))
+            const imagensProcessadas = produto.imagens
+              .map((img, idx) => {
+                const processed = processarImagem(img);
+                if (!processed) {
+                  console.log(`[API loja/produtos]     - Imagem ${idx} inválida:`, img);
+                } else {
+                  console.log(`[API loja/produtos]     - Imagem ${idx} OK:`, processed.substring(0, 50) + '...');
+                }
+                return processed;
+              })
               .filter((img): img is string => Boolean(img) && img.trim().length > 0);
+            
+            console.log(`[API loja/produtos]   → ${imagensProcessadas.length} imagens válidas após processamento`);
+            return imagensProcessadas;
           })(),
           codigo_barras: produto.codigo_barras || null,
           categoria_id: produto.categoria_id || null,
