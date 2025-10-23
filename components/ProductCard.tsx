@@ -15,7 +15,6 @@ interface ProductCardProps {
   tag?: string; // Badge (ex: "PROMO", "BESTSELLER")
   parcelamento?: string; // Ex: "6x de R$ 41,65"
   dominio: string; // Para construir o link
-  onAddToCart?: () => void;
 }
 
 export default function ProductCard({
@@ -27,11 +26,9 @@ export default function ProductCard({
   slug,
   tag,
   parcelamento,
-  dominio,
-  onAddToCart
+  dominio
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
 
   // Garantir que temos pelo menos uma imagem
   const productImages = imagens.length > 0 ? imagens : ['/placeholder-product.jpg'];
@@ -47,14 +44,12 @@ export default function ProductCard({
 
   // Trocar imagem no hover (desktop)
   const handleMouseEnter = () => {
-    setIsHovered(true);
     if (productImages.length > 1) {
       setCurrentImageIndex(1);
     }
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     setCurrentImageIndex(0);
   };
 
