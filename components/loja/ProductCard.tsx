@@ -86,10 +86,22 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              unoptimized
+              onError={(e) => {
+                // Se a imagem falhar ao carregar, usar placeholder
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
+              }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              Sem imagem
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <Image
+                src="https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem"
+                alt="Produto sem imagem"
+                fill
+                className="object-cover"
+                unoptimized
+              />
             </div>
           )}
 

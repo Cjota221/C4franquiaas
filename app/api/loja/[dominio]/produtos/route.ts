@@ -112,8 +112,10 @@ export async function GET(
             try {
               const urlObj = new URL(url);
               const realUrl = urlObj.searchParams.get('url');
-              if (realUrl && isDev) {
-                return decodeURIComponent(realUrl);
+              if (realUrl) {
+                const decoded = decodeURIComponent(realUrl);
+                // Em desenvolvimento, usar URL real; em produção, manter proxy
+                return isDev ? decoded : url;
               }
             } catch (e) {
               console.warn('Erro ao processar URL proxy:', e);
@@ -154,9 +156,19 @@ export async function GET(
           ajuste_valor: preco?.ajuste_valor || null,
           estoque: produto.estoque || 0,
           imagem: processarImagem(produto.imagem),
-          imagens: Array.isArray(produto.imagens) 
-            ? produto.imagens.map(img => processarImagem(img)).filter(Boolean)
-            : [],
+          imagens: (() => {
+            // Processar array de imagens de forma robusta
+            if (!produto.imagens || !Array.isArray(produto.imagens)) {
+              // Se não tem array de imagens mas tem imagem principal, usar ela
+              const imgPrincipal = processarImagem(produto.imagem);
+              return imgPrincipal ? [imgPrincipal] : [];
+            }
+            
+            // Filtrar e processar imagens válidas
+            return produto.imagens
+              .map(img => processarImagem(img))
+              .filter((img): img is string => Boolean(img) && img.trim().length > 0);
+          })(),
           codigo_barras: produto.codigo_barras || null,
           categoria_id: produto.categoria_id || null,
           variacoes_meta: produto.variacoes_meta || [],
