@@ -110,7 +110,8 @@ export default function ProdutoCard({
           ) : (
             <>
               <ShoppingCart size={20} />
-              <span>{produto.estoque > 0 ? 'Adicionar ao Carrinho' : 'Sem Estoque'}</span>
+              <span className="hidden sm:inline">{produto.estoque > 0 ? 'Adicionar ao Carrinho' : 'Sem Estoque'}</span>
+              <span className="sm:hidden">{produto.estoque > 0 ? 'Comprar' : 'Sem Estoque'}</span>
             </>
           )}
         </button>

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/PageWrapper';
 import Image from 'next/image';
 
@@ -32,6 +33,7 @@ type Franqueada = {
 };
 
 export default function FranqueadasPage() {
+  const router = useRouter();
   const [franqueadas, setFranqueadas] = useState<Franqueada[]>([]);
   const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'aprovada' | 'rejeitada' | 'ativa' | 'inativa'>('todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,6 +340,12 @@ export default function FranqueadasPage() {
                     
                     {f.status === 'aprovada' && f.loja && (
                       <>
+                        <button
+                          onClick={() => router.push(`/admin/franqueadas/${f.id}/customizacao`)}
+                          className="px-3 py-1 bg-pink-600 text-white rounded text-sm hover:bg-pink-700 transition whitespace-nowrap"
+                        >
+                          🎨 Customizar Loja
+                        </button>
                         <button
                           onClick={() => toggleLojaAtiva(f.id, !f.loja.ativo)}
                           className={`px-3 py-1 rounded text-sm transition whitespace-nowrap ${
