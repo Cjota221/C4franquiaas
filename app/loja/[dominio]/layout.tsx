@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import LojaHeader from '@/components/loja/LojaHeader';
 import LojaFooter from '@/components/loja/LojaFooter';
+import AnnouncementBar from '@/components/loja/AnnouncementBar';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
 import { createClient } from '@supabase/supabase-js';
 
@@ -52,6 +53,9 @@ async function getLojaInfo(dominio: string): Promise<LojaInfo | null> {
       banner_hero: loja.banner_hero,
       texto_hero: loja.texto_hero || loja.nome,
       subtexto_hero: loja.subtexto_hero || loja.descricao,
+      banner_secundario: loja.banner_secundario,
+      mensagens_regua: loja.mensagens_regua || null,
+      icones_confianca: loja.icones_confianca || null,
       whatsapp: loja.whatsapp,
       instagram: loja.instagram,
       facebook: loja.facebook,
@@ -186,6 +190,7 @@ export default async function LojaLayout({
 
       <LojaProvider loja={loja}>
         <div className="min-h-screen flex flex-col">
+          <AnnouncementBar />
           <LojaHeader dominio={dominio} />
           
           <main className="flex-1">

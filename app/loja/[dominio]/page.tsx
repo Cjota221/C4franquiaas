@@ -1,8 +1,11 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import ProdutoCard from '@/components/loja/ProdutoCard';
-import { Package, TrendingUp, Star, ArrowRight } from 'lucide-react';
+import CategoriesStories from '@/components/loja/CategoriesStories';
+import TrustIcons from '@/components/loja/TrustIcons';
+import { ArrowRight } from 'lucide-react';
 
 type Produto = {
   id: string;
@@ -65,113 +68,97 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
 
   return (
     <div>
-      {/* Hero Section */}
-      <section 
-        className="py-20"
-        style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
-      >
-        <div className="container mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Bem-vindo à {lojaInfo?.nome || 'Nossa Loja'}!
-          </h1>
-          <p className="text-xl mb-8 opacity-90">
-            Os melhores cosméticos com preços especiais para você
-          </p>
-          <Link 
-            href={`/loja/${dominio}/produtos`}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition hover:opacity-90"
-            style={{ backgroundColor: lojaInfo?.cor_secundaria || '#F8B81F' }}
-          >
-            Ver Todos os Produtos
-            <ArrowRight size={20} />
-          </Link>
+      {/* Banner Hero Grande (60vh) */}
+      <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden">
+        <Image
+          src="https://placehold.co/1920x1080/DB1472/FFFFFF/png?text=COLE%C3%87%C3%83O+2025"
+          alt="Banner Principal"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+          <div className="text-center text-white px-4">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+              Coleção 2025
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 drop-shadow-md">
+              Os melhores cosméticos com preços especiais
+            </p>
+            <Link 
+              href={`/loja/${dominio}/produtos`}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-pink-600 rounded-lg font-bold text-lg transition hover:bg-pink-50"
+            >
+              Comprar Agora
+              <ArrowRight size={20} />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Diferenciais */}
-      <section className="py-16 bg-white">
+      {/* Categorias em Stories */}
+      <section className="py-8 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div 
-                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: lojaInfo?.cor_secundaria || '#F8B81F' }}
-              >
-                <Package size={32} className="text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Produtos de Qualidade</h3>
-              <p className="text-gray-600">
-                Selecionamos os melhores cosméticos para você
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div 
-                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: lojaInfo?.cor_secundaria || '#F8B81F' }}
-              >
-                <TrendingUp size={32} className="text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Melhores Preços</h3>
-              <p className="text-gray-600">
-                Preços especiais e promoções exclusivas
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div 
-                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: lojaInfo?.cor_secundaria || '#F8B81F' }}
-              >
-                <Star size={32} className="text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Atendimento Especial</h3>
-              <p className="text-gray-600">
-                Atendimento personalizado e cuidadoso
-              </p>
-            </div>
-          </div>
+          <CategoriesStories />
         </div>
       </section>
 
       {/* Produtos em Destaque */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Produtos em Destaque</h2>
-            <p className="text-gray-600">Confira alguns dos nossos produtos mais procurados</p>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold">Produtos em Destaque</h2>
+            <Link 
+              href={`/loja/${dominio}/produtos`}
+              className="text-pink-600 font-medium hover:text-pink-700 transition"
+            >
+              Ver todos →
+            </Link>
           </div>
 
           {produtos.length === 0 ? (
             <div className="text-center py-12">
-              <Package size={64} className="mx-auto text-gray-400 mb-4" />
               <p className="text-gray-600 text-lg">Nenhum produto disponível no momento</p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {produtos.map((produto) => (
-                  <ProdutoCard 
-                    key={produto.id} 
-                    produto={produto} 
-                    dominio={dominio}
-                    corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
-                  />
-                ))}
-              </div>
-
-              <div className="text-center mt-12">
-                <Link
-                  href={`/loja/${dominio}/produtos`}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-white transition hover:opacity-90"
-                  style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
-                >
-                  Ver Todos os {lojaInfo?.produtos_ativos || 0} Produtos
-                  <ArrowRight size={20} />
-                </Link>
-              </div>
-            </>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {produtos.slice(0, 8).map((produto) => (
+                <ProdutoCard 
+                  key={produto.id} 
+                  produto={produto} 
+                  dominio={dominio}
+                  corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
+                />
+              ))}
+            </div>
           )}
+        </div>
+      </section>
+
+      {/* Banner Secundário */}
+      <section className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
+        <Image
+          src="https://placehold.co/1920x720/F8B81F/000000/png?text=FRETE+GRÁTIS+ACIMA+DE+R$+99"
+          alt="Banner Secundário"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+          <div className="text-center text-white px-4">
+            <h2 className="text-3xl md:text-5xl font-bold drop-shadow-lg">
+              Frete Grátis acima de R$ 99
+            </h2>
+            <p className="text-lg md:text-xl mt-4 drop-shadow-md">
+              Em todo o Brasil
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Ícones de Confiança */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <TrustIcons />
         </div>
       </section>
     </div>

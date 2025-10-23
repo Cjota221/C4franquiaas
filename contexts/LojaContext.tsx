@@ -29,6 +29,9 @@ export interface LojaInfo {
   banner_hero: string | null;
   texto_hero: string;
   subtexto_hero: string | null;
+  banner_secundario: string | null;
+  mensagens_regua: string[] | null;
+  icones_confianca: Array<{ icone: string; texto: string }> | null;
   
   // Contato e Redes Sociais
   whatsapp: string | null;
