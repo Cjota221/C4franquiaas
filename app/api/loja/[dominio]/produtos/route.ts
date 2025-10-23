@@ -113,6 +113,8 @@ export async function GET(
 
         // 🔧 FIX: Sempre usar proxy em produção para evitar erro 403
         const isDev = process.env.NODE_ENV === 'development';
+        const baseUrl = isDev ? '' : 'https://c4franquiaas.netlify.app';
+        
         const processarImagem = (url: string | null) => {
           if (!url) return null;
           
@@ -131,8 +133,8 @@ export async function GET(
                   console.log('[processarImagem] DEV - retornando URL real');
                   return decoded;
                 }
-                // Em produção, recriar URL do proxy Netlify
-                const proxyUrl = `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
+                // Em produção, recriar URL do proxy Netlify (ABSOLUTA)
+                const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
                 console.log('[processarImagem] PROD - proxy:', proxyUrl);
                 return proxyUrl;
               }
@@ -148,7 +150,7 @@ export async function GET(
               console.log('[processarImagem] DEV - retornando URL direta');
               return url;
             } else {
-              const proxyUrl = `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+              const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
               console.log('[processarImagem] PROD - criando proxy:', proxyUrl);
               return proxyUrl;
             }
