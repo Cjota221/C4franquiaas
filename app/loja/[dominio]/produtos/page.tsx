@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import ProdutoCard from '@/components/loja/ProdutoCard';
+import ProductGrid from '@/components/ProductGrid';
 import { Package, Search } from 'lucide-react';
 
 type Produto = {
@@ -133,16 +133,17 @@ export default function ProdutosPage({ params }: { params: Promise<{ dominio: st
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {produtosFiltrados.map((produto) => (
-            <ProdutoCard 
-              key={produto.id} 
-              produto={produto} 
-              dominio={dominio}
-              corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
-            />
-          ))}
-        </div>
+        <ProductGrid 
+          produtos={produtosFiltrados.map(p => ({
+            id: p.id,
+            nome: p.nome,
+            preco_final: p.preco_final,
+            imagens: p.imagem ? [p.imagem] : [],
+            slug: p.id,
+            dominio: dominio
+          }))}
+          dominio={dominio}
+        />
       )}
     </div>
   );
