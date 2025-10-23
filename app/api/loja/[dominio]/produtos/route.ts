@@ -116,15 +116,17 @@ export async function GET(
         const processarImagem = (url: string | null) => {
           if (!url) return null;
           
-          // Se for URL com proxy existente, processar
+          // Se for URL com proxy existente, extrair URL real
           if (url.includes('proxy-facilzap-image?url=')) {
             try {
               const urlObj = new URL(url);
               const realUrl = urlObj.searchParams.get('url');
               if (realUrl) {
                 const decoded = decodeURIComponent(realUrl);
-                // Em desenvolvimento, usar URL real; em produção, manter proxy
-                return isDev ? decoded : url;
+                // Em desenvolvimento, usar URL real
+                if (isDev) return decoded;
+                // Em produção, recriar URL do proxy Netlify
+                return `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
               }
             } catch (e) {
               console.warn('[processarImagem] Erro ao processar URL proxy:', url, e);
@@ -138,9 +140,7 @@ export async function GET(
               return url;
             } else {
               // Em produção, criar URL com proxy do Netlify
-              const proxyUrl = `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
-              console.log('[processarImagem] Criando proxy para:', url.substring(0, 50) + '...');
-              return proxyUrl;
+              return `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
             }
           }
           
