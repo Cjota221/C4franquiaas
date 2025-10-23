@@ -29,9 +29,32 @@ export default function ProductCard({
   dominio
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
+
+  // 🔧 FIX: Extrair URL real do proxy em desenvolvimento
+  const extractRealUrl = (url: string) => {
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      // Se for proxy do Netlify, extrair URL original
+      if (url.includes('.netlify/functions/proxy-facilzap-image')) {
+        try {
+          const urlObj = new URL(url);
+          const realUrl = urlObj.searchParams.get('url');
+          return realUrl || url;
+        } catch {
+          return url;
+        }
+      }
+    }
+    return url;
+  };
+
+  // Processar imagens para localhost
+  const processedImages = imagens.map(img => extractRealUrl(img));
 
   // Garantir que temos pelo menos uma imagem
-  const productImages = imagens.length > 0 ? imagens : ['/placeholder-product.jpg'];
+  const productImages = processedImages.length > 0 && !imageError
+    ? processedImages 
+    : ['https://placehold.co/400x400/f3f4f6/9ca3af?text=Sem+Imagem'];
   
   // URL do produto
   const productUrl = `/loja/${dominio}/produtos/${slug || id}`;
@@ -75,6 +98,8 @@ export default function ProductCard({
             className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
             quality={85}
+            onError={() => setImageError(true)}
+            unoptimized={productImages[currentImageIndex].includes('placehold.co')}
           />
 
           {/* Badge (Tag) */}

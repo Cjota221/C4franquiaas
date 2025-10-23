@@ -94,6 +94,15 @@ export async function GET(
         // ✅ CORREÇÃO: Usar preco_base como fallback
         const precoFinal = preco?.preco_final || produto.preco_base;
 
+        // 🔧 FIX: Em desenvolvimento, usar URLs diretas do Facilzap
+        const isDev = process.env.NODE_ENV === 'development';
+        const processarImagem = (url: string | null) => {
+          if (!url) return null;
+          // Se já for uma URL completa, retornar direto em dev
+          if (isDev && url.startsWith('http')) return url;
+          return url;
+        };
+
         return {
           id: produto.id,
           nome: produto.nome,
@@ -103,8 +112,10 @@ export async function GET(
           ajuste_tipo: preco?.ajuste_tipo || null,
           ajuste_valor: preco?.ajuste_valor || null,
           estoque: produto.estoque || 0,
-          imagem: produto.imagem || null,
-          imagens: produto.imagens || [],
+          imagem: processarImagem(produto.imagem),
+          imagens: Array.isArray(produto.imagens) 
+            ? produto.imagens.map(img => processarImagem(img)).filter(Boolean)
+            : [],
           codigo_barras: produto.codigo_barras || null,
           variacoes_meta: produto.variacoes_meta || []
         };
