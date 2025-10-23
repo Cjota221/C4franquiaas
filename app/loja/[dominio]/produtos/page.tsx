@@ -5,6 +5,10 @@ import { useLojaInfo } from '@/contexts/LojaContext';
 import ProductCard from '@/components/loja/ProductCard';
 import { Search, Loader2 } from 'lucide-react';
 
+// Força renderização dinâmica no Netlify
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 type Produto = {
   id: string;
   nome: string;
