@@ -7,6 +7,12 @@ export async function GET(
 ) {
   try {
     const { dominio } = await params;
+    
+    // Parâmetros de busca e filtros
+    const searchParams = req.nextUrl.searchParams;
+    const q = searchParams.get('q') || '';
+    const categoriaId = searchParams.get('categoriaId');
+    const destaques = searchParams.get('destaques') === 'true';
 
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -18,7 +24,7 @@ export async function GET(
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    console.log(`[API loja/produtos] Buscando loja com dominio: ${dominio}`);
+    console.log(`[API loja/produtos] Buscando loja com dominio: ${dominio}`, { q, categoriaId, destaques });
 
     // Buscar loja
     const { data: loja, error: lojaError } = await supabase
@@ -38,12 +44,13 @@ export async function GET(
 
     console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
 
-    // Buscar produtos vinculados e ativos
-    const { data: vinculacoes, error: vinculacoesError } = await supabase
+    // Buscar produtos vinculados e ativos com filtros
+    let query = supabase
       .from('produtos_franqueadas')
       .select(`
         id,
         produto_id,
+        destaque,
         produtos:produto_id (
           id,
           nome,
@@ -53,11 +60,30 @@ export async function GET(
           imagem,
           imagens,
           codigo_barras,
-          variacoes_meta
+          categoria_id,
+          variacoes_meta,
+          ativo
         )
       `)
       .eq('franqueada_id', loja.franqueada_id)
       .eq('ativo', true);
+
+    // Filtro de busca por nome
+    if (q) {
+      query = query.ilike('produtos.nome', `%${q}%`);
+    }
+
+    // Filtro por categoria
+    if (categoriaId) {
+      query = query.eq('produtos.categoria_id', categoriaId);
+    }
+
+    // Filtro de destaques
+    if (destaques) {
+      query = query.eq('destaque', true);
+    }
+
+    const { data: vinculacoes, error: vinculacoesError } = await query;
 
     if (vinculacoesError) {
       console.error('[API loja/produtos] Erro ao buscar vinculações:', vinculacoesError);
@@ -103,11 +129,30 @@ export async function GET(
           return url;
         };
 
+        // Calcular tag e parcelamento
+        const precoVenda = precoFinal;
+        const temDesconto = precoFinal < produto.preco_base;
+        let tag = null;
+        
+        if (v.destaque) {
+          tag = 'Destaque';
+        } else if (temDesconto) {
+          const desconto = Math.round(((produto.preco_base - precoFinal) / produto.preco_base) * 100);
+          tag = `-${desconto}%`;
+        }
+
+        const parcelamento = {
+          parcelas: 12,
+          valor: precoVenda / 12,
+          total: precoVenda
+        };
+
         return {
           id: produto.id,
           nome: produto.nome,
           descricao: produto.descricao || '', // ✅ Fallback para descrição
           preco_base: produto.preco_base || 0,
+          preco_venda: precoVenda !== produto.preco_base ? precoVenda : undefined,
           preco_final: precoFinal,
           ajuste_tipo: preco?.ajuste_tipo || null,
           ajuste_valor: preco?.ajuste_valor || null,
@@ -117,7 +162,11 @@ export async function GET(
             ? produto.imagens.map(img => processarImagem(img)).filter(Boolean)
             : [],
           codigo_barras: produto.codigo_barras || null,
-          variacoes_meta: produto.variacoes_meta || []
+          categoria_id: produto.categoria_id || null,
+          variacoes_meta: produto.variacoes_meta || [],
+          destaque: v.destaque || false,
+          tag,
+          parcelamento
         };
       })
       .filter((p): p is NonNullable<typeof p> => p !== null);
