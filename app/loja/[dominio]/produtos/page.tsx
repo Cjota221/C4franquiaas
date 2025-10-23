@@ -30,9 +30,15 @@ type Produto = {
 };
 
 export default function ProdutosPage() {
+  console.log('[DEBUG Produtos] 1. Componente montado');
   const params = useParams();
+  console.log('[DEBUG Produtos] 2. Params:', params);
+  
   const loja = useLojaInfo();
+  console.log('[DEBUG Produtos] 3. Loja do Context:', loja ? 'OK' : 'NULL');
+  
   const dominio = params.dominio as string;
+  console.log('[DEBUG Produtos] 4. Domínio:', dominio);
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,23 +58,33 @@ export default function ProdutosPage() {
   useEffect(() => {
     async function carregarProdutos() {
       try {
+        console.log('[DEBUG Produtos] 5. Iniciando carregamento de produtos');
         setLoading(true);
         const queryParams = new URLSearchParams();
         
         if (buscaDebounce) queryParams.append('q', buscaDebounce);
+        
+        const url = `/api/loja/${dominio}/produtos?${queryParams.toString()}`;
+        console.log('[DEBUG Produtos] 6. URL da API:', url);
 
-        const res = await fetch(`/api/loja/${dominio}/produtos?${queryParams.toString()}`);
+        const res = await fetch(url);
+        console.log('[DEBUG Produtos] 7. Response status:', res.status);
         
         if (!res.ok) {
+          const text = await res.text();
+          console.error('[DEBUG Produtos] 8. ERRO - Response:', text);
           throw new Error(`Erro ${res.status}: ${res.statusText}`);
         }
 
         const data = await res.json();
+        console.log('[DEBUG Produtos] 9. Produtos recebidos:', data.produtos?.length || 0);
         setProdutos(data.produtos || []);
       } catch (error) {
-        console.error('[ProdutosPage] Erro ao carregar:', error);
+        console.error('[DEBUG Produtos] 10. EXCEÇÃO:', error);
+        console.error('[DEBUG Produtos] 11. Stack:', error instanceof Error ? error.stack : 'N/A');
         setProdutos([]);
       } finally {
+        console.log('[DEBUG Produtos] 12. Finalizando loading');
         setLoading(false);
       }
     }

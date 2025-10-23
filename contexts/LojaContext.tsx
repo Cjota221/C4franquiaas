@@ -63,6 +63,7 @@ export function LojaProvider({
   children: React.ReactNode; 
   loja: LojaInfo;
 }) {
+  console.log('[DEBUG LojaProvider] Provendo loja:', loja.nome, '- ID:', loja.id);
   return (
     <LojaContext.Provider value={loja}>
       {children}
@@ -71,9 +72,14 @@ export function LojaProvider({
 }
 
 export function useLojaInfo() {
+  console.log('[DEBUG useLojaInfo] Hook chamado');
   const context = useContext(LojaContext);
+  
   if (!context) {
+    console.error('[DEBUG useLojaInfo] ERRO - Context é null!');
     throw new Error('useLojaInfo deve ser usado dentro de um LojaProvider');
   }
+  
+  console.log('[DEBUG useLojaInfo] Context retornado:', context.nome);
   return context;
 }
