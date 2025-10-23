@@ -102,12 +102,12 @@ export async function GET(
         // ✅ CORREÇÃO: Usar preco_base como fallback
         const precoFinal = preco?.preco_final || produto.preco_base;
 
-        // 🔧 FIX: Em desenvolvimento, extrair URL real do proxy e usar direto
+        // 🔧 FIX: Sempre usar proxy em produção para evitar erro 403
         const isDev = process.env.NODE_ENV === 'development';
         const processarImagem = (url: string | null) => {
           if (!url) return null;
           
-          // Se for URL com proxy, extrair a URL real
+          // Se for URL com proxy existente, processar
           if (url.includes('proxy-facilzap-image?url=')) {
             try {
               const urlObj = new URL(url);
@@ -122,7 +122,20 @@ export async function GET(
             }
           }
           
-          // Se já for uma URL completa do Facilzap, retornar direto
+          // Se for URL do Facilzap SEM proxy
+          if (url.includes('arquivos.facilzap.app.br') || url.includes('facilzap.app.br')) {
+            if (isDev) {
+              // Em dev, usar direto
+              return url;
+            } else {
+              // Em produção, criar URL com proxy do Netlify
+              const proxyUrl = `https://c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+              console.log('[processarImagem] Criando proxy para:', url.substring(0, 50) + '...');
+              return proxyUrl;
+            }
+          }
+          
+          // Se for outra URL completa (Supabase, etc), retornar direto
           if (url.startsWith('http')) return url;
           
           console.warn('[processarImagem] URL inválida ou vazia:', url);
