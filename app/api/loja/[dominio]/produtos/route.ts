@@ -116,36 +116,49 @@ export async function GET(
         const processarImagem = (url: string | null) => {
           if (!url) return null;
           
+          console.log('[processarImagem] INPUT:', url);
+          
           // Se for URL com proxy existente, extrair URL real
           if (url.includes('proxy-facilzap-image?url=')) {
             try {
-              const urlObj = new URL(url);
-              const realUrl = urlObj.searchParams.get('url');
-              if (realUrl) {
-                const decoded = decodeURIComponent(realUrl);
+              // Extrair a URL real do parâmetro
+              const match = url.match(/[?&]url=([^&]+)/);
+              if (match) {
+                const decoded = decodeURIComponent(match[1]);
+                console.log('[processarImagem] Extraído do proxy:', decoded);
                 // Em desenvolvimento, usar URL real
-                if (isDev) return decoded;
+                if (isDev) {
+                  console.log('[processarImagem] DEV - retornando URL real');
+                  return decoded;
+                }
                 // Em produção, recriar URL do proxy Netlify
-                return `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
+                const proxyUrl = `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
+                console.log('[processarImagem] PROD - proxy:', proxyUrl);
+                return proxyUrl;
               }
             } catch (e) {
-              console.warn('[processarImagem] Erro ao processar URL proxy:', url, e);
+              console.error('[processarImagem] Erro ao processar URL proxy:', url, e);
             }
           }
           
           // Se for URL do Facilzap SEM proxy
           if (url.includes('arquivos.facilzap.app.br') || url.includes('facilzap.app.br')) {
+            console.log('[processarImagem] URL Facilzap detectada');
             if (isDev) {
-              // Em dev, usar direto
+              console.log('[processarImagem] DEV - retornando URL direta');
               return url;
             } else {
-              // Em produção, criar URL com proxy do Netlify
-              return `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+              const proxyUrl = `/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+              console.log('[processarImagem] PROD - criando proxy:', proxyUrl);
+              return proxyUrl;
             }
           }
           
           // Se for outra URL completa (Supabase, etc), retornar direto
-          if (url.startsWith('http')) return url;
+          if (url.startsWith('http')) {
+            console.log('[processarImagem] URL externa (não Facilzap):', url);
+            return url;
+          }
           
           console.warn('[processarImagem] URL inválida ou vazia:', url);
           return null;
