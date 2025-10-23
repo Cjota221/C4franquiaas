@@ -102,12 +102,27 @@ export async function GET(
         // ✅ CORREÇÃO: Usar preco_base como fallback
         const precoFinal = preco?.preco_final || produto.preco_base;
 
-        // 🔧 FIX: Em desenvolvimento, usar URLs diretas do Facilzap
+        // 🔧 FIX: Em desenvolvimento, extrair URL real do proxy e usar direto
         const isDev = process.env.NODE_ENV === 'development';
         const processarImagem = (url: string | null) => {
           if (!url) return null;
-          // Se já for uma URL completa, retornar direto em dev
-          if (isDev && url.startsWith('http')) return url;
+          
+          // Se for URL com proxy, extrair a URL real
+          if (url.includes('proxy-facilzap-image?url=')) {
+            try {
+              const urlObj = new URL(url);
+              const realUrl = urlObj.searchParams.get('url');
+              if (realUrl && isDev) {
+                return decodeURIComponent(realUrl);
+              }
+            } catch (e) {
+              console.warn('Erro ao processar URL proxy:', e);
+            }
+          }
+          
+          // Se já for uma URL completa do Facilzap, retornar direto
+          if (url.startsWith('http')) return url;
+          
           return url;
         };
 
