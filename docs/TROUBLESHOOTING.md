@@ -135,4 +135,180 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6...
 
 ---
 
-**Última Atualização:** 20 de outubro de 2025
+## 📋 Novos Problemas Resolvidos (23/10/2025)
+
+### 1. Erro de Hydration - Tags HTML Duplicadas
+
+**❌ Problema:**
+```
+Error: Hydration failed because the server rendered HTML didn't match the client
+In HTML, <html> cannot be a child of <body>
+```
+
+**🔍 Causa:**
+Layout aninhado (`app/loja/[dominio]/layout.tsx`) contém tags `<html>`, `<head>`, `<body>` que só devem existir no layout raiz.
+
+**✅ Solução:**
+Remover tags HTML do layout aninhado:
+
+```tsx
+// ❌ ERRADO
+export default function LojaLayout({ children }) {
+  return (
+    <html>
+      <head><title>Loja</title></head>
+      <body>{children}</body>
+    </html>
+  );
+}
+
+// ✅ CORRETO
+export default function LojaLayout({ children }) {
+  return <>{children}</>;
+}
+```
+
+**Commit:** `09fc7ed`
+
+---
+
+### 2. Erro 404 em Produção - Fetch Interno Falha
+
+**❌ Problema:**
+```
+GET /api/loja/[dominio]/info 404 (Not Found)
+```
+
+**🔍 Causa:**
+`NEXT_PUBLIC_BASE_URL` não definida no Netlify, fetch para API interna falha.
+
+**✅ Solução:**
+Substituir fetch por query direta ao Supabase:
+
+```tsx
+// ❌ ERRADO
+const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/...`);
+
+// ✅ CORRETO
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+const { data } = await supabase.from('lojas').select('*').eq('dominio', dominio).single();
+```
+
+**Commit:** `b27f9c2`
+
+---
+
+### 3. Imagens com Erro 403 - Hotlinking Bloqueado
+
+**❌ Problema:**
+```
+Failed to load resource: 403 (Forbidden)
+```
+Imagens do Facilzap não carregam, mostram placeholder.
+
+**🔍 Causa:**
+Facilzap bloqueia hotlinking direto. É necessário usar proxy.
+
+**✅ Solução:**
+Usar proxy do Netlify com URLs absolutas:
+
+```typescript
+const isDev = process.env.NODE_ENV === 'development';
+const baseUrl = isDev ? '' : 'https://c4franquiaas.netlify.app';
+
+const processarImagem = (url: string | null) => {
+  if (!url) return null;
+  
+  // Se já tem proxy, extrair URL real
+  if (url.includes('proxy-facilzap-image?url=')) {
+    const match = url.match(/[?&]url=([^&]+)/);
+    if (match) {
+      const decoded = decodeURIComponent(match[1]);
+      if (isDev) return decoded;
+      return `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
+    }
+  }
+  
+  // Se for URL do Facilzap
+  if (url.includes('facilzap.app.br')) {
+    if (isDev) return url;
+    return `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+  }
+  
+  return url;
+};
+```
+
+**Pontos críticos:**
+- ✅ URL **absoluta** em produção (`https://...`)
+- ✅ Sempre **encodar** parâmetro `url`
+- ✅ Em dev, usar URL direta
+
+**Commits:** `1197b44`, `3ac74d2`, `2a342e5`, `1e447c2`
+
+---
+
+### 4. Performance do VS Code - Lentidão Geral
+
+**❌ Problema:**
+VS Code lento, alto uso de RAM/CPU.
+
+**✅ Solução:**
+Criar `.vscode/settings.json`:
+
+```json
+{
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "editor.minimap.enabled": false,
+  "editor.breadcrumbs.enabled": false,
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true
+  }
+}
+```
+
+**Resultado:** ↓30-50% RAM, ↓40-60% CPU
+
+---
+
+### 5. Rota Dinâmica Faltando - Página de Produto
+
+**❌ Problema:**
+```
+GET /loja/[dominio]/produto/[id] 404
+```
+
+**✅ Solução:**
+Criar `app/loja/[dominio]/produto/[id]/page.tsx`:
+
+```tsx
+"use client";
+export default function ProdutoDetalhePage() {
+  const params = useParams();
+  const produtoId = params.id as string;
+  
+  // Buscar produto
+  const res = await fetch(`/api/loja/${dominio}/produtos?id=${produtoId}`);
+  // ...
+}
+```
+
+Ajustar API para aceitar `?id=`:
+
+```typescript
+const produtoId = searchParams.get('id');
+if (produtoId) {
+  query = query.eq('produto_id', produtoId);
+}
+```
+
+**Commit:** `2b207d6`
+
+---
+
+**Última Atualização:** 23 de outubro de 2025
