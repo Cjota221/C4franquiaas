@@ -1,6 +1,6 @@
 {
-  "css.validate": true,
-  "scss.validate": true,
+  "css.validate": false,
+  "scss.validate": false,
   "tailwindCSS.includeLanguages": {
     "plaintext": "html",
     "javascript": "javascript",
@@ -68,5 +68,59 @@
   "editor.renderControlCharacters": false,
   
   // Salvamento automático otimizado
-  "files.autoSave": "onFocusChange"
+  "files.autoSave": "onFocusChange",
+  
+  // ===== OTIMIZAÇÕES ADICIONAIS =====
+  
+  // Desabilitar validação de links (economiza muito CPU)
+  "editor.links": false,
+  
+  // Reduzir delay de sugestões
+  "editor.quickSuggestionsDelay": 50,
+  
+  // Desabilitar breadcrumbs (economiza memória)
+  "breadcrumbs.enabled": false,
+  
+  // Limitar número de editores abertos
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 8,
+  "workbench.editor.limit.perEditorGroup": true,
+  
+  // Otimizar highlight de brackets
+  "editor.bracketPairColorization.enabled": false,
+  "editor.guides.bracketPairs": false,
+  
+  // Desabilitar sugestões de snippets inline (Copilot ghost text fica)
+  "editor.inlineSuggest.enabled": true,
+  
+  // Otimizar formatação
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+  
+  // Reduzir cache de arquivos
+  "files.hotExit": "onExitAndWindowClose",
+  
+  // Otimizar terminal
+  "terminal.integrated.enablePersistentSessions": false,
+  "terminal.integrated.persistentSessionScrollback": 100,
+  
+  // Desabilitar preview de arquivos grandes
+  "workbench.editor.enablePreview": true,
+  "workbench.editor.enablePreviewFromQuickOpen": false,
+  
+  // Otimizar Node.js (Next.js)
+  "js.suggest.autoImports": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  
+  // Excluir mais arquivos da busca
+  "files.exclude": {
+    "**/.git": true,
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.cache": true,
+    "**/dist": true,
+    "**/build": true
+  }
 }

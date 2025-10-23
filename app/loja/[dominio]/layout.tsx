@@ -5,36 +5,74 @@ import Script from 'next/script';
 import LojaHeader from '@/components/loja/LojaHeader';
 import LojaFooter from '@/components/loja/LojaFooter';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
+import { createClient } from '@supabase/supabase-js';
 
+// Busca diretamente no Supabase (evita fetch para API interna em Server Component)
 async function getLojaInfo(dominio: string): Promise<LojaInfo | null> {
   try {
-    console.log('[DEBUG Layout] 1. Iniciando busca da loja:', dominio);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    console.log('[DEBUG Layout] 2. Base URL:', baseUrl);
-    
-    const url = `${baseUrl}/api/loja/${dominio}/info`;
-    console.log('[DEBUG Layout] 3. URL completa:', url);
-    
-    const res = await fetch(url, {
-      cache: 'no-store' // Sempre buscar dados frescos
-    });
-    
-    console.log('[DEBUG Layout] 4. Response status:', res.status);
-    
-    if (!res.ok) {
-      console.error(`[DEBUG Layout] 5. ERRO - Status não OK:`, res.status, res.statusText);
-      const text = await res.text();
-      console.error('[DEBUG Layout] 6. Response body:', text);
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      console.error('[getLojaInfo] Variáveis de ambiente Supabase ausentes');
       return null;
     }
-    
-    const json = await res.json();
-    console.log('[DEBUG Layout] 7. JSON recebido:', JSON.stringify(json, null, 2));
-    console.log(`[DEBUG Layout] 8. Loja carregada com sucesso: ${json.loja?.nome}`);
-    return json.loja;
+
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    const { data: loja, error } = await supabase
+      .from('lojas')
+      .select('*')
+      .eq('dominio', dominio)
+      .eq('ativo', true)
+      .single();
+
+    if (error || !loja) {
+      console.error(`[getLojaInfo] Loja não encontrada ou erro no Supabase para dominio: ${dominio}`, error);
+      return null;
+    }
+
+    return {
+      id: loja.id,
+      nome: loja.nome,
+      dominio: loja.dominio,
+      logo: loja.logo,
+      slogan: loja.slogan,
+      descricao: loja.descricao,
+      favicon: loja.favicon,
+      cor_primaria: loja.cor_primaria || '#DB1472',
+      cor_secundaria: loja.cor_secundaria || '#F8B81F',
+      cor_texto: loja.cor_texto || '#1F2937',
+      cor_fundo: loja.cor_fundo || '#FFFFFF',
+      cor_botao: loja.cor_botao || '#DB1472',
+      cor_botao_hover: loja.cor_botao_hover || '#B01059',
+      cor_link: loja.cor_link || '#DB1472',
+      fonte_principal: loja.fonte_principal || 'Inter',
+      fonte_secundaria: loja.fonte_secundaria || 'Inter',
+      banner_hero: loja.banner_hero,
+      texto_hero: loja.texto_hero || loja.nome,
+      subtexto_hero: loja.subtexto_hero || loja.descricao,
+      whatsapp: loja.whatsapp,
+      instagram: loja.instagram,
+      facebook: loja.facebook,
+      email_contato: loja.email_contato,
+      telefone: loja.telefone,
+      endereco: loja.endereco,
+      meta_title: loja.meta_title || loja.nome,
+      meta_description: loja.meta_description || loja.descricao,
+      google_analytics: loja.google_analytics,
+      facebook_pixel: loja.facebook_pixel,
+      ativo: loja.ativo,
+      produtos_ativos: loja.produtos_ativos,
+      mostrar_estoque: loja.mostrar_estoque ?? true,
+      mostrar_codigo_barras: loja.mostrar_codigo_barras ?? false,
+      permitir_carrinho: loja.permitir_carrinho ?? true,
+      modo_catalogo: loja.modo_catalogo ?? false,
+      mensagem_whatsapp: loja.mensagem_whatsapp || 'Olá! Gostaria de saber mais sobre este produto:',
+    } as LojaInfo;
+
   } catch (error) {
-    console.error('[DEBUG Layout] 9. EXCEÇÃO capturada:', error);
-    console.error('[DEBUG Layout] 10. Stack:', error instanceof Error ? error.stack : 'N/A');
+    console.error(`[getLojaInfo] Exceção capturada ao buscar loja: ${dominio}`, error);
     return null;
   }
 }
