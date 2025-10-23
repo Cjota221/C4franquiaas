@@ -35,6 +35,10 @@ export interface LojaInfo {
   
   // Contato e Redes Sociais
   whatsapp: string | null;
+  whatsapp_flutuante?: boolean;
+  whatsapp_numero?: string | null;
+  whatsapp_posicao?: string;
+  whatsapp_mensagem_padrao?: string | null;
   instagram: string | null;
   facebook: string | null;
   email_contato: string | null;

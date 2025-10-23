@@ -5,6 +5,7 @@ import Script from 'next/script';
 import LojaHeader from '@/components/loja/LojaHeader';
 import LojaFooter from '@/components/loja/LojaFooter';
 import AnnouncementBar from '@/components/loja/AnnouncementBar';
+import WhatsAppFlutuante from '@/components/loja/WhatsAppFlutuante';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
 import { createClient } from '@supabase/supabase-js';
 
@@ -73,6 +74,10 @@ async function getLojaInfo(dominio: string): Promise<LojaInfo | null> {
       permitir_carrinho: loja.permitir_carrinho ?? true,
       modo_catalogo: loja.modo_catalogo ?? false,
       mensagem_whatsapp: loja.mensagem_whatsapp || 'Olá! Gostaria de saber mais sobre este produto:',
+      whatsapp_flutuante: loja.whatsapp_flutuante ?? true,
+      whatsapp_numero: loja.whatsapp_numero || loja.whatsapp,
+      whatsapp_posicao: loja.whatsapp_posicao || 'direita',
+      whatsapp_mensagem_padrao: loja.whatsapp_mensagem_padrao || 'Olá! Gostaria de mais informações sobre os produtos da loja.',
     } as LojaInfo;
 
   } catch (error) {
@@ -198,6 +203,7 @@ export default async function LojaLayout({
           </main>
           
           <LojaFooter />
+          <WhatsAppFlutuante />
         </div>
       </LojaProvider>
     </>
