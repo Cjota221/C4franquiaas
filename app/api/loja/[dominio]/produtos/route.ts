@@ -44,8 +44,8 @@ export async function GET(
 
     console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
 
-    // Buscar produtos vinculados e ativos com filtros
-    let query = supabase
+    // Buscar produtos vinculados e ativos (SEM filtros na query inicial)
+    const { data: vinculacoes, error: vinculacoesError } = await supabase
       .from('produtos_franqueadas')
       .select(`
         id,
@@ -67,23 +67,6 @@ export async function GET(
       `)
       .eq('franqueada_id', loja.franqueada_id)
       .eq('ativo', true);
-
-    // Filtro de busca por nome
-    if (q) {
-      query = query.ilike('produtos.nome', `%${q}%`);
-    }
-
-    // Filtro por categoria
-    if (categoriaId) {
-      query = query.eq('produtos.categoria_id', categoriaId);
-    }
-
-    // Filtro de destaques
-    if (destaques) {
-      query = query.eq('destaque', true);
-    }
-
-    const { data: vinculacoes, error: vinculacoesError } = await query;
 
     if (vinculacoesError) {
       console.error('[API loja/produtos] Erro ao buscar vinculações:', vinculacoesError);
@@ -169,7 +152,23 @@ export async function GET(
           parcelamento
         };
       })
-      .filter((p): p is NonNullable<typeof p> => p !== null);
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+      // Aplicar filtros após mapear os dados
+      .filter(p => {
+        // Filtro de busca
+        if (q && !p.nome.toLowerCase().includes(q.toLowerCase())) {
+          return false;
+        }
+        // Filtro de categoria
+        if (categoriaId && p.categoria_id !== categoriaId) {
+          return false;
+        }
+        // Filtro de destaques
+        if (destaques && !p.destaque) {
+          return false;
+        }
+        return true;
+      });
 
     console.log(`[API loja/produtos] Produtos finais retornados: ${produtos.length}`);
 
