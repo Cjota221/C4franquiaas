@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import ProductCard from '@/components/loja/ProductCard';
 import { Search, Loader2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
+
+// Forçar renderização client-side
+export const dynamic = 'force-dynamic';
 
 type Produto = {
   id: string;
