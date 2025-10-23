@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import SidebarFranqueada from '@/components/SidebarFranqueada';
+import { Toaster } from 'sonner';
 
 export default function FranqueadaLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -84,6 +85,7 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

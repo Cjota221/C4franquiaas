@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, User, Store, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, User, Store, LogOut, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: string }) {
@@ -13,6 +13,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
     { href: '/franqueada/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/franqueada/produtos', label: 'Meus Produtos', icon: Package },
     { href: '/franqueada/loja', label: 'Minha Loja', icon: Store },
+    { href: '/franqueada/customizacoes', label: 'Customizações', icon: Settings },
     { href: '/franqueada/perfil', label: 'Meu Perfil', icon: User }
   ];
 
