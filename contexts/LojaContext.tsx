@@ -46,6 +46,15 @@ export interface LojaInfo {
   barra_topo_font_size?: number | null;
   barra_topo_speed?: number | null;
   
+  // Customização da Logo (Migration 017)
+  logo_largura_max?: number;
+  logo_altura_max?: number;
+  logo_padding?: number;
+  logo_fundo_tipo?: string;
+  logo_fundo_cor?: string | null;
+  logo_border_radius?: number;
+  logo_mostrar_sombra?: boolean;
+  
   // Contato e Redes Sociais
   whatsapp: string | null;
   whatsapp_flutuante?: boolean;

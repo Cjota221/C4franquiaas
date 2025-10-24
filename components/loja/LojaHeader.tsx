@@ -22,6 +22,15 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const barraTopoAtiva = loja.barra_topo_ativa ?? true;
   const mensagensRegua = Array.isArray(loja.mensagens_regua) ? loja.mensagens_regua : [];
 
+  // Customizações da Logo (Migration 017)
+  const logoLarguraMax = loja.logo_largura_max ?? 280;
+  const logoAlturaMax = loja.logo_altura_max ?? 80;
+  const logoPadding = loja.logo_padding ?? 0;
+  const logoFundoTipo = loja.logo_fundo_tipo || 'transparente';
+  const logoFundoCor = loja.logo_fundo_cor || null;
+  const logoBorderRadius = loja.logo_border_radius ?? 0;
+  const logoMostrarSombra = loja.logo_mostrar_sombra ?? false;
+
   // Debug
   useEffect(() => {
     console.log('[LojaHeader] Estado do componente (cjotarasteirinhas):', {
@@ -76,6 +85,34 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
 
   const logoSizeClass = getLogoSize();
   const logoRoundedClass = loja.logo_formato === 'redondo' ? 'rounded-full' : 'rounded-lg';
+
+  // Gera estilos dinâmicos baseados nas customizações
+  const getLogoContainerStyle = (): React.CSSProperties => {
+    const styles: React.CSSProperties = {
+      maxWidth: `${logoLarguraMax}px`,
+      maxHeight: `${logoAlturaMax}px`,
+      padding: `${logoPadding}px`,
+    };
+
+    // Aplicar fundo baseado no tipo
+    if (logoFundoTipo === 'solido' || logoFundoTipo === 'redondo') {
+      styles.backgroundColor = logoFundoCor || '#FFFFFF';
+    }
+
+    // Border radius
+    if (logoFundoTipo === 'redondo') {
+      styles.borderRadius = '50%';
+    } else {
+      styles.borderRadius = `${logoBorderRadius}px`;
+    }
+
+    // Sombra
+    if (logoMostrarSombra) {
+      styles.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+    }
+
+    return styles;
+  };
 
   // Links do menu
   const menuLinks = [
@@ -138,7 +175,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     if (loja.logo && !logoLoadError) {
                       console.log('[LojaHeader] → Renderizando <img> direto (sem Next/Image)');
                       return (
-                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
+                        <div 
+                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                          style={getLogoContainerStyle()}
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loja.logo}
@@ -162,7 +202,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     } else if (loja.logo && logoLoadError) {
                       console.log('[LojaHeader] → Renderizando <img> fallback');
                       return (
-                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
+                        <div 
+                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                          style={getLogoContainerStyle()}
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loja.logo}
@@ -219,7 +262,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <CategorySidebar />
                   <Link href={`/loja/${dominio}`} className="flex items-center gap-3 hover:opacity-90 transition">
                     {loja.logo ? (
-                      <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
+                      <div 
+                        className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                        style={getLogoContainerStyle()}
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={loja.logo}
