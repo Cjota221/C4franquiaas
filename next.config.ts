@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       'c4franquiaas.netlify.app',
       'rprucmoavblepodvanga.supabase.co' // Supabase Storage
     ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+    deviceSizes: [64, 80, 96, 128, 256, 384],
+    imageSizes: [16, 32, 48, 64, 85, 96, 128, 256],
+    quality: 85,
     remotePatterns: [
       { protocol: 'https', hostname: 'cjotarasteirinhas.com.br', pathname: '/**' },
       { protocol: 'https', hostname: 'arquivos.facilzap.app.br', pathname: '/**' },

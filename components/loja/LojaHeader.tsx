@@ -1,5 +1,5 @@
 ﻿"use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
@@ -24,9 +24,34 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const mensagensRegua = Array.isArray(loja.mensagens_regua) ? loja.mensagens_regua : [];
 
   // Debug
-  console.log('[LojaHeader] Mensagens régua:', mensagensRegua);
-  console.log('[LojaHeader] Barra topo ativa:', barraTopoAtiva);
-  console.log('[LojaHeader] logo URL:', loja.logo);
+  useEffect(() => {
+    console.log('[LojaHeader] Estado do componente (cjotarasteirinhas):', {
+      logo: loja.logo,
+      nome: loja.nome,
+      logoPos,
+      menuTipo,
+      logoFormato: loja.logo_formato,
+      topoFlutuante,
+      logoLoadError,
+      dominio
+    });
+
+    // Verifica se a URL da logo é do Supabase
+    if (loja.logo?.includes('supabase')) {
+      console.log('[LojaHeader] URL da logo é do Supabase:', {
+        url: loja.logo,
+        bucket: loja.logo.split('/logos/')[1]
+      });
+    }
+
+    // Log quando houver erro ao carregar
+    if (logoLoadError) {
+      console.error('[LojaHeader] Erro ao carregar logo:', {
+        url: loja.logo,
+        fallbackAtivo: true
+      });
+    }
+  }, [loja, logoPos, menuTipo, topoFlutuante, logoLoadError, dominio]);
 
   // Classes dinâmicas baseadas nas configurações
   const headerClass = topoFlutuante ? 'sticky top-0 z-50' : 'relative';
@@ -106,6 +131,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         src={loja.logo}
                         alt={loja.nome}
                         fill
+                        sizes="(max-width: 768px) 64px, 80px"
                         className="object-contain p-1"
                         priority
                         onError={() => {
