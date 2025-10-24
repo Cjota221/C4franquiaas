@@ -55,24 +55,26 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   ];
 
   return (
-    <>
-      {/* Barra de Topo (Régua Deslizante) */}
-      {barraTopoAtiva && mensagensRegua.length > 0 && (
-        <AnnouncementSlider 
-          messages={mensagensRegua}
-          backgroundColor={loja.cor_primaria}
-          textColor="#FFFFFF"
-        />
-      )}
 
-      {/* Barra de Topo Simples (fallback se não houver mensagens na régua) */}
-      {barraTopoAtiva && barraTopoTexto && mensagensRegua.length === 0 && (
-        <div 
-          className="w-full py-2 text-center text-sm font-medium text-white"
-          style={{ backgroundColor: loja.cor_primaria }}
-        >
-          {barraTopoTexto}
-        </div>
+    <>
+      {/* Só exibe UMA barra de topo: se houver mensagens na régua, mostra só a régua; senão, mostra barra fixa */}
+      {barraTopoAtiva && (
+        mensagensRegua.length > 0 ? (
+          <AnnouncementSlider 
+            messages={mensagensRegua}
+            backgroundColor={loja.cor_primaria}
+            textColor="#FFFFFF"
+          />
+        ) : (
+          barraTopoTexto && (
+            <div 
+              className="w-full py-2 text-center text-sm font-medium text-white"
+              style={{ backgroundColor: loja.cor_primaria }}
+            >
+              {barraTopoTexto}
+            </div>
+          )
+        )
       )}
 
       <header className={`${headerClass} shadow-md bg-white`}>
