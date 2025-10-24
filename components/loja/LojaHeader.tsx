@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { ShoppingCart, Home, Package, Info, Phone, User } from 'lucide-react';
+import { ShoppingCart, Home, Package, Info, Phone, User, Search } from 'lucide-react';
 import CategorySidebar from './CategorySidebar';
 import AnnouncementSlider from './AnnouncementSlider';
 
@@ -12,6 +12,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
 
   const [logoLoadError, setLogoLoadError] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Configurações dinâmicas do banco
   const logoPos = loja.logo_posicao || 'centro';
@@ -148,8 +149,8 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
       )}
 
       <header className={`${headerClass} shadow-md bg-white`}>
-        <div className="container mx-auto px-4">
-          {/* Linha Principal */}
+        <div className="container mx-auto px-4 flex flex-col">
+          {/* SEÇÃO SUPERIOR: Menu + Logo + Carrinho */}
           <div className="flex items-center justify-between py-4">
             {/* Layout baseado em logo_posicao */}
             {logoPos === 'centro' ? (
@@ -316,6 +317,25 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 </div>
               </>
             )}
+          </div>
+
+          {/* SEÇÃO INFERIOR: Campo de Busca em Formato Pílula */}
+          <div className="flex items-center justify-center pb-4 pt-2">
+            <div className="relative w-full max-w-[600px]">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={20} />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="O que você procura?"
+                className="w-full rounded-full border border-gray-300 py-3 pl-12 pr-6 text-sm outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100 hover:border-gray-400"
+                style={{
+                  fontSize: '15px',
+                }}
+              />
+            </div>
           </div>
 
           {/* Menu Desktop - layout baseado em menu_tipo */}
