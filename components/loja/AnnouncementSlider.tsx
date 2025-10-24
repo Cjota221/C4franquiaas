@@ -12,8 +12,9 @@ export default function AnnouncementSlider({
   messages, 
   backgroundColor,
   textColor = '#FFFFFF',
-  speed = 50
-}: AnnouncementSliderProps) {
+  speed = 50,
+  fontSize = 14
+}: AnnouncementSliderProps & { fontSize?: number }) {
   
   console.log('[AnnouncementSlider] Received messages:', messages);
 
@@ -37,7 +38,7 @@ export default function AnnouncementSlider({
           <span 
             key={index} 
             className="mx-8"
-            style={{ color: textColor }}
+            style={{ color: textColor, fontSize: `${fontSize}px` }}
           >
             {mensagem}
           </span>

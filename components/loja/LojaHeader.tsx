@@ -62,8 +62,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
         mensagensRegua.length > 0 ? (
           <AnnouncementSlider 
             messages={mensagensRegua}
-            backgroundColor={loja.cor_primaria}
-            textColor="#FFFFFF"
+            backgroundColor={loja.barra_topo_cor || loja.cor_primaria}
+            textColor={loja.barra_topo_texto_cor || '#FFFFFF'}
+            speed={loja.barra_topo_speed ?? 50}
+            fontSize={loja.barra_topo_font_size ?? 14}
           />
         ) : (
           barraTopoTexto && (

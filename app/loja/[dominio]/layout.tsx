@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import LojaHeader from '@/components/loja/LojaHeader';
 import LojaFooter from '@/components/loja/LojaFooter';
-import AnnouncementBar from '@/components/loja/AnnouncementBar';
 import WhatsAppFlutuante from '@/components/loja/WhatsAppFlutuante';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
 import { createClient } from '@supabase/supabase-js';
@@ -62,8 +61,12 @@ async function getLojaInfo(dominio: string): Promise<LojaInfo | null> {
       logo_formato: loja.logo_formato || 'horizontal',
       topo_flutuante: loja.topo_flutuante ?? true,
       mostrar_icones_menu: loja.mostrar_icones_menu ?? true,
-      barra_topo_texto: loja.barra_topo_texto || null,
-      barra_topo_ativa: loja.barra_topo_ativa ?? true,
+  barra_topo_texto: loja.barra_topo_texto || null,
+  barra_topo_ativa: loja.barra_topo_ativa ?? true,
+  barra_topo_cor: loja.barra_topo_cor || loja.cor_primaria,
+  barra_topo_texto_cor: loja.barra_topo_texto_cor || '#FFFFFF',
+  barra_topo_font_size: loja.barra_topo_font_size ?? 14,
+  barra_topo_speed: loja.barra_topo_speed ?? 50,
       whatsapp: loja.whatsapp,
       instagram: loja.instagram,
       facebook: loja.facebook,
@@ -202,7 +205,6 @@ export default async function LojaLayout({
 
       <LojaProvider loja={loja}>
         <div className="min-h-screen flex flex-col">
-          <AnnouncementBar />
           <LojaHeader dominio={dominio} />
           
           <main className="flex-1">

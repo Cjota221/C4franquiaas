@@ -41,6 +41,10 @@ export interface LojaInfo {
   mostrar_icones_menu?: boolean;
   barra_topo_texto?: string | null;
   barra_topo_ativa?: boolean;
+  barra_topo_cor?: string | null;
+  barra_topo_texto_cor?: string | null;
+  barra_topo_font_size?: number | null;
+  barra_topo_speed?: number | null;
   
   // Contato e Redes Sociais
   whatsapp: string | null;

@@ -21,6 +21,10 @@ export default function CustomizacoesHeader() {
     mostrar_icones_menu: true,
     barra_topo_texto: '',
     barra_topo_ativa: true,
+    barra_topo_cor: '#000000',
+    barra_topo_texto_cor: '#ffffff',
+    barra_topo_font_size: 14,
+    barra_topo_speed: 50,
     mensagens_regua: ['Frete grátis acima de R$ 150', 'Parcele em até 6x sem juros'],
   });
 
@@ -52,6 +56,10 @@ export default function CustomizacoesHeader() {
           mostrar_icones_menu: loja.mostrar_icones_menu ?? true,
           barra_topo_texto: loja.barra_topo_texto || '',
           barra_topo_ativa: loja.barra_topo_ativa ?? true,
+          barra_topo_cor: loja.barra_topo_cor || '#000000',
+          barra_topo_texto_cor: loja.barra_topo_texto_cor || '#ffffff',
+          barra_topo_font_size: loja.barra_topo_font_size ?? 14,
+          barra_topo_speed: loja.barra_topo_speed ?? 50,
           mensagens_regua: loja.mensagens_regua || [],
         });
       }
@@ -118,6 +126,24 @@ export default function CustomizacoesHeader() {
               💡 {config.mensagens_regua.length} mensagem(ns) configurada(s). 
               {config.mensagens_regua.length > 1 ? ' Deslizarão automaticamente.' : config.mensagens_regua.length === 1 ? ' Adicione mais para ativar o slider.' : ' Adicione mensagens para exibir.'}
             </p>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div>
+                <Label>Cor de Fundo</Label>
+                <Input type="color" value={config.barra_topo_cor} onChange={(e) => setConfig({ ...config, barra_topo_cor: e.target.value })} />
+              </div>
+              <div>
+                <Label>Cor do Texto</Label>
+                <Input type="color" value={config.barra_topo_texto_cor} onChange={(e) => setConfig({ ...config, barra_topo_texto_cor: e.target.value })} />
+              </div>
+              <div>
+                <Label>Tamanho da Fonte (px)</Label>
+                <Input type="number" value={String(config.barra_topo_font_size)} onChange={(e) => setConfig({ ...config, barra_topo_font_size: Number(e.target.value) })} />
+              </div>
+              <div>
+                <Label>Velocidade (1-200)</Label>
+                <Input type="number" value={String(config.barra_topo_speed)} onChange={(e) => setConfig({ ...config, barra_topo_speed: Number(e.target.value) })} />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
