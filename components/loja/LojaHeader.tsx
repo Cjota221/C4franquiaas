@@ -1,7 +1,6 @@
 ﻿"use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { ShoppingCart, Home, Package, Info, Phone, User } from 'lucide-react';
@@ -137,20 +136,16 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     });
                     
                     if (loja.logo && !logoLoadError) {
-                      console.log('[LojaHeader] → Renderizando Next/Image');
+                      console.log('[LojaHeader] → Renderizando <img> direto (sem Next/Image)');
                       return (
-                        <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
-                          <Image
+                        <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm flex items-center justify-center`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
                             src={loja.logo}
                             alt={loja.nome}
-                            fill
-                            sizes="(max-width: 768px) 64px, 80px"
-                            className="object-contain p-1"
-                            priority
-                            loading="eager"
-                            unoptimized
+                            className="object-contain p-1 w-full h-full"
                             onError={() => {
-                              console.error('[LojaHeader] Falha ao carregar logo (Next/Image):', loja.logo);
+                              console.error('[LojaHeader] Falha ao carregar logo:', loja.logo);
                               setLogoLoadError(true);
                             }}
                             onLoad={() => {
@@ -218,16 +213,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <CategorySidebar />
                   <Link href={`/loja/${dominio}`} className="flex items-center gap-3 hover:opacity-90 transition">
                     {loja.logo ? (
-                      <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50`}>
-                        <Image
+                      <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 flex items-center justify-center`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={loja.logo}
                           alt={loja.nome}
-                          fill
-                          sizes="(max-width: 768px) 40px, 48px"
-                          className="object-contain p-0.5"
-                          priority
-                          loading="eager"
-                          unoptimized
+                          className="object-contain p-0.5 w-full h-full"
                         />
                       </div>
                     ) : (
