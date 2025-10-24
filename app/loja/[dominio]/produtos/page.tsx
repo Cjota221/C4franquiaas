@@ -1,9 +1,18 @@
+/**
+ * ============================================================================
+ * PARTE 3: CONSOLIDAÇÃO - PÁGINA DE PRODUTOS (SEM BUSCA REDUNDANTE)
+ * ============================================================================
+ * - Remove barra de busca interna (agora centralizada no Header)
+ * - Lê parâmetro 'search' da URL usando useSearchParams
+ * - Filtra produtos automaticamente quando vem do Header
+ */
+
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import ProductCard from '@/components/loja/ProductCard';
-import { Search, Loader2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -32,65 +41,65 @@ type Produto = {
 export default function ProdutosPage() {
   console.log('[DEBUG Produtos] 1. Componente montado');
   const params = useParams();
+  const searchParams = useSearchParams(); // ← PARTE 3: Lê URL search params
+  
   console.log('[DEBUG Produtos] 2. Params:', params);
   
   const loja = useLojaInfo();
   console.log('[DEBUG Produtos] 3. Loja do Context:', loja ? 'OK' : 'NULL');
   
   const dominio = params.dominio as string;
+  const searchFromUrl = searchParams.get('search') || ''; // ← PARTE 3: Busca da URL
+  
   console.log('[DEBUG Produtos] 4. Domínio:', dominio);
+  console.log('[DEBUG Produtos] 5. Search da URL:', searchFromUrl);
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busca, setBusca] = useState('');
-  const [buscaDebounce, setBuscaDebounce] = useState('');
 
-  // Debounce para busca
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setBuscaDebounce(busca);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [busca]);
-
-  // Carregar produtos
+  // ========================================================================
+  // PARTE 3: Carregar produtos baseado no parâmetro 'search' da URL
+  // ========================================================================
   useEffect(() => {
     async function carregarProdutos() {
       try {
-        console.log('[DEBUG Produtos] 5. Iniciando carregamento de produtos');
+        console.log('[DEBUG Produtos] Iniciando carregamento de produtos');
         setLoading(true);
         const queryParams = new URLSearchParams();
         
-        if (buscaDebounce) queryParams.append('q', buscaDebounce);
+        // Se houver busca na URL, adiciona como parâmetro
+        if (searchFromUrl) {
+          queryParams.append('q', searchFromUrl);
+          console.log('[DEBUG Produtos] Aplicando filtro de busca:', searchFromUrl);
+        }
         
         const url = `/api/loja/${dominio}/produtos?${queryParams.toString()}`;
-        console.log('[DEBUG Produtos] 6. URL da API:', url);
+        console.log('[DEBUG Produtos] URL da API:', url);
 
         const res = await fetch(url);
-        console.log('[DEBUG Produtos] 7. Response status:', res.status);
+        console.log('[DEBUG Produtos] Response status:', res.status);
         
         if (!res.ok) {
           const text = await res.text();
-          console.error('[DEBUG Produtos] 8. ERRO - Response:', text);
+          console.error('[DEBUG Produtos] ERRO - Response:', text);
           throw new Error(`Erro ${res.status}: ${res.statusText}`);
         }
 
         const data = await res.json();
-        console.log('[DEBUG Produtos] 9. Produtos recebidos:', data.produtos?.length || 0);
+        console.log('[DEBUG Produtos] Produtos recebidos:', data.produtos?.length || 0);
         setProdutos(data.produtos || []);
       } catch (error) {
-        console.error('[DEBUG Produtos] 10. EXCEÇÃO:', error);
-        console.error('[DEBUG Produtos] 11. Stack:', error instanceof Error ? error.stack : 'N/A');
+        console.error('[DEBUG Produtos] EXCEÇÃO:', error);
+        console.error('[DEBUG Produtos] Stack:', error instanceof Error ? error.stack : 'N/A');
         setProdutos([]);
       } finally {
-        console.log('[DEBUG Produtos] 12. Finalizando loading');
+        console.log('[DEBUG Produtos] Finalizando loading');
         setLoading(false);
       }
     }
     
     carregarProdutos();
-  }, [buscaDebounce, dominio]);
+  }, [searchFromUrl, dominio]); // ← PARTE 3: Recarrega quando search muda
 
   return (
     <div className="min-h-screen py-8">
@@ -101,32 +110,19 @@ export default function ProdutosPage() {
             className="text-3xl font-bold mb-2"
             style={{ color: loja.cor_primaria }}
           >
-            Nossos Produtos
+            {searchFromUrl ? `Resultados para "${searchFromUrl}"` : 'Nossos Produtos'}
           </h1>
           <p className="text-gray-600">
-            Encontre os melhores cosméticos com preços especiais
+            {searchFromUrl 
+              ? 'Produtos encontrados na sua busca'
+              : 'Encontre os melhores cosméticos com preços especiais'
+            }
           </p>
         </div>
 
-        {/* Busca */}
-        <div className="mb-8 flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
-              size={20} 
-            />
-            <input
-              type="text"
-              placeholder="Buscar produtos..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition"
-              style={{ 
-                '--tw-ring-color': loja.cor_primaria 
-              } as React.CSSProperties}
-            />
-          </div>
-        </div>
+        {/* ========================================================================
+            PARTE 3: BARRA DE BUSCA REMOVIDA (agora está no Header)
+            ======================================================================== */}
 
         {/* Loading */}
         {loading && (
@@ -157,16 +153,19 @@ export default function ProdutosPage() {
         {!loading && produtos.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-500 text-lg mb-2">
-              {busca ? 'Nenhum produto encontrado com essa busca' : 'Nenhum produto disponível'}
+              {searchFromUrl 
+                ? `Nenhum produto encontrado para "${searchFromUrl}"` 
+                : 'Nenhum produto disponível'
+              }
             </p>
-            {busca && (
-              <button
-                onClick={() => setBusca('')}
-                className="text-sm hover:underline"
+            {searchFromUrl && (
+              <a
+                href={`/loja/${dominio}/produtos`}
+                className="text-sm hover:underline inline-block mt-2"
                 style={{ color: loja.cor_primaria }}
               >
-                Limpar busca
-              </button>
+                Ver todos os produtos
+              </a>
             )}
           </div>
         )}

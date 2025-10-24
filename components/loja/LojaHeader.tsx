@@ -1,18 +1,37 @@
 ﻿"use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { ShoppingCart, Home, Package, Info, Phone, User, Search } from 'lucide-react';
 import CategorySidebar from './CategorySidebar';
 import AnnouncementSlider from './AnnouncementSlider';
 
+type Suggestion = {
+  id: string;
+  nome: string;
+  preco: number;
+  imagem: string | null;
+  categoria: string | null;
+  codigo_barras: string | null;
+};
+
 export default function LojaHeader({ dominio }: { dominio: string }) {
   const loja = useLojaInfo();
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
+  const router = useRouter();
 
   const [logoLoadError, setLogoLoadError] = useState(false);
+  
+  // ========================================================================
+  // PARTE 2: FRONTEND - SISTEMA DE BUSCA COM AUTOCOMPLETE
+  // ========================================================================
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Configurações dinâmicas do banco
   const logoPos = loja.logo_posicao || 'centro';
@@ -31,6 +50,96 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const logoFundoCor = loja.logo_fundo_cor || null;
   const logoBorderRadius = loja.logo_border_radius ?? 0;
   const logoMostrarSombra = loja.logo_mostrar_sombra ?? false;
+
+  // ========================================================================
+  // DEBOUNCE: Atraso de 300ms para otimizar chamadas à API
+  // ========================================================================
+  useEffect(() => {
+    // Se a query estiver vazia, limpa as sugestões imediatamente
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Define um timeout de 300ms
+    const debounceTimer = setTimeout(() => {
+      fetchSuggestions(searchQuery);
+    }, 300);
+
+    // Cleanup: cancela o timeout anterior se o usuário continuar digitando
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ========================================================================
+  // FUNÇÃO DE BUSCA: Chama a API e atualiza as sugestões
+  // ========================================================================
+  const fetchSuggestions = async (query: string) => {
+    if (!query.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      console.log('[LojaHeader] Buscando:', query);
+
+      const response = await fetch(
+        `/api/loja/${dominio}/search?q=${encodeURIComponent(query)}`
+      );
+
+      if (!response.ok) {
+        console.error('[LojaHeader] Erro na API:', response.status);
+        setSuggestions([]);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('[LojaHeader] Sugestões recebidas:', data.suggestions?.length || 0);
+
+      setSuggestions(data.suggestions || []);
+      setShowSuggestions((data.suggestions || []).length > 0);
+    } catch (error) {
+      console.error('[LojaHeader] Erro ao buscar sugestões:', error);
+      setSuggestions([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // ========================================================================
+  // CLICK OUTSIDE: Fecha o dropdown ao clicar fora
+  // ========================================================================
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // ========================================================================
+  // SUBMIT: Redireciona para página de produtos com query
+  // ========================================================================
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setShowSuggestions(false);
+      router.push(`/loja/${dominio}/produtos?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  // ========================================================================
+  // CLICK NA SUGESTÃO: Fecha dropdown e limpa busca
+  // ========================================================================
+  const handleSuggestionClick = () => {
+    setShowSuggestions(false);
+    setSearchQuery('');
+    setSuggestions([]);
+  };
 
   // Debug
   useEffect(() => {
@@ -319,22 +428,97 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             )}
           </div>
 
-          {/* SEÇÃO INFERIOR: Campo de Busca em Formato Pílula */}
+          {/* SEÇÃO INFERIOR: Campo de Busca em Formato Pílula com Autocomplete */}
           <div className="flex items-center justify-center pb-4 pt-2">
-            <div className="relative w-full max-w-[600px]">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <Search size={20} />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="O que você procura?"
-                className="w-full rounded-full border border-gray-300 py-3 pl-12 pr-6 text-sm outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100 hover:border-gray-400"
-                style={{
-                  fontSize: '15px',
-                }}
-              />
+            <div ref={searchRef} className="relative w-full max-w-[600px]">
+              {/* Formulário de Busca */}
+              <form onSubmit={handleSearchSubmit}>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Search size={20} />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                    placeholder="O que você procura?"
+                    className="w-full rounded-full border border-gray-300 py-3 pl-12 pr-6 text-sm outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100 hover:border-gray-400"
+                    style={{
+                      fontSize: '15px',
+                    }}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-pink-500"></div>
+                    </div>
+                  )}
+                </div>
+              </form>
+
+              {/* Dropdown de Sugestões (Autocomplete) */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[400px] overflow-y-auto z-50">
+                  {suggestions.map((suggestion) => (
+                    <Link
+                      key={suggestion.id}
+                      href={`/loja/${dominio}/produto/${suggestion.id}`}
+                      onClick={handleSuggestionClick}
+                      className="flex items-center gap-4 p-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
+                    >
+                      {/* Imagem do Produto */}
+                      <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                        {suggestion.imagem ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={suggestion.imagem}
+                            alt={suggestion.nome}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <Package size={24} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Informações do Produto */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                          {suggestion.nome}
+                        </h4>
+                        {suggestion.categoria && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {suggestion.categoria}
+                          </p>
+                        )}
+                        {suggestion.codigo_barras && (
+                          <p className="text-xs text-gray-400 mt-0.5 font-mono">
+                            Cód: {suggestion.codigo_barras}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Preço */}
+                      <div className="flex-shrink-0">
+                        <p className="text-sm font-bold" style={{ color: loja.cor_primaria }}>
+                          R$ {suggestion.preco.toFixed(2).replace('.', ',')}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                  
+                  {/* Footer: Ver todos os resultados */}
+                  <Link
+                    href={`/loja/${dominio}/produtos?search=${encodeURIComponent(searchQuery)}`}
+                    onClick={handleSuggestionClick}
+                    className="block p-3 text-center text-sm font-medium transition"
+                    style={{ color: loja.cor_primaria }}
+                  >
+                    Ver todos os resultados →
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
