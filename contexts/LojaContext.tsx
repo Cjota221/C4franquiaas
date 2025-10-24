@@ -33,6 +33,15 @@ export interface LojaInfo {
   mensagens_regua: string[] | null;
   icones_confianca: Array<{ icone: string; texto: string }> | null;
   
+  // Header e Menu
+  menu_tipo?: string;
+  logo_posicao?: string;
+  logo_formato?: string;
+  topo_flutuante?: boolean;
+  mostrar_icones_menu?: boolean;
+  barra_topo_texto?: string | null;
+  barra_topo_ativa?: boolean;
+  
   // Contato e Redes Sociais
   whatsapp: string | null;
   whatsapp_flutuante?: boolean;
