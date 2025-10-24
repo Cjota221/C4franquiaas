@@ -99,8 +99,10 @@ export default function CustomizacoesHeader() {
       {/* Régua de Anúncios */}
       <Card>
         <CardHeader>
-          <CardTitle>Régua de Anúncios</CardTitle>
-          <CardDescription>Mensagens rotativas no topo do site</CardDescription>
+          <CardTitle>Régua de Anúncios Deslizante</CardTitle>
+          <CardDescription>
+            Mensagens rotativas no topo do site (passam automaticamente a cada 4 segundos)
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -110,7 +112,12 @@ export default function CustomizacoesHeader() {
               onChange={(e) => setConfig({ ...config, mensagens_regua: e.target.value.split('\n').filter(m => m.trim()) })}
               placeholder="Frete grátis acima de R$ 150&#10;Parcele em até 6x sem juros&#10;Cupom BEMVINDO10 - 10% OFF"
               rows={4}
+              className="font-mono text-sm"
             />
+            <p className="text-xs text-gray-500">
+              💡 {config.mensagens_regua.length} mensagem(ns) configurada(s). 
+              {config.mensagens_regua.length > 1 ? ' Deslizarão automaticamente.' : config.mensagens_regua.length === 1 ? ' Adicione mais para ativar o slider.' : ' Adicione mensagens para exibir.'}
+            </p>
           </div>
         </CardContent>
       </Card>

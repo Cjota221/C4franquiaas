@@ -19,7 +19,11 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const mostrarIcones = loja.mostrar_icones_menu ?? true;
   const barraTopoTexto = loja.barra_topo_texto;
   const barraTopoAtiva = loja.barra_topo_ativa ?? true;
-  const mensagensRegua = loja.mensagens_regua || [];
+  const mensagensRegua = Array.isArray(loja.mensagens_regua) ? loja.mensagens_regua : [];
+
+  // Debug
+  console.log('[LojaHeader] Mensagens régua:', mensagensRegua);
+  console.log('[LojaHeader] Barra topo ativa:', barraTopoAtiva);
 
   // Classes dinâmicas baseadas nas configurações
   const headerClass = topoFlutuante ? 'sticky top-0 z-50' : 'relative';
