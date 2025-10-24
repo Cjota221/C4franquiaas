@@ -147,9 +147,14 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                             sizes="(max-width: 768px) 64px, 80px"
                             className="object-contain p-1"
                             priority
+                            loading="eager"
+                            unoptimized
                             onError={() => {
                               console.error('[LojaHeader] Falha ao carregar logo (Next/Image):', loja.logo);
                               setLogoLoadError(true);
+                            }}
+                            onLoad={() => {
+                              console.log('[LojaHeader] ✅ Logo carregada com sucesso!');
                             }}
                           />
                         </div>
@@ -218,8 +223,11 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                           src={loja.logo}
                           alt={loja.nome}
                           fill
+                          sizes="(max-width: 768px) 40px, 48px"
                           className="object-contain p-0.5"
                           priority
+                          loading="eager"
+                          unoptimized
                         />
                       </div>
                     ) : (
