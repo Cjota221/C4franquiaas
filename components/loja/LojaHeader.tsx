@@ -64,13 +64,13 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
     if (logoPos === 'centro') {
       // Logo no centro: maior destaque
       return loja.logo_formato === 'redondo' 
-        ? 'w-16 h-16 md:w-20 md:h-20' // Redondo: 64x64px mobile, 80x80px desktop
-        : 'h-12 md:h-16 w-auto max-w-[200px]'; // Horizontal: altura 48-64px
+        ? 'w-20 h-20 md:w-24 md:h-24' // Redondo: 80x80px mobile, 96x96px desktop (aumentado)
+        : 'h-16 md:h-20 w-auto max-w-[280px]'; // Horizontal: altura 64-80px (aumentado)
     } else {
       // Logo nas laterais: mais compacto
       return loja.logo_formato === 'redondo'
-        ? 'w-10 h-10 md:w-12 md:h-12' // Redondo: 40x40px mobile, 48x48px desktop
-        : 'h-8 md:h-10 w-auto max-w-[150px]'; // Horizontal: altura 32-40px
+        ? 'w-12 h-12 md:w-14 md:h-14' // Redondo: 48x48px mobile, 56x56px desktop (aumentado)
+        : 'h-10 md:h-12 w-auto max-w-[180px]'; // Horizontal: altura 40-48px (aumentado)
     }
   };
 
@@ -138,12 +138,17 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     if (loja.logo && !logoLoadError) {
                       console.log('[LojaHeader] → Renderizando <img> direto (sem Next/Image)');
                       return (
-                        <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm flex items-center justify-center`}>
+                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loja.logo}
                             alt={loja.nome}
-                            className="object-contain p-1 w-full h-full"
+                            className="w-full h-full object-contain"
+                            style={{ 
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              display: 'block'
+                            }}
                             onError={() => {
                               console.error('[LojaHeader] Falha ao carregar logo:', loja.logo);
                               setLogoLoadError(true);
@@ -157,11 +162,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     } else if (loja.logo && logoLoadError) {
                       console.log('[LojaHeader] → Renderizando <img> fallback');
                       return (
-                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
+                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={loja.logo}
                             alt={loja.nome}
-                            className="object-contain p-1 w-full h-full"
+                            className="w-full h-full object-contain"
                             onError={() => console.error('[LojaHeader] Falha ao carregar logo (img fallback):', loja.logo)}
                           />
                         </div>
@@ -213,12 +219,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <CategorySidebar />
                   <Link href={`/loja/${dominio}`} className="flex items-center gap-3 hover:opacity-90 transition">
                     {loja.logo ? (
-                      <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 flex items-center justify-center`}>
+                      <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={loja.logo}
                           alt={loja.nome}
-                          className="object-contain p-0.5 w-full h-full"
+                          className="w-full h-full object-contain"
                         />
                       </div>
                     ) : (
