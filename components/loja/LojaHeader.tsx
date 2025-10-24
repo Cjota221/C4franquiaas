@@ -38,15 +38,19 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
 
     // Verifica se a URL da logo é do Supabase
     if (loja.logo?.includes('supabase')) {
-      console.log('[LojaHeader] URL da logo é do Supabase:', {
+      console.log('[LojaHeader] ✅ URL da logo é do Supabase:', {
         url: loja.logo,
         bucket: loja.logo.split('/logos/')[1]
       });
+    } else if (loja.logo) {
+      console.log('[LojaHeader] ℹ️ URL da logo (outro domínio):', loja.logo);
+    } else {
+      console.warn('[LojaHeader] ⚠️ Logo está null/undefined');
     }
 
     // Log quando houver erro ao carregar
     if (logoLoadError) {
-      console.error('[LojaHeader] Erro ao carregar logo:', {
+      console.error('[LojaHeader] ❌ Erro ao carregar logo:', {
         url: loja.logo,
         fallbackAtivo: true
       });
@@ -125,39 +129,55 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   className="hover:opacity-90 transition flex-shrink-0"
                   title={loja.nome}
                 >
-                  {loja.logo && !logoLoadError ? (
-                    <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
-                      <Image
-                        src={loja.logo}
-                        alt={loja.nome}
-                        fill
-                        sizes="(max-width: 768px) 64px, 80px"
-                        className="object-contain p-1"
-                        priority
-                        onError={() => {
-                          console.error('[LojaHeader] Falha ao carregar logo (Next/Image):', loja.logo);
-                          setLogoLoadError(true);
-                        }}
-                      />
-                    </div>
-                  ) : loja.logo && logoLoadError ? (
-                    // Fallback: usar <img> nativo quando Next/Image falhar ou estiver bloqueado
-                    <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
-                      <img
-                        src={loja.logo}
-                        alt={loja.nome}
-                        className="object-contain p-1 w-full h-full"
-                        onError={() => console.error('[LojaHeader] Falha ao carregar logo (img fallback):', loja.logo)}
-                      />
-                    </div>
-                  ) : (
-                    <div 
-                      className={`${logoSizeClass} ${logoRoundedClass} flex items-center justify-center text-white font-bold text-2xl shadow-md`}
-                      style={{ backgroundColor: loja.cor_primaria }}
-                    >
-                      {loja.nome.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  {(() => {
+                    console.log('[LojaHeader] Renderizando logo - Decisão:', {
+                      temLogo: !!loja.logo,
+                      logoLoadError,
+                      logoUrl: loja.logo
+                    });
+                    
+                    if (loja.logo && !logoLoadError) {
+                      console.log('[LojaHeader] → Renderizando Next/Image');
+                      return (
+                        <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
+                          <Image
+                            src={loja.logo}
+                            alt={loja.nome}
+                            fill
+                            sizes="(max-width: 768px) 64px, 80px"
+                            className="object-contain p-1"
+                            priority
+                            onError={() => {
+                              console.error('[LojaHeader] Falha ao carregar logo (Next/Image):', loja.logo);
+                              setLogoLoadError(true);
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (loja.logo && logoLoadError) {
+                      console.log('[LojaHeader] → Renderizando <img> fallback');
+                      return (
+                        <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
+                          <img
+                            src={loja.logo}
+                            alt={loja.nome}
+                            className="object-contain p-1 w-full h-full"
+                            onError={() => console.error('[LojaHeader] Falha ao carregar logo (img fallback):', loja.logo)}
+                          />
+                        </div>
+                      );
+                    } else {
+                      console.log('[LojaHeader] → Renderizando fallback de inicial');
+                      return (
+                        <div 
+                          className={`${logoSizeClass} ${logoRoundedClass} flex items-center justify-center text-white font-bold text-2xl shadow-md`}
+                          style={{ backgroundColor: loja.cor_primaria }}
+                        >
+                          {loja.nome.charAt(0).toUpperCase()}
+                        </div>
+                      );
+                    }
+                  })()}
                 </Link>
 
                 {/* User + Carrinho */}
