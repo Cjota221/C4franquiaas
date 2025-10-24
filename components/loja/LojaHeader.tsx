@@ -1,5 +1,5 @@
 ﻿"use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
@@ -11,6 +11,8 @@ import AnnouncementSlider from './AnnouncementSlider';
 export default function LojaHeader({ dominio }: { dominio: string }) {
   const loja = useLojaInfo();
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
+
+  const [logoLoadError, setLogoLoadError] = useState(false);
 
   // Configurações dinâmicas do banco
   const logoPos = loja.logo_posicao || 'centro';
@@ -24,6 +26,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   // Debug
   console.log('[LojaHeader] Mensagens régua:', mensagensRegua);
   console.log('[LojaHeader] Barra topo ativa:', barraTopoAtiva);
+  console.log('[LojaHeader] logo URL:', loja.logo);
 
   // Classes dinâmicas baseadas nas configurações
   const headerClass = topoFlutuante ? 'sticky top-0 z-50' : 'relative';
@@ -97,7 +100,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   className="hover:opacity-90 transition flex-shrink-0"
                   title={loja.nome}
                 >
-                  {loja.logo ? (
+                  {loja.logo && !logoLoadError ? (
                     <div className={`relative ${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
                       <Image
                         src={loja.logo}
@@ -105,6 +108,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         fill
                         className="object-contain p-1"
                         priority
+                        onError={() => {
+                          console.error('[LojaHeader] Falha ao carregar logo:', loja.logo);
+                          setLogoLoadError(true);
+                        }}
                       />
                     </div>
                   ) : (
