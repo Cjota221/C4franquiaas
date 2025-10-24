@@ -97,6 +97,11 @@ export default function LojaPage() {
   const [modoCatalogo, setModoCatalogo] = useState(false);
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState('Olá! Gostaria de mais informações sobre este produto:');
 
+  // Form state - Customização da Logo (Migration 017)
+  const [logoLarguraMax, setLogoLarguraMax] = useState(280);
+  const [logoAlturaMax, setLogoAlturaMax] = useState(80);
+  const [logoFormato, setLogoFormato] = useState<'horizontal' | 'redondo'>('horizontal');
+
   // Função para gerar domínio automaticamente
   function gerarDominio(nomeLoja: string): string {
     return nomeLoja
@@ -171,6 +176,11 @@ export default function LojaPage() {
         setPermitirCarrinho(l.permitir_carrinho ?? true);
         setModoCatalogo(l.modo_catalogo ?? false);
         setMensagemWhatsapp(l.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:');
+
+        // Customização da Logo
+        setLogoLarguraMax(l.logo_largura_max || 280);
+        setLogoAlturaMax(l.logo_altura_max || 80);
+        setLogoFormato(l.logo_formato || 'horizontal');
       }
     } catch (err) {
       console.error('Erro ao carregar loja:', err);
@@ -241,7 +251,11 @@ export default function LojaPage() {
           mostrar_codigo_barras: mostrarCodigoBarras,
           permitir_carrinho: permitirCarrinho,
           modo_catalogo: modoCatalogo,
-          mensagem_whatsapp: mensagemWhatsapp
+          mensagem_whatsapp: mensagemWhatsapp,
+          // Customização da Logo
+          logo_largura_max: logoLarguraMax,
+          logo_altura_max: logoAlturaMax,
+          logo_formato: logoFormato
         })
       });
 
@@ -424,6 +438,57 @@ export default function LojaPage() {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   PNG, JPG, WEBP ou SVG (máximo 2MB)
+                </p>
+              </div>
+
+              {/* Customização da Logo */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-semibold mb-3 text-gray-700">Customização da Logo</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-600">
+                      Largura Máxima (px)
+                    </label>
+                    <input
+                      type="number"
+                      value={logoLarguraMax}
+                      onChange={(e) => setLogoLarguraMax(parseInt(e.target.value) || 280)}
+                      min="50"
+                      max="500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-600">
+                      Altura Máxima (px)
+                    </label>
+                    <input
+                      type="number"
+                      value={logoAlturaMax}
+                      onChange={(e) => setLogoAlturaMax(parseInt(e.target.value) || 80)}
+                      min="30"
+                      max="200"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-600">
+                      Formato
+                    </label>
+                    <select
+                      value={logoFormato}
+                      onChange={(e) => setLogoFormato(e.target.value as 'horizontal' | 'redondo')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    >
+                      <option value="horizontal">Retangular</option>
+                      <option value="redondo">Circular</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Configure o tamanho e formato de exibição da sua logo no site
                 </p>
               </div>
 

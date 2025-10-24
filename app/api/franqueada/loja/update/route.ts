@@ -69,6 +69,10 @@ export async function PUT(req: Request) {
         permitir_carrinho: body.permitir_carrinho,
         modo_catalogo: body.modo_catalogo,
         mensagem_whatsapp: body.mensagem_whatsapp,
+        // Customização da Logo (migration 017)
+        logo_largura_max: body.logo_largura_max,
+        logo_altura_max: body.logo_altura_max,
+        logo_formato: body.logo_formato,
         atualizado_em: new Date().toISOString()
       })
       .eq('franqueada_id', franqueada.id)

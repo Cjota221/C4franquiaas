@@ -118,7 +118,11 @@ export async function POST(req: Request) {
         mostrar_codigo_barras: body.mostrar_codigo_barras !== undefined ? body.mostrar_codigo_barras : false,
         permitir_carrinho: body.permitir_carrinho !== undefined ? body.permitir_carrinho : true,
         modo_catalogo: body.modo_catalogo !== undefined ? body.modo_catalogo : false,
-        mensagem_whatsapp: body.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:'
+        mensagem_whatsapp: body.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:',
+        // Customização da Logo (migration 017)
+        logo_largura_max: body.logo_largura_max || 280,
+        logo_altura_max: body.logo_altura_max || 80,
+        logo_formato: body.logo_formato || 'horizontal'
       })
       .select()
       .single();
