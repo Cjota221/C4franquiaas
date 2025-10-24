@@ -109,9 +109,19 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         className="object-contain p-1"
                         priority
                         onError={() => {
-                          console.error('[LojaHeader] Falha ao carregar logo:', loja.logo);
+                          console.error('[LojaHeader] Falha ao carregar logo (Next/Image):', loja.logo);
                           setLogoLoadError(true);
                         }}
+                      />
+                    </div>
+                  ) : loja.logo && logoLoadError ? (
+                    // Fallback: usar <img> nativo quando Next/Image falhar ou estiver bloqueado
+                    <div className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden bg-gray-50 shadow-sm`}>
+                      <img
+                        src={loja.logo}
+                        alt={loja.nome}
+                        className="object-contain p-1 w-full h-full"
+                        onError={() => console.error('[LojaHeader] Falha ao carregar logo (img fallback):', loja.logo)}
                       />
                     </div>
                   ) : (
