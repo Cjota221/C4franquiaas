@@ -114,23 +114,23 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
       )}
 
       {/* Header Mobile */}
-      <header className="sticky top-0 z-50 bg-white shadow-md md:hidden">
+      <header className="bg-white shadow-md md:hidden">
         {/* Linha 1: Menu + Logo + Carrinho */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          {/* Menu Hambúrguer */}
+          {/* Menu Hambúrguer - MAIOR */}
           <button
             onClick={() => setMenuOpen(true)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
             aria-label="Abrir menu"
             style={{
-              minWidth: '44px',
-              minHeight: '44px',
+              minWidth: '48px',
+              minHeight: '48px',
             }}
           >
-            <Menu size={24} className="text-gray-700" />
+            <Menu size={28} className="text-gray-700" />
           </button>
 
-          {/* Logo Centralizada - MAIOR */}
+          {/* Logo Centralizada - 10% MAIOR */}
           <Link 
             href={`/loja/${dominio}`}
             className="flex-1 flex justify-center items-center px-3"
@@ -140,8 +140,8 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 className="relative overflow-hidden flex items-center justify-center"
                 style={{
                   ...getLogoStyle(),
-                  width: 'clamp(120px, 35vw, 180px)',
-                  height: 'clamp(50px, 15vw, 70px)',
+                  width: 'clamp(132px, 38.5vw, 198px)',
+                  height: 'clamp(55px, 16.5vw, 77px)',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -156,7 +156,7 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 className="font-bold truncate"
                 style={{ 
                   color: loja.cor_primaria,
-                  fontSize: 'clamp(18px, 5vw, 24px)',
+                  fontSize: 'clamp(19.8px, 5.5vw, 26.4px)',
                 }}
               >
                 {loja.nome}
@@ -164,19 +164,19 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
             )}
           </Link>
 
-          {/* Carrinho */}
+          {/* Carrinho - MAIOR */}
           <Link
             href={`/loja/${dominio}/carrinho`}
             className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
             style={{
-              minWidth: '44px',
-              minHeight: '44px',
+              minWidth: '48px',
+              minHeight: '48px',
             }}
           >
-            <ShoppingCart size={24} className="text-gray-700" />
+            <ShoppingCart size={28} className="text-gray-700" />
             {totalItens > 0 && (
               <span 
-                className="absolute top-0 right-0 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"
+                className="absolute top-0 right-0 min-w-[22px] h-5.5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"
                 style={{ 
                   backgroundColor: loja.cor_primaria,
                   fontSize: 'clamp(10px, 2.5vw, 12px)',
@@ -188,13 +188,13 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
           </Link>
         </div>
 
-        {/* Linha 2: Barra de Busca - VISÍVEL */}
+        {/* Linha 2: Barra de Busca - ESTILO PÍLULA */}
         <div className="px-4 py-3" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <div className="relative flex items-center">
               <Search 
                 size={20} 
-                className="absolute left-3 text-gray-400 pointer-events-none" 
+                className="absolute left-4 text-gray-400 pointer-events-none" 
               />
               <input
                 type="search"
@@ -202,10 +202,10 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery && setShowSuggestions(true)}
                 placeholder="Buscar produtos..."
-                className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 transition-colors"
+                className="w-full pl-11 pr-10 py-3 border-2 border-gray-200 rounded-full focus:outline-none focus:border-gray-400 transition-colors"
                 style={{
                   fontSize: 'clamp(14px, 4vw, 16px)',
-                  minHeight: '44px',
+                  minHeight: '48px',
                 }}
               />
               {searchQuery && (
@@ -216,7 +216,7 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                     setSuggestions([]);
                     setShowSuggestions(false);
                   }}
-                  className="absolute right-3 p-1 hover:bg-gray-100 rounded-full"
+                  className="absolute right-3 p-1.5 hover:bg-gray-100 rounded-full"
                 >
                   <X size={18} className="text-gray-400" />
                 </button>
