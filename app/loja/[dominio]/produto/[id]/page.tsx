@@ -62,6 +62,10 @@ function ProdutoDetalheContent() {
   const [skuSelecionado, setSkuSelecionado] = useState<string | null>(null);
   const [cep, setCep] = useState('');
   const [pessoasVendo, setPessoasVendo] = useState(0);
+  
+  // ⭐ Estados para Swipe nas imagens
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Simular pessoas vendo o produto (entre 8-24 pessoas)
   useEffect(() => {
@@ -182,33 +186,50 @@ function ProdutoDetalheContent() {
   };
 
   const adicionarCarrinho = () => {
-    if (!produto || !skuSelecionado) return;
-    
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const variacaoSelecionada = produto.variacoes?.find(v => v.sku === skuSelecionado);
-    
-    const itemExistente = carrinho.find((item: { id: string; sku?: string }) => 
-      item.id === produto.id && item.sku === skuSelecionado
-    );
-    
-    if (itemExistente) {
-      itemExistente.quantidade += 1;
-    } else {
-      carrinho.push({
-        id: produto.id,
-        sku: skuSelecionado,
-        tamanho: variacaoSelecionada?.tamanho,
-        nome: produto.nome,
-        preco: produto.preco_final,
-        imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
-        quantidade: 1
-      });
+    if (!produto || !skuSelecionado) {
+      alert('❌ Por favor, selecione um tamanho primeiro!');
+      return;
     }
     
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    
-    // Feedback visual
-    alert(`Produto adicionado ao carrinho!\nTamanho: ${variacaoSelecionada?.tamanho}`);
+    try {
+      const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+      const variacaoSelecionada = produto.variacoes?.find(v => v.sku === skuSelecionado);
+      
+      const itemExistente = carrinho.find((item: { id: string; sku?: string }) => 
+        item.id === produto.id && item.sku === skuSelecionado
+      );
+      
+      if (itemExistente) {
+        itemExistente.quantidade += 1;
+      } else {
+        carrinho.push({
+          id: produto.id,
+          sku: skuSelecionado,
+          tamanho: variacaoSelecionada?.tamanho,
+          nome: produto.nome,
+          preco: produto.preco_final,
+          imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
+          quantidade: 1
+        });
+      }
+      
+      localStorage.setItem('carrinho', JSON.stringify(carrinho));
+      
+      // Feedback visual melhorado
+      alert(`✅ Produto adicionado ao carrinho!\n\n${produto.nome}\nTamanho: ${variacaoSelecionada?.tamanho}\nPreço: R$ ${produto.preco_final.toFixed(2)}\n\nDeseja ir para o carrinho?`);
+      
+      // Disparar evento customizado para atualizar contador do carrinho
+      window.dispatchEvent(new Event('carrinhoAtualizado'));
+      
+      console.log('[Carrinho] Produto adicionado:', {
+        nome: produto.nome,
+        tamanho: variacaoSelecionada?.tamanho,
+        total_itens: carrinho.length
+      });
+    } catch (error) {
+      console.error('[Carrinho] Erro ao adicionar produto:', error);
+      alert('❌ Erro ao adicionar produto ao carrinho. Tente novamente.');
+    }
   };
 
   const compartilhar = async () => {
@@ -236,6 +257,35 @@ function ProdutoDetalheContent() {
   const imagemAnterior = () => {
     if (!produto || !produto.imagens || produto.imagens.length === 0) return;
     setImagemAtual((prev) => (prev - 1 + produto.imagens.length) % produto.imagens.length);
+  };
+
+  // ⭐ Handlers para Swipe na Galeria (Mobile)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      proximaImagem();
+    }
+    
+    if (isRightSwipe) {
+      imagemAnterior();
+    }
+    
+    // Reset
+    setTouchStart(0);
+    setTouchEnd(0);
   };
 
   if (loading) {
@@ -325,9 +375,14 @@ function ProdutoDetalheContent() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Galeria de Imagens */}
+          {/* Galeria de Imagens com Swipe */}
           <div className="space-y-4">
-            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-xl">
+            <div 
+              className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-xl touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {(() => {
                 const temImagens = produto.imagens && Array.isArray(produto.imagens) && produto.imagens.length > 0;
                 const imagemPrincipal = produto.imagem;
@@ -623,7 +678,7 @@ function ProdutoDetalheContent() {
             )}
 
             {/* Informações de Confiança */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl md:rounded-2xl p-4 md:p-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl md:rounded-2xl p-4 md:p-6 space-y-4">
               {/* Frete */}
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-white rounded-lg">
@@ -651,6 +706,22 @@ function ProdutoDetalheContent() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Envio para todo Brasil */}
+              <div className="flex items-center gap-3 text-xs md:text-sm text-gray-700 bg-white/60 px-3 md:px-4 py-2 md:py-3 rounded-lg">
+                <svg className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span><strong>Envio para todo o Brasil</strong></span>
+              </div>
+
+              {/* Compre com Segurança */}
+              <div className="flex items-center gap-3 text-xs md:text-sm text-gray-700 bg-white/60 px-3 md:px-4 py-2 md:py-3 rounded-lg">
+                <svg className="w-4 h-4 md:w-5 md:h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span><strong>Compre com Segurança</strong> - Seus dados protegidos</span>
               </div>
             </div>
 

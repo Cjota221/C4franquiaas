@@ -96,7 +96,7 @@ export default function ProdutoCardResponsive({
           )}
         </div>
 
-        {/* ⭐ BOTÃO AGORA REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}
+        {/* ⭐ BOTÃO REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}
         <Link
           href={`/loja/${dominio}/produto/${produto.id}`}
           className="w-full rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 block text-center"
@@ -111,7 +111,7 @@ export default function ProdutoCardResponsive({
           }}
         >
           <ShoppingCart size={18} />
-          <span>{produto.estoque === 0 ? 'Indisponível' : 'Ver Detalhes'}</span>
+          <span>{produto.estoque === 0 ? 'Indisponível' : 'Comprar'}</span>
         </Link>
       </div>
     </div>

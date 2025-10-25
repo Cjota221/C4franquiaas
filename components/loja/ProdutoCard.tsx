@@ -1,9 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
-import { ShoppingCart, Check } from 'lucide-react';
+import { ShoppingCart, Package } from 'lucide-react';
 
 type Produto = {
   id: string;
@@ -22,30 +21,9 @@ export default function ProdutoCard({
   dominio: string;
   corPrimaria: string;
 }) {
-  const addItem = useCarrinhoStore((state) => state.addItem);
-  const [adicionado, setAdicionado] = useState(false);
-
-  function handleAddToCart(e: React.MouseEvent) {
-    e.preventDefault(); // Prevenir navegação do Link pai
-    
-    if (produto.estoque === 0) return;
-    
-    addItem({
-      id: produto.id,
-      nome: produto.nome,
-      preco: produto.preco_final,
-      quantidade: 1,
-      imagem: produto.imagem || '',
-      estoque: produto.estoque
-    });
-    
-    setAdicionado(true);
-    setTimeout(() => setAdicionado(false), 2000);
-  }
-
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-      <Link href={`/loja/${dominio}/produtos/${produto.id}`}>
+      <Link href={`/loja/${dominio}/produto/${produto.id}`}>
         <div className="relative w-full h-64 bg-gradient-to-br from-gray-50 to-gray-100">
           {produto.imagem ? (
             <Image
@@ -73,7 +51,7 @@ export default function ProdutoCard({
       </Link>
 
       <div className="p-4">
-        <Link href={`/loja/${dominio}/produtos/${produto.id}`}>
+        <Link href={`/loja/${dominio}/produto/${produto.id}`}>
           <h3 className="font-semibold text-lg mb-2 hover:underline line-clamp-2 min-h-[56px]">
             {produto.nome}
           </h3>
@@ -93,32 +71,22 @@ export default function ProdutoCard({
           )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={produto.estoque === 0}
-          className="w-full py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        {/* ⭐ BOTÃO REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}
+        <Link
+          href={`/loja/${dominio}/produto/${produto.id}`}
+          className="w-full py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 block text-center"
           style={{
-            backgroundColor: adicionado ? '#10B981' : corPrimaria,
-            color: 'white'
+            backgroundColor: produto.estoque === 0 ? '#d1d5db' : corPrimaria,
+            color: 'white',
+            pointerEvents: produto.estoque === 0 ? 'none' : 'auto',
+            opacity: produto.estoque === 0 ? 0.5 : 1,
           }}
         >
-          {adicionado ? (
-            <>
-              <Check size={20} />
-              <span>Adicionado!</span>
-            </>
-          ) : (
-            <>
-              <ShoppingCart size={20} />
-              <span className="hidden sm:inline">{produto.estoque > 0 ? 'Adicionar ao Carrinho' : 'Sem Estoque'}</span>
-              <span className="sm:hidden">{produto.estoque > 0 ? 'Comprar' : 'Sem Estoque'}</span>
-            </>
-          )}
-        </button>
+          <ShoppingCart size={20} />
+          <span className="hidden sm:inline">{produto.estoque > 0 ? 'Comprar' : 'Sem Estoque'}</span>
+          <span className="sm:hidden">{produto.estoque > 0 ? 'Comprar' : 'Sem Estoque'}</span>
+        </Link>
       </div>
     </div>
   );
 }
-
-// Importar Package que faltava
-import { Package } from 'lucide-react';
