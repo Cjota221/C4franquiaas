@@ -1,5 +1,6 @@
 "use client";
 import { ShieldCheck, Truck, CreditCard } from 'lucide-react';
+import { useLojaInfo } from '@/contexts/LojaContext';
 
 const icons = [
   { icon: ShieldCheck, text: 'Compra 100% Segura', description: 'Dados protegidos' },
@@ -8,10 +9,24 @@ const icons = [
 ];
 
 export default function TrustIcons() {
+  const loja = useLojaInfo();
+
+  // Cores personalizadas da franqueada
+  const corPrimaria = loja.cor_primaria || '#DB1472';
+  const corTexto = loja.cor_texto || '#1F2937';
+
+  // Gerar cor clara para fundo (10% de opacidade da cor primária)
+  const corFundoClaro = `${corPrimaria}1a`; // Hex + Alpha
+
   return (
     <>
       {/* Mobile: Marquee Horizontal Infinito */}
-      <div className="md:hidden overflow-hidden bg-gradient-to-r from-pink-50 to-purple-50 py-4">
+      <div 
+        className="md:hidden overflow-hidden py-4"
+        style={{
+          background: `linear-gradient(to right, ${corFundoClaro}, ${corPrimaria}10)`,
+        }}
+      >
         <div className="trust-marquee-container">
           <div className="trust-marquee-track">
             {/* Renderizar itens 2x para loop infinito */}
@@ -23,11 +38,22 @@ export default function TrustIcons() {
                   className="trust-marquee-item"
                 >
                   <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-sm border border-gray-100">
-                    <div className="text-pink-600 bg-pink-100 p-2 rounded-full flex-shrink-0">
+                    <div 
+                      className="p-2 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: corFundoClaro,
+                        color: corPrimaria,
+                      }}
+                    >
                       <IconComponent size={20} strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-sm text-gray-800 whitespace-nowrap">{item.text}</p>
+                      <p 
+                        className="font-bold text-sm whitespace-nowrap"
+                        style={{ color: corTexto }}
+                      >
+                        {item.text}
+                      </p>
                       <p className="text-xs text-gray-500 whitespace-nowrap">{item.description}</p>
                     </div>
                   </div>
@@ -46,9 +72,16 @@ export default function TrustIcons() {
             return (
               <div 
                 key={i} 
-                className="flex flex-col items-center text-gray-700 p-6 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex flex-col items-center p-6 rounded-lg hover:bg-gray-50 transition-colors"
+                style={{ color: corTexto }}
               >
-                <div className="text-pink-600 mb-3 p-3 bg-pink-50 rounded-full">
+                <div 
+                  className="mb-3 p-3 rounded-full"
+                  style={{
+                    backgroundColor: corFundoClaro,
+                    color: corPrimaria,
+                  }}
+                >
                   <IconComponent size={32} strokeWidth={2} />
                 </div>
                 <p className="font-bold text-lg mb-1">{item.text}</p>
