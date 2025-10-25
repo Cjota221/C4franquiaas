@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
 import { fetchProdutoFacilZapById } from '@/lib/facilzapClient';
+import { notifyProductChange } from '@/lib/webhookService';
 
 export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -103,6 +104,22 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const updated = data?.[0] ?? null;
+    
+    // ✅ SOLUÇÃO 1: WEBHOOK AUTOMÁTICO - Notificar franqueadas sobre mudança
+    if (updated) {
+      console.log(`[api/produtos/:id PATCH] 🔔 Enviando webhook de atualização...`);
+      
+      // Determinar tipo de evento baseado nos campos atualizados
+      const eventType = Object.prototype.hasOwnProperty.call(updates, 'estoque') 
+        ? 'STOCK_UPDATED' 
+        : 'PRODUCT_UPDATED';
+      
+      // Enviar webhook de forma assíncrona (não bloqueia a resposta)
+      notifyProductChange(eventType, updated.id).catch(err => {
+        console.error('[api/produtos/:id PATCH] ⚠️ Erro ao enviar webhook (não fatal):', err);
+      });
+    }
+    
     let facilzap = null;
     if (updated?.id_externo) {
       try {
