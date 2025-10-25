@@ -70,20 +70,47 @@ function ProdutoDetalheContent() {
         const response = await fetch(`/api/loja/${dominio}/produtos?id=${produtoId}`);
         
         if (!response.ok) {
+          console.error('[Produto Detalhe] Erro na resposta:', response.status, response.statusText);
           throw new Error('Produto não encontrado');
         }
 
         const data = await response.json();
+        console.log('[Produto Detalhe] Dados recebidos da API:', data);
         
-        // A API retorna array, pegar o primeiro (ou único) produto
-        const produtoData = Array.isArray(data) ? data[0] : data;
+        // A API retorna { produtos: [...] }
+        let produtoData;
+        if (data.produtos && Array.isArray(data.produtos)) {
+          produtoData = data.produtos[0];
+        } else if (Array.isArray(data)) {
+          produtoData = data[0];
+        } else {
+          produtoData = data;
+        }
         
         if (!produtoData) {
+          console.error('[Produto Detalhe] Produto não encontrado nos dados:', data);
           throw new Error('Produto não encontrado');
+        }
+
+        console.log('[Produto Detalhe] Produto encontrado:', produtoData.nome);
+        console.log('[Produto Detalhe] Imagens:', produtoData.imagens);
+        console.log('[Produto Detalhe] Preço final:', produtoData.preco_final);
+
+        // ✅ Garantir que imagens seja um array válido
+        if (!produtoData.imagens || !Array.isArray(produtoData.imagens)) {
+          console.warn('[Produto Detalhe] Array de imagens inválido, criando fallback');
+          produtoData.imagens = produtoData.imagem ? [produtoData.imagem] : [];
+        }
+
+        // ✅ Garantir que preço seja um número válido
+        if (typeof produtoData.preco_final !== 'number' || isNaN(produtoData.preco_final)) {
+          console.warn('[Produto Detalhe] Preço final inválido, usando preco_base');
+          produtoData.preco_final = produtoData.preco_base || 0;
         }
 
         // ⭐ ADICIONAR VARIAÇÕES MOCK SE NÃO EXISTIR
         if (!produtoData.variacoes || produtoData.variacoes.length === 0) {
+          console.log('[Produto Detalhe] Criando variações mock');
           produtoData.variacoes = [
             { sku: `SKU-${produtoData.id}-34`, tamanho: '34', disponivel: true },
             { sku: `SKU-${produtoData.id}-35`, tamanho: '35', disponivel: true },
@@ -97,6 +124,7 @@ function ProdutoDetalheContent() {
         }
 
         setProduto(produtoData);
+        console.log('[Produto Detalhe] Estado do produto atualizado com sucesso');
       } catch (error) {
         console.error('[Produto Detalhe] Erro ao buscar produto:', error);
         // Redirecionar para página de produtos se não encontrar
@@ -284,59 +312,103 @@ function ProdutoDetalheContent() {
           {/* Galeria de Imagens */}
           <div className="space-y-4">
             <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-xl">
-              {produto.imagens && produto.imagens.length > 0 ? (
-                <>
-                  <Image
-                    src={produto.imagens[imagemAtual] || produto.imagem || 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem'}
-                    alt={produto.nome}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem';
-                    }}
-                  />
-                  
-                  {/* Navegação de imagens */}
-                  {produto.imagens.length > 1 && (
-                    <>
-                      <button
-                        onClick={imagemAnterior}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
-                      >
-                        <ChevronLeft className="w-6 h-6 text-gray-700" />
-                      </button>
-                      
-                      <button
-                        onClick={proximaImagem}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
-                      >
-                        <ChevronRight className="w-6 h-6 text-gray-700" />
-                      </button>
+              {(() => {
+                const temImagens = produto.imagens && Array.isArray(produto.imagens) && produto.imagens.length > 0;
+                const imagemPrincipal = produto.imagem;
+                
+                console.log('[Render] Verificando imagens:', {
+                  temImagens,
+                  qtdImagens: produto.imagens?.length,
+                  imagemPrincipal,
+                  imagemAtual: produto.imagens?.[imagemAtual]
+                });
 
-                      {/* Indicadores */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                        {produto.imagens.map((_, idx) => (
+                // Se não tem array de imagens mas tem imagem principal
+                if (!temImagens && imagemPrincipal) {
+                  return (
+                    <Image
+                      src={imagemPrincipal}
+                      alt={produto.nome}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                      onError={(e) => {
+                        console.error('[Render] Erro ao carregar imagem principal:', imagemPrincipal);
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem';
+                      }}
+                    />
+                  );
+                }
+
+                // Se tem array de imagens
+                if (temImagens) {
+                  const urlImagem = produto.imagens[imagemAtual];
+                  console.log('[Render] Exibindo imagem do array:', urlImagem);
+                  
+                  return (
+                    <>
+                      <Image
+                        src={urlImagem || 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem'}
+                        alt={produto.nome}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        onError={(e) => {
+                          console.error('[Render] Erro ao carregar imagem do array:', urlImagem);
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem';
+                        }}
+                      />
+                      
+                      {/* Navegação de imagens */}
+                      {produto.imagens.length > 1 && (
+                        <>
                           <button
-                            key={idx}
-                            onClick={() => setImagemAtual(idx)}
-                            className={`w-2 h-2 rounded-full transition-all ${
-                              idx === imagemAtual 
-                                ? 'bg-white w-6' 
-                                : 'bg-white/50 hover:bg-white/75'
-                            }`}
-                          />
-                        ))}
-                      </div>
+                            onClick={imagemAnterior}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          >
+                            <ChevronLeft className="w-6 h-6 text-gray-700" />
+                          </button>
+                          
+                          <button
+                            onClick={proximaImagem}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          >
+                            <ChevronRight className="w-6 h-6 text-gray-700" />
+                          </button>
+
+                          {/* Indicadores */}
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                            {produto.imagens.map((_, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setImagemAtual(idx)}
+                                className={`w-2 h-2 rounded-full transition-all ${
+                                  idx === imagemAtual 
+                                    ? 'bg-white w-8' 
+                                    : 'bg-white/50 hover:bg-white/75'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </>
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <span className="text-gray-400">Sem imagem</span>
-                </div>
-              )}
+                  );
+                }
+
+                // Fallback se não tem nenhuma imagem
+                console.warn('[Render] Nenhuma imagem disponível, usando placeholder');
+                return (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">📦</div>
+                      <p className="text-gray-500">Sem Imagem</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Tag de destaque */}
               {produto.destaque && produto.tag && (

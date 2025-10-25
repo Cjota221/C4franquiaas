@@ -250,6 +250,32 @@ export async function GET(
 
     console.log(`[API loja/produtos] Produtos finais retornados: ${produtos.length}`);
 
+    // Se buscar produto específico, retornar no formato esperado pelo PDP
+    if (produtoId) {
+      const produto = produtos[0];
+      if (!produto) {
+        console.error(`[API loja/produtos] Produto ${produtoId} não encontrado após processamento`);
+        return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
+      }
+      
+      console.log(`[API loja/produtos] Retornando produto específico:`, {
+        id: produto.id,
+        nome: produto.nome,
+        preco_final: produto.preco_final,
+        tem_imagem: Boolean(produto.imagem),
+        qtd_imagens: produto.imagens?.length || 0
+      });
+      
+      return NextResponse.json({ 
+        produtos: [produto],
+        meta: {
+          total: 1,
+          loja: loja.nome,
+          dominio
+        }
+      }, { status: 200 });
+    }
+
     return NextResponse.json({ 
       produtos,
       meta: {
