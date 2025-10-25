@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import type { RouteContext } from 'next/dist/server/future/route-modules/route-module';
 
 /**
  * ============================================================================
@@ -18,10 +17,10 @@ import type { RouteContext } from 'next/dist/server/future/route-modules/route-m
 
 export async function GET(
   request: NextRequest,
-  context: RouteContext<{ params: { dominio: string } }>
+  { params }: { params: Promise<{ dominio: string }> }
 ) {
   try {
-    const { dominio } = context.params;
+    const { dominio } = await params;
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
 
