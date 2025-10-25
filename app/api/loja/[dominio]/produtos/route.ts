@@ -136,14 +136,20 @@ export async function GET(
           
           console.log('[processarImagem] INPUT:', url);
           
-          // Se for URL com proxy existente, extrair URL real
-          if (url.includes('proxy-facilzap-image?url=')) {
+          // ✅ CORREÇÃO: Se JÁ for URL com proxy, retornar sem modificar
+          if (url.includes('/.netlify/functions/proxy-facilzap-image')) {
+            console.log('[processarImagem] URL já tem proxy, retornando sem modificar');
+            return url;
+          }
+          
+          // Se for URL com proxy no formato antigo (query string), extrair URL real
+          if (url.includes('proxy-facilzap-image?url=') || url.includes('proxy-facilzap-image?facilzap=')) {
             try {
               // Extrair a URL real do parâmetro
-              const match = url.match(/[?&]url=([^&]+)/);
+              const match = url.match(/[?&](url|facilzap)=([^&]+)/);
               if (match) {
-                const decoded = decodeURIComponent(match[1]);
-                console.log('[processarImagem] Extraído do proxy:', decoded);
+                const decoded = decodeURIComponent(match[2]);
+                console.log('[processarImagem] Extraído do proxy antigo:', decoded);
                 // Em desenvolvimento, usar URL real
                 if (isDev) {
                   console.log('[processarImagem] DEV - retornando URL real');
@@ -151,7 +157,7 @@ export async function GET(
                 }
                 // Em produção, recriar URL do proxy Netlify (ABSOLUTA)
                 const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
-                console.log('[processarImagem] PROD - proxy:', proxyUrl);
+                console.log('[processarImagem] PROD - proxy recriado:', proxyUrl);
                 return proxyUrl;
               }
             } catch (e) {
