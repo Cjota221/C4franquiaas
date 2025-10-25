@@ -84,16 +84,10 @@ export default function ProdutoCardResponsive({
           >
             R$ {produto.preco_final.toFixed(2)}
           </p>
-          {produto.estoque > 0 && (
-            <p 
-              className="text-gray-600 text-xs sm:text-sm truncate"
-              style={{
-                fontSize: 'clamp(11px, 2.5vw, 14px)',
-              }}
-            >
-              {produto.estoque} {produto.estoque === 1 ? 'un' : 'uns'}
-            </p>
-          )}
+          {/* ❌ REMOVIDO: Exibição de estoque (ex: "15 uns")
+              ⭐ RAZÃO: Cliente não deve ver contagem exata de estoque
+              ✅ A disponibilidade é indicada pelo botão (Comprar vs Indisponível)
+          */}
         </div>
 
         {/* ⭐ BOTÃO REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}

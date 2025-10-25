@@ -169,13 +169,51 @@ export async function GET(
         console.log(`[API loja/produtos] Produto: ${produto.nome}`);
         console.log(`[API loja/produtos]   - imagem principal:`, produto.imagem);
         console.log(`[API loja/produtos]   - imagens array:`, produto.imagens);
+        console.log(`[API loja/produtos]   - variacoes_meta:`, produto.variacoes_meta);
+
+        // ⭐⭐⭐ CORREÇÃO CRÍTICA: PROCESSAR VARIAÇÕES COM ESTOQUE REAL ⭐⭐⭐
+        let variacoes = [];
+        let estoqueTotal = 0;
+        
+        if (produto.variacoes_meta && Array.isArray(produto.variacoes_meta) && produto.variacoes_meta.length > 0) {
+          console.log(`[API loja/produtos] ✅ Produto ${produto.nome} TEM ${produto.variacoes_meta.length} variações`);
+          
+          // Processar cada variação com estoque REAL
+          variacoes = produto.variacoes_meta.map((variacao: { sku?: string; nome?: string; estoque?: number; codigo_barras?: string }, idx: number) => {
+            const estoqueVariacao = typeof variacao.estoque === 'number' ? variacao.estoque : 0;
+            const disponivel = estoqueVariacao > 0;
+            
+            // Somar estoque total
+            estoqueTotal += estoqueVariacao;
+            
+            console.log(`[API loja/produtos]   Variação ${idx + 1}:`, {
+              sku: variacao.sku,
+              tamanho: variacao.nome || variacao.sku?.split('-').pop() || `Variação ${idx + 1}`,
+              estoque: estoqueVariacao,
+              disponivel
+            });
+            
+            return {
+              sku: variacao.sku || `SKU-${produto.id}-${idx}`,
+              tamanho: variacao.nome || variacao.sku?.split('-').pop() || `Variação ${idx + 1}`,
+              estoque: estoqueVariacao,
+              disponivel,
+              codigo_barras: variacao.codigo_barras || null
+            };
+          });
+          
+          console.log(`[API loja/produtos] ✅ Estoque total calculado: ${estoqueTotal}`);
+        } else {
+          // Produto sem variações - usar estoque direto
+          estoqueTotal = produto.estoque || 0;
+          console.log(`[API loja/produtos] ⚠️ Produto ${produto.nome} SEM variações, usando estoque direto: ${estoqueTotal}`);
+        }
 
         // Calcular tag e parcelamento
         const precoVenda = precoFinal;
         const temDesconto = precoFinal < produto.preco_base;
         let tag = null;
         
-        // Remover lógica de destaque pois a coluna não existe
         if (temDesconto) {
           const desconto = Math.round(((produto.preco_base - precoFinal) / produto.preco_base) * 100);
           tag = `-${desconto}%`;
@@ -196,20 +234,18 @@ export async function GET(
           preco_final: precoFinal,
           ajuste_tipo: preco?.ajuste_tipo || null,
           ajuste_valor: preco?.ajuste_valor || null,
-          estoque: produto.estoque || 0,
+          estoque: estoqueTotal, // ⭐ ESTOQUE TOTAL CALCULADO
           imagem: processarImagem(produto.imagem),
           imagens: (() => {
             // Processar array de imagens de forma robusta
             if (!produto.imagens || !Array.isArray(produto.imagens)) {
               console.log(`[API loja/produtos]   ⚠️ Produto ${produto.nome}: imagens não é array, usando imagem principal`);
-              // Se não tem array de imagens mas tem imagem principal, usar ela
               const imgPrincipal = processarImagem(produto.imagem);
               return imgPrincipal ? [imgPrincipal] : [];
             }
             
             console.log(`[API loja/produtos]   ✓ Produto ${produto.nome}: processando ${produto.imagens.length} imagens`);
             
-            // Filtrar e processar imagens válidas
             const imagensProcessadas = produto.imagens
               .map((img, idx) => {
                 const processed = processarImagem(img);
@@ -227,8 +263,8 @@ export async function GET(
           })(),
           codigo_barras: produto.codigo_barras || null,
           categoria_id: produto.categoria_id || null,
-          variacoes_meta: produto.variacoes_meta || [],
-          destaque: false, // Sempre false pois não temos essa coluna
+          variacoes, // ⭐ VARIAÇÕES COM ESTOQUE REAL
+          destaque: false,
           tag,
           parcelamento
         };

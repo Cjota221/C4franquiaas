@@ -64,11 +64,10 @@ export default function ProdutoCard({
           >
             R$ {produto.preco_final.toFixed(2)}
           </p>
-          {produto.estoque > 0 && (
-            <p className="text-sm text-gray-600">
-              {produto.estoque} {produto.estoque === 1 ? 'unidade' : 'unidades'}
-            </p>
-          )}
+          {/* ❌ REMOVIDO: Exibição de estoque (ex: "15 unidades")
+              ⭐ RAZÃO: Cliente não deve ver contagem exata de estoque
+              ✅ A disponibilidade é indicada pelo botão (Comprar vs Indisponível)
+          */}
         </div>
 
         {/* ⭐ BOTÃO REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}

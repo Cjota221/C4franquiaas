@@ -116,6 +116,7 @@ function ProdutoDetalheContent() {
         console.log('[Produto Detalhe] Produto encontrado:', produtoData.nome);
         console.log('[Produto Detalhe] Imagens:', produtoData.imagens);
         console.log('[Produto Detalhe] Preço final:', produtoData.preco_final);
+        console.log('[Produto Detalhe] Variações REAIS:', produtoData.variacoes);
 
         // ✅ Garantir que imagens seja um array válido
         if (!produtoData.imagens || !Array.isArray(produtoData.imagens)) {
@@ -129,19 +130,20 @@ function ProdutoDetalheContent() {
           produtoData.preco_final = produtoData.preco_base || 0;
         }
 
-        // ⭐ ADICIONAR VARIAÇÕES MOCK SE NÃO EXISTIR
+        // ⭐⭐⭐ CORREÇÃO CRÍTICA: USAR VARIAÇÕES REAIS DA API ⭐⭐⭐
+        // REMOVIDO: Mock data de variações
+        // A API agora retorna variações REAIS com estoque do banco de dados
         if (!produtoData.variacoes || produtoData.variacoes.length === 0) {
-          console.log('[Produto Detalhe] Criando variações mock');
-          produtoData.variacoes = [
-            { sku: `SKU-${produtoData.id}-34`, tamanho: '34', disponivel: true },
-            { sku: `SKU-${produtoData.id}-35`, tamanho: '35', disponivel: true },
-            { sku: `SKU-${produtoData.id}-36`, tamanho: '36', disponivel: false },
-            { sku: `SKU-${produtoData.id}-37`, tamanho: '37', disponivel: true },
-            { sku: `SKU-${produtoData.id}-38`, tamanho: '38', disponivel: false },
-            { sku: `SKU-${produtoData.id}-39`, tamanho: '39', disponivel: true },
-            { sku: `SKU-${produtoData.id}-40`, tamanho: '40', disponivel: true },
-            { sku: `SKU-${produtoData.id}-41`, tamanho: '41', disponivel: true },
-          ];
+          console.warn('[Produto Detalhe] ⚠️ ATENÇÃO: Produto sem variações no banco de dados!');
+          console.warn('[Produto Detalhe] Isso pode indicar que o produto não foi sincronizado corretamente.');
+          console.warn('[Produto Detalhe] Execute: node scripts/sync_variacoes_from_facilzap.mjs --apply');
+          // Não criar mock - mostrar produto sem seletor de tamanho
+          produtoData.variacoes = [];
+        } else {
+          console.log('[Produto Detalhe] ✅ Usando variações REAIS da API:', produtoData.variacoes.length);
+          produtoData.variacoes.forEach((v: { sku: string; tamanho: string; estoque: number; disponivel: boolean }, idx: number) => {
+            console.log(`[Produto Detalhe]   Variação ${idx + 1}: ${v.tamanho} - SKU: ${v.sku} - Estoque: ${v.estoque} - Disponível: ${v.disponivel}`);
+          });
         }
 
         setProduto(produtoData);
