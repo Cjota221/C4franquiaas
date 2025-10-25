@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useLojaInfo } from '@/contexts/LojaContext';
+import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import Image from 'next/image';
 import { ArrowLeft, Share2, Heart, ShoppingCart, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductErrorBoundary from '@/components/loja/ProductErrorBoundary';
+import ModalProdutoAdicionado from '@/components/loja/ModalProdutoAdicionado';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -49,6 +51,7 @@ function ProdutoDetalheContent() {
   const params = useParams();
   const router = useRouter();
   const loja = useLojaInfo();
+  const addItem = useCarrinhoStore(state => state.addItem);
   
   const dominio = params.dominio as string;
   const produtoId = params.id as string;
@@ -66,6 +69,16 @@ function ProdutoDetalheContent() {
   // ⭐ Estados para Swipe nas imagens
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+
+  // ⭐ Estado do Modal
+  const [modalAberto, setModalAberto] = useState(false);
+  const [produtoAdicionado, setProdutoAdicionado] = useState<{
+    nome: string;
+    preco: number;
+    imagem: string;
+    tamanho?: string;
+    quantidade: number;
+  } | null>(null);
 
   // Simular pessoas vendo o produto (entre 8-24 pessoas)
   useEffect(() => {
@@ -189,47 +202,54 @@ function ProdutoDetalheContent() {
 
   const adicionarCarrinho = () => {
     if (!produto || !skuSelecionado) {
-      alert('❌ Por favor, selecione um tamanho primeiro!');
+      alert('⚠️ Por favor, selecione um tamanho antes de adicionar ao carrinho.');
       return;
     }
-    
+
     try {
-      const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
       const variacaoSelecionada = produto.variacoes?.find(v => v.sku === skuSelecionado);
       
-      const itemExistente = carrinho.find((item: { id: string; sku?: string }) => 
-        item.id === produto.id && item.sku === skuSelecionado
-      );
-      
-      if (itemExistente) {
-        itemExistente.quantidade += 1;
-      } else {
-        carrinho.push({
-          id: produto.id,
-          sku: skuSelecionado,
-          tamanho: variacaoSelecionada?.tamanho,
-          nome: produto.nome,
-          preco: produto.preco_final,
-          imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
-          quantidade: 1
-        });
+      if (!variacaoSelecionada || !variacaoSelecionada.disponivel) {
+        alert('❌ Este tamanho está indisponível no momento.');
+        return;
       }
-      
-      localStorage.setItem('carrinho', JSON.stringify(carrinho));
-      
-      // Feedback visual melhorado
-      alert(`✅ Produto adicionado ao carrinho!\n\n${produto.nome}\nTamanho: ${variacaoSelecionada?.tamanho}\nPreço: R$ ${produto.preco_final.toFixed(2)}\n\nDeseja ir para o carrinho?`);
-      
-      // Disparar evento customizado para atualizar contador do carrinho
-      window.dispatchEvent(new Event('carrinhoAtualizado'));
-      
-      console.log('[Carrinho] Produto adicionado:', {
+
+      // ✅ ADICIONAR AO CARRINHO USANDO ZUSTAND STORE
+      const itemCarrinho = {
+        id: produto.id,
+        sku: skuSelecionado,  // ⭐ SKU da variação
+        tamanho: variacaoSelecionada.tamanho,  // ⭐ Nome do tamanho
         nome: produto.nome,
-        tamanho: variacaoSelecionada?.tamanho,
-        total_itens: carrinho.length
+        preco: produto.preco_final,
+        imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
+        quantidade: 1,
+        estoque: 99  // TODO: Pegar estoque real da variação
+      };
+
+      addItem(itemCarrinho);
+
+      // ✅ Preparar dados para o modal
+      setProdutoAdicionado({
+        nome: produto.nome,
+        preco: produto.preco_final,
+        imagem: itemCarrinho.imagem,
+        tamanho: variacaoSelecionada.tamanho,
+        quantidade: 1
+      });
+
+      // ✅ Abrir modal de confirmação
+      setModalAberto(true);
+
+      // Disparar evento para atualizar contador do carrinho no header
+      window.dispatchEvent(new Event('carrinhoAtualizado'));
+
+      console.log('[Carrinho] ✅ Produto adicionado via Zustand Store:', {
+        nome: produto.nome,
+        tamanho: variacaoSelecionada.tamanho,
+        sku: skuSelecionado
       });
     } catch (error) {
-      console.error('[Carrinho] Erro ao adicionar produto:', error);
+      console.error('[Carrinho] ❌ Erro ao adicionar produto:', error);
       alert('❌ Erro ao adicionar produto ao carrinho. Tente novamente.');
     }
   };
@@ -844,6 +864,17 @@ function ProdutoDetalheContent() {
           </div>
         </div>
       </div>
+
+      {/* ⭐ MODAL DE CONFIRMAÇÃO - PRODUTO ADICIONADO ⭐ */}
+      {produtoAdicionado && (
+        <ModalProdutoAdicionado
+          isOpen={modalAberto}
+          onClose={() => setModalAberto(false)}
+          produto={produtoAdicionado}
+          dominio={dominio}
+          corPrimaria={corPrimaria}
+        />
+      )}
     </div>
   );
 }

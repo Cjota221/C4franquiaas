@@ -93,76 +93,89 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Lista de Itens */}
           <div className="lg:col-span-2 space-y-4">
-            {itens.map((item) => (
-              <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex gap-4">
-                {/* Imagem */}
-                <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                  {item.imagem ? (
-                    <Image
-                      src={item.imagem}
-                      alt={item.nome}
-                      fill
-                      className="object-cover"
-                      quality={70}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Package size={32} className="text-gray-300" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Informações */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg mb-1 truncate">{item.nome}</h3>
-                  <p className="text-xl font-bold mb-3" style={{ color: lojaInfo?.cor_primaria || '#DB1472' }}>
-                    R$ {item.preco.toFixed(2).replace('.', ',')}
-                  </p>
-
-                  <div className="flex items-center gap-4">
-                    {/* Controle de Quantidade */}
-                    <div className="flex items-center border-2 border-gray-300 rounded-lg">
-                      <button
-                        onClick={() => updateQuantidade(item.id, item.quantidade - 1)}
-                        disabled={item.quantidade <= 1}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className="px-4 py-1 font-bold">{item.quantidade}</span>
-                      <button
-                        onClick={() => updateQuantidade(item.id, item.quantidade + 1)}
-                        disabled={item.quantidade >= item.estoque}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        <Plus size={16} />
-                      </button>
-                    </div>
-
-                    {/* Subtotal */}
-                    <span className="text-sm text-gray-600">
-                      Subtotal: <span className="font-bold">R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
-                    </span>
+            {itens.map((item) => {
+              // ⭐ Chave única considerando SKU
+              const itemKey = item.sku ? `${item.id}-${item.sku}` : item.id;
+              
+              return (
+                <div key={itemKey} className="bg-white rounded-xl shadow-md p-4 flex gap-4">
+                  {/* Imagem */}
+                  <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    {item.imagem ? (
+                      <Image
+                        src={item.imagem}
+                        alt={item.nome}
+                        fill
+                        className="object-cover"
+                        quality={70}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Package size={32} className="text-gray-300" />
+                      </div>
+                    )}
                   </div>
 
-                  {/* Aviso de estoque */}
-                  {item.quantidade >= item.estoque && (
-                    <p className="text-orange-600 text-sm mt-2">
-                      Quantidade máxima disponível
+                  {/* Informações */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg mb-1 truncate">{item.nome}</h3>
+                    
+                    {/* ⭐ Mostrar tamanho se existir */}
+                    {item.tamanho && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        Tamanho: <span className="font-semibold">{item.tamanho}</span>
+                      </p>
+                    )}
+                    
+                    <p className="text-xl font-bold mb-3" style={{ color: lojaInfo?.cor_primaria || '#DB1472' }}>
+                      R$ {item.preco.toFixed(2).replace('.', ',')}
                     </p>
-                  )}
-                </div>
 
-                {/* Botão Remover */}
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-red-600 hover:text-red-700 p-2 transition"
-                  title="Remover item"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-            ))}
+                    <div className="flex items-center gap-4">
+                      {/* Controle de Quantidade */}
+                      <div className="flex items-center border-2 border-gray-300 rounded-lg">
+                        <button
+                          onClick={() => updateQuantidade(item.id, item.quantidade - 1, item.sku)}
+                          disabled={item.quantidade <= 1}
+                          className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <span className="px-4 py-1 font-bold">{item.quantidade}</span>
+                        <button
+                          onClick={() => updateQuantidade(item.id, item.quantidade + 1, item.sku)}
+                          disabled={item.quantidade >= item.estoque}
+                          className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+
+                      {/* Subtotal */}
+                      <span className="text-sm text-gray-600">
+                        Subtotal: <span className="font-bold">R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                      </span>
+                    </div>
+
+                    {/* Aviso de estoque */}
+                    {item.quantidade >= item.estoque && (
+                      <p className="text-orange-600 text-sm mt-2">
+                        Quantidade máxima disponível
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Botão Remover */}
+                  <button
+                    onClick={() => removeItem(item.id, item.sku)}
+                    className="text-red-600 hover:text-red-700 p-2 transition"
+                    title="Remover item"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           {/* Resumo do Pedido */}

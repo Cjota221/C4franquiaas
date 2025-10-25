@@ -8,6 +8,8 @@ export type ProdutoCarrinho = {
   quantidade: number;
   imagem: string;
   estoque: number;
+  sku?: string;  // SKU da variação selecionada
+  tamanho?: string;  // Nome do tamanho/variação
   variacaoId?: string | null;
   variacaoSku?: string;
 };
@@ -15,8 +17,8 @@ export type ProdutoCarrinho = {
 type CarrinhoStore = {
   items: ProdutoCarrinho[];
   addItem: (produto: ProdutoCarrinho) => void;
-  removeItem: (id: string) => void;
-  updateQuantidade: (id: string, quantidade: number) => void;
+  removeItem: (id: string, sku?: string) => void;
+  updateQuantidade: (id: string, quantidade: number, sku?: string) => void;
   clearCarrinho: () => void;
   getTotal: () => number;
   getTotalItens: () => number;
@@ -28,24 +30,25 @@ export const useCarrinhoStore = create<CarrinhoStore>()(
       items: [],
       
       addItem: (produto) => set((state) => {
-        // Considerar variação ao verificar se produto já existe
-        const chaveUnica = produto.variacaoId 
-          ? `${produto.id}-${produto.variacaoId}`
+        // ⭐ Considerar SKU ao verificar se produto já existe
+        // Se tem SKU, a chave única é id+sku, senão apenas id
+        const chaveUnica = produto.sku 
+          ? `${produto.id}-${produto.sku}`
           : produto.id;
         
         const existing = state.items.find(i => {
-          const chaveItem = i.variacaoId 
-            ? `${i.id}-${i.variacaoId}`
+          const chaveItem = i.sku 
+            ? `${i.id}-${i.sku}`
             : i.id;
           return chaveItem === chaveUnica;
         });
         
         if (existing) {
-          // Atualizar quantidade se produto já existe
+          // ✅ Atualizar quantidade se produto (com mesmo SKU) já existe
           return {
             items: state.items.map(i => {
-              const chaveItem = i.variacaoId 
-                ? `${i.id}-${i.variacaoId}`
+              const chaveItem = i.sku 
+                ? `${i.id}-${i.sku}`
                 : i.id;
               
               return chaveItem === chaveUnica
@@ -55,18 +58,34 @@ export const useCarrinhoStore = create<CarrinhoStore>()(
           };
         }
         
-        // Adicionar novo produto
+        // ✅ Adicionar novo produto
         return { items: [...state.items, produto] };
       }),
       
-      removeItem: (id) => set((state) => ({
-        items: state.items.filter(i => i.id !== id)
-      })),
+      removeItem: (id, sku?) => set((state) => {
+        if (sku) {
+          // Remover item com SKU específico
+          return {
+            items: state.items.filter(i => !(i.id === id && i.sku === sku))
+          };
+        }
+        // Remover por ID apenas
+        return {
+          items: state.items.filter(i => i.id !== id)
+        };
+      }),
       
-      updateQuantidade: (id, quantidade) => set((state) => ({
-        items: state.items.map(i =>
-          i.id === id ? { ...i, quantidade: Math.max(1, Math.min(quantidade, i.estoque)) } : i
-        )
+      updateQuantidade: (id, quantidade, sku?) => set((state) => ({
+        items: state.items.map(i => {
+          // Se SKU fornecido, match por id+sku, senão apenas id
+          const isMatch = sku 
+            ? (i.id === id && i.sku === sku)
+            : i.id === id;
+          
+          return isMatch 
+            ? { ...i, quantidade: Math.max(1, Math.min(quantidade, i.estoque)) } 
+            : i;
+        })
       })),
       
       clearCarrinho: () => set({ items: [] }),
