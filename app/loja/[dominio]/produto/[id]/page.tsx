@@ -494,30 +494,69 @@ function ProdutoDetalheContent() {
               )}
             </div>
 
-            {/* Miniaturas */}
+            {/* Miniaturas - Scrollável horizontalmente */}
             {produto.imagens && produto.imagens.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {produto.imagens.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setImagemAtual(idx)}
-                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      idx === imagemAtual 
-                        ? 'border-blue-500 scale-105 shadow-lg' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${produto.nome} - ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </button>
-                ))}
+              <div className="relative">
+                <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+                  {produto.imagens.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setImagemAtual(idx)}
+                      className={`
+                        relative flex-shrink-0 snap-center
+                        w-16 h-16 sm:w-20 sm:h-20
+                        rounded-lg overflow-hidden 
+                        border-2 transition-all duration-200
+                        ${idx === imagemAtual 
+                          ? 'border-blue-500 scale-105 shadow-lg ring-2 ring-blue-200' 
+                          : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                        }
+                      `}
+                    >
+                      <Image
+                        src={img}
+                        alt={`${produto.nome} - Foto ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://placehold.co/80x80/e5e7eb/9ca3af?text=Erro';
+                        }}
+                      />
+                      
+                      {/* Número da foto (quando há muitas) */}
+                      {produto.imagens && produto.imagens.length > 5 && (
+                        <div className="absolute bottom-0 right-0 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded-tl">
+                          {idx + 1}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Indicador de scroll (quando há muitas imagens) */}
+                {produto.imagens && produto.imagens.length > 4 && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs text-gray-400 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span>Deslize</span>
+                  </div>
+                )}
               </div>
             )}
+
+            <style jsx>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
           </div>
 
           {/* Informações do Produto - BUY BOX */}
