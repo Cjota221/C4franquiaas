@@ -89,24 +89,18 @@
    5. GRID RESPONSIVO (Mobile-First)
    ---------------------------------------------------------------------------- */
 
-/* Mobile: 1 coluna por padrão */
+/* Mobile: 2 colunas por padrão (harmônico) */
 .grid-responsive {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-md);
-}
-
-/* Small Mobile (>480px): 2 colunas */
-@media (min-width: 480px) {
-  .grid-responsive {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 3vw, 16px);
 }
 
 /* Tablet (>768px): 3 colunas */
 @media (min-width: 768px) {
   .grid-responsive {
     grid-template-columns: repeat(3, 1fr);
+    gap: clamp(16px, 4vw, 24px);
   }
 }
 
@@ -114,6 +108,7 @@
 @media (min-width: 1024px) {
   .grid-responsive {
     grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
   }
 }
 

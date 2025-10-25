@@ -1,19 +1,30 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { ShoppingCart, Search, Menu } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X } from 'lucide-react';
 import MobileMenu from './MobileMenu';
-import MobileSearchModal from './MobileSearchModal';
 import AnnouncementSlider from './AnnouncementSlider';
+
+type Suggestion = {
+  id: string;
+  nome: string;
+  preco: number;
+  imagem: string | null;
+};
 
 export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
   const loja = useLojaInfo();
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
+  const router = useRouter();
   
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Configurações dinâmicas
   const barraTopoTexto = loja.barra_topo_texto;
@@ -24,15 +35,54 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
   const logoBorderRadius = loja.logo_border_radius ?? 0;
   const logoMostrarSombra = loja.logo_mostrar_sombra ?? false;
 
+  // Debounce para busca
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/loja/${dominio}/search?q=${encodeURIComponent(searchQuery)}&limit=5`);
+        const data = await res.json();
+        setSuggestions(data.produtos || []);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Erro ao buscar:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, dominio]);
+
+  // Fechar sugestões ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/loja/${dominio}/produtos?search=${encodeURIComponent(searchQuery)}`);
+      setShowSuggestions(false);
+    }
+  };
+
   const getLogoStyle = (): React.CSSProperties => {
     const styles: React.CSSProperties = {
       borderRadius: `${logoBorderRadius}px`,
     };
-
     if (logoMostrarSombra) {
       styles.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
     }
-
     return styles;
   };
 
@@ -63,9 +113,10 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
         )
       )}
 
-      {/* Header Mobile - Linha Única */}
+      {/* Header Mobile */}
       <header className="sticky top-0 z-50 bg-white shadow-md md:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
+        {/* Linha 1: Menu + Logo + Carrinho */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           {/* Menu Hambúrguer */}
           <button
             onClick={() => setMenuOpen(true)}
@@ -79,18 +130,18 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
             <Menu size={24} className="text-gray-700" />
           </button>
 
-          {/* Logo Centralizada */}
+          {/* Logo Centralizada - MAIOR */}
           <Link 
             href={`/loja/${dominio}`}
-            className="flex-1 flex justify-center items-center px-2"
+            className="flex-1 flex justify-center items-center px-3"
           >
             {loja.logo ? (
               <div 
                 className="relative overflow-hidden flex items-center justify-center"
                 style={{
                   ...getLogoStyle(),
-                  width: 'clamp(80px, 25vw, 120px)',
-                  height: 'clamp(40px, 12vw, 56px)',
+                  width: 'clamp(120px, 35vw, 180px)',
+                  height: 'clamp(50px, 15vw, 70px)',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -105,7 +156,7 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 className="font-bold truncate"
                 style={{ 
                   color: loja.cor_primaria,
-                  fontSize: 'clamp(16px, 4vw, 20px)',
+                  fontSize: 'clamp(18px, 5vw, 24px)',
                 }}
               >
                 {loja.nome}
@@ -113,60 +164,112 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
             )}
           </Link>
 
-          {/* Ícones da direita */}
-          <div className="flex items-center gap-1">
-            {/* Busca */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
-              aria-label="Buscar produtos"
-              style={{
-                minWidth: '44px',
-                minHeight: '44px',
-              }}
-            >
-              <Search size={22} className="text-gray-700" />
-            </button>
+          {/* Carrinho */}
+          <Link
+            href={`/loja/${dominio}/carrinho`}
+            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
+            style={{
+              minWidth: '44px',
+              minHeight: '44px',
+            }}
+          >
+            <ShoppingCart size={24} className="text-gray-700" />
+            {totalItens > 0 && (
+              <span 
+                className="absolute top-0 right-0 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"
+                style={{ 
+                  backgroundColor: loja.cor_primaria,
+                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                }}
+              >
+                {totalItens > 99 ? '99+' : totalItens}
+              </span>
+            )}
+          </Link>
+        </div>
 
-            {/* Carrinho */}
-            <Link
-              href={`/loja/${dominio}/carrinho`}
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
-              style={{
-                minWidth: '44px',
-                minHeight: '44px',
-              }}
-            >
-              <ShoppingCart size={22} className="text-gray-700" />
-              {totalItens > 0 && (
-                <span 
-                  className="absolute top-0 right-0 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"
-                  style={{ 
-                    backgroundColor: loja.cor_primaria,
-                    fontSize: 'clamp(10px, 2.5vw, 12px)',
+        {/* Linha 2: Barra de Busca - VISÍVEL */}
+        <div className="px-4 py-3" ref={searchRef}>
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative flex items-center">
+              <Search 
+                size={20} 
+                className="absolute left-3 text-gray-400 pointer-events-none" 
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery && setShowSuggestions(true)}
+                placeholder="Buscar produtos..."
+                className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 transition-colors"
+                style={{
+                  fontSize: 'clamp(14px, 4vw, 16px)',
+                  minHeight: '44px',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSuggestions([]);
+                    setShowSuggestions(false);
                   }}
+                  className="absolute right-3 p-1 hover:bg-gray-100 rounded-full"
                 >
-                  {totalItens > 99 ? '99+' : totalItens}
-                </span>
+                  <X size={18} className="text-gray-400" />
+                </button>
               )}
-            </Link>
-          </div>
+            </div>
+
+            {/* Sugestões de Busca */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
+                {suggestions.map((produto) => (
+                  <Link
+                    key={produto.id}
+                    href={`/loja/${dominio}/produto/${produto.id}`}
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      setSearchQuery('');
+                    }}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-0"
+                  >
+                    {produto.imagem ? (
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={produto.imagem} 
+                          alt={produto.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-200 rounded-lg" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate" style={{ fontSize: 'clamp(13px, 3.5vw, 15px)' }}>
+                        {produto.nome}
+                      </p>
+                      <p className="font-bold text-green-600" style={{ fontSize: 'clamp(14px, 4vw, 16px)' }}>
+                        R$ {produto.preco.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </form>
         </div>
       </header>
 
-      {/* Componentes Modal */}
+      {/* Menu Drawer */}
       <MobileMenu 
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         dominio={dominio}
         lojaNome={loja.nome}
-        corPrimaria={loja.cor_primaria}
-      />
-
-      <MobileSearchModal
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        dominio={dominio}
         corPrimaria={loja.cor_primaria}
       />
     </>
