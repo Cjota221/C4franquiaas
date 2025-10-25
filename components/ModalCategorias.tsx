@@ -35,10 +35,12 @@ export default function ModalCategorias(): React.JSX.Element | null {
       }
 
       const data = await response.json();
-      setCategorias(data || []);
+      // API retorna { items: [], total: 0 }, não um array direto
+      setCategorias(Array.isArray(data) ? data : (data.items || []));
     } catch (err) {
       console.error('Erro ao carregar categorias:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao carregar categorias' });
+      setCategorias([]); // Garantir que seja array mesmo em caso de erro
     } finally {
       setLoading(false);
     }
@@ -283,7 +285,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
           {/* Lista de categorias */}
           <div className="space-y-2">
             <h3 className="font-semibold mb-3 text-[#333] flex items-center gap-2">
-              Categorias Existentes ({categorias.length})
+              Categorias Existentes ({Array.isArray(categorias) ? categorias.length : 0})
               {loading && <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#DB1472] border-t-transparent"></div>}
             </h3>
             
@@ -297,7 +299,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 Nenhuma categoria cadastrada ainda.
               </div>
             ) : (
-              categorias.map((cat) => renderCategoria(cat))
+              Array.isArray(categorias) && categorias.map((cat) => renderCategoria(cat))
             )}
           </div>
         </div>
