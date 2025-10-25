@@ -81,15 +81,14 @@ COMMENT ON INDEX idx_produtos_franqueadas_precos_produto_franqueada_id IS 'Índi
 -- TABELA: categorias
 -- ============================================================================
 
--- Índice para hierarquia de categorias
-CREATE INDEX IF NOT EXISTS idx_categorias_pai_id ON categorias(pai_id) 
-WHERE pai_id IS NOT NULL;
-
--- Índice para busca por nome (usado em autocomplete)
+-- Índice para busca por nome (usado em autocomplete e listagem)
 CREATE INDEX IF NOT EXISTS idx_categorias_nome ON categorias(nome);
 
-COMMENT ON INDEX idx_categorias_pai_id IS 'Índice para navegação em hierarquia de categorias';
+-- Índice para busca por slug (usado em URLs amigáveis)
+CREATE INDEX IF NOT EXISTS idx_categorias_slug ON categorias(slug);
+
 COMMENT ON INDEX idx_categorias_nome IS 'Índice para busca e ordenação por nome de categoria';
+COMMENT ON INDEX idx_categorias_slug IS 'Índice para busca rápida por slug de categoria';
 
 -- ============================================================================
 -- TABELA: produto_categorias (junção)
