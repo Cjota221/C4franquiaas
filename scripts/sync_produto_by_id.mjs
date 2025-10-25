@@ -1,7 +1,31 @@
 #!/usr/bin/env node
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import minimist from 'minimist';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Carregar variáveis de ambiente
+const envPath = join(__dirname, '..', '.env.local');
+try {
+  const envFile = readFileSync(envPath, 'utf8');
+  const lines = envFile.split('\n');
+  
+  lines.forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    const value = valueParts.join('=').trim();
+    
+    if (key && value) {
+      process.env[key.trim()] = value;
+    }
+  });
+} catch (error) {
+  console.error('❌ Erro ao ler .env.local:', error.message);
+}
 
 const argv = minimist(process.argv.slice(2));
 
@@ -87,10 +111,11 @@ async function run() {
     const v = variacoes[i];
     const id = (v && (v.id ?? v.codigo)) ? String(v.id ?? v.codigo) : null;
     const sku = v && v.sku ? String(v.sku) : null;
+    const nome = v && v.nome ? String(v.nome) : (v && v.name ? String(v.name) : null);
     const est = normalizeEstoque(v && v.estoque ? v.estoque : null);
     estoqueTotal += est;
     const barcode = extractBarcode(v || {});
-    variacoes_meta.push({ id, sku, estoque: est, codigo_barras: barcode });
+    variacoes_meta.push({ id, sku, nome, estoque: est, codigo_barras: barcode });
   }
   if (variacoes.length === 0) estoqueTotal = normalizeEstoque(produto.estoque);
 
@@ -102,9 +127,14 @@ async function run() {
     return;
   }
 
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required to apply');
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('❌ Variáveis necessárias:');
+    console.error('   NEXT_PUBLIC_SUPABASE_URL:', SUPABASE_URL ? '✅' : '❌');
+    console.error('   SUPABASE_SERVICE_ROLE_KEY:', SUPABASE_KEY ? '✅' : '❌');
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required to apply');
+  }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   const updates = { variacoes_meta: variacoes_meta, estoque: estoqueTotal };
