@@ -61,8 +61,26 @@ function normalizeToProxy(u: string): string {
   if (!u) return u;
   let s = String(u).trim();
 
+  // ✅ Se JÁ tiver proxy Netlify completo, retornar sem modificar
   if (s.includes('cjotarasteirinhas.com.br/.netlify/functions/proxy-facilzap-image') ||
-      s.includes('c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image')) return s;
+      s.includes('c4franquiaas.netlify.app/.netlify/functions/proxy-facilzap-image')) {
+    console.log('[normalizeToProxy] URL já tem proxy completo, mantendo');
+    return s;
+  }
+
+  // ✅ Se tiver parâmetros duplicados, limpar
+  if (s.includes('proxy-facilzap-image?') && s.includes('facilzap=') && s.includes('url=')) {
+    console.warn('[normalizeToProxy] Detectado proxy com parâmetros duplicados, limpando...');
+    try {
+      const urlMatch = s.match(/[?&]url=([^&]+)/);
+      if (urlMatch) {
+        s = decodeURIComponent(urlMatch[1]);
+        console.log('[normalizeToProxy] URL limpa extraída:', s);
+      }
+    } catch (e) {
+      console.error('[normalizeToProxy] Erro ao limpar URL:', e);
+    }
+  }
 
   try {
     const d = decodeURIComponent(s);
@@ -82,10 +100,10 @@ function normalizeToProxy(u: string): string {
   s = s.replace('://produtos/', '://arquivos.facilzap.app.br/produtos/');
   s = s.replace(/^http:/i, 'https:');
 
-  const facilzapParam = encodeURIComponent(s);
+  // ✅ CORREÇÃO CRÍTICA: Usar apenas parâmetro 'url=' (sem 'facilzap=')
   const urlParam = encodeURIComponent(s);
   const PROXY_HOST = 'https://c4franquiaas.netlify.app';
-  return `${PROXY_HOST}/.netlify/functions/proxy-facilzap-image?facilzap=${facilzapParam}&url=${urlParam}`;
+  return `${PROXY_HOST}/.netlify/functions/proxy-facilzap-image?url=${urlParam}`;
 }
 
 function asString(v?: unknown): string | undefined {

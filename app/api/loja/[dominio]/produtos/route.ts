@@ -136,13 +136,38 @@ export async function GET(
           
           console.log('[processarImagem] INPUT:', url);
           
-          // ✅ CORREÇÃO: Se JÁ for URL com proxy, retornar sem modificar
+          // ✅ CORREÇÃO CRÍTICA: Se JÁ for URL com proxy Netlify COMPLETO, retornar sem modificar
           if (url.includes('/.netlify/functions/proxy-facilzap-image')) {
-            console.log('[processarImagem] URL já tem proxy, retornando sem modificar');
+            console.log('[processarImagem] URL já tem proxy Netlify completo, retornando sem modificar');
             return url;
           }
           
-          // Se for URL com proxy no formato antigo (query string), extrair URL real
+          // ✅ NOVA CORREÇÃO: Se tiver parâmetros duplicados (facilzap= E url=), extrair URL limpa
+          if (url.includes('proxy-facilzap-image?') && url.includes('facilzap=') && url.includes('url=')) {
+            console.warn('[processarImagem] ⚠️ Detectado proxy com parâmetros duplicados, limpando...');
+            try {
+              // Priorizar parâmetro 'url' que tem a URL correta
+              const urlMatch = url.match(/[?&]url=([^&]+)/);
+              if (urlMatch) {
+                const decoded = decodeURIComponent(urlMatch[1]);
+                console.log('[processarImagem] URL limpa extraída:', decoded);
+                
+                // Se for desenvolvimento, retornar URL real
+                if (isDev) {
+                  return decoded;
+                }
+                
+                // Em produção, criar proxy limpo
+                const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(decoded)}`;
+                console.log('[processarImagem] Proxy limpo criado:', proxyUrl);
+                return proxyUrl;
+              }
+            } catch (e) {
+              console.error('[processarImagem] Erro ao limpar URL duplicada:', url, e);
+            }
+          }
+          
+          // Se for URL com proxy antigo (só query string), extrair URL real
           if (url.includes('proxy-facilzap-image?url=') || url.includes('proxy-facilzap-image?facilzap=')) {
             try {
               // Extrair a URL real do parâmetro
