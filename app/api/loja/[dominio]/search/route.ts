@@ -51,14 +51,10 @@ export async function GET(
         id,
         nome,
         preco_base,
-        preco_venda,
         imagem,
         imagens,
         codigo_barras,
-        categoria_id,
-        categorias (
-          nome
-        )
+        categoria_id
       `)
       .eq('ativo', true)
       .or(`nome.ilike.%${query}%,codigo_barras.ilike.%${query}%`)
@@ -75,16 +71,11 @@ export async function GET(
 
     // Formata os resultados para o autocomplete
     const suggestions = (produtos || []).map((p) => {
-      const categoria = Array.isArray(p.categorias) && p.categorias.length > 0 
-        ? p.categorias[0]?.nome 
-        : null;
-      
       return {
         id: p.id,
         nome: p.nome,
-        preco: p.preco_venda || p.preco_base,
+        preco: p.preco_base,
         imagem: p.imagem || (Array.isArray(p.imagens) && p.imagens[0]) || null,
-        categoria,
         codigo_barras: p.codigo_barras || null
       };
     });
