@@ -146,7 +146,7 @@ export default function ProdutoDetalhePage() {
         tamanho: variacaoSelecionada?.tamanho,
         nome: produto.nome,
         preco: produto.preco_final,
-        imagem: produto.imagens[0] || produto.imagem,
+        imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
         quantidade: 1
       });
     }
@@ -174,12 +174,12 @@ export default function ProdutoDetalhePage() {
   };
 
   const proximaImagem = () => {
-    if (!produto) return;
+    if (!produto || !produto.imagens || produto.imagens.length === 0) return;
     setImagemAtual((prev) => (prev + 1) % produto.imagens.length);
   };
 
   const imagemAnterior = () => {
-    if (!produto) return;
+    if (!produto || !produto.imagens || produto.imagens.length === 0) return;
     setImagemAtual((prev) => (prev - 1 + produto.imagens.length) % produto.imagens.length);
   };
 
@@ -241,10 +241,10 @@ export default function ProdutoDetalhePage() {
           {/* Galeria de Imagens */}
           <div className="space-y-4">
             <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-xl">
-              {produto.imagens.length > 0 ? (
+              {produto.imagens && produto.imagens.length > 0 ? (
                 <>
                   <Image
-                    src={produto.imagens[imagemAtual]}
+                    src={produto.imagens[imagemAtual] || produto.imagem || 'https://placehold.co/800x800/e5e7eb/9ca3af?text=Sem+Imagem'}
                     alt={produto.nome}
                     fill
                     className="object-cover"
@@ -307,7 +307,7 @@ export default function ProdutoDetalhePage() {
             </div>
 
             {/* Miniaturas */}
-            {produto.imagens.length > 1 && (
+            {produto.imagens && produto.imagens.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {produto.imagens.map((img, idx) => (
                   <button

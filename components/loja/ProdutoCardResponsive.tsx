@@ -1,9 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
-import { ShoppingCart, Check, Package as PackageIcon } from 'lucide-react';
+import { ShoppingCart, Package as PackageIcon } from 'lucide-react';
 
 type Produto = {
   id: string;
@@ -22,30 +21,9 @@ export default function ProdutoCardResponsive({
   dominio: string;
   corPrimaria: string;
 }) {
-  const addItem = useCarrinhoStore((state) => state.addItem);
-  const [adicionado, setAdicionado] = useState(false);
-
-  function handleAddToCart(e: React.MouseEvent) {
-    e.preventDefault();
-    
-    if (produto.estoque === 0) return;
-    
-    addItem({
-      id: produto.id,
-      nome: produto.nome,
-      preco: produto.preco_final,
-      quantidade: 1,
-      imagem: produto.imagem || '',
-      estoque: produto.estoque
-    });
-    
-    setAdicionado(true);
-    setTimeout(() => setAdicionado(false), 2000);
-  }
-
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-      <Link href={`/loja/${dominio}/produtos/${produto.id}`}>
+      <Link href={`/loja/${dominio}/produto/${produto.id}`}>
         <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100">
           {produto.imagem ? (
             <Image
@@ -84,7 +62,7 @@ export default function ProdutoCardResponsive({
           padding: 'clamp(12px, 3vw, 16px)',
         }}
       >
-        <Link href={`/loja/${dominio}/produtos/${produto.id}`}>
+        <Link href={`/loja/${dominio}/produto/${produto.id}`}>
           <h3 
             className="font-semibold mb-2 hover:underline line-clamp-2"
             style={{
@@ -118,30 +96,23 @@ export default function ProdutoCardResponsive({
           )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={produto.estoque === 0}
-          className="w-full rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
+        {/* ⭐ BOTÃO AGORA REDIRECIONA PARA A PÁGINA DO PRODUTO ⭐ */}
+        <Link
+          href={`/loja/${dominio}/produto/${produto.id}`}
+          className="w-full rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 block text-center"
           style={{
-            backgroundColor: adicionado ? '#10b981' : (produto.estoque === 0 ? '#d1d5db' : corPrimaria),
+            backgroundColor: produto.estoque === 0 ? '#d1d5db' : corPrimaria,
             color: 'white',
             padding: 'clamp(10px, 2.5vw, 12px)',
             fontSize: 'clamp(13px, 3vw, 15px)',
-            minHeight: '44px', // Alvo de toque mínimo
+            minHeight: '44px',
+            pointerEvents: produto.estoque === 0 ? 'none' : 'auto',
+            opacity: produto.estoque === 0 ? 0.5 : 1,
           }}
         >
-          {adicionado ? (
-            <>
-              <Check size={18} />
-              <span>Adicionado!</span>
-            </>
-          ) : (
-            <>
-              <ShoppingCart size={18} />
-              <span>{produto.estoque === 0 ? 'Indisponível' : 'Adicionar'}</span>
-            </>
-          )}
-        </button>
+          <ShoppingCart size={18} />
+          <span>{produto.estoque === 0 ? 'Indisponível' : 'Ver Detalhes'}</span>
+        </Link>
       </div>
     </div>
   );
