@@ -103,6 +103,9 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
         </div>
       </section>
 
+      {/* Banner de Confiança - Logo após Categorias */}
+      <TrustIcons />
+
       {/* Produtos em Destaque */}
       <section className="py-fluid-xl bg-gray-50">
         <div className="container-fluid">
@@ -152,13 +155,6 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
               Em todo o Brasil
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Ícones de Confiança */}
-      <section className="py-fluid-xl bg-white">
-        <div className="container-fluid">
-          <TrustIcons />
         </div>
       </section>
     </div>
