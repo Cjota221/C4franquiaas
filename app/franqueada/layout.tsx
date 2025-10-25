@@ -82,7 +82,7 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen bg-gray-50">
       <SidebarFranqueada franqueadaNome={franqueadaNome} />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto pt-16 lg:pt-0">
         {children}
       </main>
       <Toaster position="top-right" richColors />

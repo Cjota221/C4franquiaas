@@ -340,14 +340,15 @@ export default function LojaPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Store className="text-pink-600" size={36} />
-          Customização Avançada da Loja
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 md:gap-3">
+          <Store className="text-pink-600" size={28} />
+          <span className="hidden sm:inline">Customização Avançada da Loja</span>
+          <span className="sm:hidden">Minha Loja</span>
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-sm md:text-base text-gray-600 mt-2">
           {loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender!'}
         </p>
       </div>

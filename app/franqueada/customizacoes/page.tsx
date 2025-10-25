@@ -10,21 +10,21 @@ import CustomizacoesAvancado from '@/components/franqueada/customizacoes/Customi
 
 export default function CustomizacoesPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Customizações Avançadas</h1>
-        <p className="text-gray-600">Personalize completamente a aparência e funcionalidades da sua loja</p>
+    <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Customizações Avançadas</h1>
+        <p className="text-sm md:text-base text-gray-600">Personalize completamente a aparência e funcionalidades da sua loja</p>
       </div>
 
       <Tabs defaultValue="header" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 lg:w-auto">
-          <TabsTrigger value="header">Header e Menu</TabsTrigger>
-          <TabsTrigger value="home">Página Inicial</TabsTrigger>
-          <TabsTrigger value="produtos">Produtos</TabsTrigger>
-          <TabsTrigger value="carrinho">Carrinho</TabsTrigger>
-          <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
-          <TabsTrigger value="promocoes">Promoções</TabsTrigger>
-          <TabsTrigger value="avancado">Avançado</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 lg:w-auto h-auto">
+          <TabsTrigger value="header" className="text-xs sm:text-sm">Header e Menu</TabsTrigger>
+          <TabsTrigger value="home" className="text-xs sm:text-sm">Página Inicial</TabsTrigger>
+          <TabsTrigger value="produtos" className="text-xs sm:text-sm">Produtos</TabsTrigger>
+          <TabsTrigger value="carrinho" className="text-xs sm:text-sm">Carrinho</TabsTrigger>
+          <TabsTrigger value="comunicacao" className="text-xs sm:text-sm">Comunicação</TabsTrigger>
+          <TabsTrigger value="promocoes" className="text-xs sm:text-sm">Promoções</TabsTrigger>
+          <TabsTrigger value="avancado" className="text-xs sm:text-sm">Avançado</TabsTrigger>
         </TabsList>
 
         <TabsContent value="header">

@@ -374,11 +374,11 @@ export default function FranqueadaProdutosPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Cabeçalho */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-2">💎 Meus Produtos</h1>
-        <p className="text-gray-600">Gerencie preços e disponibilidade dos produtos</p>
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">💎 Meus Produtos</h1>
+        <p className="text-sm md:text-base text-gray-600">Gerencie preços e disponibilidade dos produtos</p>
       </div>
 
       {/* Busca */}

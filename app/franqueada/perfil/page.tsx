@@ -71,11 +71,11 @@ export default function FranqueadaPerfilPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Cabeçalho */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-2">👤 Meu Perfil</h1>
-        <p className="text-gray-600">Informações da sua conta</p>
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">👤 Meu Perfil</h1>
+        <p className="text-sm md:text-base text-gray-600">Informações da sua conta</p>
       </div>
 
       {/* Card de Perfil */}
