@@ -168,7 +168,8 @@ function ProdutoDetalheContent() {
 
   const compartilhar = async () => {
     const url = window.location.href;
-    const texto = `Confira: ${produto?.nome} - R$ ${produto?.preco_final.toFixed(2)}`;
+    const preco = typeof produto?.preco_final === 'number' ? produto.preco_final.toFixed(2) : '0.00';
+    const texto = `Confira: ${produto?.nome} - R$ ${preco}`;
     
     if (navigator.share) {
       try {
@@ -411,7 +412,7 @@ function ProdutoDetalheContent() {
               {produto.preco_venda && produto.preco_venda < produto.preco_base && (
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg text-gray-500 line-through">
-                    De R$ {produto.preco_base.toFixed(2)}
+                    De R$ {typeof produto.preco_base === 'number' ? produto.preco_base.toFixed(2) : '0.00'}
                   </span>
                   <span className="text-sm font-bold text-white bg-green-500 px-3 py-1 rounded-full">
                     -{Math.round((1 - produto.preco_venda / produto.preco_base) * 100)}% OFF
@@ -421,14 +422,14 @@ function ProdutoDetalheContent() {
               
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="text-5xl font-extrabold" style={{ color: corPrimaria }}>
-                  R$ {produto.preco_final.toFixed(2)}
+                  R$ {typeof produto.preco_final === 'number' ? produto.preco_final.toFixed(2) : '0.00'}
                 </span>
                 <span className="text-gray-500 text-lg">à vista</span>
               </div>
 
               <div className="text-base text-gray-700 bg-gray-50 px-4 py-2 rounded-lg">
                 ou <span className="font-bold text-gray-900">
-                  {produto.parcelamento.parcelas}x de R$ {produto.parcelamento.valor.toFixed(2)}
+                  {produto.parcelamento?.parcelas || 0}x de R$ {typeof produto.parcelamento?.valor === 'number' ? produto.parcelamento.valor.toFixed(2) : '0.00'}
                 </span> sem juros
               </div>
             </div>
@@ -628,7 +629,7 @@ function ProdutoDetalheContent() {
                     skuSelecionado 
                       ? `\nTamanho: ${produto.variacoes?.find(v => v.sku === skuSelecionado)?.tamanho}`
                       : ''
-                  }\nR$ ${produto.preco_final.toFixed(2)}`
+                  }\nR$ ${typeof produto.preco_final === 'number' ? produto.preco_final.toFixed(2) : '0.00'}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
