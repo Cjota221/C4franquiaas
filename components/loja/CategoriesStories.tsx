@@ -69,11 +69,11 @@ export default function CategoriesStories() {
         .categories-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: clamp(16px, 4vw, 32px);
+          gap: clamp(8px, 2.5vw, 32px);
           justify-items: center;
           max-width: 100%;
           margin: 0 auto;
-          padding: 0 12px;
+          padding: 0 16px;
         }
 
         /* Item de categoria */
@@ -95,10 +95,10 @@ export default function CategoriesStories() {
           transform: scale(0.95);
         }
 
-        /* Bolinha circular - tamanho aumentado */
+        /* Bolinha circular - tamanho ajustado para mobile */
         .category-circle {
-          width: clamp(75px, 20vw, 110px);
-          height: clamp(75px, 20vw, 110px);
+          width: clamp(70px, 18vw, 110px);
+          height: clamp(70px, 18vw, 110px);
           border-radius: 9999px;
           overflow: hidden;
           border-width: 3px;
@@ -116,8 +116,8 @@ export default function CategoriesStories() {
 
         /* Label - texto maior e centralizado */
         .category-label {
-          margin-top: clamp(8px, 2.5vw, 12px);
-          font-size: clamp(0.8rem, 3vw, 0.95rem);
+          margin-top: clamp(6px, 2vw, 12px);
+          font-size: clamp(0.75rem, 2.8vw, 0.95rem);
           font-weight: 600;
           line-height: 1.3;
           word-wrap: break-word;
@@ -129,13 +129,18 @@ export default function CategoriesStories() {
         /* Responsivo para telas muito pequenas */
         @media (max-width: 360px) {
           .categories-grid {
-            gap: 10px;
-            padding: 0 8px;
+            gap: 6px;
+            padding: 0 12px;
           }
           
+          .category-circle {
+            width: clamp(65px, 17vw, 75px);
+            height: clamp(65px, 17vw, 75px);
+          }
+
           .category-label {
             font-size: 0.7rem;
-            margin-top: 6px;
+            margin-top: 5px;
           }
         }
 
