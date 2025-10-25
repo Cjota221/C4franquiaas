@@ -114,7 +114,7 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
       )}
 
       {/* Header Mobile */}
-      <header className="bg-white shadow-md md:hidden">
+      <header className="sticky top-0 z-50 bg-white shadow-md md:hidden">
         {/* Linha 1: Menu + Logo + Carrinho */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           {/* Menu Hambúrguer - MAIOR */}
