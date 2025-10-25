@@ -3,13 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { useCategoriaStore } from '@/lib/store/categoriaStore';
 import { useStatusStore } from '@/lib/store/statusStore';
-import { supabase } from '@/lib/supabaseClient';
 
 type Categoria = {
-  id: number;
+  id: string;
   nome: string;
-  pai_id: number | null;
-  subcategorias?: Categoria[];
+  slug: string;
+  descricao: string | null;
 };
 
 export default function ModalCategorias(): React.JSX.Element | null {
@@ -20,43 +19,23 @@ export default function ModalCategorias(): React.JSX.Element | null {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(false);
   const [novaCategoria, setNovaCategoria] = useState('');
-  const [novaSubcategoria, setNovaSubcategoria] = useState('');
-  const [paiSelecionado, setPaiSelecionado] = useState<number | null>(null);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [novaDescricao, setNovaDescricao] = useState('');
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editandoNome, setEditandoNome] = useState('');
+  const [editandoDescricao, setEditandoDescricao] = useState('');
 
   // Carregar categorias
   const carregarCategorias = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('categorias')
-        .select('*')
-        .order('nome', { ascending: true });
+      const response = await fetch('/api/admin/categorias/list');
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar categorias');
+      }
 
-      if (error) throw error;
-
-      // Organizar em árvore (pai -> filhos)
-      const categoriasMap = new Map<number, Categoria>();
-      const raizes: Categoria[] = [];
-
-      (data || []).forEach((cat) => {
-        categoriasMap.set(cat.id, { ...cat, subcategorias: [] });
-      });
-
-      categoriasMap.forEach((cat) => {
-        if (cat.pai_id === null) {
-          raizes.push(cat);
-        } else {
-          const pai = categoriasMap.get(cat.pai_id);
-          if (pai) {
-            pai.subcategorias = pai.subcategorias || [];
-            pai.subcategorias.push(cat);
-          }
-        }
-      });
-
-      setCategorias(raizes);
+      const data = await response.json();
+      setCategorias(data || []);
     } catch (err) {
       console.error('Erro ao carregar categorias:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao carregar categorias' });
@@ -72,37 +51,33 @@ export default function ModalCategorias(): React.JSX.Element | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoriaPanelOpen]);
 
-  // Criar categoria ou subcategoria
+  // Criar categoria
   const handleCriar = async () => {
-    const nome = paiSelecionado ? novaSubcategoria : novaCategoria;
-    if (!nome.trim()) {
-      setStatusMsg({ type: 'error', text: 'Digite um nome' });
+    if (!novaCategoria.trim()) {
+      setStatusMsg({ type: 'error', text: 'Digite um nome para a categoria' });
       return;
     }
 
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('categorias')
-        .insert({ nome: nome.trim(), pai_id: paiSelecionado });
+      const response = await fetch('/api/admin/categorias/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          nome: novaCategoria.trim(),
+          descricao: novaDescricao.trim() || null
+        })
+      });
 
-      if (error) {
-        console.error('Erro do Supabase ao criar categoria:', error);
-        
-        // Mensagens específicas para erros comuns
-        if (error.message.includes('relation') && error.message.includes('does not exist')) {
-          throw new Error('A tabela de categorias não existe. Por favor, execute a migração do banco de dados.');
-        } else if (error.message.includes('permission denied')) {
-          throw new Error('Sem permissão para criar categorias. Verifique as configurações de RLS no Supabase.');
-        } else {
-          throw error;
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao criar categoria');
       }
 
-      setStatusMsg({ type: 'success', text: `${paiSelecionado ? 'Subcategoria' : 'Categoria'} criada com sucesso` });
+      setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
       setNovaCategoria('');
-      setNovaSubcategoria('');
-      setPaiSelecionado(null);
+      setNovaDescricao('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao criar categoria:', err);
@@ -116,7 +91,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
   };
 
   // Editar categoria
-  const handleEditar = async (id: number) => {
+  const handleEditar = async (id: string) => {
     if (!editandoNome.trim()) {
       setStatusMsg({ type: 'error', text: 'Digite um nome' });
       return;
@@ -124,111 +99,136 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('categorias')
-        .update({ nome: editandoNome.trim() })
-        .eq('id', id);
+      const response = await fetch('/api/admin/categorias/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          id,
+          nome: editandoNome.trim(),
+          descricao: editandoDescricao.trim() || null
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao atualizar categoria');
+      }
 
       setStatusMsg({ type: 'success', text: 'Categoria atualizada' });
       setEditandoId(null);
       setEditandoNome('');
+      setEditandoDescricao('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao editar:', err);
-      setStatusMsg({ type: 'error', text: 'Erro ao editar categoria' });
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Erro desconhecido ao editar categoria';
+      setStatusMsg({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
   // Deletar categoria
-  const handleDeletar = async (id: number) => {
-    if (!confirm('Tem certeza? Isso também removerá as subcategorias.')) return;
+  const handleDeletar = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover esta categoria?')) return;
 
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('categorias')
-        .delete()
-        .eq('id', id);
+      const response = await fetch('/api/admin/categorias/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          id
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao deletar categoria');
+      }
 
       setStatusMsg({ type: 'success', text: 'Categoria removida' });
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao deletar:', err);
-      setStatusMsg({ type: 'error', text: 'Erro ao remover categoria' });
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Erro desconhecido ao deletar categoria';
+      setStatusMsg({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  const renderCategoria = (cat: Categoria, nivel = 0) => (
-    <div key={cat.id} className={`${nivel > 0 ? 'ml-6 border-l-2 border-gray-200 pl-4' : ''} mb-2`}>
+  const renderCategoria = (cat: Categoria) => (
+    <div key={cat.id} className="mb-2">
       {editandoId === cat.id ? (
-        <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
+        <div className="flex flex-col gap-2 bg-blue-50 p-3 rounded">
           <input
             type="text"
             value={editandoNome}
             onChange={(e) => setEditandoNome(e.target.value)}
-            className="flex-1 px-2 py-1 border rounded"
+            placeholder="Nome da categoria"
+            className="px-3 py-2 border rounded"
             autoFocus
           />
-          <button
-            onClick={() => handleEditar(cat.id)}
-            className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-          >
-            ✓
-          </button>
-          <button
-            onClick={() => {
-              setEditandoId(null);
-              setEditandoNome('');
-            }}
-            className="px-3 py-1 bg-gray-300 rounded text-sm hover:bg-gray-400"
-          >
-            ✕
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between bg-gray-50 p-2 rounded hover:bg-gray-100 transition-colors">
-          <span className="font-medium">{cat.nome}</span>
-          <div className="flex items-center gap-2">
+          <textarea
+            value={editandoDescricao}
+            onChange={(e) => setEditandoDescricao(e.target.value)}
+            placeholder="Descrição (opcional)"
+            className="px-3 py-2 border rounded resize-none"
+            rows={2}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleEditar(cat.id)}
+              className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 flex-1"
+            >
+              ✓ Salvar
+            </button>
             <button
               onClick={() => {
-                setPaiSelecionado(cat.id);
-                setNovaSubcategoria('');
+                setEditandoId(null);
+                setEditandoNome('');
+                setEditandoDescricao('');
               }}
-              className="px-2 py-1 bg-[#F8B81F] text-[#333] rounded text-xs hover:bg-[#F8B81F]/80 font-medium"
-              title="Adicionar subcategoria"
+              className="px-4 py-2 bg-gray-300 rounded text-sm hover:bg-gray-400"
             >
-              + Sub
+              ✕ Cancelar
             </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start justify-between bg-gray-50 p-3 rounded hover:bg-gray-100 transition-colors">
+          <div className="flex-1">
+            <div className="font-medium text-gray-900">{cat.nome}</div>
+            <div className="text-sm text-gray-500">Slug: {cat.slug}</div>
+            {cat.descricao && (
+              <div className="text-sm text-gray-600 mt-1">{cat.descricao}</div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setEditandoId(cat.id);
                 setEditandoNome(cat.nome);
+                setEditandoDescricao(cat.descricao || '');
               }}
-              className="px-2 py-1 bg-[#DB1472] text-white rounded text-xs hover:bg-[#DB1472]/90"
+              className="px-3 py-1 bg-[#DB1472] text-white rounded text-xs hover:bg-[#DB1472]/90"
             >
               Editar
             </button>
             <button
               onClick={() => handleDeletar(cat.id)}
-              className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+              className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
             >
               Deletar
             </button>
           </div>
-        </div>
-      )}
-      
-      {cat.subcategorias && cat.subcategorias.length > 0 && (
-        <div className="mt-2">
-          {cat.subcategorias.map((sub) => renderCategoria(sub, nivel + 1))}
         </div>
       )}
     </div>
@@ -254,64 +254,36 @@ export default function ModalCategorias(): React.JSX.Element | null {
           {/* Criar nova categoria */}
           <div className="mb-6 p-4 bg-[#F8B81F]/10 rounded-lg border border-[#F8B81F]/30">
             <h3 className="font-semibold mb-3 text-[#333]">Nova Categoria</h3>
-            <div className="flex gap-2">
+            <div className="space-y-2">
               <input
                 type="text"
-                placeholder="Nome da categoria..."
+                placeholder="Nome da categoria (ex: Rasteirinhas)"
                 value={novaCategoria}
                 onChange={(e) => setNovaCategoria(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCriar()}
-                className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleCriar()}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
+              />
+              <textarea
+                placeholder="Descrição (opcional)"
+                value={novaDescricao}
+                onChange={(e) => setNovaDescricao(e.target.value)}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] resize-none"
+                rows={2}
               />
               <button
                 onClick={handleCriar}
                 disabled={loading || !novaCategoria.trim()}
-                className="px-6 py-2 bg-[#DB1472] text-white rounded hover:bg-[#DB1472]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                className="w-full px-6 py-2 bg-[#DB1472] text-white rounded hover:bg-[#DB1472]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                Criar
+                {loading ? 'Criando...' : 'Criar Categoria'}
               </button>
             </div>
           </div>
 
-          {/* Criar subcategoria */}
-          {paiSelecionado !== null && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold mb-3 text-[#333]">
-                Nova Subcategoria de: <span className="text-[#DB1472]">{categorias.find(c => c.id === paiSelecionado)?.nome}</span>
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Nome da subcategoria..."
-                  value={novaSubcategoria}
-                  onChange={(e) => setNovaSubcategoria(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCriar()}
-                  className="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
-                />
-                <button
-                  onClick={handleCriar}
-                  disabled={loading || !novaSubcategoria.trim()}
-                  className="px-6 py-2 bg-[#F8B81F] text-[#333] rounded hover:bg-[#F8B81F]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  Criar
-                </button>
-                <button
-                  onClick={() => {
-                    setPaiSelecionado(null);
-                    setNovaSubcategoria('');
-                  }}
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Lista de categorias */}
           <div className="space-y-2">
             <h3 className="font-semibold mb-3 text-[#333] flex items-center gap-2">
-              Categorias Existentes
+              Categorias Existentes ({categorias.length})
               {loading && <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#DB1472] border-t-transparent"></div>}
             </h3>
             

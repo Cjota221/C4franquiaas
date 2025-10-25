@@ -13,6 +13,7 @@ export async function GET(
     const produtoId = searchParams.get('id'); // Para buscar produto específico
     const q = searchParams.get('q') || '';
     const categoriaId = searchParams.get('categoriaId');
+    const categoriaSlug = searchParams.get('categoria');
     const destaques = searchParams.get('destaques') === 'true';
 
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -44,6 +45,21 @@ export async function GET(
     }
 
     console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
+
+    // Buscar categoria_id pelo slug se fornecido
+    let categoriaIdFinal = categoriaId;
+    if (categoriaSlug && !categoriaId) {
+      const { data: categoria } = await supabase
+        .from('categorias')
+        .select('id')
+        .eq('slug', categoriaSlug)
+        .single();
+      
+      if (categoria) {
+        categoriaIdFinal = categoria.id;
+        console.log(`[API loja/produtos] Categoria '${categoriaSlug}' -> ID: ${categoriaIdFinal}`);
+      }
+    }
 
     // Construir query base
     let query = supabase
@@ -276,8 +292,8 @@ export async function GET(
         if (q && !p.nome.toLowerCase().includes(q.toLowerCase())) {
           return false;
         }
-        // Filtro de categoria
-        if (categoriaId && p.categoria_id !== categoriaId) {
+        // Filtro de categoria (por ID ou slug convertido)
+        if (categoriaIdFinal && p.categoria_id !== categoriaIdFinal) {
           return false;
         }
         // Remover filtro de destaques pois não existe a coluna

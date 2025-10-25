@@ -2,18 +2,39 @@
 import { useLojaInfo } from '@/contexts/LojaContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
-const categorias = [
-  { nome: 'Rasteirinha', imagem: 'https://placehold.co/120x120/ec4899/ffffff?text=Rasteirinha' },
-  { nome: 'Salto', imagem: 'https://placehold.co/120x120/8b5cf6/ffffff?text=Salto' },
-  { nome: 'Papete/Flat', imagem: 'https://placehold.co/120x120/06b6d4/ffffff?text=Papete' },
-  { nome: 'Bolsa', imagem: 'https://placehold.co/120x120/f59e0b/ffffff?text=Bolsa' },
-];
+interface Categoria {
+  id: string;
+  nome: string;
+  slug: string;
+  descricao: string;
+  imagem: string;
+}
 
 export default function CategoriesStories() {
   const loja = useLojaInfo();
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
-  if (!loja) return null;
+  useEffect(() => {
+    if (!loja) return;
+
+    const fetchCategorias = async () => {
+      try {
+        const response = await fetch(`/api/loja/${loja.dominio}/categorias`);
+        if (response.ok) {
+          const data = await response.json();
+          setCategorias(data);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+      }
+    };
+
+    fetchCategorias();
+  }, [loja]);
+
+  if (!loja || categorias.length === 0) return null;
 
   const corPrimaria = loja.cor_primaria || '#DB1472';
   const corTexto = loja.cor_texto || '#1F2937';
@@ -33,10 +54,10 @@ export default function CategoriesStories() {
         
         {/* Grid Único para Mobile e Desktop - 1 linha */}
         <div className="categories-grid">
-          {categorias.map((cat, i) => (
+          {categorias.map((cat) => (
             <Link 
-              key={i}
-              href={`/loja/${loja.dominio}/produtos?categoria=${cat.nome.toLowerCase()}`}
+              key={cat.id}
+              href={`/loja/${loja.dominio}/produtos?categoria=${cat.slug}`}
               className="category-item"
             >
               <div 
