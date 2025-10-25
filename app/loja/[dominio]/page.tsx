@@ -78,39 +78,39 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
           priority
         />
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+          <div className="text-center text-white px-fluid-md">
+            <h1 className="heading-hero mb-4 drop-shadow-lg">
               Coleção 2025
             </h1>
-            <p className="text-xl md:text-2xl mb-8 drop-shadow-md">
+            <p className="text-fluid-xl mb-8 drop-shadow-md">
               Os melhores cosméticos com preços especiais
             </p>
             <Link 
               href={`/loja/${dominio}/produtos`}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-pink-600 rounded-lg font-bold text-lg transition hover:bg-pink-50"
+              className="btn-responsive bg-white text-pink-600 hover:bg-pink-50"
             >
               Comprar Agora
-              <ArrowRight size={20} />
+              <ArrowRight size={20} className="ml-2" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Categorias em Stories */}
-      <section className="py-8 bg-white">
-        <div className="container mx-auto px-4">
+      <section className="py-fluid-lg bg-white">
+        <div className="container-fluid">
           <CategoriesStories />
         </div>
       </section>
 
       {/* Produtos em Destaque */}
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold">Produtos em Destaque</h2>
+      <section className="py-fluid-xl bg-gray-50">
+        <div className="container-fluid">
+          <div className="flex items-center justify-between mb-fluid-lg">
+            <h2 className="heading-section">Produtos em Destaque</h2>
             <Link 
               href={`/loja/${dominio}/produtos`}
-              className="text-pink-600 font-medium hover:text-pink-700 transition"
+              className="text-pink-600 font-medium hover:text-pink-700 transition text-fluid-base"
             >
               Ver todos →
             </Link>
@@ -121,7 +121,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
               <p className="text-gray-600 text-lg">Nenhum produto disponível no momento</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid-responsive">
               {produtos.slice(0, 8).map((produto) => (
                 <ProdutoCard 
                   key={produto.id} 
@@ -144,11 +144,11 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <h2 className="text-3xl md:text-5xl font-bold drop-shadow-lg">
+          <div className="text-center text-white px-fluid-md">
+            <h2 className="heading-section drop-shadow-lg">
               Frete Grátis acima de R$ 99
             </h2>
-            <p className="text-lg md:text-xl mt-4 drop-shadow-md">
+            <p className="text-fluid-lg mt-4 drop-shadow-md">
               Em todo o Brasil
             </p>
           </div>
@@ -156,8 +156,8 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
       </section>
 
       {/* Ícones de Confiança */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
+      <section className="py-fluid-xl bg-white">
+        <div className="container-fluid">
           <TrustIcons />
         </div>
       </section>

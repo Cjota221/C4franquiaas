@@ -137,7 +137,7 @@ export default function ProdutosPage() {
             <p className="text-sm text-gray-600 mb-4">
               {produtos.length} {produtos.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid-responsive">
               {produtos.map((produto) => (
                 <ProductCard
                   key={produto.id}
