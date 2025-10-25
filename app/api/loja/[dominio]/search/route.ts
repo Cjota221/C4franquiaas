@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import type { RouteContext } from 'next/dist/server/future/route-modules/route-module';
 
 /**
  * ============================================================================
@@ -16,12 +17,12 @@ import { supabase } from '@/lib/supabaseClient';
  */
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { dominio: string } }
+  request: NextRequest,
+  context: RouteContext<{ params: { dominio: string } }>
 ) {
   try {
-    const { dominio } = params;
-    const searchParams = req.nextUrl.searchParams;
+    const { dominio } = context.params;
+    const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
 
     // Se não houver query, retorna array vazio
