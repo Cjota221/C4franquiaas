@@ -69,11 +69,11 @@ export default function CategoriesStories() {
         .categories-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: clamp(12px, 3vw, 24px);
+          gap: clamp(16px, 4vw, 32px);
           justify-items: center;
-          max-width: 600px;
+          max-width: 100%;
           margin: 0 auto;
-          padding: 0 8px;
+          padding: 0 12px;
         }
 
         /* Item de categoria */
@@ -81,6 +81,7 @@ export default function CategoriesStories() {
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: flex-start;
           text-align: center;
           width: 100%;
           transition: transform 0.3s ease;
@@ -94,50 +95,65 @@ export default function CategoriesStories() {
           transform: scale(0.95);
         }
 
-        /* Bolinha circular - tamanho harmônico */
+        /* Bolinha circular - tamanho aumentado */
         .category-circle {
-          width: clamp(60px, 18vw, 100px);
-          height: clamp(60px, 18vw, 100px);
+          width: clamp(75px, 20vw, 110px);
+          height: clamp(75px, 20vw, 110px);
           border-radius: 9999px;
           overflow: hidden;
           border-width: 3px;
           border-style: solid;
           position: relative;
           transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+          flex-shrink: 0;
         }
 
         .category-item:hover .category-circle {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
           transform: scale(1.05);
         }
 
-        /* Label - texto harmônico */
+        /* Label - texto maior e centralizado */
         .category-label {
-          margin-top: clamp(6px, 2vw, 10px);
-          font-size: clamp(0.7rem, 2.5vw, 0.875rem);
-          font-weight: 500;
-          line-height: 1.2;
+          margin-top: clamp(8px, 2.5vw, 12px);
+          font-size: clamp(0.8rem, 3vw, 0.95rem);
+          font-weight: 600;
+          line-height: 1.3;
           word-wrap: break-word;
           max-width: 100%;
+          display: block;
+          text-align: center;
         }
 
         /* Responsivo para telas muito pequenas */
         @media (max-width: 360px) {
           .categories-grid {
-            gap: 8px;
+            gap: 10px;
+            padding: 0 8px;
           }
           
           .category-label {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
+            margin-top: 6px;
           }
         }
 
-        /* Desktop - maior espaçamento */
+        /* Desktop - maior espaçamento e tamanhos */
         @media (min-width: 768px) {
           .categories-grid {
-            max-width: 700px;
-            gap: 32px;
+            max-width: 800px;
+            gap: 40px;
+          }
+
+          .category-circle {
+            width: clamp(110px, 12vw, 140px);
+            height: clamp(110px, 12vw, 140px);
+          }
+
+          .category-label {
+            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+            margin-top: 14px;
           }
         }
       `}</style>
