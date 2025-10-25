@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import Image from 'next/image';
 import { ArrowLeft, Share2, Heart, ShoppingCart, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import ProductErrorBoundary from '@/components/loja/ProductErrorBoundary';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,14 @@ type Produto = {
 };
 
 export default function ProdutoDetalhePage() {
+  return (
+    <ProductErrorBoundary>
+      <ProdutoDetalheContent />
+    </ProductErrorBoundary>
+  );
+}
+
+function ProdutoDetalheContent() {
   const params = useParams();
   const router = useRouter();
   const loja = useLojaInfo();
@@ -186,14 +195,47 @@ export default function ProdutoDetalhePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Carregando produto...</p>
+        </div>
       </div>
     );
   }
 
   if (!produto || !loja) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+        <div className="text-center max-w-md">
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Produto não encontrado</h2>
+            <p className="text-gray-600 mb-6">
+              O produto que você está procurando não existe ou foi removido.
+            </p>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.history.back();
+                }
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Voltar para a loja
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
+
+  // Garantir que loja tem as propriedades necessárias
+  const corPrimaria = loja?.cor_primaria || '#DB1472';
+  const whatsapp = loja?.whatsapp || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
@@ -201,8 +243,8 @@ export default function ProdutoDetalhePage() {
       <div 
         className="sticky top-0 z-10 backdrop-blur-xl shadow-sm"
         style={{ 
-          backgroundColor: `${loja.cor_primaria}15`,
-          borderBottom: `1px solid ${loja.cor_primaria}30`
+          backgroundColor: `${corPrimaria}15`,
+          borderBottom: `1px solid ${corPrimaria}30`
         }}
       >
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -299,7 +341,7 @@ export default function ProdutoDetalhePage() {
               {produto.destaque && produto.tag && (
                 <div 
                   className="absolute top-4 left-4 px-3 py-1 rounded-full text-white text-sm font-bold shadow-lg"
-                  style={{ backgroundColor: loja.cor_primaria }}
+                  style={{ backgroundColor: corPrimaria }}
                 >
                   {produto.tag}
                 </div>
@@ -378,7 +420,7 @@ export default function ProdutoDetalhePage() {
               )}
               
               <div className="flex items-baseline gap-3 mb-3">
-                <span className="text-5xl font-extrabold" style={{ color: loja.cor_primaria }}>
+                <span className="text-5xl font-extrabold" style={{ color: corPrimaria }}>
                   R$ {produto.preco_final.toFixed(2)}
                 </span>
                 <span className="text-gray-500 text-lg">à vista</span>
@@ -400,7 +442,7 @@ export default function ProdutoDetalhePage() {
                   </h3>
                   <button 
                     className="text-sm font-medium flex items-center gap-1 hover:underline"
-                    style={{ color: loja.cor_primaria }}
+                    style={{ color: corPrimaria }}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -438,9 +480,9 @@ export default function ProdutoDetalhePage() {
                         style={
                           isAvailable && isSelected
                             ? {
-                                backgroundColor: `${loja.cor_primaria}15`,
-                                borderColor: loja.cor_primaria,
-                                color: loja.cor_primaria,
+                                backgroundColor: `${corPrimaria}15`,
+                                borderColor: corPrimaria,
+                                color: corPrimaria,
                               }
                             : isAvailable
                             ? { color: '#374151' }
@@ -469,7 +511,7 @@ export default function ProdutoDetalhePage() {
                         {isSelected && isAvailable && (
                           <div 
                             className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: loja.cor_primaria }}
+                            style={{ backgroundColor: corPrimaria }}
                           >
                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -542,7 +584,7 @@ export default function ProdutoDetalhePage() {
             {produto.descricao && (
               <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg className="w-6 h-6" style={{ color: loja.cor_primaria }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" style={{ color: corPrimaria }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Detalhes do Produto
@@ -569,7 +611,7 @@ export default function ProdutoDetalhePage() {
                 `}
                 style={
                   skuSelecionado 
-                    ? { backgroundColor: loja.cor_primaria }
+                    ? { backgroundColor: corPrimaria }
                     : {}
                 }
               >
@@ -581,7 +623,7 @@ export default function ProdutoDetalhePage() {
               </button>
 
               <a
-                href={`https://wa.me/${loja.whatsapp}?text=${encodeURIComponent(
+                href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
                   `Olá! Gostaria de saber mais sobre:\n${produto.nome}${
                     skuSelecionado 
                       ? `\nTamanho: ${produto.variacoes?.find(v => v.sku === skuSelecionado)?.tamanho}`
