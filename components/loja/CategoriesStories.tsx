@@ -69,7 +69,7 @@ export default function CategoriesStories() {
         .categories-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: clamp(8px, 2.5vw, 32px);
+          gap: clamp(10px, 3vw, 36px);
           justify-items: center;
           max-width: 100%;
           margin: 0 auto;
@@ -129,7 +129,7 @@ export default function CategoriesStories() {
         /* Responsivo para telas muito pequenas */
         @media (max-width: 360px) {
           .categories-grid {
-            gap: 6px;
+            gap: 8px;
             padding: 0 12px;
           }
           
@@ -148,7 +148,7 @@ export default function CategoriesStories() {
         @media (min-width: 768px) {
           .categories-grid {
             max-width: 800px;
-            gap: 40px;
+            gap: 44px;
           }
 
           .category-circle {
