@@ -15,6 +15,7 @@ type Variacao = {
   sku: string;
   tamanho: string;
   disponivel: boolean;
+  estoque?: number;
 };
 
 type Produto = {
@@ -63,8 +64,10 @@ function ProdutoDetalheContent() {
   
   // ⭐ ESTADO CRÍTICO: SKU Selecionado
   const [skuSelecionado, setSkuSelecionado] = useState<string | null>(null);
+  const [quantidade, setQuantidade] = useState<number>(1);
   const [cep, setCep] = useState('');
   const [pessoasVendo, setPessoasVendo] = useState(0);
+  const [erroEstoque, setErroEstoque] = useState<string>('');
   
   // ⭐ Estados para Swipe nas imagens
   const [touchStart, setTouchStart] = useState(0);
@@ -95,6 +98,12 @@ function ProdutoDetalheContent() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Resetar quantidade e erro quando trocar de variação
+  useEffect(() => {
+    setQuantidade(1);
+    setErroEstoque('');
+  }, [skuSelecionado]);
 
   // Buscar produto
   useEffect(() => {
@@ -214,6 +223,27 @@ function ProdutoDetalheContent() {
         return;
       }
 
+      // ✅ VALIDAÇÃO DE ESTOQUE
+      const estoqueDisponivel = variacaoSelecionada.estoque || 0;
+      
+      if (quantidade > estoqueDisponivel) {
+        const mensagemErro = estoqueDisponivel === 0 
+          ? `❌ Este tamanho está sem estoque no momento.`
+          : estoqueDisponivel === 1
+            ? `⚠️ Temos apenas 1 unidade disponível deste tamanho.`
+            : `⚠️ Temos apenas ${estoqueDisponivel} unidades disponíveis deste tamanho.`;
+        
+        setErroEstoque(mensagemErro);
+        alert(mensagemErro);
+        
+        // Ajustar quantidade automaticamente para o máximo disponível
+        setQuantidade(Math.max(1, estoqueDisponivel));
+        return;
+      }
+
+      // Limpar erro de estoque se tudo estiver OK
+      setErroEstoque('');
+
       // ✅ ADICIONAR AO CARRINHO USANDO ZUSTAND STORE
       const itemCarrinho = {
         id: produto.id,
@@ -222,8 +252,8 @@ function ProdutoDetalheContent() {
         nome: produto.nome,
         preco: produto.preco_final,
         imagem: (produto.imagens && produto.imagens.length > 0 ? produto.imagens[0] : produto.imagem) || '',
-        quantidade: 1,
-        estoque: 99  // TODO: Pegar estoque real da variação
+        quantidade: quantidade,  // ⭐ Usando a quantidade selecionada
+        estoque: estoqueDisponivel  // ✅ Estoque REAL da variação
       };
 
       addItem(itemCarrinho);
@@ -234,11 +264,14 @@ function ProdutoDetalheContent() {
         preco: produto.preco_final,
         imagem: itemCarrinho.imagem,
         tamanho: variacaoSelecionada.tamanho,
-        quantidade: 1
+        quantidade: quantidade
       });
 
       // ✅ Abrir modal de confirmação
       setModalAberto(true);
+
+      // Resetar quantidade para 1 após adicionar
+      setQuantidade(1);
 
       // Disparar evento para atualizar contador do carrinho no header
       window.dispatchEvent(new Event('carrinhoAtualizado'));
@@ -246,7 +279,9 @@ function ProdutoDetalheContent() {
       console.log('[Carrinho] ✅ Produto adicionado via Zustand Store:', {
         nome: produto.nome,
         tamanho: variacaoSelecionada.tamanho,
-        sku: skuSelecionado
+        sku: skuSelecionado,
+        quantidade: quantidade,
+        estoque: estoqueDisponivel
       });
     } catch (error) {
       console.error('[Carrinho] ❌ Erro ao adicionar produto:', error);
@@ -805,61 +840,207 @@ function ProdutoDetalheContent() {
 
         {/* ⭐ STICKY FOOTER - CTA PRINCIPAL (Mobile) ⭐ */}
         <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t-2 border-gray-200 p-3 shadow-2xl z-20">
-          <button
-            onClick={adicionarCarrinho}
-            disabled={!skuSelecionado}
-            className={`
-              w-full py-3 rounded-lg font-bold text-white text-base
-              shadow-lg transition-all 
-              flex items-center justify-center gap-2
-              ${!skuSelecionado 
-                ? 'opacity-50 cursor-not-allowed bg-gray-400' 
-                : 'active:scale-95'
+          {/* Mostrar estoque disponível */}
+          {skuSelecionado && produto?.variacoes && (() => {
+            const variacaoSelecionada = produto.variacoes.find(v => v.sku === skuSelecionado);
+            const estoqueDisponivel = variacaoSelecionada?.estoque || 0;
+            
+            return (
+              <div className="mb-2 text-center">
+                <p className="text-xs text-gray-600">
+                  {estoqueDisponivel > 0 ? (
+                    <>
+                      <span className="font-semibold text-green-600">
+                        {estoqueDisponivel} {estoqueDisponivel === 1 ? 'unidade disponível' : 'unidades disponíveis'}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-semibold text-red-600">Sem estoque</span>
+                  )}
+                </p>
+              </div>
+            );
+          })()}
+
+          {/* Erro de estoque */}
+          {erroEstoque && (
+            <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs text-red-700 text-center font-medium">
+                {erroEstoque}
+              </p>
+            </div>
+          )}
+
+          {/* Quantidade + Botão */}
+          <div className="flex gap-2">
+            {/* Seletor de Quantidade */}
+            {skuSelecionado && (
+              <div className="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                  className="px-3 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                  disabled={quantidade <= 1}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  </svg>
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max={produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999}
+                  value={quantidade}
+                  onChange={(e) => {
+                    const valor = parseInt(e.target.value) || 1;
+                    const max = produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999;
+                    setQuantidade(Math.min(Math.max(1, valor), max));
+                  }}
+                  className="w-14 text-center font-bold text-lg border-none focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    const max = produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999;
+                    setQuantidade(Math.min(quantidade + 1, max));
+                  }}
+                  className="px-3 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Botão Adicionar */}
+            <button
+              onClick={adicionarCarrinho}
+              disabled={!skuSelecionado}
+              className={`
+                flex-1 py-3 rounded-lg font-bold text-white text-base
+                shadow-lg transition-all 
+                flex items-center justify-center gap-2
+                ${!skuSelecionado 
+                  ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+                  : 'active:scale-95'
+                }
+              `}
+              style={
+                skuSelecionado 
+                  ? { backgroundColor: corPrimaria }
+                  : {}
               }
-            `}
-            style={
-              skuSelecionado 
-                ? { backgroundColor: corPrimaria }
-                : {}
-            }
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {!skuSelecionado 
-              ? 'Selecione um tamanho' 
-              : 'Adicionar ao Carrinho'
-            }
-          </button>
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {!skuSelecionado 
+                ? 'Selecione um tamanho' 
+                : 'Adicionar'
+              }
+            </button>
+          </div>
         </div>
 
         {/* CTA para Desktop */}
         <div className="hidden lg:block max-w-7xl mx-auto px-4 pb-8">
           <div className="grid lg:grid-cols-2 gap-8">
             <div></div>
-            <div>
-              <button
-                onClick={adicionarCarrinho}
-                disabled={!skuSelecionado}
-                className={`
-                  w-full py-5 rounded-xl font-bold text-white text-lg
-                  shadow-lg hover:shadow-xl transition-all 
-                  flex items-center justify-center gap-3
-                  ${!skuSelecionado 
-                    ? 'opacity-50 cursor-not-allowed bg-gray-400' 
-                    : 'hover:scale-105'
+            <div className="space-y-4">
+              {/* Mostrar estoque disponível */}
+              {skuSelecionado && produto?.variacoes && (() => {
+                const variacaoSelecionada = produto.variacoes.find(v => v.sku === skuSelecionado);
+                const estoqueDisponivel = variacaoSelecionada?.estoque || 0;
+                
+                return (
+                  <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                    <p className="text-sm">
+                      {estoqueDisponivel > 0 ? (
+                        <>
+                          ✅ <span className="font-bold text-green-700">
+                            {estoqueDisponivel} {estoqueDisponivel === 1 ? 'unidade disponível' : 'unidades disponíveis'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-bold text-red-600">❌ Sem estoque</span>
+                      )}
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Erro de estoque */}
+              {erroEstoque && (
+                <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                  <p className="text-sm text-red-700 text-center font-semibold">
+                    {erroEstoque}
+                  </p>
+                </div>
+              )}
+
+              {/* Quantidade + Botão */}
+              <div className="flex gap-4">
+                {/* Seletor de Quantidade */}
+                {skuSelecionado && (
+                  <div className="flex items-center border-2 border-gray-300 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                      className="px-5 py-5 bg-gray-100 hover:bg-gray-200 transition-colors"
+                      disabled={quantidade <= 1}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999}
+                      value={quantidade}
+                      onChange={(e) => {
+                        const valor = parseInt(e.target.value) || 1;
+                        const max = produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999;
+                        setQuantidade(Math.min(Math.max(1, valor), max));
+                      }}
+                      className="w-20 text-center font-bold text-xl border-none focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        const max = produto?.variacoes?.find(v => v.sku === skuSelecionado)?.estoque || 999;
+                        setQuantidade(Math.min(quantidade + 1, max));
+                      }}
+                      className="px-5 py-5 bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Botão Adicionar */}
+                <button
+                  onClick={adicionarCarrinho}
+                  disabled={!skuSelecionado}
+                  className={`
+                    flex-1 py-5 rounded-xl font-bold text-white text-lg
+                    shadow-lg hover:shadow-xl transition-all 
+                    flex items-center justify-center gap-3
+                    ${!skuSelecionado 
+                      ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+                      : 'hover:scale-105'
+                    }
+                  `}
+                  style={
+                    skuSelecionado 
+                      ? { backgroundColor: corPrimaria }
+                      : {}
                   }
-                `}
-                style={
-                  skuSelecionado 
-                    ? { backgroundColor: corPrimaria }
-                    : {}
-                }
-              >
-                <ShoppingCart className="w-6 h-6" />
-                {!skuSelecionado 
-                  ? 'Selecione um tamanho' 
-                  : 'Adicionar ao Carrinho'
-                }
-              </button>
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  {!skuSelecionado 
+                    ? 'Selecione um tamanho' 
+                    : 'Adicionar ao Carrinho'
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>
