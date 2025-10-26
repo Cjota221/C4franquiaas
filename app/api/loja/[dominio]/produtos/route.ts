@@ -316,29 +316,45 @@ export async function GET(
           parcelamento
         };
       })
-      .filter((p): p is NonNullable<typeof p> => p !== null)
-      // Aplicar filtros após mapear os dados
-      .filter(p => {
-        // Filtro de busca
-        if (q && !p.nome.toLowerCase().includes(q.toLowerCase())) {
-          return false;
-        }
-        // Filtro de categoria (por ID ou slug convertido)
-        if (categoriaIdFinal && p.categoria_id !== categoriaIdFinal) {
-          return false;
-        }
-        // Remover filtro de destaques pois não existe a coluna
-        return true;
-      });
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
-    console.log(`[API loja/produtos] Produtos finais retornados: ${produtos.length}`);
+    // ⭐ APLICAR FILTROS APÓS MAPEAR OS DADOS
+    let produtosFiltrados = produtos;
+
+    // Filtro de busca por nome
+    if (q && q.trim().length > 0) {
+      console.log(`[API loja/produtos] 🔍 Aplicando filtro de busca: "${q}"`);
+      produtosFiltrados = produtosFiltrados.filter(p => 
+        p.nome.toLowerCase().includes(q.toLowerCase())
+      );
+      console.log(`[API loja/produtos] ✓ Produtos após busca: ${produtosFiltrados.length}`);
+    }
+
+    // Filtro de categoria (por ID do Supabase)
+    if (categoriaIdFinal) {
+      console.log(`[API loja/produtos] 🏷️  Aplicando filtro de categoria ID: ${categoriaIdFinal}`);
+      produtosFiltrados = produtosFiltrados.filter(p => {
+        const match = p.categoria_id === categoriaIdFinal;
+        if (!match) {
+          console.log(`[API loja/produtos]   ❌ ${p.nome}: categoria_id = ${p.categoria_id} (diferente de ${categoriaIdFinal})`);
+        } else {
+          console.log(`[API loja/produtos]   ✅ ${p.nome}: categoria_id = ${p.categoria_id} (MATCH!)`);
+        }
+        return match;
+      });
+      console.log(`[API loja/produtos] ✓ Produtos após filtro de categoria: ${produtosFiltrados.length}`);
+    }
+
+    console.log(`[API loja/produtos] Produtos finais retornados: ${produtosFiltrados.length}`);
 
     return NextResponse.json({ 
-      produtos,
+      produtos: produtosFiltrados,
       meta: {
-        total: produtos.length,
+        total: produtosFiltrados.length,
         loja: loja.nome,
-        dominio
+        dominio,
+        ...(categoriaIdFinal && { categoria_id: categoriaIdFinal }),
+        ...(q && { busca: q })
       }
     }, { status: 200 });
 

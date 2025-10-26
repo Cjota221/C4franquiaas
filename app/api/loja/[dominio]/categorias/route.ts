@@ -11,8 +11,8 @@ export async function GET() {
     // Buscar categorias ativas
     const { data: categorias, error } = await supabase
       .from('categorias')
-      .select('id, nome, slug, descricao')
-      .order('nome', { ascending: true });
+      .select('id, nome, slug, descricao, imagem')  // ✅ ADICIONA 'imagem'
+      .order('nome', { ascending: true});
 
     if (error) {
       console.error('Erro ao buscar categorias:', error);
@@ -22,9 +22,17 @@ export async function GET() {
       );
     }
 
-    // Mapear imagens placeholder por categoria
+    // Mapear categorias com imagem real ou placeholder
     const categoriasComImagem = categorias?.map((cat) => {
-      // Definir cores para cada categoria
+      // Se já tem imagem real (do upload), usar ela
+      if (cat.imagem && cat.imagem.trim().length > 0) {
+        return {
+          ...cat,
+          imagem: cat.imagem
+        };
+      }
+      
+      // Se não tem imagem, usar placeholder colorido
       const cores: { [key: string]: string } = {
         'rasteirinhas': 'ec4899',
         'rasteirinha': 'ec4899',
