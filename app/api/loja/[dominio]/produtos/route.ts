@@ -77,14 +77,14 @@ export async function GET(
           imagens,
           codigo_barras,
           variacoes_meta,
-          ativo,
-          produto_categorias (
-            categoria_id
-          )
+          ativo
         )
       `)
       .eq('franqueada_id', loja.franqueada_id)
       .eq('ativo', true);
+    
+    // Buscar categorias separadamente após obter produtos
+    // (evita ambiguidade no relacionamento)
 
     // Se buscar produto específico por ID
     if (produtoId) {
@@ -106,6 +106,28 @@ export async function GET(
       console.log('[API loja/produtos] Nenhum produto vinculado encontrado');
       return NextResponse.json({ produtos: [] }, { status: 200 });
     }
+
+    // Buscar categorias dos produtos (query separada para evitar ambiguidade)
+    const produtoIds = vinculacoes
+      .map(v => (Array.isArray(v.produtos) ? v.produtos[0] : v.produtos)?.id)
+      .filter(Boolean);
+    
+    const { data: produtoCategorias, error: categoriasError } = await supabase
+      .from('produto_categorias')
+      .select('produto_id, categoria_id')
+      .in('produto_id', produtoIds);
+
+    if (categoriasError) {
+      console.error('[API loja/produtos] Erro ao buscar categorias (não fatal):', categoriasError);
+    }
+
+    // Criar mapa de produto_id -> categoria_id
+    const categoriasMap = new Map<string, string>();
+    produtoCategorias?.forEach(pc => {
+      if (!categoriasMap.has(pc.produto_id)) {
+        categoriasMap.set(pc.produto_id, pc.categoria_id);
+      }
+    });
 
     // Buscar preços personalizados
     const vinculacaoIds = vinculacoes.map(v => v.id);
@@ -311,13 +333,7 @@ export async function GET(
             return imagensProcessadas;
           })(),
           codigo_barras: produto.codigo_barras || null,
-          categoria_id: (() => {
-            // Extrair categoria_id da tabela de junção produto_categorias
-            if (produto.produto_categorias && Array.isArray(produto.produto_categorias) && produto.produto_categorias.length > 0) {
-              return produto.produto_categorias[0].categoria_id;
-            }
-            return null;
-          })(),
+          categoria_id: categoriasMap.get(produto.id) || null,
           variacoes, // ⭐ VARIAÇÕES COM ESTOQUE REAL
           destaque: false,
           tag,
