@@ -51,7 +51,8 @@ async function criarNotificacao(supabase: ReturnType<typeof createClient>, param
   estoque_atual: number;
   tipo_mudanca: string;
 }) {
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from('estoque_notifications')
     .insert({
       produto_id: params.produto_id,

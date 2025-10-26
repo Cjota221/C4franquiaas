@@ -30,7 +30,8 @@ export default function EstoqueNotifications() {
 
     // Buscar notificações não visualizadas
     const fetchNotifications = async () => {
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('estoque_notifications')
         .select('*')
         .eq('visualizada', false)
@@ -75,7 +76,8 @@ export default function EstoqueNotifications() {
   const marcarComoVisualizada = async (id: string) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
       .from('estoque_notifications')
       .update({ 
         visualizada: true, 
@@ -93,7 +95,8 @@ export default function EstoqueNotifications() {
 
     if (ids.length === 0) return;
 
-    await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
       .from('estoque_notifications')
       .update({ 
         visualizada: true, 
