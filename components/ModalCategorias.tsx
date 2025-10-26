@@ -155,12 +155,35 @@ export default function ModalCategorias(): React.JSX.Element | null {
         } catch {
           errorDetail = await response.text();
         }
-        console.error('[ModalCategorias] Erro da API (criar):', JSON.stringify(errorDetail, null, 2));
+        
+        // Log completo do erro
+        console.error('[ModalCategorias] Erro da API (criar):', errorDetail);
         console.error('[ModalCategorias] Status:', response.status);
-        const errorMessage = typeof errorDetail === 'object' 
-          ? (errorDetail.error || errorDetail.message || JSON.stringify(errorDetail))
-          : String(errorDetail);
-        throw new Error(errorMessage || 'Erro ao criar categoria');
+        
+        // Extrair mensagem de erro
+        let errorMessage = 'Erro ao criar categoria';
+        if (typeof errorDetail === 'object' && errorDetail !== null) {
+          // Se for objeto, tentar extrair campos comuns
+          if (errorDetail.error) {
+            // Se error for string, usar direto
+            if (typeof errorDetail.error === 'string') {
+              errorMessage = errorDetail.error;
+            } 
+            // Se error for objeto (do Supabase), converter para string legível
+            else if (typeof errorDetail.error === 'object') {
+              errorMessage = errorDetail.error.message || errorDetail.error.details || JSON.stringify(errorDetail.error);
+            }
+          } else if (errorDetail.message) {
+            errorMessage = errorDetail.message;
+          } else {
+            // Se não tem campos conhecidos, mostrar tudo
+            errorMessage = JSON.stringify(errorDetail);
+          }
+        } else if (typeof errorDetail === 'string') {
+          errorMessage = errorDetail;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
@@ -222,12 +245,35 @@ export default function ModalCategorias(): React.JSX.Element | null {
         } catch {
           errorDetail = await response.text();
         }
-        console.error('[ModalCategorias] Erro da API (editar):', JSON.stringify(errorDetail, null, 2));
+        
+        // Log completo do erro
+        console.error('[ModalCategorias] Erro da API (editar):', errorDetail);
         console.error('[ModalCategorias] Status:', response.status);
-        const errorMessage = typeof errorDetail === 'object' 
-          ? (errorDetail.error || errorDetail.message || JSON.stringify(errorDetail))
-          : String(errorDetail);
-        throw new Error(errorMessage || 'Erro ao atualizar categoria');
+        
+        // Extrair mensagem de erro
+        let errorMessage = 'Erro ao atualizar categoria';
+        if (typeof errorDetail === 'object' && errorDetail !== null) {
+          // Se for objeto, tentar extrair campos comuns
+          if (errorDetail.error) {
+            // Se error for string, usar direto
+            if (typeof errorDetail.error === 'string') {
+              errorMessage = errorDetail.error;
+            } 
+            // Se error for objeto (do Supabase), converter para string legível
+            else if (typeof errorDetail.error === 'object') {
+              errorMessage = errorDetail.error.message || errorDetail.error.details || JSON.stringify(errorDetail.error);
+            }
+          } else if (errorDetail.message) {
+            errorMessage = errorDetail.message;
+          } else {
+            // Se não tem campos conhecidos, mostrar tudo
+            errorMessage = JSON.stringify(errorDetail);
+          }
+        } else if (typeof errorDetail === 'string') {
+          errorMessage = errorDetail;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria atualizada' });
