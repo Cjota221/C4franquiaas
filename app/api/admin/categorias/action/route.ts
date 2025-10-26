@@ -53,9 +53,19 @@ export async function POST(req: Request) {
 
     if (action === 'update') {
       const { id, updates } = body as { id?: string; updates?: Record<string, unknown> };
+      console.log('[API Categorias] Update - ID:', id);
+      console.log('[API Categorias] Update - Updates:', updates);
+      
       if (!id) return NextResponse.json({ error: 'id é obrigatório para update' }, { status: 400 });
+      
       const { data, error } = await supabase.from('categorias').update(updates).eq('id', id).select().single();
-      if (error) throw error;
+      
+      if (error) {
+        console.error('[API Categorias] Erro no update:', error);
+        throw error;
+      }
+      
+      console.log('[API Categorias] Update bem-sucedido:', data);
       return NextResponse.json({ data });
     }
 
