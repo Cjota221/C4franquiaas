@@ -76,9 +76,11 @@ export async function GET(
           imagem,
           imagens,
           codigo_barras,
-          categoria_id,
           variacoes_meta,
-          ativo
+          ativo,
+          produto_categorias (
+            categoria_id
+          )
         )
       `)
       .eq('franqueada_id', loja.franqueada_id)
@@ -309,7 +311,13 @@ export async function GET(
             return imagensProcessadas;
           })(),
           codigo_barras: produto.codigo_barras || null,
-          categoria_id: produto.categoria_id || null,
+          categoria_id: (() => {
+            // Extrair categoria_id da tabela de junção produto_categorias
+            if (produto.produto_categorias && Array.isArray(produto.produto_categorias) && produto.produto_categorias.length > 0) {
+              return produto.produto_categorias[0].categoria_id;
+            }
+            return null;
+          })(),
           variacoes, // ⭐ VARIAÇÕES COM ESTOQUE REAL
           destaque: false,
           tag,
