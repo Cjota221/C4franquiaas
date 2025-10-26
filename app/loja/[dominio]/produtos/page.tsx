@@ -50,9 +50,11 @@ export default function ProdutosPage() {
   
   const dominio = params.dominio as string;
   const searchFromUrl = searchParams.get('search') || ''; // ← PARTE 3: Busca da URL
+  const categoriaFromUrl = searchParams.get('categoria') || ''; // ← Filtro por categoria
   
   console.log('[DEBUG Produtos] 4. Domínio:', dominio);
   console.log('[DEBUG Produtos] 5. Search da URL:', searchFromUrl);
+  console.log('[DEBUG Produtos] 6. Categoria da URL:', categoriaFromUrl);
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,12 @@ export default function ProdutosPage() {
         if (searchFromUrl) {
           queryParams.append('q', searchFromUrl);
           console.log('[DEBUG Produtos] Aplicando filtro de busca:', searchFromUrl);
+        }
+        
+        // Se houver categoria na URL, adiciona como parâmetro
+        if (categoriaFromUrl) {
+          queryParams.append('categoria', categoriaFromUrl);
+          console.log('[DEBUG Produtos] Aplicando filtro de categoria:', categoriaFromUrl);
         }
         
         const url = `/api/loja/${dominio}/produtos?${queryParams.toString()}`;
@@ -99,7 +107,7 @@ export default function ProdutosPage() {
     }
     
     carregarProdutos();
-  }, [searchFromUrl, dominio]); // ← PARTE 3: Recarrega quando search muda
+  }, [searchFromUrl, categoriaFromUrl, dominio]); // ← Recarrega quando search ou categoria muda
 
   return (
     <div className="min-h-screen py-8">
@@ -110,12 +118,19 @@ export default function ProdutosPage() {
             className="text-3xl font-bold mb-2"
             style={{ color: loja.cor_primaria }}
           >
-            {searchFromUrl ? `Resultados para "${searchFromUrl}"` : 'Nossos Produtos'}
+            {searchFromUrl 
+              ? `Resultados para "${searchFromUrl}"` 
+              : categoriaFromUrl 
+                ? `Categoria: ${decodeURIComponent(categoriaFromUrl)}`
+                : 'Nossos Produtos'
+            }
           </h1>
           <p className="text-gray-600">
             {searchFromUrl 
               ? 'Produtos encontrados na sua busca'
-              : 'Encontre os melhores cosméticos com preços especiais'
+              : categoriaFromUrl
+                ? `Produtos da categoria ${decodeURIComponent(categoriaFromUrl)}`
+                : 'Encontre os melhores cosméticos com preços especiais'
             }
           </p>
         </div>
