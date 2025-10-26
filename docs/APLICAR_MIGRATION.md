@@ -1,10 +1,18 @@
-# Aplicar Migration de Notificações de Estoque
+# ⚠️ APLICAR MIGRATION NO SUPABASE - URGENTE
 
-## Instruções
+O sistema de notificações está deployado mas **NÃO VAI FUNCIONAR** até você aplicar esta migration!
 
-1. Acesse o **Supabase Dashboard**
-2. Vá em **SQL Editor**
-3. Copie e cole o conteúdo abaixo:
+## 🚀 Como Aplicar (2 minutos)
+
+### **Passo 1: Abrir SQL Editor**
+
+1. Acesse: https://supabase.com/dashboard
+2. Selecione o projeto: **C4 Franquias**
+3. No menu lateral, clique em **SQL Editor**
+
+### **Passo 2: Copiar e Executar SQL**
+
+Copie **TODO** o código abaixo e cole no SQL Editor:
 
 ```sql
 -- Migration: Adicionar tabela de notificações de estoque
