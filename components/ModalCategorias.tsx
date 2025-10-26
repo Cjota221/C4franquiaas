@@ -150,7 +150,9 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Erro ao criar categoria');
+        console.error('[ModalCategorias] Erro ao criar:', error);
+        console.error('[ModalCategorias] Status:', response.status);
+        throw new Error(error.error || JSON.stringify(error) || 'Erro ao criar categoria');
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
@@ -207,7 +209,9 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Erro ao atualizar categoria');
+        console.error('[ModalCategorias] Erro da API:', error);
+        console.error('[ModalCategorias] Status:', response.status);
+        throw new Error(error.error || JSON.stringify(error) || 'Erro ao atualizar categoria');
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria atualizada' });
