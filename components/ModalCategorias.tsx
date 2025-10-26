@@ -149,10 +149,18 @@ export default function ModalCategorias(): React.JSX.Element | null {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        console.error('[ModalCategorias] Erro ao criar:', error);
+        let errorDetail;
+        try {
+          errorDetail = await response.json();
+        } catch {
+          errorDetail = await response.text();
+        }
+        console.error('[ModalCategorias] Erro da API (criar):', JSON.stringify(errorDetail, null, 2));
         console.error('[ModalCategorias] Status:', response.status);
-        throw new Error(error.error || JSON.stringify(error) || 'Erro ao criar categoria');
+        const errorMessage = typeof errorDetail === 'object' 
+          ? (errorDetail.error || errorDetail.message || JSON.stringify(errorDetail))
+          : String(errorDetail);
+        throw new Error(errorMessage || 'Erro ao criar categoria');
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
@@ -208,10 +216,18 @@ export default function ModalCategorias(): React.JSX.Element | null {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        console.error('[ModalCategorias] Erro da API:', error);
+        let errorDetail;
+        try {
+          errorDetail = await response.json();
+        } catch {
+          errorDetail = await response.text();
+        }
+        console.error('[ModalCategorias] Erro da API (editar):', JSON.stringify(errorDetail, null, 2));
         console.error('[ModalCategorias] Status:', response.status);
-        throw new Error(error.error || JSON.stringify(error) || 'Erro ao atualizar categoria');
+        const errorMessage = typeof errorDetail === 'object' 
+          ? (errorDetail.error || errorDetail.message || JSON.stringify(errorDetail))
+          : String(errorDetail);
+        throw new Error(errorMessage || 'Erro ao atualizar categoria');
       }
 
       setStatusMsg({ type: 'success', text: 'Categoria atualizada' });
