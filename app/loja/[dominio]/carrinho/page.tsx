@@ -15,6 +15,7 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
   const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [mounted, setMounted] = useState(false);
   const [dominio, setDominio] = useState<string>('');
+  const [erroEstoque, setErroEstoque] = useState<Record<string, string>>({});
   
   const itens = useCarrinhoStore(state => state.items);
   const updateQuantidade = useCarrinhoStore(state => state.updateQuantidade);
@@ -49,6 +50,39 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
 
   const total = getTotal();
   const isEmpty = itens.length === 0;
+
+  // Função para aumentar quantidade com validação
+  const handleAumentarQuantidade = (item: typeof itens[0]) => {
+    const itemKey = item.sku ? `${item.id}-${item.sku}` : item.id;
+    
+    if (item.quantidade >= item.estoque) {
+      const mensagem = item.estoque === 0 
+        ? `Este produto está sem estoque.`
+        : item.estoque === 1
+          ? `Temos apenas 1 unidade disponível.`
+          : `Temos apenas ${item.estoque} unidades disponíveis.`;
+      
+      setErroEstoque(prev => ({ ...prev, [itemKey]: mensagem }));
+      
+      // Limpar erro após 3 segundos
+      setTimeout(() => {
+        setErroEstoque(prev => {
+          const newErros = { ...prev };
+          delete newErros[itemKey];
+          return newErros;
+        });
+      }, 3000);
+      
+      return;
+    }
+    
+    updateQuantidade(item.id, item.quantidade + 1, item.sku);
+    setErroEstoque(prev => {
+      const newErros = { ...prev };
+      delete newErros[itemKey];
+      return newErros;
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -122,14 +156,36 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
                     
                     {/* ⭐ Mostrar tamanho se existir */}
                     {item.tamanho && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 mb-1">
                         Tamanho: <span className="font-semibold">{item.tamanho}</span>
                       </p>
                     )}
                     
+                    {/* ✅ Mostrar estoque disponível */}
+                    <p className="text-xs text-gray-500 mb-2">
+                      {item.estoque > 0 ? (
+                        <>
+                          <span className="text-green-600 font-semibold">
+                            {item.estoque} {item.estoque === 1 ? 'unidade disponível' : 'unidades disponíveis'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-red-600 font-semibold">Sem estoque</span>
+                      )}
+                    </p>
+                    
                     <p className="text-xl font-bold mb-3" style={{ color: lojaInfo?.cor_primaria || '#DB1472' }}>
                       R$ {item.preco.toFixed(2).replace('.', ',')}
                     </p>
+
+                    {/* ❌ Mensagem de erro de estoque */}
+                    {erroEstoque[itemKey] && (
+                      <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-xs text-red-700 font-medium">
+                          ⚠️ {erroEstoque[itemKey]}
+                        </p>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-4">
                       {/* Controle de Quantidade */}
@@ -143,9 +199,10 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
                         </button>
                         <span className="px-4 py-1 font-bold">{item.quantidade}</span>
                         <button
-                          onClick={() => updateQuantidade(item.id, item.quantidade + 1, item.sku)}
+                          onClick={() => handleAumentarQuantidade(item)}
                           disabled={item.quantidade >= item.estoque}
                           className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          title={item.quantidade >= item.estoque ? 'Estoque máximo atingido' : 'Aumentar quantidade'}
                         >
                           <Plus size={16} />
                         </button>
@@ -156,13 +213,6 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
                         Subtotal: <span className="font-bold">R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
                       </span>
                     </div>
-
-                    {/* Aviso de estoque */}
-                    {item.quantidade >= item.estoque && (
-                      <p className="text-orange-600 text-sm mt-2">
-                        Quantidade máxima disponível
-                      </p>
-                    )}
                   </div>
 
                   {/* Botão Remover */}
