@@ -390,7 +390,7 @@ function ProdutoDetalheContent() {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-32 lg:pb-20">
       {/* Header */}
       <div 
         className="sticky top-0 z-10 backdrop-blur-xl shadow-sm"

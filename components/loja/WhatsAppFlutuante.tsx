@@ -1,9 +1,11 @@
 "use client";
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { MessageCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function WhatsAppFlutuante() {
   const loja = useLojaInfo();
+  const pathname = usePathname();
 
   // Não exibe se estiver desativado ou sem número configurado
   if (!loja.whatsapp_flutuante || !loja.whatsapp_numero) {
@@ -19,12 +21,19 @@ export default function WhatsAppFlutuante() {
   // Posição do botão (esquerda ou direita)
   const posicaoClass = loja.whatsapp_posicao === 'esquerda' ? 'left-4 md:left-6' : 'right-4 md:right-6';
 
+  // ✅ Detectar se está em página de produto (mobile)
+  // Se estiver, sobe o botão para não ficar sobre o botão de adicionar
+  const isPaginaProduto = pathname?.includes('/produto/');
+  const bottomClass = isPaginaProduto 
+    ? 'bottom-24 md:bottom-6'  // Mobile: sobe | Desktop: posição normal
+    : 'bottom-4 md:bottom-6';  // Posição padrão
+
   return (
     <a
       href={`https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`}
       target="_blank"
       rel="noopener noreferrer"
-      className={`fixed bottom-4 md:bottom-6 ${posicaoClass} z-50 
+      className={`fixed ${bottomClass} ${posicaoClass} z-40 
         flex flex-col items-center gap-2
         group`}
       aria-label="Contato via WhatsApp"
