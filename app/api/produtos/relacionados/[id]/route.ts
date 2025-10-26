@@ -12,6 +12,7 @@ export async function GET(
 ) {
   try {
     const { id: produtoId } = await context.params;
+    console.log('\n🔍 [API Relacionados] Iniciando busca para produto:', produtoId);
 
     // 1. Buscar categoria do produto atual através da tabela produto_categorias
     const { data: categoriaAtual, error: erroCategoriaAtual } = await supabase
@@ -20,8 +21,9 @@ export async function GET(
       .eq('produto_id', produtoId)
       .single();
 
+    console.log('📂 [API Relacionados] Categoria do produto:', categoriaAtual);
     if (erroCategoriaAtual) {
-      console.warn('[API Relacionados] Produto sem categoria:', produtoId);
+      console.warn('⚠️ [API Relacionados] Produto sem categoria:', produtoId, erroCategoriaAtual.message);
     }
 
     // 2. Buscar informações do produto atual
@@ -42,6 +44,8 @@ export async function GET(
     const precoMin = produtoAtual.preco_base * 0.7;
     const precoMax = produtoAtual.preco_base * 1.3;
 
+    console.log('💰 [API Relacionados] Faixa de preço:', { precoMin, precoMax, precoBase: produtoAtual.preco_base });
+
     // 3. Buscar produtos relacionados (busca ampla baseada em preço)
     const { data: produtosRelacionados, error: erroRelacionados } = await supabase
       .from('produtos')
@@ -59,8 +63,10 @@ export async function GET(
       .lte('preco_base', precoMax * 1.5)
       .limit(20); // Buscar mais produtos para ter opções
 
+    console.log(`📦 [API Relacionados] Produtos encontrados: ${produtosRelacionados?.length || 0}`);
+
     if (erroRelacionados) {
-      console.error('[API Relacionados] Erro ao buscar:', erroRelacionados);
+      console.error('❌ [API Relacionados] Erro ao buscar:', erroRelacionados);
       return NextResponse.json(
         { error: 'Erro ao buscar produtos relacionados' },
         { status: 500 }
@@ -73,6 +79,8 @@ export async function GET(
       .from('produto_categorias')
       .select('produto_id, categoria_id')
       .in('produto_id', produtoIds);
+
+    console.log(`🏷️ [API Relacionados] Categorias encontradas: ${produtoCategorias?.length || 0}`);
 
     // Criar mapa de produto_id -> categoria_id
     const categoriasMap = new Map<string, string>();
@@ -131,6 +139,12 @@ export async function GET(
           categoria_id: categoriasMap.get(produto.id) || null,
         };
       });
+
+    console.log('🎯 [API Relacionados] Top produtos por score:');
+    produtosComScore.slice(0, 6).forEach((p, i) => {
+      console.log(`  ${i + 1}. ${p.nome} - Score: ${p.score} (Categoria: ${categoriasMap.get(p.id) || 'N/A'})`);
+    });
+    console.log(`✅ [API Relacionados] Retornando ${topProdutos.length} produtos\n`);
 
     return NextResponse.json({
       produtos: topProdutos,
