@@ -8,10 +8,10 @@ const supabase = createClient(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const produtoId = params.id;
+    const { id: produtoId } = await context.params;
 
     // 1. Buscar informações do produto atual
     const { data: produtoAtual, error: erroProduto } = await supabase
