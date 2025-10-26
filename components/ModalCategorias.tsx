@@ -21,11 +21,16 @@ export default function ModalCategorias(): React.JSX.Element | null {
   const [loading, setLoading] = useState(false);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaDescricao, setNovaDescricao] = useState('');
-  const [novaImagem, setNovaImagem] = useState('');
+  const [novaImagemFile, setNovaImagemFile] = useState<File | null>(null);
+  const [novaImagemPreview, setNovaImagemPreview] = useState<string>('');
+  const [uploadingImagem, setUploadingImagem] = useState(false);
+  
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editandoNome, setEditandoNome] = useState('');
   const [editandoDescricao, setEditandoDescricao] = useState('');
-  const [editandoImagem, setEditandoImagem] = useState('');
+  const [editandoImagemFile, setEditandoImagemFile] = useState<File | null>(null);
+  const [editandoImagemPreview, setEditandoImagemPreview] = useState<string>('');
+  const [editandoImagemAtual, setEditandoImagemAtual] = useState<string>('');
 
   // Carregar categorias
   const carregarCategorias = async () => {
@@ -56,6 +61,62 @@ export default function ModalCategorias(): React.JSX.Element | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoriaPanelOpen]);
 
+  // Upload de imagem para o Supabase Storage
+  const uploadImagem = async (file: File): Promise<string | null> => {
+    try {
+      setUploadingImagem(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/categorias/upload-imagem', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao fazer upload');
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (err) {
+      console.error('Erro no upload:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao fazer upload da imagem' });
+      return null;
+    } finally {
+      setUploadingImagem(false);
+    }
+  };
+
+  // Handler para seleção de arquivo (criar)
+  const handleNovaImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNovaImagemFile(file);
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNovaImagemPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handler para seleção de arquivo (editar)
+  const handleEditandoImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditandoImagemFile(file);
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditandoImagemPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Criar categoria
   const handleCriar = async () => {
     if (!novaCategoria.trim()) {
@@ -65,6 +126,17 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
     try {
       setLoading(true);
+      
+      // Upload da imagem primeiro (se houver)
+      let imagemUrl: string | null = null;
+      if (novaImagemFile) {
+        imagemUrl = await uploadImagem(novaImagemFile);
+        if (!imagemUrl) {
+          // Erro no upload, mas permite continuar sem imagem
+          setStatusMsg({ type: 'info', text: 'Erro no upload da imagem, categoria será criada sem imagem' });
+        }
+      }
+
       const response = await fetch('/api/admin/categorias/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +144,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
           action: 'create',
           nome: novaCategoria.trim(),
           descricao: novaDescricao.trim() || null,
-          imagem: novaImagem.trim() || null
+          imagem: imagemUrl
         })
       });
 
@@ -84,7 +156,8 @@ export default function ModalCategorias(): React.JSX.Element | null {
       setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
       setNovaCategoria('');
       setNovaDescricao('');
-      setNovaImagem('');
+      setNovaImagemFile(null);
+      setNovaImagemPreview('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao criar categoria:', err);
@@ -106,6 +179,17 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
     try {
       setLoading(true);
+      
+      // Upload da nova imagem (se houver)
+      let imagemUrl: string | null = editandoImagemAtual; // Mantém a atual por padrão
+      if (editandoImagemFile) {
+        const novaUrl = await uploadImagem(editandoImagemFile);
+        if (novaUrl) {
+          imagemUrl = novaUrl;
+          // TODO: Deletar imagem antiga do storage se necessário
+        }
+      }
+
       const response = await fetch('/api/admin/categorias/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +200,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
             nome: editandoNome.trim(),
             slug: slugify(editandoNome.trim()),
             descricao: editandoDescricao.trim() || null,
-            imagem: editandoImagem.trim() || null
+            imagem: imagemUrl
           }
         })
       });
@@ -130,7 +214,9 @@ export default function ModalCategorias(): React.JSX.Element | null {
       setEditandoId(null);
       setEditandoNome('');
       setEditandoDescricao('');
-      setEditandoImagem('');
+      setEditandoImagemFile(null);
+      setEditandoImagemPreview('');
+      setEditandoImagemAtual('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao editar:', err);
@@ -206,17 +292,24 @@ export default function ModalCategorias(): React.JSX.Element | null {
             className="px-3 py-2 border rounded resize-none"
             rows={2}
           />
-          <input
-            type="url"
-            value={editandoImagem}
-            onChange={(e) => setEditandoImagem(e.target.value)}
-            placeholder="URL da imagem (opcional)"
-            className="px-3 py-2 border rounded"
-          />
-          {editandoImagem && (
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-1 block">
+              Imagem da categoria (opcional)
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleEditandoImagemChange}
+              className="w-full px-3 py-2 border rounded text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#DB1472] file:text-white hover:file:bg-[#DB1472]/90 cursor-pointer"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              JPG, PNG, WebP ou GIF (máx. 5MB)
+            </p>
+          </label>
+          {(editandoImagemPreview || editandoImagemAtual) && (
             <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
               <img 
-                src={editandoImagem} 
+                src={editandoImagemPreview || editandoImagemAtual} 
                 alt="Preview" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -224,21 +317,29 @@ export default function ModalCategorias(): React.JSX.Element | null {
                   target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
                 }}
               />
+              {editandoImagemFile && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                  Nova imagem selecionada
+                </div>
+              )}
             </div>
           )}
           <div className="flex gap-2">
             <button
               onClick={() => handleEditar(cat.id)}
-              className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 flex-1"
+              disabled={uploadingImagem}
+              className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 flex-1 disabled:opacity-50"
             >
-              ✓ Salvar
+              {uploadingImagem ? '⏳ Enviando...' : '✓ Salvar'}
             </button>
             <button
               onClick={() => {
                 setEditandoId(null);
                 setEditandoNome('');
                 setEditandoDescricao('');
-                setEditandoImagem('');
+                setEditandoImagemFile(null);
+                setEditandoImagemPreview('');
+                setEditandoImagemAtual('');
               }}
               className="px-4 py-2 bg-gray-300 rounded text-sm hover:bg-gray-400"
             >
@@ -277,7 +378,9 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 setEditandoId(cat.id);
                 setEditandoNome(cat.nome);
                 setEditandoDescricao(cat.descricao || '');
-                setEditandoImagem(cat.imagem || '');
+                setEditandoImagemAtual(cat.imagem || '');
+                setEditandoImagemPreview(cat.imagem || '');
+                setEditandoImagemFile(null);
               }}
               className="px-3 py-1 bg-[#DB1472] text-white rounded text-xs hover:bg-[#DB1472]/90"
             >
@@ -331,17 +434,26 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] resize-none"
                 rows={2}
               />
-              <input
-                type="url"
-                placeholder="URL da imagem (opcional)"
-                value={novaImagem}
-                onChange={(e) => setNovaImagem(e.target.value)}
-                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
-              />
-              {novaImagem && (
+              
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700 mb-1 block">
+                  Imagem da categoria (opcional)
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleNovaImagemChange}
+                  className="w-full px-3 py-2 border rounded text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#DB1472] file:text-white hover:file:bg-[#DB1472]/90 cursor-pointer"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  JPG, PNG, WebP ou GIF (máx. 5MB)
+                </p>
+              </label>
+
+              {novaImagemPreview && (
                 <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
                   <img 
-                    src={novaImagem} 
+                    src={novaImagemPreview} 
                     alt="Preview" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -349,14 +461,18 @@ export default function ModalCategorias(): React.JSX.Element | null {
                       target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
                     }}
                   />
+                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                    ✓ Imagem selecionada
+                  </div>
                 </div>
               )}
+
               <button
                 onClick={handleCriar}
-                disabled={loading || !novaCategoria.trim()}
+                disabled={loading || uploadingImagem || !novaCategoria.trim()}
                 className="w-full px-6 py-2 bg-[#DB1472] text-white rounded hover:bg-[#DB1472]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {loading ? 'Criando...' : 'Criar Categoria'}
+                {uploadingImagem ? '⏳ Enviando imagem...' : loading ? 'Criando...' : 'Criar Categoria'}
               </button>
             </div>
           </div>
