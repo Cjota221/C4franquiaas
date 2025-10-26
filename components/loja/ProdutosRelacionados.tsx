@@ -31,16 +31,24 @@ export default function ProdutosRelacionados({
     async function carregarProdutosRelacionados() {
       try {
         setLoading(true);
+        console.log(`🔍 [ProdutosRelacionados] Buscando produtos relacionados para ID: ${produtoId}`);
+        
         const response = await fetch(`/api/produtos/relacionados/${produtoId}`);
         
         if (!response.ok) {
-          throw new Error('Erro ao carregar produtos relacionados');
+          const errorData = await response.json().catch(() => ({}));
+          console.warn(`⚠️ [ProdutosRelacionados] Resposta ${response.status}:`, errorData);
+          
+          // Se for 404 ou outro erro, apenas não mostra produtos
+          setProdutos([]);
+          return;
         }
 
         const data = await response.json();
+        console.log(`✅ [ProdutosRelacionados] ${data.produtos?.length || 0} produtos encontrados`);
         setProdutos(data.produtos || []);
       } catch (error) {
-        console.error('[ProdutosRelacionados] Erro:', error);
+        console.error('❌ [ProdutosRelacionados] Erro:', error);
         setProdutos([]);
       } finally {
         setLoading(false);

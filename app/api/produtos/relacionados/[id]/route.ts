@@ -29,15 +29,28 @@ export async function GET(
     // 2. Buscar informações do produto atual
     const { data: produtoAtual, error: erroProduto } = await supabase
       .from('produtos')
-      .select('id, nome, preco_base, cores')
+      .select('id, nome, preco_base, cores, ativo')
       .eq('id', produtoId)
       .single();
 
     if (erroProduto || !produtoAtual) {
-      return NextResponse.json(
-        { error: 'Produto não encontrado' },
-        { status: 404 }
-      );
+      console.warn('⚠️ [API Relacionados] Produto não encontrado:', produtoId);
+      // Retornar lista vazia ao invés de 404
+      return NextResponse.json({
+        produtos: [],
+        total: 0,
+        mensagem: 'Produto não encontrado',
+      });
+    }
+
+    if (!produtoAtual.ativo) {
+      console.warn('⚠️ [API Relacionados] Produto inativo:', produtoId);
+      // Retornar lista vazia para produtos inativos
+      return NextResponse.json({
+        produtos: [],
+        total: 0,
+        mensagem: 'Produto inativo',
+      });
     }
 
     const categoriaIdAtual = categoriaAtual?.categoria_id || null;
