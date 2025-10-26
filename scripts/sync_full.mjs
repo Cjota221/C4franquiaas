@@ -93,6 +93,40 @@ function normalizeProduct(p) {
   const imgsRaw = Array.isArray(p.imagens) ? p.imagens : Array.isArray(p.fotos) ? p.fotos : [];
   const imgs = imgsRaw.map(extractImageUrl).filter(x => !!x).map(s => s.replace(/^\/+/, '')).map(s => s.includes('://') ? s : `https://arquivos.facilzap.app.br/${s}`);
 
+  // Processar variações
+  const variacoes_meta = [];
+  if (Array.isArray(p.variacoes)) {
+    for (const v of p.variacoes) {
+      if (!v) continue;
+      
+      const varId = asString(v.id ?? v.codigo);
+      const varSku = asString(v.sku);
+      const varNome = asString(v.nome ?? v.name);
+      
+      let varEstoque = 0;
+      if (typeof v.estoque === 'number') {
+        varEstoque = v.estoque;
+      } else if (v.estoque && typeof v.estoque === 'object') {
+        if (typeof v.estoque.estoque === 'number') varEstoque = v.estoque.estoque;
+        else if (typeof v.estoque.disponivel === 'number') varEstoque = v.estoque.disponivel;
+      }
+      
+      // Extrair código de barras se existir
+      let codigoBarras = null;
+      if (v.codigo_barras) codigoBarras = asString(v.codigo_barras);
+      else if (v.codigoBarras) codigoBarras = asString(v.codigoBarras);
+      else if (v.barcode) codigoBarras = asString(v.barcode);
+      
+      variacoes_meta.push({
+        id: varId || null,
+        sku: varSku || null,
+        nome: varNome || null,
+        estoque: varEstoque,
+        codigo_barras: codigoBarras,
+      });
+    }
+  }
+
   return {
     id_externo: id,
     nome,
@@ -101,6 +135,7 @@ function normalizeProduct(p) {
     ativo: Boolean(ativo),
     imagem: imgs.length > 0 ? imgs[0] : null,
     imagens: imgs,
+    variacoes_meta,
   };
 }
 
@@ -170,6 +205,7 @@ async function run() {
         ativo: p.estoque && p.estoque > 0 ? p.ativo : false,
         imagem: p.imagem ?? null,
         imagens: p.imagens ?? [],
+        variacoes_meta: p.variacoes_meta ?? [],
         last_synced_at: new Date().toISOString(),
       }));
       if (args.dryRun) {
