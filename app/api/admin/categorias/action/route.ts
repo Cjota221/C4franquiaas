@@ -66,9 +66,15 @@ export async function POST(req: Request) {
         // Verificar se é erro de slug duplicado
         const errObj = error as unknown as Record<string, unknown>;
         const code = errObj?.code || errObj?.status;
-        const message = errObj?.message || String(error);
+        const message = typeof errObj?.message === 'string' ? errObj.message : String(error);
         
-        if (code === '23505' || code === 23505 || message.toLowerCase().includes('duplicate')) {
+        // Verificar duplicação de slug (constraint violation)
+        const isDuplicate = 
+          code === '23505' || 
+          code === 23505 || 
+          (typeof message === 'string' && message.toLowerCase().includes('duplicate'));
+        
+        if (isDuplicate) {
           return NextResponse.json({ 
             error: 'Já existe uma categoria com esse nome/slug. Tente outro nome.' 
           }, { status: 409 });
