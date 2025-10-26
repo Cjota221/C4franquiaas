@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowLeft, Share2, Heart, ShoppingCart, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductErrorBoundary from '@/components/loja/ProductErrorBoundary';
 import ModalProdutoAdicionado from '@/components/loja/ModalProdutoAdicionado';
+import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -1045,6 +1046,16 @@ function ProdutoDetalheContent() {
           </div>
         </div>
       </div>
+
+      {/* ⭐ PRODUTOS RELACIONADOS ⭐ */}
+      {produto && (
+        <ProdutosRelacionados
+          produtoId={produto.id}
+          dominio={dominio}
+          titulo="Produtos Relacionados"
+          subtitulo="Você também pode gostar destes produtos"
+        />
+      )}
 
       {/* ⭐ MODAL DE CONFIRMAÇÃO - PRODUTO ADICIONADO ⭐ */}
       {produtoAdicionado && (

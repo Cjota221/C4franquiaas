@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Package } from 'lucide-react';
+import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
 
 type LojaInfo = {
   nome: string;
@@ -284,6 +285,16 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
             </div>
           </div>
         </div>
+      )}
+
+      {/* ⭐ PRODUTOS RELACIONADOS - COMPLETE SEU LOOK ⭐ */}
+      {!isEmpty && itens.length > 0 && (
+        <ProdutosRelacionados
+          produtoId={itens[0].id}
+          dominio={dominio}
+          titulo="Complete seu look"
+          subtitulo="Produtos que combinam com o seu carrinho"
+        />
       )}
     </div>
   );
