@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import EstoqueNotifications from '@/components/EstoqueNotifications';
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -37,6 +38,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
         {/* Main content */}
         <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          {/* Notificações de Estoque em Tempo Real */}
+          <EstoqueNotifications />
+          
           {children}
         </main>
       </div>
