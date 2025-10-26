@@ -9,6 +9,7 @@ type Categoria = {
   nome: string;
   slug: string;
   descricao: string | null;
+  imagem: string | null;
 };
 
 export default function ModalCategorias(): React.JSX.Element | null {
@@ -20,9 +21,11 @@ export default function ModalCategorias(): React.JSX.Element | null {
   const [loading, setLoading] = useState(false);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaDescricao, setNovaDescricao] = useState('');
+  const [novaImagem, setNovaImagem] = useState('');
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editandoNome, setEditandoNome] = useState('');
   const [editandoDescricao, setEditandoDescricao] = useState('');
+  const [editandoImagem, setEditandoImagem] = useState('');
 
   // Carregar categorias
   const carregarCategorias = async () => {
@@ -68,7 +71,8 @@ export default function ModalCategorias(): React.JSX.Element | null {
         body: JSON.stringify({
           action: 'create',
           nome: novaCategoria.trim(),
-          descricao: novaDescricao.trim() || null
+          descricao: novaDescricao.trim() || null,
+          imagem: novaImagem.trim() || null
         })
       });
 
@@ -80,6 +84,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
       setStatusMsg({ type: 'success', text: 'Categoria criada com sucesso' });
       setNovaCategoria('');
       setNovaDescricao('');
+      setNovaImagem('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao criar categoria:', err);
@@ -110,7 +115,8 @@ export default function ModalCategorias(): React.JSX.Element | null {
           updates: {
             nome: editandoNome.trim(),
             slug: slugify(editandoNome.trim()),
-            descricao: editandoDescricao.trim() || null
+            descricao: editandoDescricao.trim() || null,
+            imagem: editandoImagem.trim() || null
           }
         })
       });
@@ -124,6 +130,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
       setEditandoId(null);
       setEditandoNome('');
       setEditandoDescricao('');
+      setEditandoImagem('');
       await carregarCategorias();
     } catch (err) {
       console.error('Erro ao editar:', err);
@@ -199,6 +206,26 @@ export default function ModalCategorias(): React.JSX.Element | null {
             className="px-3 py-2 border rounded resize-none"
             rows={2}
           />
+          <input
+            type="url"
+            value={editandoImagem}
+            onChange={(e) => setEditandoImagem(e.target.value)}
+            placeholder="URL da imagem (opcional)"
+            className="px-3 py-2 border rounded"
+          />
+          {editandoImagem && (
+            <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
+              <img 
+                src={editandoImagem} 
+                alt="Preview" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
+                }}
+              />
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               onClick={() => handleEditar(cat.id)}
@@ -211,6 +238,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 setEditandoId(null);
                 setEditandoNome('');
                 setEditandoDescricao('');
+                setEditandoImagem('');
               }}
               className="px-4 py-2 bg-gray-300 rounded text-sm hover:bg-gray-400"
             >
@@ -220,12 +248,28 @@ export default function ModalCategorias(): React.JSX.Element | null {
         </div>
       ) : (
         <div className="flex items-start justify-between bg-gray-50 p-3 rounded hover:bg-gray-100 transition-colors">
-          <div className="flex-1">
-            <div className="font-medium text-gray-900">{cat.nome}</div>
-            <div className="text-sm text-gray-500">Slug: {cat.slug}</div>
-            {cat.descricao && (
-              <div className="text-sm text-gray-600 mt-1">{cat.descricao}</div>
+          <div className="flex gap-3 flex-1">
+            {/* Imagem da categoria */}
+            {cat.imagem && (
+              <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+                <img 
+                  src={cat.imagem} 
+                  alt={cat.nome}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
             )}
+            <div className="flex-1">
+              <div className="font-medium text-gray-900">{cat.nome}</div>
+              <div className="text-sm text-gray-500">Slug: {cat.slug}</div>
+              {cat.descricao && (
+                <div className="text-sm text-gray-600 mt-1">{cat.descricao}</div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -233,6 +277,7 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 setEditandoId(cat.id);
                 setEditandoNome(cat.nome);
                 setEditandoDescricao(cat.descricao || '');
+                setEditandoImagem(cat.imagem || '');
               }}
               className="px-3 py-1 bg-[#DB1472] text-white rounded text-xs hover:bg-[#DB1472]/90"
             >
@@ -286,6 +331,26 @@ export default function ModalCategorias(): React.JSX.Element | null {
                 className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] resize-none"
                 rows={2}
               />
+              <input
+                type="url"
+                placeholder="URL da imagem (opcional)"
+                value={novaImagem}
+                onChange={(e) => setNovaImagem(e.target.value)}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
+              />
+              {novaImagem && (
+                <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
+                  <img 
+                    src={novaImagem} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
+                    }}
+                  />
+                </div>
+              )}
               <button
                 onClick={handleCriar}
                 disabled={loading || !novaCategoria.trim()}

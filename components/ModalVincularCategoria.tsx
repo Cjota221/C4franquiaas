@@ -161,6 +161,14 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
             <label htmlFor="categoria-select" className="block text-sm font-medium text-[#333] mb-2">
               Selecione a categoria:
             </label>
+            
+            {/* Debug: Mostrar quantidade de categorias carregadas */}
+            {categorias.length === 0 && (
+              <p className="text-xs text-orange-600 mb-2">
+                ⚠️ Nenhuma categoria encontrada. Crie categorias primeiro em &quot;Gerenciar Categorias&quot;.
+              </p>
+            )}
+            
             <select
               id="categoria-select"
               value={categoriaSelecionada || ''}
@@ -170,20 +178,33 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
                 console.log('[ModalVincularCategoria] Categoria selecionada:', {
                   value,
                   categoriaId,
-                  evento: e.target.value
+                  evento: e.target.value,
+                  totalCategorias: categorias.length
                 });
                 setCategoriaSelecionada(categoriaId);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] focus:outline-none bg-white"
-              disabled={loading}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] focus:outline-none bg-white cursor-pointer"
+              disabled={loading || categorias.length === 0}
             >
-              <option value="">-- Escolha uma categoria --</option>
+              <option value="">
+                {categorias.length === 0 
+                  ? '-- Nenhuma categoria disponível --' 
+                  : '-- Escolha uma categoria --'
+                }
+              </option>
               {categorias.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.pai_id ? `  └─ ${cat.nome}` : cat.nome}
                 </option>
               ))}
             </select>
+            
+            {/* Debug: Mostrar valor selecionado */}
+            {categoriaSelecionada && (
+              <p className="text-xs text-green-600 mt-2">
+                ✓ Categoria selecionada: ID {categoriaSelecionada}
+              </p>
+            )}
           </div>
 
           {/* Ações */}

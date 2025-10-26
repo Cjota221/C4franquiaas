@@ -26,8 +26,9 @@ export async function POST(req: Request) {
 
   try {
     if (action === 'create') {
-  let { nome, slug } = body as { nome?: string; slug?: string; descricao?: string };
+  let { nome, slug } = body as { nome?: string; slug?: string; descricao?: string; imagem?: string };
   const descricao = (body as unknown as Record<string, unknown>)?.descricao as string | undefined;
+  const imagem = (body as unknown as Record<string, unknown>)?.imagem as string | undefined;
       nome = (nome ?? '').trim();
       if (!nome || nome.length < 2) {
         return NextResponse.json({ error: 'Nome da categoria é obrigatório e deve ter pelo menos 2 caracteres.' }, { status: 400 });
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
       }
 
       // attempt insert; if slug already exists, return a 409 with helpful message
-      const { data, error } = await supabase.from('categorias').insert([{ nome, slug, descricao }]).select().single();
+      const { data, error } = await supabase.from('categorias').insert([{ nome, slug, descricao, imagem }]).select().single();
       if (error) {
         // unique_violation in Postgres returns code '23505'
         const errObj = (error as unknown) as Record<string, unknown> | null;
