@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { useStatusStore } from '@/lib/store/statusStore';
 
 type Categoria = {
-  id: number;
+  id: string; // UUID do Supabase
   nome: string;
-  pai_id: number | null;
+  pai_id: string | null;
 };
 
 type Props = {
@@ -19,7 +19,7 @@ type Props = {
 
 export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, onSuccess }: Props): React.JSX.Element | null {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number | null>(null);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null); // Mudado de number para string
   const [loading, setLoading] = useState(false);
   const [modo, setModo] = useState<'vincular' | 'desvincular'>('vincular');
   const setStatusMsg = useStatusStore((s) => s.setStatusMsg);
@@ -174,7 +174,7 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
               value={categoriaSelecionada || ''}
               onChange={(e) => {
                 const value = e.target.value;
-                const categoriaId = value ? Number(value) : null;
+                const categoriaId = value || null; // Mantém como string (UUID)
                 console.log('[ModalVincularCategoria] Categoria selecionada:', {
                   value,
                   categoriaId,
