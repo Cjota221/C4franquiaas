@@ -101,8 +101,19 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-2xl">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={(e) => {
+        // Fechar modal se clicar no backdrop
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white rounded-xl max-w-md w-full shadow-2xl relative z-50"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-[#DB1472] text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
           <h2 className="text-xl font-bold">Gerenciar Categorias</h2>
@@ -145,13 +156,18 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
 
           {/* Selecionar categoria */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-[#333] mb-2">
+            <label htmlFor="categoria-select" className="block text-sm font-medium text-[#333] mb-2">
               Selecione a categoria:
             </label>
             <select
+              id="categoria-select"
               value={categoriaSelecionada || ''}
-              onChange={(e) => setCategoriaSelecionada(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472]"
+              onChange={(e) => {
+                const value = e.target.value;
+                setCategoriaSelecionada(value ? Number(value) : null);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] focus:outline-none bg-white"
+              disabled={loading}
             >
               <option value="">-- Escolha uma categoria --</option>
               {categorias.map((cat) => (

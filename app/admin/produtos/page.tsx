@@ -10,6 +10,7 @@ import { useModalStore } from '@/lib/store/modalStore';
 import ProductDetailsModal from '@/components/ProductDetailsModal';
 import ModalCategorias from '@/components/ModalCategorias';
 import ModalVincularCategoria from '@/components/ModalVincularCategoria';
+import ModalAtualizarPrecos from '@/components/ModalAtualizarPrecos';
 import { supabase } from '@/lib/supabaseClient';
 import PageWrapper from '@/components/PageWrapper';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -34,6 +35,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const selectedIds = useProdutoStore((s) => s.selectedIds);
   const setSelectedId = useProdutoStore((s) => s.setSelectedId);
   const clearSelected = useProdutoStore((s) => s.clearSelected);
+  const selectAll = useProdutoStore((s) => s.selectAll);
   const setCategoryPanelOpen = useCategoriaStore((s) => s.setCategoryPanelOpen);
   const statusMsg = useStatusStore((s) => s.statusMsg);
   const setStatusMsg = useStatusStore((s) => s.setStatusMsg);
@@ -55,6 +57,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [modalVincularOpen, setModalVincularOpen] = useState(false);
   const [filtroCategoria, setFiltroCategoria] = useState<number | null>(null);
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
+  const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -258,6 +261,17 @@ export default function ProdutosPage(): React.JSX.Element {
   // Desabilitar navegação se tem busca ativa (mostra tudo)
   const temBusca = debouncedSearchTerm.trim().length > 0;
 
+  // Função para selecionar todos os produtos exibidos
+  const selecionarTodos = () => {
+    const ids = produtosFiltrados.map(p => p.id);
+    selectAll(ids);
+    setStatusMsg({ 
+      type: 'success', 
+      text: `${produtosFiltrados.length} produto(s) selecionado(s)` 
+    });
+    setTimeout(() => setStatusMsg(null), 2000);
+  };
+
   return (
     <PageWrapper title="Produtos">
       <h1 className="text-3xl font-bold mb-6 text-[#333]">Gerenciar Produtos</h1>
@@ -304,6 +318,14 @@ export default function ProdutosPage(): React.JSX.Element {
           </button>
 
           <button
+            onClick={selecionarTodos}
+            disabled={produtosFiltrados.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
+          >
+            Selecionar Todos ({produtosFiltrados.length})
+          </button>
+
+          <button
             onClick={() => setModalVincularOpen(true)}
             disabled={selectedCount === 0}
             className="px-4 py-2 bg-[#F8B81F] text-[#333] rounded-lg hover:bg-[#F8B81F]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
@@ -332,6 +354,12 @@ export default function ProdutosPage(): React.JSX.Element {
                   className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
                 >
                   Desativar Selecionados
+                </button>
+                <button 
+                  onClick={() => setModalAtualizarPrecosOpen(true)} 
+                  className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-green-50 hover:text-green-700 font-medium transition-colors border-t-2 border-gray-100"
+                >
+                  Atualizar Preços
                 </button>
               </div>
             )}
@@ -589,6 +617,15 @@ export default function ProdutosPage(): React.JSX.Element {
       <ModalVincularCategoria
         isOpen={modalVincularOpen}
         onClose={() => setModalVincularOpen(false)}
+        produtoIds={Object.keys(selectedIds).filter(k => selectedIds[k]).map(k => isNaN(Number(k)) ? k : Number(k))}
+        onSuccess={() => {
+          carregarProdutos(pagina, debouncedSearchTerm);
+          clearSelected();
+        }}
+      />
+      <ModalAtualizarPrecos
+        isOpen={modalAtualizarPrecosOpen}
+        onClose={() => setModalAtualizarPrecosOpen(false)}
         produtoIds={Object.keys(selectedIds).filter(k => selectedIds[k]).map(k => isNaN(Number(k)) ? k : Number(k))}
         onSuccess={() => {
           carregarProdutos(pagina, debouncedSearchTerm);
