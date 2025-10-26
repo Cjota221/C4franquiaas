@@ -39,9 +39,11 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
         .order('nome', { ascending: true });
 
       if (error) throw error;
+      
+      console.log('[ModalVincularCategoria] Categorias carregadas:', data);
       setCategorias(data || []);
     } catch (err) {
-      console.error('Erro ao carregar categorias:', err);
+      console.error('[ModalVincularCategoria] Erro ao carregar categorias:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao carregar categorias' });
     }
   };
@@ -164,7 +166,13 @@ export default function ModalVincularCategoria({ isOpen, onClose, produtoIds, on
               value={categoriaSelecionada || ''}
               onChange={(e) => {
                 const value = e.target.value;
-                setCategoriaSelecionada(value ? Number(value) : null);
+                const categoriaId = value ? Number(value) : null;
+                console.log('[ModalVincularCategoria] Categoria selecionada:', {
+                  value,
+                  categoriaId,
+                  evento: e.target.value
+                });
+                setCategoriaSelecionada(categoriaId);
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] focus:outline-none bg-white"
               disabled={loading}

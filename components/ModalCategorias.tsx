@@ -107,8 +107,11 @@ export default function ModalCategorias(): React.JSX.Element | null {
         body: JSON.stringify({
           action: 'update',
           id,
-          nome: editandoNome.trim(),
-          descricao: editandoDescricao.trim() || null
+          updates: {
+            nome: editandoNome.trim(),
+            slug: slugify(editandoNome.trim()),
+            descricao: editandoDescricao.trim() || null
+          }
         })
       });
 
@@ -131,6 +134,17 @@ export default function ModalCategorias(): React.JSX.Element | null {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função auxiliar para criar slug
+  const slugify = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
   };
 
   // Deletar categoria
