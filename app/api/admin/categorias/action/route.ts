@@ -61,8 +61,24 @@ export async function POST(req: Request) {
       const { data, error } = await supabase.from('categorias').update(updates).eq('id', id).select().single();
       
       if (error) {
-        console.error('[API Categorias] Erro no update:', error);
-        throw error;
+        console.error('[API Categorias] Erro completo do Supabase:', JSON.stringify(error, null, 2));
+        
+        // Verificar se é erro de slug duplicado
+        const errObj = error as unknown as Record<string, unknown>;
+        const code = errObj?.code || errObj?.status;
+        const message = errObj?.message || String(error);
+        
+        if (code === '23505' || code === 23505 || message.toLowerCase().includes('duplicate')) {
+          return NextResponse.json({ 
+            error: 'Já existe uma categoria com esse nome/slug. Tente outro nome.' 
+          }, { status: 409 });
+        }
+        
+        // Retornar mensagem de erro do Supabase
+        return NextResponse.json({ 
+          error: message || 'Erro ao atualizar categoria',
+          details: error
+        }, { status: 500 });
       }
       
       console.log('[API Categorias] Update bem-sucedido:', data);
