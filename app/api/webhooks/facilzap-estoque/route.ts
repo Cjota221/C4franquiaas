@@ -40,7 +40,8 @@ function normalizeEstoque(estoqueField: unknown): number {
 }
 
 // Criar notificação de mudança de estoque
-async function criarNotificacao(supabase: ReturnType<typeof createClient>, params: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function criarNotificacao(supabase: any, params: {
   produto_id: string;
   produto_nome: string;
   id_externo: string;
