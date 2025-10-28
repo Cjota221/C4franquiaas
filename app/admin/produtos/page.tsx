@@ -59,6 +59,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
+  const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -304,6 +305,46 @@ export default function ProdutosPage(): React.JSX.Element {
     }
   };
 
+  // Função para vincular produtos às franqueadas
+  const vincularTodasFranqueadas = async () => {
+    try {
+      setVinculandoFranqueadas(true);
+      setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos às franqueadas...' });
+
+      const response = await fetch('/api/admin/produtos/vincular-todas-franqueadas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // Vazio = vincular TODOS os produtos ativos
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || 'Erro ao vincular produtos');
+      }
+
+      setStatusMsg({ 
+        type: 'success', 
+        text: `✅ ${data.detalhes.vinculacoes} vinculações criadas! (${data.detalhes.produtos} produtos × ${data.detalhes.franqueadas} franqueadas)` 
+      });
+
+      setTimeout(() => {
+        setStatusMsg(null);
+      }, 5000);
+
+    } catch (err) {
+      console.error('❌ Erro ao vincular:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setStatusMsg({ 
+        type: 'error', 
+        text: `❌ Erro ao vincular: ${errorMessage}` 
+      });
+      setTimeout(() => setStatusMsg(null), 5000);
+    } finally {
+      setVinculandoFranqueadas(false);
+    }
+  };
+
   // Função para selecionar todos os produtos exibidos
   const selecionarTodos = () => {
     const ids = produtosFiltrados.map(p => p.id);
@@ -369,6 +410,26 @@ export default function ProdutosPage(): React.JSX.Element {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Sincronizar FacilZap
+              </>
+            )}
+          </button>
+
+          <button 
+            onClick={vincularTodasFranqueadas}
+            disabled={vinculandoFranqueadas}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
+          >
+            {vinculandoFranqueadas ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                Vinculando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Vincular às Franqueadas
               </>
             )}
           </button>
