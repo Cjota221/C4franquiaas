@@ -79,12 +79,13 @@ export async function GET(
     // 2. Buscar informações do produto atual
     const { data: produtoAtual, error: erroProduto } = await supabase
       .from('produtos')
-      .select('id, nome, preco_base, cores, ativo')
+      .select('id, nome, preco_base, ativo')
       .eq('id', produtoId)
       .single();
 
     if (erroProduto || !produtoAtual) {
       console.warn('⚠️ [API Relacionados] Produto não encontrado:', produtoId);
+      console.warn('⚠️ [API Relacionados] Erro:', erroProduto?.message);
       // Retornar lista vazia ao invés de 404
       return NextResponse.json({
         produtos: [],
@@ -129,7 +130,7 @@ export async function GET(
     console.log('🎯 [API Relacionados] Buscando todos os produtos ativos...');
     const { data: todosProdutos, error: erroBusca } = await supabase
       .from('produtos')
-      .select('id, nome, preco_base, cores, imagens, slug, ativo')
+      .select('id, nome, preco_base, imagens, ativo')
       .neq('id', produtoId)
       .eq('ativo', true);
 
@@ -157,9 +158,7 @@ export async function GET(
       id: string;
       nome: string;
       preco_base: number;
-      cores: string[];
       imagens: string[];
-      slug: string;
       score: number;
       palavrasComuns: string[];
     };
@@ -177,9 +176,7 @@ export async function GET(
         id: produto.id,
         nome: produto.nome || '',
         preco_base: produto.preco_base || 0,
-        cores: produto.cores || [],
         imagens: produto.imagens || [],
-        slug: produto.slug || '',
         score,
         palavrasComuns,
       };

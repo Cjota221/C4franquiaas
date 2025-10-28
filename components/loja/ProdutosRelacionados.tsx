@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ProdutoRelacionado = {
-  id: number;
+  id: number | string;
   nome: string;
   preco: number;
-  slug: string;
   imagens: string[] | null;
 };
 
@@ -31,15 +31,14 @@ export default function ProdutosRelacionados({
     async function carregarProdutosRelacionados() {
       try {
         setLoading(true);
-        console.log(`🔍 [ProdutosRelacionados] Buscando produtos relacionados para ID: ${produtoId}`);
+        console.log(`🔍 [ProdutosRelacionados] Buscando para produto: ${produtoId} no domínio: ${dominio}`);
         
-        const response = await fetch(`/api/produtos/relacionados/${produtoId}`);
+        // ⭐ NOVA API: Busca produtos da FRANQUEADA com preços corretos
+        const response = await fetch(`/api/loja/${dominio}/produtos/relacionados/${produtoId}`);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.warn(`⚠️ [ProdutosRelacionados] Resposta ${response.status}:`, errorData);
-          
-          // Se for 404 ou outro erro, apenas não mostra produtos
           setProdutos([]);
           return;
         }
@@ -55,10 +54,10 @@ export default function ProdutosRelacionados({
       }
     }
 
-    if (produtoId) {
+    if (produtoId && dominio) {
       carregarProdutosRelacionados();
     }
-  }, [produtoId]);
+  }, [produtoId, dominio]);
 
   // Não mostrar nada se não tiver produtos
   if (!loading && produtos.length === 0) {
@@ -83,65 +82,87 @@ export default function ProdutosRelacionados({
           </div>
         )}
 
-        {/* Grade de Produtos */}
+        {/* 🎨 CARROSSEL HORIZONTAL - MOBILE E DESKTOP */}
         {!loading && produtos.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
-            {produtos.map((produto) => {
-              const imagemPrincipal = produto.imagens?.[0] || '/placeholder-produto.png';
-              
-              return (
-                <Link
-                  key={produto.id}
-                  href={`/loja/${dominio}/produto/${produto.id}`}
-                  className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-                >
-                  {/* Imagem */}
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
-                    <img
-                      src={imagemPrincipal}
-                      alt={produto.nome}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
-                      }}
-                    />
-                    
-                    {/* Badge "Ver Produto" no hover */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                      <span className="bg-white text-gray-900 px-4 py-2 rounded-full text-sm font-semibold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                        Ver Produto
-                      </span>
-                    </div>
-                  </div>
+          <div className="relative">
+            {/* Gradient esquerda */}
+            <div className="hidden md:block absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
+            
+            {/* Gradient direita */}
+            <div className="hidden md:block absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
 
-                  {/* Informações */}
-                  <div className="p-3 md:p-4">
-                    <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#DB1472] transition-colors">
-                      {produto.nome}
-                    </h3>
-                    
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg md:text-xl font-bold text-[#DB1472]">
-                        R$ {produto.preco.toFixed(2)}
-                      </span>
+            {/* Container scrollável */}
+            <div 
+              className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 -mx-4 px-4"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              {produtos.slice(0, 20).map((produto) => {
+                const imagemPrincipal = produto.imagens?.[0] || '/placeholder-produto.png';
+                
+                return (
+                  <Link
+                    key={produto.id}
+                    href={`/loja/${dominio}/produto/${produto.id}`}
+                    className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex-none snap-start w-[160px] sm:w-[180px] md:w-[220px] lg:w-[240px]"
+                  >
+                    {/* Imagem */}
+                    <div className="relative aspect-square overflow-hidden bg-gray-100">
+                      <img
+                        src={imagemPrincipal}
+                        alt={produto.nome}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
+                        }}
+                      />
+                      
+                      {/* Badge "Ver Produto" no hover */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="bg-white text-gray-900 px-3 py-1.5 rounded-full text-xs font-semibold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                          Ver Produto
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
 
-        {/* Scroll hint para mobile */}
-        {!loading && produtos.length > 2 && (
-          <div className="md:hidden text-center mt-4">
-            <p className="text-xs text-gray-500">
-              ← Deslize para ver mais →
-            </p>
+                    {/* Informações */}
+                    <div className="p-3 md:p-4">
+                      <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#DB1472] transition-colors min-h-[2.5rem]">
+                        {produto.nome}
+                      </h3>
+                      
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg md:text-xl font-bold text-[#DB1472]">
+                          R$ {produto.preco.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Indicador de scroll (mobile) */}
+            <div className="flex md:hidden items-center justify-center gap-1 mt-4">
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <span className="text-xs text-gray-500">Deslize para ver mais</span>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
           </div>
         )}
       </div>
+
+      {/* CSS customizado para esconder scrollbar */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }
+
