@@ -158,6 +158,32 @@ export async function GET(
     console.log(`💰 [API Relacionados Loja] ${precos?.length || 0} produtos com preços ativos`);
 
     // 6️⃣ Processar imagens
+    // ⚠️ SEMPRE usar proxy porque Facilzap bloqueia acesso direto externo (CORS/403)
+    const baseUrl = 'https://c4franquiaas.netlify.app';
+
+    const processarImagem = (url: string | null): string | null => {
+      if (!url) return null;
+
+      // Se já tiver proxy Netlify completo, manter
+      if (url.includes('/.netlify/functions/proxy-facilzap-image')) {
+        return url;
+      }
+
+      // Se for URL do Facilzap, SEMPRE adicionar proxy (mesmo em DEV)
+      if (url.includes('facilzap.app.br')) {
+        const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+        return proxyUrl;
+      }
+
+      // Outras URLs (Supabase, etc) retornar direto
+      if (url.startsWith('http')) {
+        return url;
+      }
+
+      return null;
+    };
+
+    // 6️⃣ Processar imagens
     // EM DESENVOLVIMENTO: Retornar URLs diretas do Facilzap (sem proxy)
     // EM PRODUÇÃO: Usar proxy Netlify para evitar erro 403
     const isDev = process.env.NODE_ENV === 'development';

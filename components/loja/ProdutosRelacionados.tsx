@@ -126,9 +126,14 @@ export default function ProdutosRelacionados({
                         alt={produto.nome}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
+                        crossOrigin="anonymous"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
+                          console.error('🚨 [Imagem Erro]', produto.nome, 'URL:', imagemPrincipal);
                           target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
+                        }}
+                        onLoad={() => {
+                          console.log('✅ [Imagem OK]', produto.nome);
                         }}
                       />
                       
