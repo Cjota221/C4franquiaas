@@ -28,6 +28,7 @@ type ProdutoRow = {
   imagens: string[] | null;
   categorias: { id: number; nome: string }[] | null;
   variacoes_meta?: { sku?: string; codigo_barras?: string }[] | null;
+  temMargem?: boolean; // ⭐ NOVO: Identifica se o produto tem preço personalizado (margem configurada)
 };
 
 export default function ProdutosPage(): React.JSX.Element {
@@ -60,6 +61,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
   const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
+  const [filtroNovos, setFiltroNovos] = useState(false); // Novo filtro
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -102,14 +104,19 @@ export default function ProdutosPage(): React.JSX.Element {
         query = query.or(`nome.ilike.%${termo}%,id_externo.ilike.%${termo}%`);
       }
 
-      // TODO: Aplicar filtro de categoria quando a tabela existir
-      // if (filtroCategoria) {
-      //   query = query.contains('categorias', [{ id: filtroCategoria }]);
-      // }
-
       const { data, error, count } = await query.range(from, to);
 
       if (error) throw error;
+
+      // Buscar preços personalizados de TODOS os produtos para identificar "novos"
+      const produtoIds = (data || []).map((r: ProdutoRow) => r.id);
+      const { data: precosPersonalizados } = await supabase
+        .from('produtos_franqueadas')
+        .select('produto_id')
+        .in('produto_id', produtoIds);
+
+      // Criar Set de produtos que JÁ TÊM margem configurada
+      const produtosComMargem = new Set(precosPersonalizados?.map(p => p.produto_id) || []);
 
       const mapped: ProdutoType[] = (data || []).map((r: ProdutoRow) => {
         const id = r.id;
@@ -151,10 +158,18 @@ export default function ProdutosPage(): React.JSX.Element {
           imagens: r.imagens || undefined,
           estoque_display: estoque,
           categorias: null, // Será carregado depois da migração
+          temMargem: produtosComMargem.has(id), // ⭐ NOVO: indica se produto já tem margem
         };
       });
 
-      setProdutosFiltrados(mapped);
+      // ⭐ Aplicar filtro de "Produtos Novos" (sem margem)
+      let produtosFiltradosLocal = mapped;
+      if (filtroNovos) {
+        produtosFiltradosLocal = produtosFiltradosLocal.filter(p => !p.temMargem);
+        console.log(`🔍 Filtro "Produtos Novos": ${produtosFiltradosLocal.length} de ${mapped.length}`);
+      }
+
+      setProdutosFiltrados(produtosFiltradosLocal);
       setTotalProdutos(count || 0);
     } catch (err) {
       console.error('Erro ao carregar produtos:', err);
@@ -178,7 +193,7 @@ export default function ProdutosPage(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [setStatusMsg]);
+  }, [setStatusMsg, filtroNovos]); // Adicionar filtroNovos às dependências
 
   function safeDecodeUrl(v?: unknown) {
     if (!v) return null;
@@ -201,7 +216,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
   useEffect(() => {
     carregarProdutos(pagina, debouncedSearchTerm);
-  }, [pagina, debouncedSearchTerm, filtroCategoria, carregarProdutos]);
+  }, [pagina, debouncedSearchTerm, filtroCategoria, filtroNovos, carregarProdutos]); // ⭐ Adicionar filtroNovos
 
   // Indicador de busca
   useEffect(() => {
@@ -234,6 +249,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       const novoStatus = action === 'activate';
       
+      // 1. Atualizar status do produto
       const { error } = await supabase
         .from('produtos')
         .update({ ativo: novoStatus })
@@ -241,8 +257,43 @@ export default function ProdutosPage(): React.JSX.Element {
 
       if (error) throw error;
 
-      setStatusMsg({ type: 'success', text: `${selected.length} produto(s) ${novoStatus ? 'ativado(s)' : 'desativado(s)'}` });
-      setTimeout(() => setStatusMsg(null), 3000);
+      // 2. Se estiver ATIVANDO, vincular automaticamente às franqueadas
+      if (novoStatus) {
+        setStatusMsg({ type: 'info', text: `✅ ${selected.length} produto(s) ativado(s). Vinculando às franqueadas...` });
+        
+        try {
+          const response = await fetch('/api/admin/produtos/vincular-todas-franqueadas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ produto_ids: selected }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            console.warn('Aviso ao vincular:', data.error);
+            setStatusMsg({ 
+              type: 'success', 
+              text: `✅ ${selected.length} produto(s) ativado(s) (vinculação pode ter falhado - clique no botão roxo)` 
+            });
+          } else {
+            setStatusMsg({ 
+              type: 'success', 
+              text: `✅ ${selected.length} produto(s) ativado(s) e vinculados às franqueadas!` 
+            });
+          }
+        } catch (vinculacaoError) {
+          console.warn('Erro ao vincular:', vinculacaoError);
+          setStatusMsg({ 
+            type: 'success', 
+            text: `✅ ${selected.length} produto(s) ativado(s) (use botão roxo para vincular)` 
+          });
+        }
+      } else {
+        setStatusMsg({ type: 'success', text: `✅ ${selected.length} produto(s) desativado(s)` });
+      }
+
+      setTimeout(() => setStatusMsg(null), 5000);
       
       // Atualizar localmente
       setProdutosFiltrados(prev => prev.map(p => 
@@ -254,6 +305,7 @@ export default function ProdutosPage(): React.JSX.Element {
     } catch (err) {
       console.error('Erro em ação em massa:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao processar ação' });
+      setTimeout(() => setStatusMsg(null), 3000);
     }
   };
 
@@ -390,6 +442,19 @@ export default function ProdutosPage(): React.JSX.Element {
               <option key={cat.id} value={cat.id}>{cat.nome}</option>
             ))}
           </select>
+
+          {/* ⭐ NOVO: Filtro "Produtos Novos" */}
+          <label className="flex items-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-[#DB1472] transition-all cursor-pointer bg-white">
+            <input 
+              type="checkbox" 
+              checked={filtroNovos}
+              onChange={(e) => setFiltroNovos(e.target.checked)}
+              className="w-4 h-4 text-[#DB1472] border-gray-300 rounded focus:ring-[#DB1472]"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Apenas produtos novos (sem margem)
+            </span>
+          </label>
         </div>
 
         {/* Linha 2: Ações */}
@@ -447,6 +512,21 @@ export default function ProdutosPage(): React.JSX.Element {
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
           >
             Selecionar Todos ({produtosFiltrados.length})
+          </button>
+
+          {/* ⭐ NOVO: Botão "Selecionar Produtos Novos" */}
+          <button
+            onClick={() => {
+              const novos = produtosFiltrados.filter(p => !p.temMargem);
+              selectAll(novos.map(p => p.id)); // Usar selectAll do store
+            }}
+            disabled={produtosFiltrados.filter(p => !p.temMargem).length === 0}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Selecionar Novos ({produtosFiltrados.filter(p => !p.temMargem).length})
           </button>
 
           <button
@@ -611,7 +691,15 @@ export default function ProdutosPage(): React.JSX.Element {
                   </div>
 
                   {/* Info */}
-                  <h3 className="font-bold text-[#333] mb-2 line-clamp-2">{p.nome}</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-bold text-[#333] line-clamp-2 flex-1">{p.nome}</h3>
+                    {/* ⭐ NOVO: Badge "NOVO" para produtos sem margem */}
+                    {!p.temMargem && (
+                      <span className="px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded uppercase whitespace-nowrap">
+                        NOVO
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="space-y-1 text-sm mb-3">
                     <p className="text-gray-600">

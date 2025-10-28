@@ -122,7 +122,9 @@ export async function GET(request: NextRequest) {
       },
       categoria: categoria ? {
         id: categoria.categoria_id,
-        nome: categoria.categorias?.nome || 'N/A',
+        nome: Array.isArray(categoria.categorias) 
+          ? categoria.categorias[0]?.nome || 'N/A' 
+          : (categoria.categorias as {nome?: string})?.nome || 'N/A',
       } : null,
       estatisticas: {
         total_produtos_ativos: totalAtivos,
