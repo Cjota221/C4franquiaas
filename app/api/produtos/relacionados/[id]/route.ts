@@ -53,38 +53,109 @@ export async function GET(
       });
     }
 
+    console.log('📦 [API Relacionados] Produto atual:', {
+      id: produtoAtual.id,
+      nome: produtoAtual.nome,
+      preco_base: produtoAtual.preco_base,
+      ativo: produtoAtual.ativo,
+    });
+
     const categoriaIdAtual = categoriaAtual?.categoria_id || null;
-    const precoMin = produtoAtual.preco_base * 0.7;
-    const precoMax = produtoAtual.preco_base * 1.3;
+    
+    // Se não tiver preço_base, usar valor padrão para não quebrar
+    const precoBase = produtoAtual.preco_base || 100;
+    const precoMin = precoBase * 0.7 * 0.5;
+    const precoMax = precoBase * 1.3 * 1.5;
 
-    console.log('💰 [API Relacionados] Faixa de preço:', { precoMin, precoMax, precoBase: produtoAtual.preco_base });
+    console.log('💰 [API Relacionados] Faixa de preço:', { 
+      precoBase, 
+      precoMin: precoMin.toFixed(2), 
+      precoMax: precoMax.toFixed(2) 
+    });
 
-    // 3. Buscar produtos relacionados (busca ampla baseada em preço)
-    const { data: produtosRelacionados, error: erroRelacionados } = await supabase
-      .from('produtos')
-      .select(`
-        id,
-        nome,
-        preco_base,
-        cores,
-        imagens,
-        slug
-      `)
-      .neq('id', produtoId) // Não incluir o próprio produto
-      .eq('ativo', true) // Apenas produtos ativos
-      .gte('preco_base', precoMin * 0.5) // Busca mais ampla
-      .lte('preco_base', precoMax * 1.5)
-      .limit(20); // Buscar mais produtos para ter opções
+    // 3. Buscar produtos relacionados com estratégia em cascata
+    let produtosRelacionados: Array<{
+      id: string;
+      nome: string;
+      preco_base: number;
+      cores: string[];
+      imagens: string[];
+      slug: string;
+    }> = [];
+    
+    // ESTRATÉGIA 1: Mesma categoria (mais relevante)
+    if (categoriaIdAtual) {
+      console.log('🎯 [API Relacionados] Tentando buscar produtos da mesma categoria:', categoriaIdAtual);
+      
+      const { data: vinculacoesMesmaCategoria } = await supabase
+        .from('produto_categorias')
+        .select('produto_id')
+        .eq('categoria_id', categoriaIdAtual)
+        .neq('produto_id', produtoId)
+        .limit(20);
 
-    console.log(`📦 [API Relacionados] Produtos encontrados: ${produtosRelacionados?.length || 0}`);
-
-    if (erroRelacionados) {
-      console.error('❌ [API Relacionados] Erro ao buscar:', erroRelacionados);
-      return NextResponse.json(
-        { error: 'Erro ao buscar produtos relacionados' },
-        { status: 500 }
-      );
+      if (vinculacoesMesmaCategoria && vinculacoesMesmaCategoria.length > 0) {
+        const produtoIds = vinculacoesMesmaCategoria.map(v => v.produto_id);
+        
+        const { data: produtosMesmaCategoria } = await supabase
+          .from('produtos')
+          .select('id, nome, preco_base, cores, imagens, slug')
+          .in('id', produtoIds)
+          .eq('ativo', true)
+          .limit(20);
+        
+        if (produtosMesmaCategoria && produtosMesmaCategoria.length > 0) {
+          produtosRelacionados = produtosMesmaCategoria;
+          console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos da mesma categoria`);
+        }
+      }
     }
+    
+    // ESTRATÉGIA 2: Se não achou pela categoria, buscar por faixa de preço
+    if (produtosRelacionados.length === 0 && precoBase > 0) {
+      console.log('🎯 [API Relacionados] Tentando buscar produtos por faixa de preço...');
+      
+      const { data: produtosPorPreco } = await supabase
+        .from('produtos')
+        .select('id, nome, preco_base, cores, imagens, slug')
+        .neq('id', produtoId)
+        .eq('ativo', true)
+        .gte('preco_base', precoMin)
+        .lte('preco_base', precoMax)
+        .limit(20);
+      
+      if (produtosPorPreco && produtosPorPreco.length > 0) {
+        produtosRelacionados = produtosPorPreco;
+        console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos por faixa de preço`);
+      }
+    }
+    
+    // ESTRATÉGIA 3: Se ainda não achou, buscar qualquer produto ativo (fallback)
+    if (produtosRelacionados.length === 0) {
+      console.log('🎯 [API Relacionados] Buscando qualquer produto ativo (fallback)...');
+      
+      const { data: produtosGenericos, error: erroRelacionados } = await supabase
+        .from('produtos')
+        .select('id, nome, preco_base, cores, imagens, slug')
+        .neq('id', produtoId)
+        .eq('ativo', true)
+        .limit(20);
+
+      if (erroRelacionados) {
+        console.error('❌ [API Relacionados] Erro ao buscar:', erroRelacionados);
+        return NextResponse.json(
+          { error: 'Erro ao buscar produtos relacionados' },
+          { status: 500 }
+        );
+      }
+      
+      if (produtosGenericos && produtosGenericos.length > 0) {
+        produtosRelacionados = produtosGenericos;
+        console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos genéricos`);
+      }
+    }
+
+    console.log(`📦 [API Relacionados] Total de produtos para processar: ${produtosRelacionados?.length || 0}`);
 
     // 4. Buscar categorias dos produtos relacionados
     const produtoIds = (produtosRelacionados || []).map(p => p.id);
