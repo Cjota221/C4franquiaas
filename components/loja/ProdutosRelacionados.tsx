@@ -45,6 +45,17 @@ export default function ProdutosRelacionados({
 
         const data = await response.json();
         console.log(`✅ [ProdutosRelacionados] ${data.produtos?.length || 0} produtos encontrados`);
+        
+        // 🐛 DEBUG: Verificar se produtos têm imagens
+        if (data.produtos && data.produtos.length > 0) {
+          console.log('🖼️ [DEBUG Frontend] Primeiros 3 produtos recebidos:');
+          data.produtos.slice(0, 3).forEach((p: ProdutoRelacionado, i: number) => {
+            console.log(`  ${i + 1}. ${p.nome}`);
+            console.log(`     Imagens:`, p.imagens);
+            console.log(`     Primeira imagem:`, p.imagens?.[0] || 'NENHUMA');
+          });
+        }
+        
         setProdutos(data.produtos || []);
       } catch (error) {
         console.error('❌ [ProdutosRelacionados] Erro:', error);

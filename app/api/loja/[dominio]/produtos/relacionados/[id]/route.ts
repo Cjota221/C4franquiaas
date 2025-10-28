@@ -282,7 +282,17 @@ export async function GET(
       preco: produto.preco_final, // Compatibilidade com frontend
     }));
 
-    console.log(`✅ [API Relacionados Loja] Retornando ${produtosResposta.length} produtos\n`);
+    console.log(`✅ [API Relacionados Loja] Retornando ${produtosResposta.length} produtos`);
+    
+    // 🐛 DEBUG: Logar primeiros 3 produtos com imagens
+    if (produtosResposta.length > 0) {
+      console.log('🖼️ [DEBUG Imagens] Primeiros 3 produtos:');
+      produtosResposta.slice(0, 3).forEach((p, i) => {
+        console.log(`  ${i + 1}. ${p.nome}`);
+        console.log(`     Imagens (${p.imagens?.length || 0}):`, p.imagens?.[0] || 'NENHUMA');
+      });
+    }
+    console.log(''); // Linha em branco
 
     return NextResponse.json({
       produtos: produtosResposta,
