@@ -58,6 +58,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [filtroCategoria, setFiltroCategoria] = useState<number | null>(null);
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
+  const [sincronizando, setSincronizando] = useState(false);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -261,6 +262,48 @@ export default function ProdutosPage(): React.JSX.Element {
   // Desabilitar navegação se tem busca ativa (mostra tudo)
   const temBusca = debouncedSearchTerm.trim().length > 0;
 
+  // Função para sincronizar produtos do FacilZap
+  const sincronizarProdutos = async () => {
+    try {
+      setSincronizando(true);
+      setStatusMsg({ type: 'info', text: '🔄 Sincronizando produtos do FacilZap...' });
+
+      const response = await fetch('/api/sync-produtos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || data.message || 'Erro ao sincronizar produtos');
+      }
+
+      setStatusMsg({ 
+        type: 'success', 
+        text: `✅ ${data.imported} produto(s) sincronizado(s) com sucesso!` 
+      });
+
+      // Recarregar produtos após 2 segundos
+      setTimeout(() => {
+        carregarProdutos(pagina, debouncedSearchTerm);
+        setStatusMsg(null);
+      }, 2000);
+
+    } catch (err) {
+      console.error('❌ Erro ao sincronizar:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setStatusMsg({ 
+        type: 'error', 
+        text: `❌ Erro ao sincronizar: ${errorMessage}` 
+      });
+      setTimeout(() => setStatusMsg(null), 5000);
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
   // Função para selecionar todos os produtos exibidos
   const selecionarTodos = () => {
     const ids = produtosFiltrados.map(p => p.id);
@@ -310,6 +353,26 @@ export default function ProdutosPage(): React.JSX.Element {
 
         {/* Linha 2: Ações */}
         <div className="flex gap-3 items-center flex-wrap">
+          <button 
+            onClick={sincronizarProdutos}
+            disabled={sincronizando}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
+          >
+            {sincronizando ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                Sincronizando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sincronizar FacilZap
+              </>
+            )}
+          </button>
+
           <button 
             onClick={() => setCategoryPanelOpen(true)} 
             className="px-4 py-2 bg-[#DB1472] text-white rounded-lg hover:bg-[#DB1472]/90 transition-all shadow-md font-medium"
