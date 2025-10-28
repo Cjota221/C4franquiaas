@@ -6,6 +6,56 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+/**
+ * Extrai palavras-chave do nome do produto
+ * Remove cores comuns, tamanhos e palavras irrelevantes
+ */
+function extrairPalavrasChave(nome: string): string[] {
+  // Normalizar: minúsculas e remover acentos
+  const normalizado = nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  
+  // Lista de palavras a ignorar (stopwords + cores + tamanhos)
+  const stopwords = [
+    'com', 'de', 'da', 'do', 'e', 'para', 'em', 'o', 'a', 'os', 'as',
+    // Cores comuns
+    'preto', 'preta', 'branco', 'branca', 'azul', 'vermelho', 'vermelha',
+    'verde', 'amarelo', 'amarela', 'rosa', 'roxo', 'roxa', 'laranja',
+    'marrom', 'cinza', 'bege', 'cafe', 'prata', 'dourado', 'dourada',
+    'colorido', 'colorida', 'estampado', 'estampada',
+    // Tamanhos
+    'pp', 'p', 'm', 'g', 'gg', 'xgg', 'pequeno', 'medio', 'grande',
+    // Qualificadores
+    'com', 'sem', 'strass', 'bordado', 'bordada', 'liso', 'lisa'
+  ];
+  
+  // Separar palavras
+  const palavras = normalizado
+    .split(/[\s\-_,]+/)
+    .filter(p => p.length >= 3) // Mínimo 3 caracteres
+    .filter(p => !stopwords.includes(p))
+    .filter(p => !/^\d+$/.test(p)); // Remover números puros
+  
+  return [...new Set(palavras)]; // Remover duplicatas
+}
+
+/**
+ * Calcula score de similaridade entre dois arrays de palavras
+ */
+function calcularSimilaridade(palavras1: string[], palavras2: string[]): number {
+  const set1 = new Set(palavras1);
+  const set2 = new Set(palavras2);
+  
+  // Interseção: palavras em comum
+  const intersecao = [...set1].filter(p => set2.has(p));
+  
+  // Score = palavras em comum / total de palavras únicas
+  const uniao = new Set([...palavras1, ...palavras2]);
+  return intersecao.length / uniao.size;
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -60,179 +110,128 @@ export async function GET(
       ativo: produtoAtual.ativo,
     });
 
-    const categoriaIdAtual = categoriaAtual?.categoria_id || null;
-    
-    // Se não tiver preço_base, usar valor padrão para não quebrar
-    const precoBase = produtoAtual.preco_base || 100;
-    const precoMin = precoBase * 0.7 * 0.5;
-    const precoMax = precoBase * 1.3 * 1.5;
+    // ⭐ NOVA ESTRATÉGIA: Busca por similaridade de nome
+    console.log('🔍 [API Relacionados] Extraindo palavras-chave do nome...');
+    const palavrasChaveProdutoAtual = extrairPalavrasChave(produtoAtual.nome || '');
+    console.log('🏷️ [API Relacionados] Palavras-chave:', palavrasChaveProdutoAtual);
 
-    console.log('💰 [API Relacionados] Faixa de preço:', { 
-      precoBase, 
-      precoMin: precoMin.toFixed(2), 
-      precoMax: precoMax.toFixed(2) 
-    });
+    // Se não conseguiu extrair palavras-chave, retornar vazio
+    if (palavrasChaveProdutoAtual.length === 0) {
+      console.warn('⚠️ [API Relacionados] Nenhuma palavra-chave encontrada no nome');
+      return NextResponse.json({
+        produtos: [],
+        total: 0,
+        mensagem: 'Nome do produto muito curto ou sem palavras-chave',
+      });
+    }
 
-    // 3. Buscar produtos relacionados com estratégia em cascata
-    let produtosRelacionados: Array<{
+    // 1. Buscar TODOS os produtos ativos (exceto o atual)
+    console.log('🎯 [API Relacionados] Buscando todos os produtos ativos...');
+    const { data: todosProdutos, error: erroBusca } = await supabase
+      .from('produtos')
+      .select('id, nome, preco_base, cores, imagens, slug, ativo')
+      .neq('id', produtoId)
+      .eq('ativo', true);
+
+    if (erroBusca) {
+      console.error('❌ [API Relacionados] Erro ao buscar produtos:', erroBusca);
+      return NextResponse.json(
+        { error: 'Erro ao buscar produtos' },
+        { status: 500 }
+      );
+    }
+
+    if (!todosProdutos || todosProdutos.length === 0) {
+      console.warn('⚠️ [API Relacionados] Nenhum produto ativo encontrado');
+      return NextResponse.json({
+        produtos: [],
+        total: 0,
+        mensagem: 'Nenhum produto ativo disponível',
+      });
+    }
+
+    console.log(`📊 [API Relacionados] ${todosProdutos.length} produtos ativos encontrados`);
+
+    // 2. Calcular score de similaridade para cada produto
+    type ProdutoComScore = {
       id: string;
       nome: string;
       preco_base: number;
       cores: string[];
       imagens: string[];
       slug: string;
-    }> = [];
-    
-    // ESTRATÉGIA 1: Mesma categoria (mais relevante)
-    if (categoriaIdAtual) {
-      console.log('🎯 [API Relacionados] Tentando buscar produtos da mesma categoria:', categoriaIdAtual);
+      score: number;
+      palavrasComuns: string[];
+    };
+
+    const produtosComScore: ProdutoComScore[] = todosProdutos.map(produto => {
+      const palavrasProduto = extrairPalavrasChave(produto.nome || '');
+      const score = calcularSimilaridade(palavrasChaveProdutoAtual, palavrasProduto);
       
-      const { data: vinculacoesMesmaCategoria } = await supabase
-        .from('produto_categorias')
-        .select('produto_id')
-        .eq('categoria_id', categoriaIdAtual)
-        .neq('produto_id', produtoId)
-        .limit(20);
-
-      if (vinculacoesMesmaCategoria && vinculacoesMesmaCategoria.length > 0) {
-        const produtoIds = vinculacoesMesmaCategoria.map(v => v.produto_id);
-        
-        const { data: produtosMesmaCategoria } = await supabase
-          .from('produtos')
-          .select('id, nome, preco_base, cores, imagens, slug')
-          .in('id', produtoIds)
-          .eq('ativo', true)
-          .limit(20);
-        
-        if (produtosMesmaCategoria && produtosMesmaCategoria.length > 0) {
-          produtosRelacionados = produtosMesmaCategoria;
-          console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos da mesma categoria`);
-        }
-      }
-    }
-    
-    // ESTRATÉGIA 2: Se não achou pela categoria, buscar por faixa de preço
-    if (produtosRelacionados.length === 0 && precoBase > 0) {
-      console.log('🎯 [API Relacionados] Tentando buscar produtos por faixa de preço...');
-      
-      const { data: produtosPorPreco } = await supabase
-        .from('produtos')
-        .select('id, nome, preco_base, cores, imagens, slug')
-        .neq('id', produtoId)
-        .eq('ativo', true)
-        .gte('preco_base', precoMin)
-        .lte('preco_base', precoMax)
-        .limit(20);
-      
-      if (produtosPorPreco && produtosPorPreco.length > 0) {
-        produtosRelacionados = produtosPorPreco;
-        console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos por faixa de preço`);
-      }
-    }
-    
-    // ESTRATÉGIA 3: Se ainda não achou, buscar qualquer produto ativo (fallback)
-    if (produtosRelacionados.length === 0) {
-      console.log('🎯 [API Relacionados] Buscando qualquer produto ativo (fallback)...');
-      
-      const { data: produtosGenericos, error: erroRelacionados } = await supabase
-        .from('produtos')
-        .select('id, nome, preco_base, cores, imagens, slug')
-        .neq('id', produtoId)
-        .eq('ativo', true)
-        .limit(20);
-
-      if (erroRelacionados) {
-        console.error('❌ [API Relacionados] Erro ao buscar:', erroRelacionados);
-        return NextResponse.json(
-          { error: 'Erro ao buscar produtos relacionados' },
-          { status: 500 }
-        );
-      }
-      
-      if (produtosGenericos && produtosGenericos.length > 0) {
-        produtosRelacionados = produtosGenericos;
-        console.log(`✅ [API Relacionados] Encontrados ${produtosRelacionados.length} produtos genéricos`);
-      }
-    }
-
-    console.log(`📦 [API Relacionados] Total de produtos para processar: ${produtosRelacionados?.length || 0}`);
-
-    // 4. Buscar categorias dos produtos relacionados
-    const produtoIds = (produtosRelacionados || []).map(p => p.id);
-    const { data: produtoCategorias } = await supabase
-      .from('produto_categorias')
-      .select('produto_id, categoria_id')
-      .in('produto_id', produtoIds);
-
-    console.log(`🏷️ [API Relacionados] Categorias encontradas: ${produtoCategorias?.length || 0}`);
-
-    // Criar mapa de produto_id -> categoria_id
-    const categoriasMap = new Map<string, string>();
-    produtoCategorias?.forEach(pc => {
-      if (!categoriasMap.has(pc.produto_id)) {
-        categoriasMap.set(pc.produto_id, pc.categoria_id);
-      }
-    });
-
-    // 5. Calcular score de relevância para cada produto
-    const produtosComScore = (produtosRelacionados || []).map((produto) => {
-      let score = 0;
-
-      // Mesma categoria: +10 pontos
-      const categoriaProduto = categoriasMap.get(produto.id);
-      if (categoriaProduto && categoriaProduto === categoriaIdAtual) {
-        score += 10;
-      }
-
-      // Preço similar: +5 pontos
-      if (produto.preco_base >= precoMin && produto.preco_base <= precoMax) {
-        score += 5;
-      }
-
-      // Cores em comum: +3 pontos por cor
-      if (produtoAtual.cores && produto.cores) {
-        const coresAtual = Array.isArray(produtoAtual.cores) 
-          ? produtoAtual.cores 
-          : [];
-        const coresProduto = Array.isArray(produto.cores) 
-          ? produto.cores 
-          : [];
-        
-        const coresEmComum = coresAtual.filter((cor: string) => 
-          coresProduto.includes(cor)
-        );
-        score += coresEmComum.length * 3;
-      }
+      // Palavras em comum
+      const palavrasComuns = palavrasChaveProdutoAtual.filter(p => 
+        palavrasProduto.includes(p)
+      );
 
       return {
-        ...produto,
+        id: produto.id,
+        nome: produto.nome || '',
+        preco_base: produto.preco_base || 0,
+        cores: produto.cores || [],
+        imagens: produto.imagens || [],
+        slug: produto.slug || '',
         score,
+        palavrasComuns,
       };
     });
 
-    // 6. Ordenar por score e pegar top 6, incluindo categoria_id do Map
-    const topProdutos = produtosComScore
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-      .map((item) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { score, ...produto } = item;
-        return {
-          ...produto,
-          preco: produto.preco_base, // Compatibilidade com frontend
-          categoria_id: categoriasMap.get(produto.id) || null,
-        };
-      });
+    // 3. Filtrar produtos com similaridade > 0 (pelo menos 1 palavra em comum)
+    const produtosSimilares = produtosComScore.filter(p => p.score > 0);
 
-    console.log('🎯 [API Relacionados] Top produtos por score:');
-    produtosComScore.slice(0, 6).forEach((p, i) => {
-      console.log(`  ${i + 1}. ${p.nome} - Score: ${p.score} (Categoria: ${categoriasMap.get(p.id) || 'N/A'})`);
+    console.log(`✅ [API Relacionados] ${produtosSimilares.length} produtos com palavras em comum`);
+
+    // 4. Ordenar por score (mais similar primeiro)
+    const produtosOrdenados = produtosSimilares.sort((a, b) => b.score - a.score);
+
+    // 5. Limitar a 20 produtos
+    const produtosRelacionados = produtosOrdenados.slice(0, 20);
+
+    // Log dos top 5 para debug
+    console.log('🏆 [API Relacionados] Top 5 produtos mais similares:');
+    produtosRelacionados.slice(0, 5).forEach((p, i) => {
+      console.log(`  ${i + 1}. ${p.nome}`);
+      console.log(`     Score: ${(p.score * 100).toFixed(1)}% | Palavras comuns: ${p.palavrasComuns.join(', ')}`);
     });
-    console.log(`✅ [API Relacionados] Retornando ${topProdutos.length} produtos\n`);
+
+    // FALLBACK: Se não encontrou nenhum similar, buscar produtos aleatórios
+    let produtosFinais = produtosRelacionados;
+
+    if (produtosFinais.length === 0) {
+      console.log('⚠️ [API Relacionados] Nenhum produto similar, buscando produtos aleatórios...');
+      const produtosAleatorios = produtosComScore
+        .sort(() => Math.random() - 0.5) // Embaralhar
+        .slice(0, 20);
+      
+      produtosFinais = produtosAleatorios.map(p => ({
+        ...p,
+        score: 0,
+        palavrasComuns: [],
+      }));
+      console.log(`✅ [API Relacionados] ${produtosFinais.length} produtos aleatórios selecionados`);
+    }
+
+    // Remover campos internos antes de retornar
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const produtosResposta = produtosFinais.map(({ score, palavrasComuns, ...produto }) => ({
+      ...produto,
+      preco: produto.preco_base, // Compatibilidade com frontend
+    }));
+
+    console.log(`✅ [API Relacionados] Retornando ${produtosResposta.length} produtos\n`);
 
     return NextResponse.json({
-      produtos: topProdutos,
-      total: topProdutos.length,
+      produtos: produtosResposta,
+      total: produtosResposta.length,
     });
 
   } catch (error) {
