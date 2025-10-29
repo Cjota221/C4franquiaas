@@ -12,6 +12,11 @@ export default function CheckoutPage() {
   const { items, isLoading } = useCart();
   const corPrimaria = loja?.cor_primaria || '#DB1472';
 
+  // Debug
+  console.log('🛒 Checkout - Items:', items);
+  console.log('⏳ Checkout - Loading:', isLoading);
+  console.log('🏪 Checkout - Loja:', loja?.nome);
+
   if (!loja || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -40,36 +45,50 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Minimalista - Apenas Logo */}
+      {/* Header Minimalista - Apenas Logo e Avisos de Segurança */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href={`/loja/${loja.dominio}`} className="flex items-center">
-            {loja.logo ? (
-              <Image 
-                src={loja.logo} 
-                alt={loja.nome}
-                width={140}
-                height={50}
-                className="h-10 w-auto"
-                unoptimized
-              />
-            ) : (
-              <span className="text-2xl font-bold" style={{ color: corPrimaria }}>
-                {loja.nome}
-              </span>
-            )}
-          </Link>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            {/* Logo */}
+            <Link href={`/loja/${loja.dominio}`} className="flex items-center">
+              {loja.logo ? (
+                <Image 
+                  src={loja.logo} 
+                  alt={loja.nome}
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-xl font-bold" style={{ color: corPrimaria }}>
+                  {loja.nome}
+                </span>
+              )}
+            </Link>
 
-          {/* Selos de Segurança */}
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Lock size={18} style={{ color: corPrimaria }} />
-              <span className="font-medium">Compra Segura</span>
+            {/* Selo Compra Segura - Desktop */}
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
+              <ShieldCheck size={20} className="text-green-600" />
+              <span className="text-sm font-semibold text-green-700">
+                Compra 100% Segura
+              </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <ShieldCheck size={18} style={{ color: corPrimaria }} />
-              <span className="font-medium">Dados Protegidos</span>
+          </div>
+
+          {/* Aviso de Segurança - Importante */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="flex items-start gap-3">
+              <Lock size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900 mb-1">
+                  🔒 Para sua segurança: Faça o pagamento apenas neste site
+                </p>
+                <p className="text-xs text-amber-700">
+                  Não realize pagamentos por PIX externo, links de terceiros ou fora desta plataforma. 
+                  Pagamentos seguros são processados apenas aqui.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -31,12 +31,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Carregar carrinho do localStorage
   useEffect(() => {
     try {
+      console.log('🔍 CartContext - Iniciando load...');
+      
       // Ler do mesmo localStorage que o Zustand usa
       const savedCart = localStorage.getItem('c4-carrinho-storage');
+      console.log('📦 CartContext - Raw storage:', savedCart);
+      
       if (savedCart) {
         const parsed = JSON.parse(savedCart);
+        console.log('📦 CartContext - Parsed:', parsed);
+        
         // O Zustand salva como { state: { items: [...] } }
         const zustandItems = parsed?.state?.items || [];
+        console.log('🎯 CartContext - Zustand items:', zustandItems);
         
         // Converter formato do Zustand para CartItem
         const convertedItems: CartItem[] = zustandItems.map((item: {
@@ -57,11 +64,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           sku: item.sku,
         }));
         
+        console.log('✅ CartContext - Converted items:', convertedItems);
         setItems(convertedItems);
+      } else {
+        console.log('⚠️ CartContext - No saved cart');
       }
     } catch (error) {
-      console.error('Erro ao carregar carrinho:', error);
+      console.error('❌ CartContext - Error:', error);
     } finally {
+      console.log('🏁 CartContext - Loading finished');
       setIsLoading(false);
     }
   }, []);
