@@ -5,7 +5,7 @@
  */
 
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import { StickyLojaHeader } from '@/components/loja/StickyLojaHeader';
 import { ProductImageGallery } from '@/components/loja/ProductImageGallery';
 import { ProductTitle } from '@/components/loja/ProductTitle';
@@ -14,7 +14,6 @@ import { SizeSelector } from '@/components/loja/SizeSelector';
 import { QuantitySelector } from '@/components/loja/QuantitySelector';
 import { BuyButton } from '@/components/loja/BuyButton';
 import { ShippingCalculator } from '@/components/loja/ShippingCalculator';
-import MobileMenu from '@/components/loja/MobileMenu';
 
 interface Produto {
   id: string;
@@ -66,8 +65,6 @@ export function ModernProductPage({
   onQuantityChange,
   onAddToCart,
 }: ModernProductPageProps) {
-  const [menuAberto, setMenuAberto] = useState(false);
-
   // Preparar dados para componentes
   const imagensValidas = produto.imagens && produto.imagens.length > 0 
     ? produto.imagens 
@@ -95,28 +92,16 @@ export function ModernProductPage({
       `}</style>
 
       <div className="min-h-screen bg-white">
-        {/* Header Único com Sticky/Shrinking Effect */}
+        {/* Header Único: ← Voltar | Logo | Carrinho 🛒 */}
         <StickyLojaHeader
           dominio={dominio}
           logoUrl={logoUrl}
           nomeLoja={nomeLoja}
           corPrimaria={corPrimaria}
-          onMenuClick={() => setMenuAberto(true)}
         />
 
-        {/* Menu Mobile */}
-        {menuAberto && (
-          <MobileMenu
-            isOpen={menuAberto}
-            onClose={() => setMenuAberto(false)}
-            dominio={dominio}
-            lojaNome={nomeLoja || 'Loja'}
-            corPrimaria="#000000"
-          />
-        )}
-
-      {/* Container Principal */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Container Principal */}
+        <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* COLUNA 1: Galeria de Imagens */}
           <div>

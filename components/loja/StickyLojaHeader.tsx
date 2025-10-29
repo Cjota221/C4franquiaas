@@ -3,31 +3,31 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
-import { ShoppingCart, Menu } from 'lucide-react';
+import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface StickyLojaHeaderProps {
   dominio: string;
   logoUrl?: string;
   nomeLoja?: string;
-  onMenuClick?: () => void;
   corPrimaria?: string;
 }
 
 /**
- * Header Principal Único com Shrinking Effect
+ * Header da Página de Produto com Shrinking Effect
  * - ÚNICO header sticky (sem duplicação)
  * - Encolhe suavemente ao rolar (h-16 → h-12)
  * - Sombra forte quando rolado
- * - Menu Hamburger | Logo Centralizada | Carrinho
+ * - Layout: ← Seta Voltar | Logo Centralizada (clicável) | Carrinho 🛒
  */
 export function StickyLojaHeader({
   dominio,
   logoUrl,
   nomeLoja = 'Loja',
-  onMenuClick,
   corPrimaria = '#000000',
 }: StickyLojaHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const router = useRouter();
   const items = useCarrinhoStore(state => state.items);
   const totalItems = items.reduce((acc, item) => acc + item.quantidade, 0);
 
@@ -54,14 +54,14 @@ export function StickyLojaHeader({
     >
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
-          {/* COLUNA 1: Menu Hamburger */}
+          {/* COLUNA 1: Seta de Voltar */}
           <div className="flex-1 flex items-center">
             <button
-              onClick={onMenuClick}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Abrir menu"
+              onClick={() => router.back()}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Voltar"
             >
-              <Menu 
+              <ArrowLeft 
                 className={`text-gray-700 transition-all duration-300 ${
                   isScrolled ? 'w-5 h-5' : 'w-6 h-6'
                 }`}
@@ -69,7 +69,7 @@ export function StickyLojaHeader({
             </button>
           </div>
 
-          {/* COLUNA 2: Logo CACAU SHOES (Centralizada) */}
+          {/* COLUNA 2: Logo Centralizada (Clicável para Home) */}
           <div className="flex-1 flex justify-center">
             <Link 
               href={`/loja/${dominio}`}
