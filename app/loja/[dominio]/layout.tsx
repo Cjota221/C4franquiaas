@@ -2,10 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import LojaHeader from '@/components/loja/LojaHeader';
-import LojaHeaderMobile from '@/components/loja/LojaHeaderMobile';
-import LojaFooter from '@/components/loja/LojaFooter';
-import WhatsAppFlutuante from '@/components/loja/WhatsAppFlutuante';
+import ConditionalLayout from '@/components/loja/ConditionalLayout';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { createClient } from '@supabase/supabase-js';
@@ -215,24 +212,9 @@ export default async function LojaLayout({
 
       <LojaProvider loja={loja}>
         <CartProvider>
-          <div className="min-h-screen flex flex-col">
-            {/* Header Desktop - Oculto em mobile */}
-            <div className="desktop-only">
-              <LojaHeader dominio={dominio} />
-            </div>
-
-            {/* Header Mobile - Apenas em mobile */}
-            <div className="mobile-only">
-              <LojaHeaderMobile dominio={dominio} />
-            </div>
-            
-            <main className="flex-1">
-              {children}
-            </main>
-            
-            <LojaFooter />
-            <WhatsAppFlutuante />
-          </div>
+          <ConditionalLayout dominio={dominio}>
+            {children}
+          </ConditionalLayout>
         </CartProvider>
       </LojaProvider>
     </>

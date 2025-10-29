@@ -82,11 +82,10 @@ export default function CheckoutPage() {
               <Lock size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-amber-900 mb-1">
-                  🔒 Para sua segurança: Faça o pagamento apenas neste site
+                  Para sua segurança: realize o pagamento somente neste site oficial
                 </p>
                 <p className="text-xs text-amber-700">
-                  Não realize pagamentos por PIX externo, links de terceiros ou fora desta plataforma. 
-                  Pagamentos seguros são processados apenas aqui.
+                  Não efetue pagamentos via PIX externo ou links de terceiros. Pagamentos seguros são processados apenas aqui.
                 </p>
               </div>
             </div>
