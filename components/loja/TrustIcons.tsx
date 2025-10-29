@@ -38,14 +38,14 @@ export default function TrustIcons() {
               >
                 {/* Ícone Maior */}
                 <div 
-                  className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-lg"
+                  className="flex-shrink-0 w-[70px] h-[70px] md:w-[88px] md:h-[88px] rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-lg"
                   style={{ 
                     backgroundColor: `${corPrimaria}12`,
                   }}
                 >
                   <IconComponent 
                     className="transition-all duration-500 group-hover:scale-110" 
-                    size={36}
+                    size={40}
                     strokeWidth={1.5}
                     style={{ color: corPrimaria }}
                   />
@@ -82,13 +82,13 @@ export default function TrustIcons() {
                 >
                   {/* Ícone */}
                   <div 
-                    className="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center"
+                    className="flex-shrink-0 w-[70px] h-[70px] rounded-full flex items-center justify-center"
                     style={{ 
                       backgroundColor: `${corPrimaria}12`,
                     }}
                   >
                     <IconComponent 
-                      size={32}
+                      size={35}
                       strokeWidth={1.5}
                       style={{ color: corPrimaria }}
                     />

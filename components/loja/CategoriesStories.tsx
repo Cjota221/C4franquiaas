@@ -39,7 +39,7 @@ export default function CategoriesStories() {
   const corPrimaria = loja.cor_primaria || '#DB1472';
 
   return (
-    <section className="py-4 md:py-5">
+    <section className="py-3 md:py-4">
       <div className="container mx-auto px-4">
         <h2 
           className="font-bold text-center mb-4"
@@ -137,8 +137,8 @@ export default function CategoriesStories() {
 
         /* Bolinha circular - MAIORES e com borda sutil */
         .category-circle {
-          width: clamp(90px, 22vw, 130px);
-          height: clamp(90px, 22vw, 130px);
+          width: clamp(99px, 24.2vw, 143px);
+          height: clamp(99px, 24.2vw, 143px);
           border-radius: 9999px;
           overflow: hidden;
           border-width: 1px; /* Borda fina e sutil */
@@ -161,7 +161,7 @@ export default function CategoriesStories() {
           font-weight: 600;
           line-height: 1.3;
           word-wrap: break-word;
-          max-width: clamp(90px, 22vw, 130px);
+          max-width: clamp(99px, 24.2vw, 143px);
           display: block;
           text-align: center;
         }
@@ -175,8 +175,8 @@ export default function CategoriesStories() {
           }
 
           .category-circle {
-            width: clamp(130px, 14vw, 160px);
-            height: clamp(130px, 14vw, 160px);
+            width: clamp(143px, 15.4vw, 176px);
+            height: clamp(143px, 15.4vw, 176px);
           }
 
           .category-label {
