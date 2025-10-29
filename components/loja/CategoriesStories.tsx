@@ -52,49 +52,68 @@ export default function CategoriesStories() {
           Categorias
         </h2>
         
-        {/* Grid Único para Mobile e Desktop - 1 linha */}
-        <div className="categories-grid">
-          {categorias.map((cat) => (
-            <Link 
-              key={cat.id}
-              href={`/loja/${loja.dominio}/produtos?categoria=${cat.slug}`}
-              className="category-item"
-            >
-              <div 
-                className="category-circle"
-                style={{
-                  borderColor: `${corPrimaria}40`
-                }}
+        {/* Carrossel Horizontal - Linha Única */}
+        <div className="categories-carousel-wrapper">
+          <div className="categories-carousel">
+            {categorias.map((cat) => (
+              <Link 
+                key={cat.id}
+                href={`/loja/${loja.dominio}/produtos?categoria=${cat.slug}`}
+                className="category-item"
               >
-                <Image 
-                  src={cat.imagem} 
-                  alt={cat.nome} 
-                  fill 
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-              <p 
-                className="category-label"
-                style={{ color: corTexto }}
-              >
-                {cat.nome}
-              </p>
-            </Link>
-          ))}
+                <div 
+                  className="category-circle"
+                  style={{
+                    borderColor: corPrimaria
+                  }}
+                >
+                  <Image 
+                    src={cat.imagem} 
+                    alt={cat.nome} 
+                    fill 
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+                <p 
+                  className="category-label"
+                  style={{ color: corTexto }}
+                >
+                  {cat.nome}
+                </p>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
       <style jsx>{`
-        /* Grid harmônico em 1 linha - Mobile e Desktop */
-        .categories-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: clamp(10px, 3vw, 36px);
-          justify-items: center;
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 0 16px;
+        /* Wrapper do Carrossel */
+        .categories-carousel-wrapper {
+          width: 100%;
+          overflow: hidden;
+          position: relative;
+        }
+
+        /* Carrossel Horizontal - Linha Única */
+        .categories-carousel {
+          display: flex;
+          flex-direction: row;
+          gap: clamp(20px, 4vw, 32px);
+          overflow-x: auto;
+          overflow-y: hidden;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          padding: 10px 8px 20px 8px;
+          
+          /* Ocultar scrollbar mantendo funcionalidade */
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        /* Ocultar scrollbar Webkit (Chrome, Safari) */
+        .categories-carousel::-webkit-scrollbar {
+          display: none;
         }
 
         /* Item de categoria */
@@ -104,8 +123,9 @@ export default function CategoriesStories() {
           align-items: center;
           justify-content: flex-start;
           text-align: center;
-          width: 100%;
+          flex-shrink: 0;
           transition: transform 0.3s ease;
+          cursor: pointer;
         }
 
         .category-item:hover {
@@ -116,70 +136,54 @@ export default function CategoriesStories() {
           transform: scale(0.95);
         }
 
-        /* Bolinha circular - tamanho ajustado para mobile */
+        /* Bolinha circular - MAIORES e com borda sutil */
         .category-circle {
-          width: clamp(70px, 18vw, 110px);
-          height: clamp(70px, 18vw, 110px);
+          width: clamp(90px, 22vw, 130px);
+          height: clamp(90px, 22vw, 130px);
           border-radius: 9999px;
           overflow: hidden;
-          border-width: 3px;
+          border-width: 1px; /* Borda fina e sutil */
           border-style: solid;
           position: relative;
           transition: all 0.3s ease;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           flex-shrink: 0;
         }
 
         .category-item:hover .category-circle {
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
-          transform: scale(1.05);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+          transform: scale(1.08);
         }
 
         /* Label - texto maior e centralizado */
         .category-label {
-          margin-top: clamp(6px, 2vw, 12px);
-          font-size: clamp(0.75rem, 2.8vw, 0.95rem);
+          margin-top: clamp(8px, 2.5vw, 14px);
+          font-size: clamp(0.8rem, 3vw, 1rem);
           font-weight: 600;
           line-height: 1.3;
           word-wrap: break-word;
-          max-width: 100%;
+          max-width: clamp(90px, 22vw, 130px);
           display: block;
           text-align: center;
         }
 
-        /* Responsivo para telas muito pequenas */
-        @media (max-width: 360px) {
-          .categories-grid {
-            gap: 8px;
-            padding: 0 12px;
-          }
-          
-          .category-circle {
-            width: clamp(65px, 17vw, 75px);
-            height: clamp(65px, 17vw, 75px);
-          }
-
-          .category-label {
-            font-size: 0.7rem;
-            margin-top: 5px;
-          }
-        }
-
-        /* Desktop - maior espaçamento e tamanhos */
+        /* Desktop - ícones ainda maiores */
         @media (min-width: 768px) {
-          .categories-grid {
-            max-width: 800px;
-            gap: 44px;
+          .categories-carousel {
+            gap: 40px;
+            padding: 12px 16px 24px 16px;
+            justify-content: center;
           }
 
           .category-circle {
-            width: clamp(110px, 12vw, 140px);
-            height: clamp(110px, 12vw, 140px);
+            width: clamp(130px, 14vw, 160px);
+            height: clamp(130px, 14vw, 160px);
           }
 
           .category-label {
-            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
-            margin-top: 14px;
+            font-size: clamp(1rem, 1.6vw, 1.15rem);
+            margin-top: 16px;
+            max-width: clamp(130px, 14vw, 160px);
           }
         }
       `}</style>
