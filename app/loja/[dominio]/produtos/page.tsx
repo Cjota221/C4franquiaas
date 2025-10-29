@@ -12,7 +12,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import ProductCard from '@/components/loja/ProductCard';
 import FilterBar, { FilterState, SortOption } from '@/components/loja/FilterBar';
-import TrustIcons from '@/components/loja/TrustIcons';
 import { Loader2 } from 'lucide-react';
 import { useParams, useSearchParams } from 'next/navigation';
 
@@ -208,11 +207,6 @@ export default function ProdutosPage() {
               {produtosFiltradosEOrdenados.length} {produtosFiltradosEOrdenados.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
             </p>
           )}
-        </div>
-
-        {/* Faixa de Confiança */}
-        <div className="mb-6">
-          <TrustIcons />
         </div>
 
         {/* Barra de Filtros e Ordenação */}
