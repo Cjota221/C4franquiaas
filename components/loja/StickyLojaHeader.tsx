@@ -31,6 +31,10 @@ export function StickyLojaHeader({
   const items = useCarrinhoStore(state => state.items);
   const totalItems = items.reduce((acc, item) => acc + item.quantidade, 0);
 
+  // Debug: verificar se logoUrl está chegando
+  console.log('[StickyLojaHeader] logoUrl recebido:', logoUrl);
+  console.log('[StickyLojaHeader] nomeLoja:', nomeLoja);
+
   // Detectar scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -77,17 +81,21 @@ export function StickyLojaHeader({
             >
               {logoUrl ? (
                 <div 
-                  className={`relative transition-all duration-300 ease-in-out ${
+                  className={`transition-all duration-300 ease-in-out ${
                     isScrolled 
-                      ? 'h-8 w-auto max-w-[120px]' 
-                      : 'h-12 w-auto max-w-[160px]'
+                      ? 'h-8' 
+                      : 'h-12'
                   }`}
                 >
                   <Image
                     src={logoUrl}
                     alt={nomeLoja}
-                    fill
-                    className="object-contain"
+                    width={160}
+                    height={48}
+                    className={`object-contain transition-all duration-300 ${
+                      isScrolled ? 'h-8' : 'h-12'
+                    }`}
+                    style={{ width: 'auto', height: '100%' }}
                     priority
                   />
                 </div>
