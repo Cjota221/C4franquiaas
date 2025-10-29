@@ -1,4 +1,5 @@
 {
+  // ===== CONFIGURAÇÕES REACT + NEXT.JS =====
   "css.validate": false,
   "scss.validate": false,
   "tailwindCSS.includeLanguages": {
@@ -12,9 +13,9 @@
   "css.lint.unknownAtRules": "ignore",
   "scss.lint.unknownAtRules": "ignore",
 
-  // ===== OTIMIZAÇÕES DE PERFORMANCE =====
+  // ===== OTIMIZAÇÕES MÁXIMAS DE PERFORMANCE =====
   
-  // Reduzir monitoramento de arquivos (economiza RAM)
+  // Monitoramento de arquivos - REDUÇÃO MASSIVA DE RAM
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
@@ -22,17 +23,44 @@
     "**/dist/**": true,
     "**/.next/**": true,
     "**/build/**": true,
-    "**/.cache/**": true
+    "**/.cache/**": true,
+    "**/public/**": true,
+    "**/*.log": true
   },
   
-  // Limitar memória do TypeScript Server
+  // Exclusão de busca - MELHORA MUITO A VELOCIDADE
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/build": true,
+    "**/.cache": true,
+    "**/public": true,
+    "**/*.log": true
+  },
+  
+  // Excluir arquivos do explorador
+  "files.exclude": {
+    "**/.git": true,
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.cache": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/*.log": true
+  },
+  
+  // TypeScript - LIMITA MEMÓRIA E REDUZ CPU
   "typescript.tsserver.maxTsServerMemory": 4096,
   "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.preferences.importModuleSpecifier": "relative",
   
-  // Desabilitar telemetria (economiza CPU)
-  "telemetry.telemetryLevel": "off",
+  // JavaScript
+  "js.suggest.autoImports": true,
   
-  // Otimizar ESLint
+  // ESLint - VALIDA APENAS O NECESSÁRIO
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -40,87 +68,60 @@
     "typescriptreact"
   ],
   
-  // Limitar histórico do Git
+  // Git - REDUZ CPU E REDE
   "git.maxGitHistoryItems": 50,
   "git.autofetch": false,
+  "git.enabled": true,
   
-  // Desabilitar minimap (economiza RAM)
+  // DESABILITAR RECURSOS PESADOS
   "editor.minimap.enabled": false,
+  "editor.codeLens": false,
+  "editor.parameterHints.enabled": false,
+  "editor.links": false,
+  "editor.renderControlCharacters": false,
+  "breadcrumbs.enabled": false,
+  "editor.bracketPairColorization.enabled": false,
+  "editor.guides.bracketPairs": false,
   
-  // Reduzir sugestões automáticas
+  // Sugestões otimizadas
   "editor.quickSuggestions": {
     "other": true,
     "comments": false,
     "strings": false
   },
-  
-  // Otimizar busca
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/.next": true,
-    "**/build": true,
-    "**/.cache": true
-  },
-  
-  // Otimizar renderização
-  "editor.renderWhitespace": "selection",
-  "editor.renderControlCharacters": false,
-  
-  // Salvamento automático otimizado
-  "files.autoSave": "onFocusChange",
-  
-  // ===== OTIMIZAÇÕES ADICIONAIS =====
-  
-  // Desabilitar validação de links (economiza muito CPU)
-  "editor.links": false,
-  
-  // Reduzir delay de sugestões
   "editor.quickSuggestionsDelay": 50,
-  
-  // Desabilitar breadcrumbs (economiza memória)
-  "breadcrumbs.enabled": false,
-  
-  // Limitar número de editores abertos
-  "workbench.editor.limit.enabled": true,
-  "workbench.editor.limit.value": 8,
-  "workbench.editor.limit.perEditorGroup": true,
-  
-  // Otimizar highlight de brackets
-  "editor.bracketPairColorization.enabled": false,
-  "editor.guides.bracketPairs": false,
-  
-  // Desabilitar sugestões de snippets inline (Copilot ghost text fica)
   "editor.inlineSuggest.enabled": true,
   
-  // Otimizar formatação
+  // Renderização otimizada
+  "editor.renderWhitespace": "selection",
+  
+  // Formatação otimizada
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
   "editor.formatOnType": false,
   
-  // Reduzir cache de arquivos
+  // Salvamento automático
+  "files.autoSave": "onFocusChange",
   "files.hotExit": "onExitAndWindowClose",
   
-  // Otimizar terminal
-  "terminal.integrated.enablePersistentSessions": false,
-  "terminal.integrated.persistentSessionScrollback": 100,
-  
-  // Desabilitar preview de arquivos grandes
+  // Limitar editores abertos - ECONOMIZA MUITA RAM
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 8,
+  "workbench.editor.limit.perEditorGroup": true,
   "workbench.editor.enablePreview": true,
   "workbench.editor.enablePreviewFromQuickOpen": false,
   
-  // Otimizar Node.js (Next.js)
-  "js.suggest.autoImports": true,
-  "typescript.suggest.autoImports": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
+  // Inicialização rápida
+  "workbench.startupEditor": "none",
+  "window.restoreWindows": "none",
   
-  // Excluir mais arquivos da busca
-  "files.exclude": {
-    "**/.git": true,
-    "**/.next": true,
-    "**/node_modules": true,
-    "**/.cache": true,
-    "**/dist": true,
-    "**/build": true
-  }
+  // Terminal otimizado
+  "terminal.integrated.enablePersistentSessions": false,
+  "terminal.integrated.persistentSessionScrollback": 100,
+  
+  // Telemetria desabilitada
+  "telemetry.telemetryLevel": "off",
+  
+  // Desabilitar aceleração de hardware (se tiver problemas de renderização)
+  // "disable-hardware-acceleration": true
 }

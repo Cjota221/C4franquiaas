@@ -85,8 +85,8 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               alt={produto.nome}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              unoptimized
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 300px"
+              quality={85}
               onError={(e) => {
                 // Se a imagem falhar ao carregar, usar placeholder
                 const target = e.target as HTMLImageElement;

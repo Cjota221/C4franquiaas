@@ -15,8 +15,9 @@ const nextConfig: NextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
-    deviceSizes: [64, 80, 96, 128, 256, 384],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    // Tamanhos otimizados para produto em alta resolução
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 512, 640, 750, 828, 1080],
     remotePatterns: [
       { protocol: 'https', hostname: 'cjotarasteirinhas.com.br', pathname: '/**' },
       { protocol: 'https', hostname: 'arquivos.facilzap.app.br', pathname: '/**' },
