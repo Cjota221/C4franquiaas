@@ -39,10 +39,10 @@ export default function CategoriesStories() {
   const corPrimaria = loja.cor_primaria || '#DB1472';
 
   return (
-    <section className="py-6 md:py-8">
+    <section className="py-4 md:py-5">
       <div className="container mx-auto px-4">
         <h2 
-          className="font-bold text-center mb-6"
+          className="font-bold text-center mb-4"
           style={{ 
             fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
             color: corPrimaria

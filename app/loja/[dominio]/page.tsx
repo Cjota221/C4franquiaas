@@ -92,7 +92,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
       </section>
 
       {/* Categorias em Stories */}
-      <section className="py-fluid-lg bg-white">
+      <section className="bg-white" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div className="container-fluid">
           <CategoriesStories />
         </div>
@@ -102,7 +102,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
       <TrustIcons />
 
       {/* Produtos em Destaque */}
-      <section className="py-fluid-xl bg-gray-50">
+      <section className="bg-gray-50" style={{ paddingTop: '4rem', paddingBottom: '4rem' }}>
         <div className="container-fluid">
           <div className="flex items-center justify-between mb-fluid-lg">
             <h2 className="heading-section" style={{ color: corPrimaria }}>
