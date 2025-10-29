@@ -21,6 +21,7 @@ interface SizeSelectorProps {
   selectedSize: string | null;
   onSizeSelect: (size: string) => void;
   className?: string;
+  corPrimaria?: string;
 }
 
 export function SizeSelector({
@@ -28,6 +29,7 @@ export function SizeSelector({
   selectedSize,
   onSizeSelect,
   className = '',
+  corPrimaria = '#DB1472',
 }: SizeSelectorProps) {
   if (!sizes || sizes.length === 0) {
     return null;
@@ -49,32 +51,40 @@ export function SizeSelector({
 
       {/* Grid de Botões */}
       <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-        {sizes.map((size) => (
-          <button
-            key={size.value}
-            onClick={() => size.disponivel && onSizeSelect(size.value)}
-            disabled={!size.disponivel}
-            className={`
-              relative py-3 px-4 rounded-full border-2 font-semibold transition-all
-              ${
-                size.value === selectedSize
-                  ? 'border-black bg-black text-white'
-                  : size.disponivel
-                  ? 'border-gray-300 bg-white text-gray-900 hover:border-gray-400'
-                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+        {sizes.map((size) => {
+          const isSelected = size.value === selectedSize;
+          return (
+            <button
+              key={size.value}
+              onClick={() => size.disponivel && onSizeSelect(size.value)}
+              disabled={!size.disponivel}
+              className={`
+                relative py-3 px-4 rounded-full border-2 font-semibold transition-all
+                ${
+                  !size.disponivel
+                    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : isSelected
+                    ? 'text-white'
+                    : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400'
+                }
+              `}
+              style={
+                isSelected && size.disponivel
+                  ? { borderColor: corPrimaria, backgroundColor: corPrimaria }
+                  : undefined
               }
-            `}
-          >
-            {size.label}
-            
-            {/* Indicador de Esgotado */}
-            {!size.disponivel && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-full h-0.5 bg-gray-400 rotate-45" />
-              </div>
-            )}
-          </button>
-        ))}
+            >
+              {size.label}
+              
+              {/* Indicador de Esgotado */}
+              {!size.disponivel && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-full h-0.5 bg-gray-400 rotate-45" />
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Aviso de Seleção */}

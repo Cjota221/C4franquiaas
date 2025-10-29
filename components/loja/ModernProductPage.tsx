@@ -107,6 +107,7 @@ export function ModernProductPage({
                 sizes={sizes}
                 selectedSize={skuSelecionado}
                 onSizeSelect={onSizeSelect}
+                corPrimaria={corPrimaria}
               />
             )}
 
@@ -114,7 +115,7 @@ export function ModernProductPage({
             {skuSelecionado && (
               <div className="text-sm text-gray-600">
                 {estoqueDisponivel > 0 ? (
-                  <p className="text-green-600 font-medium">
+                  <p className="font-medium" style={{ color: corPrimaria }}>
                     ✓ {estoqueDisponivel} {estoqueDisponivel === 1 ? 'unidade disponível' : 'unidades disponíveis'}
                   </p>
                 ) : (
@@ -150,6 +151,7 @@ export function ModernProductPage({
             {/* 5º HIERARQUIA: Calculadora de Frete */}
             <ShippingCalculator
               produtoId={produto.id}
+              corPrimaria={corPrimaria}
             />
 
             {/* Descrição do Produto */}
