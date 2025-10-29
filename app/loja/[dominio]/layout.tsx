@@ -7,6 +7,7 @@ import LojaHeaderMobile from '@/components/loja/LojaHeaderMobile';
 import LojaFooter from '@/components/loja/LojaFooter';
 import WhatsAppFlutuante from '@/components/loja/WhatsAppFlutuante';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
+import { CartProvider } from '@/contexts/CartContext';
 import { createClient } from '@supabase/supabase-js';
 
 // Busca diretamente no Supabase (evita fetch para API interna em Server Component)
@@ -213,24 +214,26 @@ export default async function LojaLayout({
       )}
 
       <LojaProvider loja={loja}>
-        <div className="min-h-screen flex flex-col">
-          {/* Header Desktop - Oculto em mobile */}
-          <div className="desktop-only">
-            <LojaHeader dominio={dominio} />
-          </div>
+        <CartProvider>
+          <div className="min-h-screen flex flex-col">
+            {/* Header Desktop - Oculto em mobile */}
+            <div className="desktop-only">
+              <LojaHeader dominio={dominio} />
+            </div>
 
-          {/* Header Mobile - Apenas em mobile */}
-          <div className="mobile-only">
-            <LojaHeaderMobile dominio={dominio} />
+            {/* Header Mobile - Apenas em mobile */}
+            <div className="mobile-only">
+              <LojaHeaderMobile dominio={dominio} />
+            </div>
+            
+            <main className="flex-1">
+              {children}
+            </main>
+            
+            <LojaFooter />
+            <WhatsAppFlutuante />
           </div>
-          
-          <main className="flex-1">
-            {children}
-          </main>
-          
-          <LojaFooter />
-          <WhatsAppFlutuante />
-        </div>
+        </CartProvider>
       </LojaProvider>
     </>
   );

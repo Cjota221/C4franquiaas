@@ -255,13 +255,13 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
 
               {/* Botões */}
               <div className="space-y-3">
-                <button
-                  className="w-full py-4 rounded-lg font-bold text-white text-lg transition hover:opacity-90"
+                <Link
+                  href={`/loja/${dominio}/checkout`}
+                  className="w-full py-4 rounded-lg font-bold text-white text-lg transition hover:opacity-90 flex items-center justify-center"
                   style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
-                  onClick={() => alert('Em breve: Finalizar Compra via WhatsApp')}
                 >
                   Finalizar Compra
-                </button>
+                </Link>
 
                 <Link
                   href={`/loja/${dominio}/produtos`}
