@@ -1,5 +1,9 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { useEnvioecom } from '@/hooks/useEnvioecom';
+import { RastreamentoModal } from '@/components/admin/RastreamentoModal';
+import { Button } from '@/components/ui/button';
+import type { EtiquetaRequest, EnderecoCompleto } from '@/types/envioecom';
 
 type Cliente = {
   nome?: string | null;
@@ -74,6 +78,14 @@ export default function AdminVendasPage() {
   const [scanValue, setScanValue] = useState('');
   const [perPage] = useState(20);
 
+  // Estados Envioecom
+  const [showRastreamento, setShowRastreamento] = useState(false);
+  const [codigoRastreioAtual, setCodigoRastreioAtual] = useState('');
+  const [gerandoEtiqueta, setGerandoEtiqueta] = useState(false);
+
+  // Hook Envioecom
+  const { gerarEtiqueta: gerarEtiquetaEnvioecom, isLoading: loadingEnvioecom } = useEnvioecom();
+
   const apiUrl = `/api/admin/vendas/list?page=${page}&per_page=${perPage}&status=${filter}&q=${encodeURIComponent(search)}`;
   const { data, mutate } = usePoll<ListResponse>(apiUrl, 5000);
 
@@ -95,9 +107,92 @@ export default function AdminVendasPage() {
     mutate();
   };
 
-  const gerarEtiqueta = async (pedido: Pedido, etiqueta: string) => {
-    await fetch('/api/admin/vendas/action', { method: 'POST', body: JSON.stringify({ action: 'label', pedido_id: pedido.id, etiqueta }) });
-    mutate();
+  /**
+   * Gerar Etiqueta via Envioecom
+   * ⚠️ IMPORTANTE: Só deve ser chamado APÓS confirmação do pagamento
+   */
+  const gerarEtiquetaAutomatica = async (pedido: Pedido) => {
+    // Validação: Verificar se pedido está pago
+    if (pedido.status !== 'pago' && pedido.status !== 'separado') {
+      alert('Atenção: Etiquetas só podem ser geradas para pedidos pagos ou em separação!');
+      return;
+    }
+
+    if (!pedido.cliente) {
+      alert('Erro: Dados do cliente não encontrados');
+      return;
+    }
+
+    try {
+      setGerandoEtiqueta(true);
+
+      // Montar dados do destinatário
+      const destinatario: EnderecoCompleto = {
+        nome: pedido.cliente.nome || 'Cliente',
+        telefone: pedido.cliente.telefone || '',
+        endereco: pedido.cliente.endereco || '',
+        numero: 'S/N', // TODO: Extrair do endereço
+        bairro: '', // TODO: Adicionar campo no banco
+        cidade: '', // TODO: Adicionar campo no banco
+        estado: '', // TODO: Adicionar campo no banco
+        cep: '', // TODO: Adicionar campo no banco
+      };
+
+      // Montar request
+      const request: EtiquetaRequest = {
+        servico_id: '', // Será selecionado via cotação
+        remetente: {
+          nome: 'C4 Franquias', // TODO: Obter da configuração
+          telefone: '', // TODO: Configurar
+          endereco: '', // TODO: Configurar
+          numero: '', // TODO: Configurar
+          bairro: '', // TODO: Configurar
+          cidade: '', // TODO: Configurar
+          estado: '', // TODO: Configurar
+          cep: '', // TODO: Configurar
+        },
+        destinatario,
+        pacotes: [
+          {
+            peso: 500, // TODO: Calcular peso real dos produtos
+            altura: 10, // TODO: Calcular dimensões reais
+            largura: 15,
+            comprimento: 20,
+            valor_declarado: Number(pedido.valor_total),
+          },
+        ],
+        produtos: [], // TODO: Mapear itens do pedido
+        numero_pedido: pedido.id,
+      };
+
+      const response = await gerarEtiquetaEnvioecom(request);
+
+      // Salvar código de rastreio no banco
+      await fetch('/api/admin/vendas/action', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'label',
+          pedido_id: pedido.id,
+          etiqueta: response.codigo_rastreio,
+        }),
+      });
+
+      // Abrir PDF da etiqueta
+      window.open(response.url_etiqueta, '_blank');
+
+      alert(`Etiqueta gerada com sucesso!\nCódigo de rastreio: ${response.codigo_rastreio}`);
+      mutate();
+    } catch (error) {
+      console.error('Erro ao gerar etiqueta:', error);
+      alert(`Erro ao gerar etiqueta: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setGerandoEtiqueta(false);
+    }
+  };
+
+  const abrirRastreamento = (codigoRastreio: string) => {
+    setCodigoRastreioAtual(codigoRastreio);
+    setShowRastreamento(true);
   };
 
   const concluirEnvio = async (pedido: Pedido) => {
@@ -174,7 +269,36 @@ export default function AdminVendasPage() {
                     <td className="p-3 flex gap-2">
                       <button onClick={() => openDetalhes(p)} className="px-3 py-2 bg-white border rounded min-h-[44px]">Ver Detalhes</button>
                       <button onClick={() => startSeparacao(p)} className="px-3 py-2 bg-[#F8B81F] rounded min-h-[44px]">Iniciar Separação</button>
-                      <button onClick={() => gerarEtiqueta(p, prompt('Código de rastreio:') || '')} className="px-3 py-2 bg-[#DB1472] text-white rounded min-h-[44px]">Gerar Etiqueta</button>
+                      
+                      {/* Botão Gerar Etiqueta - Desabilitado se não estiver pago */}
+                      <button 
+                        onClick={() => gerarEtiquetaAutomatica(p)} 
+                        disabled={p.status !== 'pago' && p.status !== 'separado' || gerandoEtiqueta || loadingEnvioecom}
+                        className={`px-3 py-2 rounded min-h-[44px] ${
+                          p.status !== 'pago' && p.status !== 'separado' 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[#DB1472] text-white hover:bg-[#c01163]'
+                        }`}
+                        title={
+                          p.status !== 'pago' && p.status !== 'separado'
+                            ? 'Etiqueta só pode ser gerada após confirmação do pagamento'
+                            : 'Gerar etiqueta via Envioecom'
+                        }
+                      >
+                        {gerandoEtiqueta ? 'Gerando...' : 'Gerar Etiqueta'}
+                      </button>
+
+                      {/* Botão Rastreamento - Só aparece se tiver código */}
+                      {p.etiqueta && (
+                        <button 
+                          onClick={() => abrirRastreamento(p.etiqueta!)} 
+                          className="px-3 py-2 bg-blue-600 text-white rounded min-h-[44px] hover:bg-blue-700"
+                          title="Rastrear pedido"
+                        >
+                          🔍 Rastrear
+                        </button>
+                      )}
+
                       <button onClick={() => concluirEnvio(p)} className="px-3 py-2 bg-green-600 text-white rounded min-h-[44px]">Concluir Envio</button>
                     </td>
                   </tr>
@@ -245,6 +369,17 @@ export default function AdminVendasPage() {
             </section>
           </div>
         </div>
+      )}
+
+      {/* Modal de Rastreamento Envioecom */}
+      {showRastreamento && codigoRastreioAtual && (
+        <RastreamentoModal
+          codigoRastreio={codigoRastreioAtual}
+          onClose={() => {
+            setShowRastreamento(false);
+            setCodigoRastreioAtual('');
+          }}
+        />
       )}
     </div>
   );
