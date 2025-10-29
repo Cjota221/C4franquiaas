@@ -141,11 +141,8 @@ export async function GET(
     }
 
     if (!vinculacoes || vinculacoes.length === 0) {
-      console.log('⚠️ [API Relacionados Loja] Nenhum outro produto disponível');
       return NextResponse.json({ produtos: [], total: 0 }, { status: 200 });
     }
-
-    console.log(`🎯 [API Relacionados Loja] ${vinculacoes.length} produtos candidatos encontrados`);
 
     // 5️⃣ Buscar preços personalizados
     const vinculacaoIds = vinculacoes.map(v => v.id);
@@ -153,9 +150,7 @@ export async function GET(
       .from('produtos_franqueadas_precos')
       .select('*')
       .in('produto_franqueada_id', vinculacaoIds)
-      .eq('ativo_no_site', true); // Apenas produtos ativos no site da franqueada
-
-    console.log(`💰 [API Relacionados Loja] ${precos?.length || 0} produtos com preços ativos`);
+      .eq('ativo_no_site', true);
 
     // 6️⃣ Processar imagens
     // Em DEV: usar proxy local Next.js (/api/proxy-image)
@@ -163,34 +158,23 @@ export async function GET(
     const isDev = process.env.NODE_ENV === 'development';
     const baseUrl = isDev ? '' : 'https://c4franquiaas.netlify.app';
 
-    console.log(`🔧 [Processar Imagem] isDev: ${isDev}, NODE_ENV: ${process.env.NODE_ENV}`);
-
     const processarImagem = (url: string | null): string | null => {
       if (!url) return null;
-
-      console.log(`📥 [Processar Imagem] INPUT: ${url}`);
 
       // Se já tiver proxy, extrair URL original
       if (url.includes('/proxy-facilzap-image?url=') || url.includes('/proxy-image?url=')) {
         const urlMatch = url.match(/[?&]url=([^&]+)/);
         if (urlMatch) {
           url = decodeURIComponent(urlMatch[1]);
-          console.log(`🔓 [Processar Imagem] URL extraída do proxy: ${url}`);
         }
       }
 
       // Se for URL do Facilzap, adicionar proxy apropriado
       if (url.includes('facilzap.app.br')) {
         if (isDev) {
-          // DEV: usar proxy local Next.js
-          const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
-          console.log(`🏠 [Processar Imagem] DEV - proxy local: ${proxyUrl}`);
-          return proxyUrl;
+          return `/api/proxy-image?url=${encodeURIComponent(url)}`;
         } else {
-          // PROD: usar proxy Netlify
-          const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
-          console.log(`☁️ [Processar Imagem] PROD - proxy Netlify: ${proxyUrl}`);
-          return proxyUrl;
+          return `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
         }
       }
 
@@ -250,39 +234,25 @@ export async function GET(
       })
       .filter((p): p is ProdutoComScore => p !== null);
 
-    console.log(`📊 [API Relacionados Loja] ${produtosComScore.length} produtos processados com scores`);
-
     // 8️⃣ Filtrar, ordenar e limitar
     const produtosSimilares = produtosComScore.filter(p => p.score > 0);
     const produtosOrdenados = produtosSimilares.sort((a, b) => b.score - a.score);
     const produtosRelacionados = produtosOrdenados.slice(0, 20);
 
-    console.log(`✅ [API Relacionados Loja] ${produtosRelacionados.length} produtos similares encontrados`);
-
-    if (produtosRelacionados.length > 0) {
-      console.log('🏆 Top 5 produtos mais similares:');
-      produtosRelacionados.slice(0, 5).forEach((p, i) => {
-        console.log(`  ${i + 1}. ${p.nome}`);
-        console.log(`     Score: ${(p.score * 100).toFixed(1)}% | R$ ${p.preco_final.toFixed(2)} | Palavras: ${p.palavrasComuns.join(', ')}`);
-      });
-    }
-
     // 9️⃣ Fallback: produtos aleatórios se não encontrou similares
     let produtosFinais = produtosRelacionados;
 
     if (produtosFinais.length === 0) {
-      console.log('⚠️ [API Relacionados Loja] Nenhum similar, buscando aleatórios...');
       produtosFinais = produtosComScore
         .sort(() => Math.random() - 0.5)
         .slice(0, 20);
-      console.log(`✅ [API Relacionados Loja] ${produtosFinais.length} produtos aleatórios selecionados`);
     }
 
     // 🔟 Formatar resposta
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const produtosResposta = produtosFinais.map(({ score, palavrasComuns, ...produto }) => ({
       ...produto,
-      preco: produto.preco_final, // Compatibilidade com frontend
+      preco: produto.preco_final,
     }));
 
     console.log(`✅ [API Relacionados Loja] Retornando ${produtosResposta.length} produtos`);

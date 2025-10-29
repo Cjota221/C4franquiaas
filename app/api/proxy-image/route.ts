@@ -27,17 +27,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      console.error(`[Proxy Image] Erro ao buscar: ${response.status} - ${imageUrl}`);
       return NextResponse.json(
-        { error: 'Imagem não encontrada', status: response.status }, 
+        { error: 'Imagem não encontrada', status: response.status },
         { status: response.status }
       );
     }
 
     const imageBuffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/webp';
-
-    console.log(`[Proxy Image] ✅ Imagem carregada: ${imageUrl}`);
 
     // Retornar a imagem com headers apropriados
     return new NextResponse(imageBuffer, {
