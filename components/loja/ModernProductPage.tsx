@@ -85,26 +85,35 @@ export function ModernProductPage({
   const isButtonDisabled = !skuSelecionado || addingToCart || estoqueDisponivel === 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Único com Sticky/Shrinking Effect */}
-      <StickyLojaHeader
-        dominio={dominio}
-        logoUrl={logoUrl}
-        nomeLoja={nomeLoja}
-        corPrimaria={corPrimaria}
-        onMenuClick={() => setMenuAberto(true)}
-      />
+    <>
+      {/* Esconde headers do layout pai */}
+      <style jsx global>{`
+        .desktop-only,
+        .mobile-only {
+          display: none !important;
+        }
+      `}</style>
 
-      {/* Menu Mobile */}
-      {menuAberto && (
-        <MobileMenu
-          isOpen={menuAberto}
-          onClose={() => setMenuAberto(false)}
+      <div className="min-h-screen bg-white">
+        {/* Header Único com Sticky/Shrinking Effect */}
+        <StickyLojaHeader
           dominio={dominio}
-          lojaNome={nomeLoja || 'Loja'}
-          corPrimaria="#000000"
+          logoUrl={logoUrl}
+          nomeLoja={nomeLoja}
+          corPrimaria={corPrimaria}
+          onMenuClick={() => setMenuAberto(true)}
         />
-      )}
+
+        {/* Menu Mobile */}
+        {menuAberto && (
+          <MobileMenu
+            isOpen={menuAberto}
+            onClose={() => setMenuAberto(false)}
+            dominio={dominio}
+            lojaNome={nomeLoja || 'Loja'}
+            corPrimaria="#000000"
+          />
+        )}
 
       {/* Container Principal */}
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -194,6 +203,7 @@ export function ModernProductPage({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
