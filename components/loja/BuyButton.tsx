@@ -1,6 +1,6 @@
 /**
  * Botão de Compra (CTA Principal)
- * Design: Preto, uppercase, largura total
+ * Design: Usa cor primária da loja, uppercase, largura total
  * Estados: loading, disabled
  */
 
@@ -15,6 +15,7 @@ interface BuyButtonProps {
   loading?: boolean;
   text?: string;
   className?: string;
+  corPrimaria?: string;
 }
 
 export function BuyButton({
@@ -23,6 +24,7 @@ export function BuyButton({
   loading = false,
   text = 'ADICIONAR AO CARRINHO',
   className = '',
+  corPrimaria = '#DB1472',
 }: BuyButtonProps) {
   return (
     <button
@@ -30,14 +32,16 @@ export function BuyButton({
       disabled={disabled || loading}
       className={`
         w-full py-4 px-6 rounded-full
-        bg-black text-white
+        text-white
         font-bold text-base uppercase tracking-wide
         flex items-center justify-center gap-3
         transition-all duration-200
-        hover:bg-gray-800
         disabled:bg-gray-300 disabled:cursor-not-allowed disabled:text-gray-500
         ${className}
       `}
+      style={{
+        backgroundColor: disabled ? undefined : corPrimaria,
+      }}
     >
       {loading ? (
         <>

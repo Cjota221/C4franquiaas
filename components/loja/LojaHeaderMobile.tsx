@@ -127,7 +127,10 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
               minHeight: '48px',
             }}
           >
-            <Menu size={28} className="text-gray-700" />
+            <Menu 
+              size={28} 
+              style={{ color: loja.cor_primaria }} 
+            />
           </button>
 
           {/* Logo Centralizada - 10% MAIOR */}
@@ -173,7 +176,10 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
               minHeight: '48px',
             }}
           >
-            <ShoppingCart size={28} className="text-gray-700" />
+            <ShoppingCart 
+              size={28} 
+              style={{ color: loja.cor_primaria }} 
+            />
             {totalItens > 0 && (
               <span 
                 className="absolute top-0 right-0 min-w-[22px] h-5.5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"

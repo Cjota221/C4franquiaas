@@ -39,6 +39,7 @@ interface ModernProductPageProps {
   skuSelecionado: string | null;
   quantidade: number;
   addingToCart: boolean;
+  corPrimaria?: string;
   onToggleFavorito: () => void;
   onSizeSelect: (sku: string) => void;
   onQuantityChange: (qty: number) => void;
@@ -51,6 +52,7 @@ export function ModernProductPage({
   skuSelecionado,
   quantidade,
   addingToCart,
+  corPrimaria = '#DB1472',
   onToggleFavorito,
   onSizeSelect,
   onQuantityChange,
@@ -141,6 +143,7 @@ export function ModernProductPage({
                 disabled={isButtonDisabled}
                 loading={addingToCart}
                 text={!skuSelecionado ? 'SELECIONE UM TAMANHO' : 'ADICIONAR AO CARRINHO'}
+                corPrimaria={corPrimaria}
               />
             </div>
 

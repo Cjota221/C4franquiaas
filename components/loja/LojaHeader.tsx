@@ -343,7 +343,8 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 <div className="flex items-center gap-2 md:gap-4 flex-1 justify-end">
                   <Link 
                     href="/login" 
-                    className="hidden md:flex items-center gap-2 text-gray-700 hover:text-pink-600 transition"
+                    className="hidden md:flex items-center gap-2 hover:opacity-80 transition"
+                    style={{ color: loja.cor_primaria }}
                   >
                     <User size={20} />
                     <span className="text-sm font-medium">Entrar</span>
@@ -353,7 +354,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     href={`/loja/${dominio}/carrinho`}
                     className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                   >
-                    <ShoppingCart size={24} className="text-gray-700" />
+                    <ShoppingCart 
+                      size={24} 
+                      style={{ color: loja.cor_primaria }} 
+                    />
                     {totalItens > 0 && (
                       <span 
                         className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
@@ -403,7 +407,8 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 <div className="flex items-center gap-2 md:gap-4">
                   <Link 
                     href="/login" 
-                    className="hidden md:flex items-center gap-2 text-gray-700 hover:text-pink-600 transition"
+                    className="hidden md:flex items-center gap-2 hover:opacity-80 transition"
+                    style={{ color: loja.cor_primaria }}
                   >
                     <User size={20} />
                     <span className="text-sm font-medium">Entrar</span>
@@ -413,7 +418,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     href={`/loja/${dominio}/carrinho`}
                     className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                   >
-                    <ShoppingCart size={24} className="text-gray-700" />
+                    <ShoppingCart 
+                      size={24} 
+                      style={{ color: loja.cor_primaria }} 
+                    />
                     {totalItens > 0 && (
                       <span 
                         className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"

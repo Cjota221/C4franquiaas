@@ -305,6 +305,7 @@ function ProdutoDetalheContent() {
         skuSelecionado={skuSelecionado}
         quantidade={quantidade}
         addingToCart={addingToCart}
+        corPrimaria={loja.cor_primaria}
         onToggleFavorito={toggleFavorito}
         onSizeSelect={setSkuSelecionado}
         onQuantityChange={setQuantidade}
