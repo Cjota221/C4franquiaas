@@ -9,10 +9,10 @@ import OrderSummary from '@/components/loja/OrderSummary';
 
 export default function CheckoutPage() {
   const loja = useLojaInfo();
-  const { items } = useCart();
+  const { items, isLoading } = useCart();
   const corPrimaria = loja?.cor_primaria || '#DB1472';
 
-  if (!loja) {
+  if (!loja || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-600"></div>

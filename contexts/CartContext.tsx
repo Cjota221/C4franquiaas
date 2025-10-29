@@ -19,18 +19,27 @@ interface CartContextType {
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
+  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Carregar carrinho do localStorage
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setItems(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        setItems(parsed);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -94,6 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       getTotal,
       getItemCount,
+      isLoading,
     }}>
       {children}
     </CartContext.Provider>
