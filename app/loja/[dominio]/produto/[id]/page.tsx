@@ -301,10 +301,6 @@ function ProdutoDetalheContent() {
       {/* Página Moderna do Produto */}
       <ModernProductPage
         produto={produto}
-        dominio={dominio}
-        logoUrl={loja?.logo || undefined}
-        nomeLoja={loja?.nome}
-        corPrimaria={loja?.cor_primaria}
         favorito={favorito}
         skuSelecionado={skuSelecionado}
         quantidade={quantidade}

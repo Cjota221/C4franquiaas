@@ -6,7 +6,6 @@
 
 "use client";
 import React from 'react';
-import { StickyLojaHeader } from '@/components/loja/StickyLojaHeader';
 import { ProductImageGallery } from '@/components/loja/ProductImageGallery';
 import { ProductTitle } from '@/components/loja/ProductTitle';
 import { PriceBlock } from '@/components/loja/PriceBlock';
@@ -36,14 +35,10 @@ interface Produto {
 
 interface ModernProductPageProps {
   produto: Produto;
-  dominio: string;
   favorito: boolean;
   skuSelecionado: string | null;
   quantidade: number;
   addingToCart: boolean;
-  logoUrl?: string;
-  nomeLoja?: string;
-  corPrimaria?: string;
   onToggleFavorito: () => void;
   onSizeSelect: (sku: string) => void;
   onQuantityChange: (qty: number) => void;
@@ -52,14 +47,10 @@ interface ModernProductPageProps {
 
 export function ModernProductPage({
   produto,
-  dominio,
   favorito,
   skuSelecionado,
   quantidade,
   addingToCart,
-  logoUrl,
-  nomeLoja,
-  corPrimaria,
   onToggleFavorito,
   onSizeSelect,
   onQuantityChange,
@@ -83,23 +74,7 @@ export function ModernProductPage({
 
   return (
     <>
-      {/* Esconde headers do layout pai */}
-      <style jsx global>{`
-        .desktop-only,
-        .mobile-only {
-          display: none !important;
-        }
-      `}</style>
-
       <div className="min-h-screen bg-white">
-        {/* Header Único: ← Voltar | Logo | Carrinho 🛒 */}
-        <StickyLojaHeader
-          dominio={dominio}
-          logoUrl={logoUrl}
-          nomeLoja={nomeLoja}
-          corPrimaria={corPrimaria}
-        />
-
         {/* Container Principal */}
         <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-12">
