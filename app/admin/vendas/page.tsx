@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useEnvioecom } from '@/hooks/useEnvioecom';
 import { RastreamentoModal } from '@/components/admin/RastreamentoModal';
-import { Button } from '@/components/ui/button';
 import type { EtiquetaRequest, EnderecoCompleto } from '@/types/envioecom';
 
 type Cliente = {
