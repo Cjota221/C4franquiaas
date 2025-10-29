@@ -158,21 +158,31 @@ export async function GET(
     console.log(`💰 [API Relacionados Loja] ${precos?.length || 0} produtos com preços ativos`);
 
     // 6️⃣ Processar imagens
-    // ⚠️ SEMPRE usar proxy porque Facilzap bloqueia acesso direto externo (CORS/403)
-    const baseUrl = 'https://c4franquiaas.netlify.app';
+    // Em DEV: usar proxy local Next.js (/api/proxy-image)
+    // Em PROD: usar proxy Netlify
+    const isDev = process.env.NODE_ENV === 'development';
+    const baseUrl = isDev ? '' : 'https://c4franquiaas.netlify.app';
 
     const processarImagem = (url: string | null): string | null => {
       if (!url) return null;
 
-      // Se já tiver proxy Netlify completo, manter
-      if (url.includes('/.netlify/functions/proxy-facilzap-image')) {
-        return url;
+      // Se já tiver proxy, extrair URL original
+      if (url.includes('/proxy-facilzap-image?url=') || url.includes('/proxy-image?url=')) {
+        const urlMatch = url.match(/[?&]url=([^&]+)/);
+        if (urlMatch) {
+          url = decodeURIComponent(urlMatch[1]);
+        }
       }
 
-      // Se for URL do Facilzap, SEMPRE adicionar proxy (mesmo em DEV)
+      // Se for URL do Facilzap, adicionar proxy apropriado
       if (url.includes('facilzap.app.br')) {
-        const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
-        return proxyUrl;
+        if (isDev) {
+          // DEV: usar proxy local Next.js
+          return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+        } else {
+          // PROD: usar proxy Netlify
+          return `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+        }
       }
 
       // Outras URLs (Supabase, etc) retornar direto
@@ -180,63 +190,6 @@ export async function GET(
         return url;
       }
 
-      return null;
-    };
-
-    // 6️⃣ Processar imagens
-    // EM DESENVOLVIMENTO: Retornar URLs diretas do Facilzap (sem proxy)
-    // EM PRODUÇÃO: Usar proxy Netlify para evitar erro 403
-    const isDev = process.env.NODE_ENV === 'development';
-    const baseUrl = 'https://c4franquiaas.netlify.app';
-
-    const processarImagem = (url: string | null): string | null => {
-      if (!url) return null;
-
-      console.log(`[processarImagem Relacionados] INPUT: ${url}`);
-      console.log(`[processarImagem Relacionados] isDev: ${isDev}`);
-
-      // Se já tiver proxy Netlify completo
-      if (url.includes('/.netlify/functions/proxy-facilzap-image')) {
-        // Extrair URL real do parâmetro
-        const urlMatch = url.match(/[?&]url=([^&]+)/);
-        if (urlMatch) {
-          const decoded = decodeURIComponent(urlMatch[1]);
-          console.log(`[processarImagem Relacionados] Extraído do proxy: ${decoded}`);
-          
-          // Em DEV, retornar URL direta
-          if (isDev) {
-            console.log(`[processarImagem Relacionados] DEV - retornando URL direta`);
-            return decoded;
-          }
-          // Em PROD, retornar proxy
-          console.log(`[processarImagem Relacionados] PROD - mantendo proxy`);
-          return url;
-        }
-      }
-
-      // Se for URL Facilzap direta
-      if (url.includes('facilzap.app.br')) {
-        console.log(`[processarImagem Relacionados] URL Facilzap detectada`);
-        
-        // Em DEV, retornar direto
-        if (isDev) {
-          console.log(`[processarImagem Relacionados] DEV - retornando URL direta Facilzap`);
-          return url;
-        }
-        
-        // Em PROD, adicionar proxy
-        const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
-        console.log(`[processarImagem Relacionados] PROD - criando proxy: ${proxyUrl}`);
-        return proxyUrl;
-      }
-
-      // Outras URLs (Supabase, etc)
-      if (url.startsWith('http')) {
-        console.log(`[processarImagem Relacionados] URL externa (não Facilzap): ${url}`);
-        return url;
-      }
-
-      console.warn(`[processarImagem Relacionados] URL inválida: ${url}`);
       return null;
     };
 
