@@ -309,7 +309,6 @@ function ProdutoDetalheContent() {
         skuSelecionado={skuSelecionado}
         quantidade={quantidade}
         addingToCart={addingToCart}
-        onBack={() => router.back()}
         onToggleFavorito={toggleFavorito}
         onSizeSelect={setSkuSelecionado}
         onQuantityChange={setQuantidade}

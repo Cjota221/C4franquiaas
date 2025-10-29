@@ -45,7 +45,6 @@ interface ModernProductPageProps {
   logoUrl?: string;
   nomeLoja?: string;
   corPrimaria?: string;
-  onBack: () => void;
   onToggleFavorito: () => void;
   onSizeSelect: (sku: string) => void;
   onQuantityChange: (qty: number) => void;
@@ -62,7 +61,6 @@ export function ModernProductPage({
   logoUrl,
   nomeLoja,
   corPrimaria,
-  onBack,
   onToggleFavorito,
   onSizeSelect,
   onQuantityChange,
@@ -94,8 +92,6 @@ export function ModernProductPage({
         logoUrl={logoUrl}
         nomeLoja={nomeLoja}
         corPrimaria={corPrimaria}
-        showBackButton={true}
-        onBackClick={onBack}
         onMenuClick={() => setMenuAberto(true)}
       />
 

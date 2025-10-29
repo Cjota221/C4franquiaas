@@ -1,6 +1,7 @@
 /**
- * Galeria de Imagens Moderna - OTIMIZADA PARA ALTA QUALIDADE
+ * Galeria de Imagens Moderna - OTIMIZADA PARA 960x1280
  * - Imagem principal grande em alta resolução
+ * - Proporção 3:4 (960x1280) para máximo aproveitamento
  * - Dots de navegação
  * - Ícone de favoritar (coração) flutuante
  * - Suporte a swipe/touch
@@ -81,23 +82,24 @@ export function ProductImageGallery({
 
   return (
     <div className="relative w-full">
-      {/* Container da Imagem Principal */}
+      {/* Container da Imagem Principal - Proporção 3:4 (960x1280) */}
       <div
-        className="relative w-full aspect-square bg-gray-50 overflow-hidden rounded-lg"
+        className="relative w-full bg-white overflow-hidden rounded-lg"
+        style={{ aspectRatio: '3 / 4' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* Loading Spinner */}
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-5">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-5">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
           </div>
         )}
 
         {/* Error State */}
         {hasError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-5">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-5">
             <p className="text-gray-500 text-sm">Erro ao carregar imagem</p>
           </div>
         )}
@@ -107,7 +109,7 @@ export function ProductImageGallery({
           alt={`${productName} - Imagem ${currentIndex + 1}`}
           fill
           className="object-contain"
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 50vw, 600px"
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 95vw, (max-width: 1024px) 50vw, 600px"
           quality={95}
           priority={currentIndex === 0}
           unoptimized={false}
