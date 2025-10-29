@@ -38,14 +38,14 @@ export default function TrustIcons() {
               >
                 {/* Ícone Maior */}
                 <div 
-                  className="flex-shrink-0 w-[70px] h-[70px] md:w-[88px] md:h-[88px] rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-lg"
+                  className="flex-shrink-0 w-[74px] h-[74px] md:w-[92px] md:h-[92px] rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-lg"
                   style={{ 
                     backgroundColor: `${corPrimaria}12`,
                   }}
                 >
                   <IconComponent 
                     className="transition-all duration-500 group-hover:scale-110" 
-                    size={40}
+                    size={42}
                     strokeWidth={1.5}
                     style={{ color: corPrimaria }}
                   />
@@ -53,10 +53,10 @@ export default function TrustIcons() {
 
                 {/* Conteúdo */}
                 <div className="flex-1">
-                  <h3 className="text-gray-900 font-semibold text-sm md:text-base mb-0.5 tracking-tight whitespace-nowrap">
+                  <h3 className="text-gray-900 font-semibold text-base md:text-lg mb-0.5 tracking-tight whitespace-nowrap">
                     {benefit.title}
                   </h3>
-                  <p className="text-gray-500 text-xs md:text-sm whitespace-nowrap">
+                  <p className="text-gray-500 text-sm md:text-base whitespace-nowrap">
                     {benefit.description}
                   </p>
                 </div>
@@ -82,13 +82,13 @@ export default function TrustIcons() {
                 >
                   {/* Ícone */}
                   <div 
-                    className="flex-shrink-0 w-[70px] h-[70px] rounded-full flex items-center justify-center"
+                    className="flex-shrink-0 w-[74px] h-[74px] rounded-full flex items-center justify-center"
                     style={{ 
                       backgroundColor: `${corPrimaria}12`,
                     }}
                   >
                     <IconComponent 
-                      size={35}
+                      size={37}
                       strokeWidth={1.5}
                       style={{ color: corPrimaria }}
                     />
@@ -96,10 +96,10 @@ export default function TrustIcons() {
 
                   {/* Conteúdo */}
                   <div className="flex-1">
-                    <h3 className="text-gray-900 font-semibold text-sm mb-0.5 tracking-tight">
+                    <h3 className="text-gray-900 font-semibold text-base mb-0.5 tracking-tight">
                       {benefit.title}
                     </h3>
-                    <p className="text-gray-500 text-xs">
+                    <p className="text-gray-500 text-sm">
                       {benefit.description}
                     </p>
                   </div>

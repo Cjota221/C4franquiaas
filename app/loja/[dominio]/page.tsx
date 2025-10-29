@@ -92,7 +92,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
       </section>
 
       {/* Categorias em Stories */}
-      <section className="bg-white" style={{ paddingTop: '1.8rem', paddingBottom: '1.8rem' }}>
+      <section className="bg-white" style={{ paddingTop: '1.6rem', paddingBottom: '1.6rem' }}>
         <div className="container-fluid">
           <CategoriesStories />
         </div>
