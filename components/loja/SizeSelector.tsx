@@ -55,7 +55,7 @@ export function SizeSelector({
             onClick={() => size.disponivel && onSizeSelect(size.value)}
             disabled={!size.disponivel}
             className={`
-              relative py-3 px-4 rounded-lg border-2 font-semibold transition-all
+              relative py-3 px-4 rounded-full border-2 font-semibold transition-all
               ${
                 size.value === selectedSize
                   ? 'border-black bg-black text-white'

@@ -73,9 +73,10 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
           />
         </button>
 
-        {/* Imagem do Produto */}
+        {/* Imagem do Produto - Proporção 3:4 (960x1280) */}
         <div 
-          className="relative aspect-square bg-gray-100 overflow-hidden"
+          className="relative bg-gray-100 overflow-hidden"
+          style={{ aspectRatio: '3 / 4' }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -160,7 +161,7 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
                 // TODO: Abrir modal de variações ou adicionar direto
                 console.log('Adicionar ao carrinho:', produto.id);
               }}
-              className="w-full py-2 px-4 rounded-lg text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+              className="w-full py-2 px-4 rounded-full text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
               style={{ backgroundColor: loja.cor_botao }}
             >
               <ShoppingCart size={18} />
@@ -177,7 +178,7 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full py-2 px-4 rounded-lg bg-green-600 text-white font-semibold text-sm hover:bg-green-700 transition text-center block"
+              className="w-full py-2 px-4 rounded-full bg-green-600 text-white font-semibold text-sm hover:bg-green-700 transition text-center block"
             >
               Consultar no WhatsApp
             </a>

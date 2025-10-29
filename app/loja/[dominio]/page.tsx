@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProdutoCard from '@/components/loja/ProdutoCard';
+import ProductCard from '@/components/loja/ProductCard';
 import CategoriesStories from '@/components/loja/CategoriesStories';
 import TrustIcons from '@/components/loja/TrustIcons';
 import { ArrowRight } from 'lucide-react';
@@ -10,21 +10,19 @@ import { ArrowRight } from 'lucide-react';
 type Produto = {
   id: string;
   nome: string;
+  preco_base: number;
+  preco_venda?: number;
   preco_final: number;
-  imagem: string | null;
-  estoque: number;
-};
-
-type LojaInfo = {
-  nome: string;
-  cor_primaria: string;
-  cor_secundaria: string;
-  produtos_ativos: number;
+  imagens: string[];
+  tag?: string;
+  parcelamento: {
+    parcelas: number;
+    valor: number;
+  };
 };
 
 export default function LojaHomePage({ params }: { params: Promise<{ dominio: string }> }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [lojaInfo, setLojaInfo] = useState<LojaInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [dominio, setDominio] = useState<string>('');
 
@@ -34,13 +32,6 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
         const { dominio: dom } = await params;
         setDominio(dom);
         
-        // Carregar informações da loja
-        const infoRes = await fetch(`/api/loja/${dom}/info`);
-        if (infoRes.ok) {
-          const infoJson = await infoRes.json();
-          setLojaInfo(infoJson.loja);
-        }
-
         // Carregar produtos em destaque (primeiros 6)
         const prodRes = await fetch(`/api/loja/${dom}/produtos`);
         if (prodRes.ok) {
@@ -87,7 +78,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
             </p>
             <Link 
               href={`/loja/${dominio}/produtos`}
-              className="btn-responsive bg-white text-pink-600 hover:bg-pink-50"
+              className="btn-responsive bg-white text-pink-600 hover:bg-pink-50 rounded-full"
             >
               Comprar Agora
               <ArrowRight size={20} className="ml-2" />
@@ -126,11 +117,10 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
           ) : (
             <div className="grid-responsive">
               {produtos.slice(0, 8).map((produto) => (
-                <ProdutoCard 
+                <ProductCard 
                   key={produto.id} 
                   produto={produto} 
                   dominio={dominio}
-                  corPrimaria={lojaInfo?.cor_primaria || '#DB1472'}
                 />
               ))}
             </div>

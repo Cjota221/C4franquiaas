@@ -40,7 +40,7 @@ export function QuantitySelector({
       <button
         onClick={handleDecrease}
         disabled={quantity <= min}
-        className="p-3 rounded-l-lg border-2 border-r-0 border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+        className="p-3 rounded-l-full border-2 border-r-0 border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
         aria-label="Diminuir quantidade"
       >
         <Minus className="w-5 h-5 text-gray-700" />
@@ -53,7 +53,7 @@ export function QuantitySelector({
       <button
         onClick={handleIncrease}
         disabled={quantity >= max}
-        className="p-3 rounded-r-lg border-2 border-l-0 border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+        className="p-3 rounded-r-full border-2 border-l-0 border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
         aria-label="Aumentar quantidade"
       >
         <Plus className="w-5 h-5 text-gray-700" />

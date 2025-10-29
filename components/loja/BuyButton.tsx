@@ -29,7 +29,7 @@ export function BuyButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        w-full py-4 px-6 rounded-lg
+        w-full py-4 px-6 rounded-full
         bg-black text-white
         font-bold text-base uppercase tracking-wide
         flex items-center justify-center gap-3

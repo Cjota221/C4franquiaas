@@ -110,13 +110,13 @@ export function ShippingCalculator({
             onChange={handleCEPChange}
             placeholder="00000-000"
             maxLength={9}
-            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-full focus:border-black focus:outline-none transition-colors"
           />
         </div>
         <button
           onClick={handleCalcularFrete}
           disabled={loading || cep.replace(/\D/g, '').length !== 8}
-          className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
