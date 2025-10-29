@@ -163,14 +163,19 @@ export async function GET(
     const isDev = process.env.NODE_ENV === 'development';
     const baseUrl = isDev ? '' : 'https://c4franquiaas.netlify.app';
 
+    console.log(`🔧 [Processar Imagem] isDev: ${isDev}, NODE_ENV: ${process.env.NODE_ENV}`);
+
     const processarImagem = (url: string | null): string | null => {
       if (!url) return null;
+
+      console.log(`📥 [Processar Imagem] INPUT: ${url}`);
 
       // Se já tiver proxy, extrair URL original
       if (url.includes('/proxy-facilzap-image?url=') || url.includes('/proxy-image?url=')) {
         const urlMatch = url.match(/[?&]url=([^&]+)/);
         if (urlMatch) {
           url = decodeURIComponent(urlMatch[1]);
+          console.log(`🔓 [Processar Imagem] URL extraída do proxy: ${url}`);
         }
       }
 
@@ -178,18 +183,24 @@ export async function GET(
       if (url.includes('facilzap.app.br')) {
         if (isDev) {
           // DEV: usar proxy local Next.js
-          return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+          const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+          console.log(`🏠 [Processar Imagem] DEV - proxy local: ${proxyUrl}`);
+          return proxyUrl;
         } else {
           // PROD: usar proxy Netlify
-          return `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+          const proxyUrl = `${baseUrl}/.netlify/functions/proxy-facilzap-image?url=${encodeURIComponent(url)}`;
+          console.log(`☁️ [Processar Imagem] PROD - proxy Netlify: ${proxyUrl}`);
+          return proxyUrl;
         }
       }
 
       // Outras URLs (Supabase, etc) retornar direto
       if (url.startsWith('http')) {
+        console.log(`🌐 [Processar Imagem] URL externa: ${url}`);
         return url;
       }
 
+      console.log(`❌ [Processar Imagem] URL inválida: ${url}`);
       return null;
     };
 
