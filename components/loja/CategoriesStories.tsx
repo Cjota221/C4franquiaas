@@ -37,7 +37,6 @@ export default function CategoriesStories() {
   if (!loja || categorias.length === 0) return null;
 
   const corPrimaria = loja.cor_primaria || '#DB1472';
-  const corTexto = loja.cor_texto || '#1F2937';
 
   return (
     <section className="py-6 md:py-8">
@@ -46,7 +45,7 @@ export default function CategoriesStories() {
           className="font-bold text-center mb-6"
           style={{ 
             fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-            color: corTexto
+            color: corPrimaria
           }}
         >
           Categorias
@@ -77,7 +76,7 @@ export default function CategoriesStories() {
                 </div>
                 <p 
                   className="category-label"
-                  style={{ color: corTexto }}
+                  style={{ color: corPrimaria }}
                 >
                   {cat.nome}
                 </p>

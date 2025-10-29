@@ -6,6 +6,7 @@ import ProductCard from '@/components/loja/ProductCard';
 import CategoriesStories from '@/components/loja/CategoriesStories';
 import TrustIcons from '@/components/loja/TrustIcons';
 import { ArrowRight } from 'lucide-react';
+import { useLojaInfo } from '@/contexts/LojaContext';
 
 type Produto = {
   id: string;
@@ -22,9 +23,12 @@ type Produto = {
 };
 
 export default function LojaHomePage({ params }: { params: Promise<{ dominio: string }> }) {
+  const loja = useLojaInfo();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [dominio, setDominio] = useState<string>('');
+
+  const corPrimaria = loja?.cor_primaria || '#DB1472';
 
   useEffect(() => {
     async function loadData() {
@@ -101,10 +105,13 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
       <section className="py-fluid-xl bg-gray-50">
         <div className="container-fluid">
           <div className="flex items-center justify-between mb-fluid-lg">
-            <h2 className="heading-section">Produtos em Destaque</h2>
+            <h2 className="heading-section" style={{ color: corPrimaria }}>
+              Produtos em Destaque
+            </h2>
             <Link 
               href={`/loja/${dominio}/produtos`}
-              className="text-pink-600 font-medium hover:text-pink-700 transition text-fluid-base"
+              className="font-medium hover:opacity-80 transition text-fluid-base"
+              style={{ color: corPrimaria }}
             >
               Ver todos →
             </Link>
