@@ -31,10 +31,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Carregar carrinho do localStorage
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem('cart');
+      // Ler do mesmo localStorage que o Zustand usa
+      const savedCart = localStorage.getItem('c4-carrinho-storage');
       if (savedCart) {
         const parsed = JSON.parse(savedCart);
-        setItems(parsed);
+        // O Zustand salva como { state: { items: [...] } }
+        const zustandItems = parsed?.state?.items || [];
+        
+        // Converter formato do Zustand para CartItem
+        const convertedItems: CartItem[] = zustandItems.map((item: {
+          id: string;
+          nome: string;
+          preco: number;
+          imagem: string;
+          quantidade: number;
+          tamanho?: string;
+          sku?: string;
+        }) => ({
+          id: item.id,
+          nome: item.nome,
+          preco_final: item.preco,
+          imagens: [item.imagem],
+          quantidade: item.quantidade,
+          tamanho: item.tamanho,
+          sku: item.sku,
+        }));
+        
+        setItems(convertedItems);
       }
     } catch (error) {
       console.error('Erro ao carregar carrinho:', error);
@@ -43,14 +66,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Salvar carrinho no localStorage
-  useEffect(() => {
-    if (items.length > 0) {
-      localStorage.setItem('cart', JSON.stringify(items));
-    } else {
-      localStorage.removeItem('cart');
-    }
-  }, [items]);
+  // Nota: Não salvamos no localStorage aqui porque o Zustand já faz isso
+  // O CartContext apenas LÊ os dados do Zustand para uso no checkout
 
   const addItem = (item: CartItem) => {
     setItems(prev => {
