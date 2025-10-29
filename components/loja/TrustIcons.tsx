@@ -2,131 +2,68 @@
 import { ShieldCheck, Truck, CreditCard } from 'lucide-react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 
-const icons = [
-  { icon: ShieldCheck, text: 'Compra 100% Segura', description: 'Dados protegidos' },
-  { icon: Truck, text: 'Enviamos para todo Brasil', description: 'Frete rápido e seguro' },
-  { icon: CreditCard, text: 'Parcele suas compras', description: 'Em até 6x sem juros' },
+const benefits = [
+  { 
+    icon: ShieldCheck, 
+    title: 'Compra 100% Segura',
+    description: 'Seus dados protegidos'
+  },
+  { 
+    icon: Truck, 
+    title: 'Frete para todo Brasil',
+    description: 'Entrega rápida e garantida'
+  },
+  { 
+    icon: CreditCard, 
+    title: 'Parcele em até 6x',
+    description: 'Sem juros no cartão'
+  },
 ];
 
 export default function TrustIcons() {
   const loja = useLojaInfo();
-
-  // Cores personalizadas da franqueada
-  const corPrimaria = loja.cor_primaria || '#DB1472';
-  const corTexto = loja.cor_texto || '#1F2937';
-
-  // Gerar cor clara para fundo (10% de opacidade da cor primária)
-  const corFundoClaro = `${corPrimaria}1a`; // Hex + Alpha
+  const corPrimaria = loja?.cor_primaria || '#DB1472';
 
   return (
-    <>
-      {/* Mobile: Marquee Horizontal Infinito */}
-      <div 
-        className="md:hidden overflow-hidden py-4"
-        style={{
-          background: `linear-gradient(to right, ${corFundoClaro}, ${corPrimaria}10)`,
-        }}
-      >
-        <div className="trust-marquee-container">
-          <div className="trust-marquee-track">
-            {/* Renderizar itens 2x para loop infinito */}
-            {[...icons, ...icons].map((item, i) => {
-              const IconComponent = item.icon;
-              return (
-                <div 
-                  key={i} 
-                  className="trust-marquee-item"
-                >
-                  <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-sm border border-gray-100">
-                    <div 
-                      className="p-2 rounded-full flex-shrink-0"
-                      style={{
-                        backgroundColor: corFundoClaro,
-                        color: corPrimaria,
-                      }}
-                    >
-                      <IconComponent size={20} strokeWidth={2.5} />
-                    </div>
-                    <div className="text-left">
-                      <p 
-                        className="font-bold text-sm whitespace-nowrap"
-                        style={{ color: corTexto }}
-                      >
-                        {item.text}
-                      </p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap">{item.description}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop: Layout Estático em Grid */}
-      <div className="hidden md:block">
-        <div className="grid grid-cols-3 gap-8 text-center">
-          {icons.map((item, i) => {
-            const IconComponent = item.icon;
+    <section className="w-full bg-white py-12 md:py-16 border-t border-b border-gray-100">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+          {benefits.map((benefit, index) => {
+            const IconComponent = benefit.icon;
             return (
               <div 
-                key={i} 
-                className="flex flex-col items-center p-6 rounded-lg hover:bg-gray-50 transition-colors"
-                style={{ color: corTexto }}
+                key={index} 
+                className="flex items-start gap-4 group"
               >
+                {/* Ícone */}
                 <div 
-                  className="mb-3 p-3 rounded-full"
-                  style={{
-                    backgroundColor: corFundoClaro,
-                    color: corPrimaria,
+                  className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                  style={{ 
+                    backgroundColor: `${corPrimaria}10`,
                   }}
                 >
-                  <IconComponent size={32} strokeWidth={2} />
+                  <IconComponent 
+                    className="transition-all duration-300" 
+                    size={28}
+                    strokeWidth={1.5}
+                    style={{ color: corPrimaria }}
+                  />
                 </div>
-                <p className="font-bold text-lg mb-1">{item.text}</p>
-                <p className="text-sm text-gray-500">{item.description}</p>
+
+                {/* Conteúdo */}
+                <div className="flex-1 pt-1">
+                  <h3 className="text-gray-900 font-semibold text-base mb-1 tracking-tight">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* CSS Inline para Animação Marquee */}
-      <style jsx>{`
-        .trust-marquee-container {
-          width: 100%;
-          overflow: hidden;
-          white-space: nowrap;
-          position: relative;
-        }
-
-        .trust-marquee-track {
-          display: inline-flex;
-          gap: 16px;
-          animation: marquee-scroll 25s linear infinite;
-          will-change: transform;
-        }
-
-        .trust-marquee-item {
-          display: inline-block;
-          flex-shrink: 0;
-        }
-
-        @keyframes marquee-scroll {
-          0% {
-            transform: translateX(0%);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        /* Pausar animação ao hover (opcional) */
-        .trust-marquee-container:hover .trust-marquee-track {
-          animation-play-state: paused;
-        }
-      `}</style>
-    </>
+    </section>
   );
 }
