@@ -81,6 +81,10 @@ export interface LojaInfo {
   permitir_carrinho: boolean;
   modo_catalogo: boolean;
   mensagem_whatsapp: string;
+  
+  // 🆕 Franqueada
+  franqueada_id?: string | null;
+  margem_lucro?: number; // Percentual de comissão
 }
 
 const LojaContext = createContext<LojaInfo | null>(null);

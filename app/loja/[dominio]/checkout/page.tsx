@@ -1,6 +1,7 @@
 "use client";
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { useCart } from '@/contexts/CartContext';
+import { useCarrinhoStore } from '@/lib/store/carrinhoStore'; // 🔧 MUDANÇA: Usar Zustand em vez de CartContext
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
@@ -10,15 +11,38 @@ import CheckoutFooter from '@/components/loja/CheckoutFooter';
 
 export default function CheckoutPage() {
   const loja = useLojaInfo();
-  const { items, isLoading } = useCart();
+  const [mounted, setMounted] = useState(false);
+  
+  // 🔧 Usar Zustand em vez de CartContext
+  const items = useCarrinhoStore(state => state.items);
   const corPrimaria = loja?.cor_primaria || '#DB1472';
+
+  // Garantir hidratação
+  useEffect(() => {
+    console.log('🔄 [Checkout] useEffect montando...');
+    console.log('📦 [Checkout] Items do Zustand:', items);
+    console.log('💾 [Checkout] localStorage:', localStorage.getItem('c4-carrinho-storage'));
+    setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Array vazio - só roda uma vez na montagem
 
   // Debug
   console.log('🛒 Checkout - Items:', items);
-  console.log('⏳ Checkout - Loading:', isLoading);
+  console.log('🛒 Checkout - Mounted:', mounted);
   console.log('🏪 Checkout - Loja:', loja?.nome);
 
-  if (!loja || isLoading) {
+  // Converter items do Zustand para formato do OrderSummary
+  const convertedItems = items.map(item => ({
+    id: item.id,
+    nome: item.nome,
+    preco_final: item.preco,
+    imagens: [item.imagem],
+    quantidade: item.quantidade,
+    tamanho: item.tamanho,
+    sku: item.sku,
+  }));
+
+  if (!loja || !mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-600"></div>
@@ -112,7 +136,7 @@ export default function CheckoutPage() {
           {/* Coluna Direita - Resumo (40%) */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-24">
-              <OrderSummary loja={loja} items={items} />
+              <OrderSummary loja={loja} items={convertedItems} />
             </div>
           </div>
         </div>

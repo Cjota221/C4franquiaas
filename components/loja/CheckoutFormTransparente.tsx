@@ -15,10 +15,11 @@
 import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
-import { useCart } from '@/contexts/CartContext';
+import { useCarrinhoStore } from '@/lib/store/carrinhoStore'; // 🔧 Usar Zustand
 import PaymentMethodSelector, { type PaymentMethodType } from './PaymentMethodSelector';
 import PixPayment from './PixPayment';
 import CardPayment from './CardPayment';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 interface CheckoutFormProps {
   loja: LojaInfo;
@@ -28,7 +29,16 @@ type CheckoutStep = 'form' | 'payment' | 'processing' | 'success' | 'error';
 
 export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
-  const { items, getTotal, clearCart } = useCart();
+  
+  // 🔧 Usar Zustand em vez de CartContext
+  const items = useCarrinhoStore(state => state.items);
+  const clearCarrinho = useCarrinhoStore(state => state.clearCarrinho);
+  const getTotal = useCarrinhoStore(state => state.getTotal);
+  
+  // Calcular totais
+  const subtotal = getTotal();
+  const frete = subtotal >= 99 ? 0 : 15.90;
+  const total = subtotal + frete;
   
   // Estados do checkout
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('form');
@@ -78,22 +88,6 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     }
     loadPublicKey();
   }, []);
-
-  // Monitorar mudanças no carrinho e resetar checkout se necessário
-  useEffect(() => {
-    console.log('🔄 [CheckoutForm] Items mudaram:', items.length);
-    console.log('📋 [CheckoutForm] Items:', items);
-    console.log('🎯 [CheckoutForm] Checkout Step:', checkoutStep);
-    
-    // Se o carrinho mudou enquanto estava no processo de pagamento, voltar para o formulário
-    if (checkoutStep !== 'form' && checkoutStep !== 'success') {
-      console.log('🔄 Carrinho atualizado, resetando checkout...');
-      setCheckoutStep('form');
-      setSelectedPaymentMethod(null);
-      setPixData(null);
-      setError(null);
-    }
-  }, [items, checkoutStep]); // Reage a mudanças nos items do carrinho
 
   const handleCepBlur = async () => {
     const cep = formData.cep.replace(/\D/g, '');
@@ -150,21 +144,75 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     setCheckoutStep('payment');
   };
 
+  // 🆕 Salvar venda no banco de dados
+  const salvarVenda = async (paymentId: string, metodo: string) => {
+    try {
+      const supabase = createBrowserClient();
+
+      // Calcular comissão da franqueada
+      const percentualComissao = loja.margem_lucro || 30; // Default 30%
+      const comissaoFranqueada = (total * percentualComissao) / 100;
+
+      const vendaData = {
+        loja_id: loja.id,
+        franqueada_id: loja.franqueada_id,
+        items: items.map(item => ({
+          id: item.id,
+          nome: item.nome,
+          tamanho: item.tamanho,
+          sku: item.sku,
+          quantidade: item.quantidade,
+          preco: item.preco,
+          imagem: item.imagem
+        })),
+        valor_total: total,
+        comissao_franqueada: comissaoFranqueada,
+        percentual_comissao: percentualComissao,
+        mp_payment_id: paymentId,
+        metodo_pagamento: metodo,
+        status_pagamento: 'pending',
+        cliente_nome: formData.fullName,
+        cliente_email: formData.email,
+        cliente_cpf: formData.cpf.replace(/\D/g, ''),
+        cliente_telefone: formData.whatsapp,
+        endereco_completo: {
+          cep: formData.cep,
+          rua: formData.address,
+          numero: formData.number,
+          complemento: formData.complement,
+          bairro: formData.neighborhood,
+          cidade: formData.city,
+          estado: formData.state,
+        }
+      };
+
+      const { error } = await supabase
+        .from('vendas')
+        .insert(vendaData);
+
+      if (error) {
+        console.error('❌ Erro ao salvar venda:', error);
+        throw error;
+      }
+
+      console.log('✅ Venda salva com sucesso!', paymentId);
+    } catch (error) {
+      console.error('❌ Erro ao salvar venda:', error);
+      // Não bloquear o checkout se falhar ao salvar
+    }
+  };
+
   // Processar pagamento PIX
   const handlePixPayment = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const subtotal = getTotal();
-      const frete = subtotal >= 99 ? 0 : 15.90;
-      const total = subtotal + frete;
-
       const mpItems = items.map(item => ({
         id: item.sku || item.id,
         title: item.nome,
         quantity: item.quantidade,
-        unit_price: item.preco_final,
+        unit_price: item.preco,
       }));
 
       const response = await fetch('/api/mp-payment', {
@@ -204,6 +252,9 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         external_reference: result.external_reference,
       });
 
+      // 🆕 Salvar venda no banco de dados
+      await salvarVenda(result.paymentId, 'pix');
+
       setCheckoutStep('processing');
 
     } catch (err) {
@@ -217,7 +268,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   // Callbacks do PIX
   const handlePixPaymentConfirmed = () => {
     setCheckoutStep('success');
-    clearCart();
+    clearCarrinho();
   };
 
   const handlePixPaymentExpired = () => {
@@ -227,10 +278,14 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   };
 
   // Callbacks do Cartão
-  const handleCardPaymentSuccess = (paymentIdResult: string) => {
+  const handleCardPaymentSuccess = async (paymentIdResult: string) => {
     setPaymentId(paymentIdResult);
+    
+    // 🆕 Salvar venda no banco de dados
+    await salvarVenda(paymentIdResult, 'credit_card');
+    
     setCheckoutStep('success');
-    clearCart();
+    clearCarrinho();
   };
 
   const handleCardPaymentError = (errorMessage: string) => {
@@ -251,11 +306,6 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
       setError(null);
     }
   };
-
-  // Calcular totais
-  const subtotal = getTotal();
-  const frete = subtotal >= 99 ? 0 : 15.90;
-  const total = subtotal + frete;
 
   // ==========================================
   // RENDERIZAÇÃO CONDICIONAL POR ETAPA
@@ -476,7 +526,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
                 id: item.sku || item.id,
                 title: item.nome,
                 quantity: item.quantidade,
-                unit_price: item.preco_final,
+                unit_price: item.preco,
               }))}
             />
           </div>
