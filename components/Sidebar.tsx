@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
     { id: 'vendas', label: 'Vendas', icon: ShoppingCart, href: '/admin/vendas' },
     { id: 'comissoes', label: 'Comissões', icon: Coins, href: '/admin/comissoes' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart, disabled: true },
-    { id: 'configuracoes', label: 'Configurações', icon: Settings, disabled: true },
+    { id: 'configuracoes', label: 'Configurações', icon: Settings, href: '/admin/configuracoes' },
   ];
 
   // Classes de estilo para os botões (ativo vs. inativo)

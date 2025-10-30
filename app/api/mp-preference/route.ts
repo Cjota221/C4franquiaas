@@ -22,7 +22,6 @@ interface PreferenceItem {
 }
 
 interface PreferencePayload {
-  lojaId: string;
   items: PreferenceItem[];
   payer: {
     email: string;
@@ -48,15 +47,15 @@ interface PreferencePayload {
 export async function POST(request: NextRequest) {
   try {
     const payload: PreferencePayload = await request.json();
-    const { lojaId, items, payer, external_reference, back_urls } = payload;
+    const { items, payer, external_reference, back_urls } = payload;
 
-    console.log(`💳 [MP Preference] Criando preferência para loja ${lojaId}...`);
+    console.log(`💳 [MP Preference] Criando preferência...`);
     console.log(`📦 [MP Preference] Items:`, items);
 
-    // 1. Obter credenciais seguras
+    // 1. Obter credenciais seguras (GLOBAIS)
     let credentials;
     try {
-      credentials = await getMercadoPagoCredentials(lojaId);
+      credentials = await getMercadoPagoCredentials();
       console.log(`🔑 [MP Preference] Credenciais obtidas - Modo: ${credentials.isProduction ? 'PRODUÇÃO' : 'TESTE'}`);
     } catch (credError) {
       console.error('❌ [MP Preference] Erro ao obter credenciais:', credError);

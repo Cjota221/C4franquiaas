@@ -100,7 +100,6 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          lojaId: loja.id,
           items: mpItems,
           payer: {
             email: formData.email,
