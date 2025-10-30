@@ -3,6 +3,7 @@
 ## 📋 Visão Geral
 
 Este webhook sincroniza automaticamente o estoque após uma venda, atualizando:
+
 - ✅ Banco de dados central (Supabase)
 - ✅ Meta Commerce (Facebook/Instagram Shopping)
 - ✅ Lojas das franqueadas (via notificação)
@@ -33,11 +34,13 @@ META_CATALOG_ID=SEU_CATALOG_ID
 ## 📡 Endpoint do Webhook
 
 ### URL
+
 ```
 POST https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 ### Headers
+
 ```json
 {
   "Content-Type": "application/json"
@@ -45,6 +48,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 ### Payload (Body)
+
 ```json
 {
   "secret": "c4franquias_webhook_secret_2025_secure_key",
@@ -77,6 +81,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ## ❌ Respostas de Erro
 
 ### 401 - Não Autorizado
+
 ```json
 {
   "error": "Chave secreta inválida"
@@ -84,6 +89,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 ### 404 - Produto Não Encontrado
+
 ```json
 {
   "error": "Produto não encontrado"
@@ -91,6 +97,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 ### 400 - Dados Inválidos
+
 ```json
 {
   "error": "SKU ou quantidade inválida"
@@ -98,6 +105,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 ### 500 - Erro Interno
+
 ```json
 {
   "error": "Erro interno do servidor",
@@ -110,6 +118,7 @@ POST https://c4franquiaas.netlify.app/api/sync-estoque
 ## 🧪 Teste Local
 
 ### Com cURL:
+
 ```bash
 curl -X POST http://localhost:3000/api/sync-estoque \
   -H "Content-Type: application/json" \
@@ -122,9 +131,11 @@ curl -X POST http://localhost:3000/api/sync-estoque \
 ```
 
 ### Com Postman:
+
 1. Método: **POST**
 2. URL: `http://localhost:3000/api/sync-estoque`
 3. Body (JSON):
+
 ```json
 {
   "secret": "c4franquias_webhook_secret_2025_secure_key",
@@ -145,6 +156,7 @@ curl https://c4franquiaas.netlify.app/api/sync-estoque
 ```
 
 Resposta:
+
 ```json
 {
   "status": "online",
@@ -215,13 +227,17 @@ O webhook gera logs detalhados:
 ## ⚠️ Alertas Automáticos
 
 ### Estoque Mínimo
+
 Quando `estoque_novo <= estoque_minimo`:
+
 ```
 ⚠️ [Webhook] ALERTA: Produto Chocolate ao Leite 100g atingiu estoque mínimo!
 ```
 
 ### Estoque Zerado
+
 Quando `estoque_novo === 0`:
+
 ```
 🚫 [Webhook] CRÍTICO: Produto Chocolate ao Leite 100g sem estoque!
 ```
@@ -231,14 +247,17 @@ Quando `estoque_novo === 0`:
 ## 🔧 Troubleshooting
 
 ### Webhook retorna 401
+
 - ✅ Verifique se o `secret` está correto
 - ✅ Confira se `WEBHOOK_SECRET` está no `.env.local`
 
 ### Produto não encontrado (404)
+
 - ✅ Verifique se o SKU está correto no banco
 - ✅ Confirme que o produto está ativo
 
 ### Meta Sync falha
+
 - ✅ Valide o `META_ACCESS_TOKEN`
 - ✅ Confirme permissão `catalog_management`
 - ✅ Verifique se o `META_CATALOG_ID` está correto
