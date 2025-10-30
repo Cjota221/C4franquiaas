@@ -42,12 +42,12 @@ CREATE TABLE IF NOT EXISTS public.vendas (
 );
 
 -- Índices para performance
-CREATE INDEX idx_vendas_loja_id ON public.vendas(loja_id);
-CREATE INDEX idx_vendas_franqueada_id ON public.vendas(franqueada_id);
-CREATE INDEX idx_vendas_status ON public.vendas(status_pagamento);
-CREATE INDEX idx_vendas_mp_payment_id ON public.vendas(mp_payment_id);
-CREATE INDEX idx_vendas_created_at ON public.vendas(created_at DESC);
-CREATE INDEX idx_vendas_comissao_paga ON public.vendas(comissao_paga) WHERE comissao_paga = FALSE;
+CREATE INDEX IF NOT EXISTS idx_vendas_loja_id ON public.vendas(loja_id);
+CREATE INDEX IF NOT EXISTS idx_vendas_franqueada_id ON public.vendas(franqueada_id);
+CREATE INDEX IF NOT EXISTS idx_vendas_status ON public.vendas(status_pagamento);
+CREATE INDEX IF NOT EXISTS idx_vendas_mp_payment_id ON public.vendas(mp_payment_id);
+CREATE INDEX IF NOT EXISTS idx_vendas_created_at ON public.vendas(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vendas_comissao_paga ON public.vendas(comissao_paga) WHERE comissao_paga = FALSE;
 
 -- Trigger para updated_at
 CREATE OR REPLACE FUNCTION update_vendas_updated_at()
@@ -58,6 +58,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS vendas_updated_at ON public.vendas;
 CREATE TRIGGER vendas_updated_at
   BEFORE UPDATE ON public.vendas
   FOR EACH ROW
@@ -67,6 +68,7 @@ CREATE TRIGGER vendas_updated_at
 ALTER TABLE public.vendas ENABLE ROW LEVEL SECURITY;
 
 -- Política: Franqueada vê apenas suas vendas
+DROP POLICY IF EXISTS "Franqueada vê apenas suas vendas" ON public.vendas;
 CREATE POLICY "Franqueada vê apenas suas vendas"
   ON public.vendas
   FOR SELECT
@@ -74,6 +76,7 @@ CREATE POLICY "Franqueada vê apenas suas vendas"
   USING (franqueada_id = auth.uid());
 
 -- Política: Qualquer usuário autenticado pode inserir (checkout client-side)
+DROP POLICY IF EXISTS "Usuários podem criar vendas" ON public.vendas;
 CREATE POLICY "Usuários podem criar vendas"
   ON public.vendas
   FOR INSERT
@@ -81,6 +84,7 @@ CREATE POLICY "Usuários podem criar vendas"
   WITH CHECK (true);
 
 -- Política: Sistema pode atualizar vendas (para webhook via service_role key)
+DROP POLICY IF EXISTS "Sistema pode atualizar vendas" ON public.vendas;
 CREATE POLICY "Sistema pode atualizar vendas"
   ON public.vendas
   FOR UPDATE
