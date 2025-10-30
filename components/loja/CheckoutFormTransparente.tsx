@@ -174,6 +174,14 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     try {
       const supabase = createBrowserClient();
 
+      // 🔍 Verificar se usuário está autenticado
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('👤 [Venda] Usuário autenticado:', user?.id || 'NÃO AUTENTICADO');
+      
+      if (authError) {
+        console.error('❌ [Venda] Erro de autenticação:', authError);
+      }
+
       // Calcular comissão da franqueada
       const percentualComissao = loja.margem_lucro || 30; // Default 30%
       const comissaoFranqueada = (total * percentualComissao) / 100;
