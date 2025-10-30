@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.vendas (
   
   -- Relacionamentos
   loja_id UUID NOT NULL REFERENCES public.lojas(id) ON DELETE CASCADE,
-  franqueada_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  franqueada_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- NULLABLE - clientes anônimos podem comprar
   
   -- Dados da venda
   items JSONB NOT NULL, -- Array de produtos vendidos
@@ -75,12 +75,13 @@ CREATE POLICY "Franqueada vê apenas suas vendas"
   TO authenticated
   USING (franqueada_id = auth.uid());
 
--- Política: Qualquer usuário autenticado pode inserir (checkout client-side)
+-- Política: Qualquer um pode inserir vendas (checkout público)
 DROP POLICY IF EXISTS "Usuários podem criar vendas" ON public.vendas;
-CREATE POLICY "Usuários podem criar vendas"
+DROP POLICY IF EXISTS "Clientes podem criar vendas" ON public.vendas;
+CREATE POLICY "Clientes podem criar vendas"
   ON public.vendas
   FOR INSERT
-  TO authenticated
+  TO anon, authenticated
   WITH CHECK (true);
 
 -- Política: Sistema pode atualizar vendas (para webhook via service_role key)
