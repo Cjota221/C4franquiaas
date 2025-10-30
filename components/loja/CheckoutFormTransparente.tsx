@@ -165,6 +165,12 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
 
   // 🆕 Salvar venda no banco de dados
   const salvarVenda = async (paymentId: string, metodo: string) => {
+    console.log('🔄 [Venda] Iniciando salvamento...');
+    console.log('🔄 [Venda] Payment ID:', paymentId);
+    console.log('🔄 [Venda] Método:', metodo);
+    console.log('🔄 [Venda] Loja ID:', loja.id);
+    console.log('🔄 [Venda] Franqueada ID:', loja.franqueada_id);
+    
     try {
       const supabase = createBrowserClient();
 
@@ -205,18 +211,25 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         }
       };
 
-      const { error } = await supabase
+      console.log('📦 [Venda] Dados preparados:', JSON.stringify(vendaData, null, 2));
+
+      const { data, error } = await supabase
         .from('vendas')
-        .insert(vendaData);
+        .insert(vendaData)
+        .select();
 
       if (error) {
-        console.error('❌ Erro ao salvar venda:', error);
+        console.error('❌ [Venda] Erro no INSERT:', error);
+        console.error('❌ [Venda] Error code:', error.code);
+        console.error('❌ [Venda] Error message:', error.message);
+        console.error('❌ [Venda] Error details:', error.details);
         throw error;
       }
 
-      console.log('✅ Venda salva com sucesso!', paymentId);
+      console.log('✅ [Venda] Salva com sucesso!', data);
+      console.log('✅ [Venda] Payment ID:', paymentId);
     } catch (error) {
-      console.error('❌ Erro ao salvar venda:', error);
+      console.error('❌ [Venda] EXCEPTION ao salvar:', error);
       // Não bloquear o checkout se falhar ao salvar
     }
   };
