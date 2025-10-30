@@ -9,7 +9,7 @@ interface Venda {
   franqueada_id: string;
   cliente_nome: string;
   cliente_email: string;
-  valor_total: number;
+  valor_total: string | number; // DECIMAL do Postgres pode vir como string
   status_pagamento: string;
   mp_payment_id?: string;
   created_at: string;
@@ -98,7 +98,7 @@ export default function DebugVendasPage() {
                       <div className="text-gray-500 text-xs">{venda.cliente_email}</div>
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-                      R$ {parseFloat(venda.valor_total).toFixed(2)}
+                      R$ {Number(venda.valor_total).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
