@@ -51,9 +51,25 @@ export async function POST(request: NextRequest) {
     const { lojaId, items, payer, external_reference, back_urls } = payload;
 
     console.log(`💳 [MP Preference] Criando preferência para loja ${lojaId}...`);
+    console.log(`📦 [MP Preference] Items:`, items);
 
     // 1. Obter credenciais seguras
-    const { accessToken, isProduction } = await getMercadoPagoCredentials(lojaId);
+    let credentials;
+    try {
+      credentials = await getMercadoPagoCredentials(lojaId);
+      console.log(`🔑 [MP Preference] Credenciais obtidas - Modo: ${credentials.isProduction ? 'PRODUÇÃO' : 'TESTE'}`);
+    } catch (credError) {
+      console.error('❌ [MP Preference] Erro ao obter credenciais:', credError);
+      return NextResponse.json(
+        { 
+          error: 'Erro de configuração',
+          details: credError instanceof Error ? credError.message : 'Credenciais não configuradas'
+        },
+        { status: 500 }
+      );
+    }
+
+    const { accessToken, isProduction } = credentials;
 
     // 2. Validar dados
     if (!items || items.length === 0) {
