@@ -112,34 +112,53 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
 
   // Validar formulário
   const validateForm = (): boolean => {
+    console.log('🔍 [Validação] Dados do formulário:', formData);
+    
     if (!formData.email || !formData.fullName || !formData.cpf) {
-      setError('Preencha todos os campos obrigatórios');
+      const erro = 'Preencha todos os campos obrigatórios (Nome, Email, CPF)';
+      setError(erro);
+      console.error('❌ [Validação]', erro);
+      // Scroll para o topo para mostrar o erro
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     if (!formData.whatsapp) {
-      setError('WhatsApp é obrigatório');
+      const erro = 'WhatsApp é obrigatório';
+      setError(erro);
+      console.error('❌ [Validação]', erro);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     if (!formData.cep || !formData.address || !formData.number) {
-      setError('Complete o endereço de entrega');
+      const erro = 'Complete o endereço de entrega (CEP, Rua, Número)';
+      setError(erro);
+      console.error('❌ [Validação]', erro);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
+    
+    console.log('✅ [Validação] Formulário válido!');
     return true;
   };
 
   // Avançar para escolha de pagamento
   const handleContinueToPayment = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 [Checkout] Botão clicado!');
     
     if (items.length === 0) {
       setError('Carrinho vazio');
+      console.error('❌ [Checkout] Carrinho vazio');
       return;
     }
 
+    console.log('📋 [Checkout] Validando formulário...');
     if (!validateForm()) {
+      console.error('❌ [Checkout] Validação falhou');
       return;
     }
 
+    console.log('✅ [Checkout] Avançando para pagamento!');
     setError(null);
     setCheckoutStep('payment');
   };
@@ -780,15 +799,18 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
       {/* Botão Continuar */}
       <div className="pt-6 border-t border-gray-200">
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm">❌ {error}</p>
+          <div className="mb-4 p-4 bg-red-50 border-2 border-red-400 rounded-lg shadow-lg animate-pulse">
+            <div className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <p className="text-red-800 text-sm font-semibold">{error}</p>
+            </div>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 px-6 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full py-4 px-6 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation"
           style={{ backgroundColor: corPrimaria }}
         >
           {loading ? (

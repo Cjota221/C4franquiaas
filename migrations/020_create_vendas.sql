@@ -66,19 +66,6 @@ CREATE TRIGGER vendas_updated_at
 -- RLS (Row Level Security)
 ALTER TABLE public.vendas ENABLE ROW LEVEL SECURITY;
 
--- Política: Admin vê todas as vendas
-CREATE POLICY "Admin pode ver todas as vendas"
-  ON public.vendas
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE users.id = auth.uid()
-      AND users.tipo = 'admin'
-    )
-  );
-
 -- Política: Franqueada vê apenas suas vendas
 CREATE POLICY "Franqueada vê apenas suas vendas"
   ON public.vendas
@@ -86,19 +73,20 @@ CREATE POLICY "Franqueada vê apenas suas vendas"
   TO authenticated
   USING (franqueada_id = auth.uid());
 
--- Política: Sistema pode inserir vendas (service role)
-CREATE POLICY "Sistema pode inserir vendas"
+-- Política: Qualquer usuário autenticado pode inserir (checkout client-side)
+CREATE POLICY "Usuários podem criar vendas"
   ON public.vendas
   FOR INSERT
-  TO service_role
+  TO authenticated
   WITH CHECK (true);
 
--- Política: Sistema pode atualizar vendas (para webhook)
+-- Política: Sistema pode atualizar vendas (para webhook via service_role key)
 CREATE POLICY "Sistema pode atualizar vendas"
   ON public.vendas
   FOR UPDATE
-  TO service_role
-  USING (true);
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
 
 -- Comentários
 COMMENT ON TABLE public.vendas IS 'Registro de todas as vendas realizadas pelas franqueadas';
