@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         },
       },
       external_reference: external_reference || `PAGAMENTO-${Date.now()}`,
-      notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/mp-webhook`,
+      notification_url: `https://c4franquiaas.netlify.app/api/mp-webhook`,
       metadata: {
         items: items || [],
       },

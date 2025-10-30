@@ -79,6 +79,18 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     loadPublicKey();
   }, []);
 
+  // Monitorar mudanças no carrinho e resetar checkout se necessário
+  useEffect(() => {
+    // Se o carrinho mudou enquanto estava no processo de pagamento, voltar para o formulário
+    if (checkoutStep !== 'form' && checkoutStep !== 'success') {
+      console.log('🔄 Carrinho atualizado, resetando checkout...');
+      setCheckoutStep('form');
+      setSelectedPaymentMethod(null);
+      setPixData(null);
+      setError(null);
+    }
+  }, [items, checkoutStep]); // Reage a mudanças nos items do carrinho
+
   const handleCepBlur = async () => {
     const cep = formData.cep.replace(/\D/g, '');
     if (cep.length === 8) {
@@ -347,6 +359,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
           pixData={pixData}
           onPaymentConfirmed={handlePixPaymentConfirmed}
           onPaymentExpired={handlePixPaymentExpired}
+          corPrimaria={corPrimaria}
         />
       </div>
     );
@@ -389,6 +402,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         <PaymentMethodSelector
           selectedMethod={selectedPaymentMethod}
           onSelectMethod={setSelectedPaymentMethod}
+          corPrimaria={corPrimaria}
         />
 
         {/* Erro */}
@@ -446,6 +460,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
               publicKey={publicKey}
               onPaymentSuccess={handleCardPaymentSuccess}
               onPaymentError={handleCardPaymentError}
+              corPrimaria={corPrimaria}
               payerInfo={{
                 email: formData.email,
                 firstName: formData.fullName.split(' ')[0],

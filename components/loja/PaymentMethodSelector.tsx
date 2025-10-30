@@ -14,11 +14,13 @@ export type PaymentMethodType = 'pix' | 'credit_card';
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethodType | null;
   onSelectMethod: (method: PaymentMethodType) => void;
+  corPrimaria?: string; // Cor da franqueada
 }
 
 export default function PaymentMethodSelector({ 
   selectedMethod, 
-  onSelectMethod 
+  onSelectMethod,
+  corPrimaria = '#DB1472' // Cor padrão rosa
 }: PaymentMethodSelectorProps) {
   
   const methods = [
@@ -57,54 +59,63 @@ export default function PaymentMethodSelector({
                 relative p-6 rounded-lg border-2 transition-all
                 hover:shadow-lg hover:scale-105
                 ${isSelected 
-                  ? 'border-blue-600 bg-blue-50 shadow-md' 
-                  : 'border-gray-200 bg-white hover:border-blue-300'
+                  ? 'shadow-md' 
+                  : 'border-gray-200 bg-white'
                 }
               `}
+              style={isSelected ? {
+                borderColor: corPrimaria,
+                backgroundColor: `${corPrimaria}10` // 10% opacidade
+              } : {}}
             >
               {/* Badge */}
               <div className="absolute top-2 right-2">
-                <span className={`
-                  text-xs px-2 py-1 rounded-full font-semibold
-                  ${isSelected 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-600'
-                  }
-                `}>
+                <span 
+                  className="text-xs px-2 py-1 rounded-full font-semibold"
+                  style={isSelected ? {
+                    backgroundColor: corPrimaria,
+                    color: 'white'
+                  } : {
+                    backgroundColor: '#F3F4F6',
+                    color: '#6B7280'
+                  }}
+                >
                   {method.badge}
                 </span>
               </div>
 
               {/* Ícone */}
-              <div className={`
-                mb-3 flex items-center justify-center w-16 h-16 rounded-full mx-auto
-                ${isSelected ? 'bg-blue-600' : 'bg-gray-100'}
-              `}>
+              <div 
+                className="mb-3 flex items-center justify-center w-16 h-16 rounded-full mx-auto"
+                style={isSelected ? {
+                  backgroundColor: corPrimaria
+                } : {
+                  backgroundColor: '#F3F4F6'
+                }}
+              >
                 <Icon 
-                  className={`w-8 h-8 ${isSelected ? 'text-white' : 'text-gray-600'}`} 
+                  className="w-8 h-8"
+                  style={{ color: isSelected ? 'white' : '#6B7280' }}
                 />
               </div>
 
               {/* Nome */}
-              <h4 className={`
-                text-lg font-bold mb-1
-                ${isSelected ? 'text-blue-900' : 'text-gray-900'}
-              `}>
+              <h4 className="text-lg font-bold mb-1 text-gray-900">
                 {method.name}
               </h4>
 
               {/* Descrição */}
-              <p className={`
-                text-sm
-                ${isSelected ? 'text-blue-700' : 'text-gray-600'}
-              `}>
+              <p className="text-sm text-gray-600">
                 {method.description}
               </p>
 
               {/* Indicador de seleção */}
               {isSelected && (
                 <div className="mt-4 flex items-center justify-center">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: corPrimaria }}
+                  >
                     <svg 
                       className="w-4 h-4 text-white" 
                       fill="none" 

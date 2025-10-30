@@ -22,12 +22,14 @@ interface PixPaymentProps {
   pixData: PixPaymentData;
   onPaymentConfirmed: () => void;
   onPaymentExpired: () => void;
+  corPrimaria?: string; // Cor da franqueada
 }
 
 export default function PixPayment({ 
   pixData, 
   onPaymentConfirmed,
-  onPaymentExpired 
+  onPaymentExpired,
+  corPrimaria = '#DB1472' // Cor padrão
 }: PixPaymentProps) {
   
   const [copied, setCopied] = useState(false);
@@ -114,14 +116,22 @@ export default function PixPayment({
       </div>
 
       {/* Timer */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+      <div 
+        className="rounded-lg p-4 flex items-center justify-between"
+        style={{ 
+          backgroundColor: `${corPrimaria}10`, 
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: `${corPrimaria}30` 
+        }}
+      >
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium text-blue-900">
+          <Clock className="w-5 h-5" style={{ color: corPrimaria }} />
+          <span className="text-sm font-medium" style={{ color: corPrimaria }}>
             Tempo restante para pagar:
           </span>
         </div>
-        <span className="text-lg font-mono font-bold text-blue-600">
+        <span className="text-lg font-mono font-bold" style={{ color: corPrimaria }}>
           {formatTime(timeRemaining)}
         </span>
       </div>
@@ -157,13 +167,23 @@ export default function PixPayment({
           />
           <button
             onClick={handleCopyCode}
-            className={`
-              px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2
-              ${copied 
-                ? 'bg-green-600 text-white' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+            className="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-white"
+            style={{ 
+              backgroundColor: copied ? '#10b981' : corPrimaria,
+              ...(copied ? {} : {
+                ':hover': { backgroundColor: `${corPrimaria}dd` }
+              })
+            }}
+            onMouseEnter={(e) => {
+              if (!copied) {
+                e.currentTarget.style.backgroundColor = `${corPrimaria}dd`;
               }
-            `}
+            }}
+            onMouseLeave={(e) => {
+              if (!copied) {
+                e.currentTarget.style.backgroundColor = corPrimaria;
+              }
+            }}
           >
             {copied ? (
               <>

@@ -21,6 +21,7 @@ interface CardPaymentProps {
   publicKey: string;
   onPaymentSuccess: (paymentId: string) => void;
   onPaymentError: (error: string) => void;
+  corPrimaria?: string; // Cor da franqueada
   payerInfo: {
     email: string;
     firstName: string;
@@ -41,6 +42,7 @@ export default function CardPayment({
   publicKey,
   onPaymentSuccess,
   onPaymentError,
+  corPrimaria = '#DB1472', // Cor padrão
   payerInfo,
   items,
 }: CardPaymentProps) {
@@ -240,8 +242,11 @@ export default function CardPayment({
       
       {/* Cabeçalho */}
       <div className="flex items-center gap-3 pb-4 border-b">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <CreditCard className="w-6 h-6 text-blue-600" />
+        <div 
+          className="w-12 h-12 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: `${corPrimaria}20` }}
+        >
+          <CreditCard className="w-6 h-6" style={{ color: corPrimaria }} />
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900">Cartão de Crédito</h3>
@@ -404,13 +409,23 @@ export default function CardPayment({
       <button
         type="submit"
         disabled={isProcessing}
-        className={`
-          w-full py-4 rounded-lg font-bold text-white transition-all
-          ${isProcessing 
-            ? 'bg-gray-400 cursor-not-allowed' 
-            : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+        className="w-full py-4 rounded-lg font-bold text-white transition-all"
+        style={{ 
+          backgroundColor: isProcessing ? '#9ca3af' : corPrimaria,
+          cursor: isProcessing ? 'not-allowed' : 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          if (!isProcessing) {
+            e.currentTarget.style.backgroundColor = `${corPrimaria}dd`;
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
           }
-        `}
+        }}
+        onMouseLeave={(e) => {
+          if (!isProcessing) {
+            e.currentTarget.style.backgroundColor = corPrimaria;
+            e.currentTarget.style.boxShadow = '';
+          }
+        }}
       >
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
