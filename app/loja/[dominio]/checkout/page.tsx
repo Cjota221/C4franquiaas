@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
 import CheckoutForm from '@/components/loja/CheckoutForm';
 import OrderSummary from '@/components/loja/OrderSummary';
+import CheckoutFooter from '@/components/loja/CheckoutFooter';
 
 export default function CheckoutPage() {
   const loja = useLojaInfo();
@@ -116,6 +117,9 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer do Checkout */}
+      <CheckoutFooter />
     </div>
   );
 }
