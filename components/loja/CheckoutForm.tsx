@@ -119,9 +119,17 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
       });
 
       const result = await response.json();
+      
+      console.log('📥 Resposta da API:', result);
+      console.log('🔍 Status da resposta:', response.status);
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erro ao criar preferência de pagamento');
+        const errorMsg = result.details 
+          ? `${result.error}: ${result.details}` 
+          : result.error || 'Erro ao criar preferência de pagamento';
+        
+        console.error('❌ Erro retornado pela API:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       console.log('✅ Preferência criada:', result.preference_id);
