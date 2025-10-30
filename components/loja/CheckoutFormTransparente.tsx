@@ -169,7 +169,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     console.log('🔄 [Venda] Payment ID:', paymentId);
     console.log('🔄 [Venda] Método:', metodo);
     console.log('🔄 [Venda] Loja ID:', loja.id);
-    console.log('🔄 [Venda] Franqueada ID:', loja.franqueada_id);
+    console.log('🔄 [Venda] Loja Franqueada ID:', loja.franqueada_id);
     
     try {
       const supabase = createBrowserClient();
@@ -182,13 +182,33 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         console.error('❌ [Venda] Erro de autenticação:', authError);
       }
 
+      // 🔧 CORREÇÃO: Buscar user_id da franqueada
+      // loja.franqueada_id → franqueadas.id
+      // Precisamos buscar franqueadas.user_id para vincular à venda
+      let franqueadaUserId = null;
+      
+      if (loja.franqueada_id) {
+        const { data: franqueadaData, error: franqueadaError } = await supabase
+          .from('franqueadas')
+          .select('user_id')
+          .eq('id', loja.franqueada_id)
+          .single();
+        
+        if (franqueadaError) {
+          console.error('❌ [Venda] Erro ao buscar franqueada:', franqueadaError);
+        } else if (franqueadaData) {
+          franqueadaUserId = franqueadaData.user_id;
+          console.log('✅ [Venda] Franqueada User ID encontrado:', franqueadaUserId);
+        }
+      }
+
       // Calcular comissão da franqueada
       const percentualComissao = loja.margem_lucro || 30; // Default 30%
       const comissaoFranqueada = (total * percentualComissao) / 100;
 
       const vendaData = {
         loja_id: loja.id,
-        franqueada_id: loja.franqueada_id,
+        franqueada_id: franqueadaUserId, // 🔧 CORRIGIDO: usar user_id da franqueada
         items: items.map(item => ({
           id: item.id,
           nome: item.nome,
