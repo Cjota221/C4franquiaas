@@ -15,6 +15,9 @@ export default function OrderSummary({ loja, items }: OrderSummaryProps) {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(false);
 
+  // Debug para verificar se items está atualizando
+  console.log('📦 [OrderSummary] Items recebidos:', items.length, items);
+
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + (item.preco_final * item.quantidade), 0);
   const shipping = subtotal > 99 ? 0 : 15.90;

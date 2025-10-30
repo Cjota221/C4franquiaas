@@ -81,6 +81,10 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
 
   // Monitorar mudanças no carrinho e resetar checkout se necessário
   useEffect(() => {
+    console.log('🔄 [CheckoutForm] Items mudaram:', items.length);
+    console.log('📋 [CheckoutForm] Items:', items);
+    console.log('🎯 [CheckoutForm] Checkout Step:', checkoutStep);
+    
     // Se o carrinho mudou enquanto estava no processo de pagamento, voltar para o formulário
     if (checkoutStep !== 'form' && checkoutStep !== 'success') {
       console.log('🔄 Carrinho atualizado, resetando checkout...');
