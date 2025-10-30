@@ -1,4 +1,4 @@
-# 🎯 Como Aplicar Migration 022 - Módulo Financeiro
+# 🎯 Como Aplicar Migration 023 - Módulo Financeiro
 
 ## 📋 PRÉ-REQUISITOS
 
@@ -12,7 +12,7 @@
 
 1. **Acesse o Supabase SQL Editor**: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
 
-2. **Copie TODO o conteúdo** do arquivo: `migrations/022_modulo_financeiro.sql`
+2. **Copie TODO o conteúdo** do arquivo: `migrations/023_modulo_financeiro.sql`
 
 3. **Cole no SQL Editor** e clique em **RUN**
 
