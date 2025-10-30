@@ -347,6 +347,12 @@ export default function FranqueadasPage() {
                           🎨 Customizar Loja
                         </button>
                         <button
+                          onClick={() => router.push(`/admin/lojas/${f.loja.id}/pagamentos`)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition whitespace-nowrap"
+                        >
+                          💳 Pagamentos
+                        </button>
+                        <button
                           onClick={() => toggleLojaAtiva(f.id, !f.loja.ativo)}
                           className={`px-3 py-1 rounded text-sm transition whitespace-nowrap ${
                             f.loja.ativo
