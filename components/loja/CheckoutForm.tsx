@@ -1,11 +1,8 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { CreditCard, Smartphone, Barcode, Lock, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import { CreditCard, Smartphone, Barcode, Lock, Loader2 } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
 import { useCart } from '@/contexts/CartContext';
-import PaymentMethodSelector, { type PaymentMethodType } from './PaymentMethodSelector';
-import PixPayment from './PixPayment';
-import CardPayment from './CardPayment';
 
 interface CheckoutFormProps {
   loja: LojaInfo;
@@ -13,16 +10,8 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ loja }: CheckoutFormProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
-  const { items, getTotal, clearCart } = useCart();
+  const { items, getTotal } = useCart();
   
-  // Estados do checkout transparente
-  const [checkoutStep, setCheckoutStep] = useState<'form' | 'payment' | 'processing' | 'success' | 'error'>('form');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodType | null>(null);
-  const [pixData, setPixData] = useState<any>(null);
-  const [publicKey, setPublicKey] = useState<string>('');
-  const [paymentId, setPaymentId] = useState<string>('');
-  
-  // Estados do formulário original
   const [paymentMethod, setPaymentMethod] = useState<'credit' | 'pix' | 'boleto'>('credit');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,22 +36,6 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
     cardCvv: '',
     installments: '1',
   });
-
-  // Buscar Public Key do Mercado Pago
-  useEffect(() => {
-    async function loadPublicKey() {
-      try {
-        const response = await fetch('/api/mp-public-key');
-        const data = await response.json();
-        if (data.publicKey) {
-          setPublicKey(data.publicKey);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar Public Key:', error);
-      }
-    }
-    loadPublicKey();
-  }, []);
 
   const handleCepBlur = async () => {
     const cep = formData.cep.replace(/\D/g, '');
