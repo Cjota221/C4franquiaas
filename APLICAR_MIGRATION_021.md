@@ -41,21 +41,21 @@ CREATE POLICY "Admin vê todas as vendas"
 Execute esta query:
 
 ```sql
-SELECT 
-  id, 
-  email, 
+SELECT
+  id,
+  email,
   user_metadata->>'nome' as nome,
   user_metadata->>'tipo' as tipo
-FROM auth.users 
-WHERE user_metadata->>'tipo' = 'franqueada' 
-ORDER BY created_at DESC 
+FROM auth.users
+WHERE user_metadata->>'tipo' = 'franqueada'
+ORDER BY created_at DESC
 LIMIT 5;
 ```
 
 **Você vai ver algo como:**
 
-| id | email | nome | tipo |
-|----|-------|------|------|
+| id                                     | email                | nome     | tipo       |
+| -------------------------------------- | -------------------- | -------- | ---------- |
 | `7703ac76-2e82-4ee6-a55d-11be67e72779` | caroline@exemplo.com | Caroline | franqueada |
 
 **COPIE O ID** (primeira coluna) - este é o ID correto!
@@ -67,14 +67,15 @@ LIMIT 5;
 **SUBSTITUA** `'ID_DA_FRANQUEADA_AQUI'` pelo ID que você copiou no Passo 2:
 
 ```sql
-UPDATE public.lojas 
+UPDATE public.lojas
 SET franqueada_id = 'ID_DA_FRANQUEADA_AQUI'
 WHERE id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f';
 ```
 
 **Exemplo** (use SEU ID, não este):
+
 ```sql
-UPDATE public.lojas 
+UPDATE public.lojas
 SET franqueada_id = '7703ac76-2e82-4ee6-a55d-11be67e72779'
 WHERE id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f';
 ```
@@ -88,9 +89,9 @@ WHERE id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f';
 **SUBSTITUA** `'ID_DA_FRANQUEADA_AQUI'` pelo **MESMO ID** do Passo 2:
 
 ```sql
-UPDATE public.vendas 
+UPDATE public.vendas
 SET franqueada_id = 'ID_DA_FRANQUEADA_AQUI'
-WHERE loja_id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f' 
+WHERE loja_id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f'
   AND franqueada_id IS NULL;
 ```
 
@@ -101,14 +102,14 @@ WHERE loja_id = 'ab1d2370-0972-496c-a2f8-2196ec14ee8f'
 ### 📍 PASSO 5: Verificar Resultado
 
 ```sql
-SELECT 
-  id, 
-  cliente_nome, 
-  valor_total, 
-  franqueada_id, 
+SELECT
+  id,
+  cliente_nome,
+  valor_total,
+  franqueada_id,
   mp_payment_id,
-  created_at 
-FROM public.vendas 
+  created_at
+FROM public.vendas
 ORDER BY created_at DESC;
 ```
 
@@ -121,11 +122,13 @@ ORDER BY created_at DESC;
 Após aplicar tudo acima:
 
 ### Painel Franqueada:
+
 - **URL**: `/franqueada/vendas`
 - **Login**: Com o email da franqueada
 - **Resultado**: Deve mostrar a venda da loja CACAU SHOES
 
 ### Painel Admin:
+
 - **URL**: `/admin/vendas`
 - **Login**: Com email de admin
 - **Resultado**: Deve mostrar TODAS as vendas
