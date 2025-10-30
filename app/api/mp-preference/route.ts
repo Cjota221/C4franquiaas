@@ -88,6 +88,15 @@ export async function POST(request: NextRequest) {
     // 3. Montar payload da preferência
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
+    // Garantir que back_urls sejam sempre definidas corretamente
+    const backUrls = back_urls && back_urls.success && back_urls.failure && back_urls.pending
+      ? back_urls
+      : {
+          success: `${baseUrl}/pedido/sucesso`,
+          failure: `${baseUrl}/pedido/falha`,
+          pending: `${baseUrl}/pedido/pendente`,
+        };
+    
     const preferenceData = {
       items: items.map(item => ({
         id: item.id,
@@ -104,11 +113,7 @@ export async function POST(request: NextRequest) {
       },
       external_reference: external_reference || `PEDIDO-${Date.now()}`,
       notification_url: `${baseUrl}/api/mp-webhook`,
-      back_urls: back_urls || {
-        success: `${baseUrl}/pedido/sucesso`,
-        failure: `${baseUrl}/pedido/falha`,
-        pending: `${baseUrl}/pedido/pendente`,
-      },
+      back_urls: backUrls,
       auto_return: 'approved' as const,
       statement_descriptor: 'C4 FRANQUIAS',
       binary_mode: false,
