@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       external_reference: external_reference || `PEDIDO-${Date.now()}`,
       notification_url: `${baseUrl}/api/mp-webhook`,
       back_urls: backUrls,
-      auto_return: 'approved' as const,
+      // auto_return: 'approved' as const, // Desabilitado temporariamente para testes locais
       statement_descriptor: 'C4 FRANQUIAS',
       binary_mode: false,
       payment_methods: {
