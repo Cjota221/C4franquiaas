@@ -81,7 +81,7 @@ SELECT
   END as status
 FROM lojas l
 LEFT JOIN franqueadas f ON l.franqueada_id = f.id
-ORDER BY l.created_at DESC
+ORDER BY l.criado_em DESC
 LIMIT 5;
 
 -- ============================================================================
