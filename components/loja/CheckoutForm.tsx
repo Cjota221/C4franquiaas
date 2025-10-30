@@ -1,7 +1,8 @@
 "use client";
 import { useState } from 'react';
-import { CreditCard, Smartphone, Barcode, Lock } from 'lucide-react';
+import { CreditCard, Smartphone, Barcode, Lock, Loader2 } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
+import { useCart } from '@/contexts/CartContext';
 
 interface CheckoutFormProps {
   loja: LojaInfo;
@@ -9,7 +10,11 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ loja }: CheckoutFormProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
+  const { items, getTotal } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<'credit' | 'pix' | 'boleto'>('credit');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -52,10 +57,90 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui virá a lógica de processamento
-    console.log('Processando pagamento...', formData);
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('🛒 Iniciando processo de pagamento...');
+
+      // Validações básicas
+      if (items.length === 0) {
+        throw new Error('Carrinho vazio');
+      }
+
+      if (!formData.email || !formData.fullName || !formData.cpf) {
+        throw new Error('Preencha todos os campos obrigatórios');
+      }
+
+      // 1. Preparar itens para o Mercado Pago
+      const mpItems = items.map(item => ({
+        id: item.sku || item.id,
+        title: item.nome,
+        quantity: item.quantidade,
+        unit_price: item.preco_final,
+        currency_id: 'BRL',
+        picture_url: item.imagens[0],
+      }));
+
+      // 2. Calcular totais
+      const subtotal = getTotal();
+      const frete = subtotal >= 99 ? 0 : 15.90;
+      const total = subtotal + frete;
+
+      console.log('💰 Totais:', { subtotal, frete, total });
+
+      // 3. Criar preferência no Mercado Pago
+      console.log('📡 Chamando API do Mercado Pago...');
+      
+      const response = await fetch('/api/mp-preference', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lojaId: loja.id,
+          items: mpItems,
+          payer: {
+            email: formData.email,
+            name: formData.fullName,
+            identification: {
+              type: 'CPF',
+              number: formData.cpf.replace(/\D/g, ''),
+            },
+          },
+          external_reference: `PEDIDO-${Date.now()}`,
+          back_urls: {
+            success: `${window.location.origin}/loja/${loja.dominio}/pedido/sucesso`,
+            failure: `${window.location.origin}/loja/${loja.dominio}/pedido/falha`,
+            pending: `${window.location.origin}/loja/${loja.dominio}/pedido/pendente`,
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao criar preferência de pagamento');
+      }
+
+      console.log('✅ Preferência criada:', result.preference_id);
+
+      // 4. Redirecionar para o checkout do Mercado Pago
+      const checkoutUrl = result.is_production 
+        ? result.init_point 
+        : result.sandbox_init_point;
+
+      console.log('🌐 Redirecionando para:', checkoutUrl);
+      
+      window.location.href = checkoutUrl;
+
+    } catch (err) {
+      console.error('❌ Erro ao processar pagamento:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao processar pagamento');
+      setLoading(false);
+    }
   };
 
   return (
@@ -456,12 +541,29 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
 
       {/* Botão de Finalização */}
       <div className="pt-6 border-t border-gray-200">
+        {/* Mensagem de erro */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">
+              ❌ {error}
+            </p>
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full py-4 px-6 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          disabled={loading}
+          className="w-full py-4 px-6 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           style={{ backgroundColor: corPrimaria }}
         >
-          🔒 Finalizar Pagamento
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Processando...
+            </span>
+          ) : (
+            <>🔒 Finalizar Pagamento</>
+          )}
         </button>
         
         <p className="text-xs text-gray-500 text-center mt-4">

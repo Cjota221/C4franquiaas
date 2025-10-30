@@ -34,6 +34,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/mp-preference \
 ```
 
 **Resposta esperada:**
+
 ```json
 {
   "success": true,
@@ -63,7 +64,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/mp-preference \
          "id": "PROD-001",
          "title": "Produto Teste",
          "quantity": 1,
-         "unit_price": 50.00,
+         "unit_price": 50.0,
          "currency_id": "BRL"
        }
      ],
@@ -90,6 +91,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/mp-preference \
 **IMPORTANTE:** No modo sandbox, use apenas **cartões de teste** do Mercado Pago.
 
 #### **Cartão que APROVA o pagamento:**
+
 ```
 Número: 5031 4332 1540 6351
 Titular: APRO
@@ -99,6 +101,7 @@ CPF: 12345678909
 ```
 
 #### **Cartão que REJEITA o pagamento:**
+
 ```
 Número: 5031 4332 1540 6351
 Titular: OTHE
@@ -121,6 +124,7 @@ Após fazer o pagamento, veja os logs no terminal do Netlify:
 4. Veja os logs em tempo real
 
 **Você deve ver:**
+
 ```
 🔔 [MP Webhook] Notificação recebida: {...}
 💳 [MP Webhook] Processando pagamento: 123456
@@ -166,15 +170,18 @@ Após o pagamento ser aprovado:
 ## ⚠️ **Troubleshooting**
 
 ### Erro 404 - Pedido não encontrado
+
 - Certifique-se de criar o pedido no banco antes de criar a preferência
 - Ou use o `external_reference` para identificar
 
 ### Webhook não dispara
+
 - Verifique se a URL está correta no painel do MP
 - Confirme que o webhook está ativo
 - Veja os logs no Netlify Functions
 
 ### Pagamento não atualiza o pedido
+
 - Verifique se o `mp_payment_id` ou `external_reference` estão corretos
 - Veja os logs do webhook para identificar o erro
 
