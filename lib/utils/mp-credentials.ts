@@ -19,6 +19,8 @@ interface MercadoPagoCredentials {
  * Busca as configurações GLOBAIS do Mercado Pago
  */
 async function getConfiguracoesGlobais() {
+  console.log('🔍 [MP Config] Buscando configurações globais...');
+  
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -30,7 +32,9 @@ async function getConfiguracoesGlobais() {
     .eq('id', 1)
     .single();
 
-  if (error || !data) {
+  if (error) {
+    console.error('❌ [MP Config] Erro ao buscar do banco:', error);
+    console.log('⚠️ [MP Config] Usando valores padrão (mp_ativado=true, mp_modo_producao=false)');
     // Valores padrão se não existir configuração
     return {
       mp_ativado: true,
@@ -38,6 +42,15 @@ async function getConfiguracoesGlobais() {
     };
   }
 
+  if (!data) {
+    console.log('⚠️ [MP Config] Nenhum dado encontrado, usando padrão');
+    return {
+      mp_ativado: true,
+      mp_modo_producao: false,
+    };
+  }
+
+  console.log('✅ [MP Config] Configurações carregadas:', data);
   return data;
 }
 
@@ -46,13 +59,18 @@ async function getConfiguracoesGlobais() {
  */
 export async function getMercadoPagoCredentials(): Promise<MercadoPagoCredentials> {
   try {
+    console.log('🔑 [MP Credentials] Iniciando busca de credenciais...');
+    
     const config = await getConfiguracoesGlobais();
+    console.log('📋 [MP Credentials] Config obtida:', config);
     
     if (!config.mp_ativado) {
+      console.error('❌ [MP Credentials] Mercado Pago está DESATIVADO globalmente');
       throw new Error('Mercado Pago não está ativado globalmente');
     }
     
     const isProduction = config.mp_modo_producao;
+    console.log(`🎯 [MP Credentials] Modo selecionado: ${isProduction ? 'PRODUÇÃO' : 'TESTE'}`);
 
     // Seleciona credenciais baseado no modo
     const accessToken = isProduction
@@ -63,15 +81,21 @@ export async function getMercadoPagoCredentials(): Promise<MercadoPagoCredential
       ? process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_PROD
       : process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_TEST;
 
+    console.log('🔐 [MP Credentials] Verificando variáveis de ambiente...');
+    console.log(`  - Access Token (${isProduction ? 'PROD' : 'TEST'}): ${accessToken ? '✅ Presente' : '❌ AUSENTE'}`);
+    console.log(`  - Public Key (${isProduction ? 'PROD' : 'TEST'}): ${publicKey ? '✅ Presente' : '❌ AUSENTE'}`);
+
     if (!accessToken || !publicKey) {
-      throw new Error(
-        `Credenciais do Mercado Pago não configuradas para modo ${isProduction ? 'PRODUÇÃO' : 'TESTE'}`
-      );
+      const missing = [];
+      if (!accessToken) missing.push(`MERCADOPAGO_ACCESS_TOKEN_${isProduction ? 'PROD' : 'TEST'}`);
+      if (!publicKey) missing.push(`NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_${isProduction ? 'PROD' : 'TEST'}`);
+      
+      const errorMsg = `Credenciais ausentes para modo ${isProduction ? 'PRODUÇÃO' : 'TESTE'}: ${missing.join(', ')}`;
+      console.error(`❌ [MP Credentials] ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
-    console.log(
-      `🔑 [MP Credentials] Usando modo: ${isProduction ? 'PRODUÇÃO' : 'TESTE'}`
-    );
+    console.log(`✅ [MP Credentials] Credenciais OK - Modo: ${isProduction ? 'PRODUÇÃO' : 'TESTE'}`);
 
     return {
       accessToken,
@@ -79,7 +103,7 @@ export async function getMercadoPagoCredentials(): Promise<MercadoPagoCredential
       isProduction,
     };
   } catch (error) {
-    console.error('❌ Erro ao buscar credenciais MP:', error);
+    console.error('❌ [MP Credentials] ERRO FATAL:', error);
     throw error;
   }
 }
