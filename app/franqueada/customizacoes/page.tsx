@@ -7,6 +7,7 @@ import CustomizacoesCarrinho from '@/components/franqueada/customizacoes/Customi
 import CustomizacoesComunicacao from '@/components/franqueada/customizacoes/CustomizacoesComunicacao';
 import CustomizacoesPromocoes from '@/components/franqueada/customizacoes/CustomizacoesPromocoes';
 import CustomizacoesAvancado from '@/components/franqueada/customizacoes/CustomizacoesAvancado';
+import MercadoPagoConfigWrapper from '@/components/franqueada/MercadoPagoConfigWrapper';
 
 export default function CustomizacoesPage() {
   return (
@@ -17,11 +18,12 @@ export default function CustomizacoesPage() {
       </div>
 
       <Tabs defaultValue="header" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 lg:w-auto h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 lg:w-auto h-auto">
           <TabsTrigger value="header" className="text-xs sm:text-sm">Header e Menu</TabsTrigger>
           <TabsTrigger value="home" className="text-xs sm:text-sm">Página Inicial</TabsTrigger>
           <TabsTrigger value="produtos" className="text-xs sm:text-sm">Produtos</TabsTrigger>
           <TabsTrigger value="carrinho" className="text-xs sm:text-sm">Carrinho</TabsTrigger>
+          <TabsTrigger value="pagamentos" className="text-xs sm:text-sm">Pagamentos</TabsTrigger>
           <TabsTrigger value="comunicacao" className="text-xs sm:text-sm">Comunicação</TabsTrigger>
           <TabsTrigger value="promocoes" className="text-xs sm:text-sm">Promoções</TabsTrigger>
           <TabsTrigger value="avancado" className="text-xs sm:text-sm">Avançado</TabsTrigger>
@@ -41,6 +43,10 @@ export default function CustomizacoesPage() {
 
         <TabsContent value="carrinho">
           <CustomizacoesCarrinho />
+        </TabsContent>
+
+        <TabsContent value="pagamentos">
+          <MercadoPagoConfigWrapper />
         </TabsContent>
 
         <TabsContent value="comunicacao">
