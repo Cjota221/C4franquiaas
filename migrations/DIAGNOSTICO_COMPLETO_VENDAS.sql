@@ -4,8 +4,11 @@
 -- Execute este arquivo completo no Supabase Dashboard > SQL Editor
 -- ============================================================================
 
-RAISE NOTICE '🔍 === INICIANDO DIAGNÓSTICO === 🔍';
-RAISE NOTICE '';
+DO $$
+BEGIN
+  RAISE NOTICE '🔍 === INICIANDO DIAGNÓSTICO === 🔍';
+  RAISE NOTICE '';
+END $$;
 
 -- ============================================================================
 -- 1️⃣ VERIFICAR TODAS AS VENDAS
@@ -27,7 +30,6 @@ BEGIN
 END $$;
 
 -- Mostrar últimas 5 vendas
-RAISE NOTICE '📋 ÚLTIMAS 5 VENDAS:';
 SELECT 
   v.id,
   v.created_at,
@@ -43,8 +45,6 @@ FROM vendas v
 ORDER BY v.created_at DESC
 LIMIT 5;
 
-RAISE NOTICE '';
-
 -- ============================================================================
 -- 2️⃣ VERIFICAR LOJAS E FRANQUEADAS
 -- ============================================================================
@@ -58,6 +58,7 @@ BEGIN
   SELECT COUNT(*) INTO lojas_com_franqueada FROM lojas WHERE franqueada_id IS NOT NULL;
   SELECT COUNT(*) INTO franqueadas_sem_user_id FROM franqueadas WHERE user_id IS NULL;
   
+  RAISE NOTICE '';
   RAISE NOTICE '🏪 LOJAS:';
   RAISE NOTICE '   Total: %', total_lojas;
   RAISE NOTICE '   Com franqueada vinculada: %', lojas_com_franqueada;
@@ -68,7 +69,6 @@ BEGIN
 END $$;
 
 -- Mostrar lojas e suas franqueadas
-RAISE NOTICE '📋 LOJAS E FRANQUEADAS:';
 SELECT 
   l.nome as loja,
   l.dominio,
@@ -84,13 +84,15 @@ LEFT JOIN franqueadas f ON l.franqueada_id = f.id
 ORDER BY l.created_at DESC
 LIMIT 5;
 
-RAISE NOTICE '';
-
 -- ============================================================================
 -- 3️⃣ CORRIGIR VENDAS SEM FRANQUEADA_ID
 -- ============================================================================
-RAISE NOTICE '🔧 === INICIANDO CORREÇÃO === 🔧';
-RAISE NOTICE '';
+DO $$
+BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '🔧 === INICIANDO CORREÇÃO === 🔧';
+  RAISE NOTICE '';
+END $$;
 
 -- Atualizar vendas que não têm franqueada_id
 UPDATE vendas v
@@ -110,6 +112,7 @@ BEGIN
   SELECT COUNT(*) INTO vendas_corrigidas FROM vendas WHERE franqueada_id IS NOT NULL;
   SELECT COUNT(*) INTO vendas_ainda_sem FROM vendas WHERE franqueada_id IS NULL;
   
+  RAISE NOTICE '';
   RAISE NOTICE '✅ Vendas com franqueada_id: %', vendas_corrigidas;
   RAISE NOTICE '⚠️ Vendas ainda sem franqueada_id: %', vendas_ainda_sem;
   
@@ -121,13 +124,15 @@ BEGIN
   END IF;
 END $$;
 
-RAISE NOTICE '';
-
 -- ============================================================================
 -- 4️⃣ VERIFICAÇÃO FINAL
 -- ============================================================================
-RAISE NOTICE '✅ === VERIFICAÇÃO FINAL === ✅';
-RAISE NOTICE '';
+DO $$
+BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '✅ === VERIFICAÇÃO FINAL === ✅';
+  RAISE NOTICE '';
+END $$;
 
 -- Vendas com dados completos
 SELECT 
@@ -150,12 +155,18 @@ LEFT JOIN franqueadas f ON v.franqueada_id = f.user_id
 ORDER BY v.created_at DESC
 LIMIT 10;
 
-RAISE NOTICE '';
-RAISE NOTICE '🎉 === DIAGNÓSTICO E CORREÇÃO CONCLUÍDOS === 🎉';
-RAISE NOTICE '';
-RAISE NOTICE '📝 Próximos passos:';
-RAISE NOTICE '1. Verifique se ainda há vendas sem franqueada_id';
-RAISE NOTICE '2. Se sim, certifique-se que a franqueada tem user_id no Supabase Auth';
-RAISE NOTICE '3. Teste criar uma nova venda';
-RAISE NOTICE '4. Acesse /franqueada/comissoes para ver as vendas';
-RAISE NOTICE '5. Acesse /admin/comissoes para ver todas as vendas';
+-- ============================================================================
+-- MENSAGEM FINAL
+-- ============================================================================
+DO $$
+BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '🎉 === DIAGNÓSTICO E CORREÇÃO CONCLUÍDOS === 🎉';
+  RAISE NOTICE '';
+  RAISE NOTICE '📝 Próximos passos:';
+  RAISE NOTICE '1. Verifique se ainda há vendas sem franqueada_id';
+  RAISE NOTICE '2. Se sim, certifique-se que a franqueada tem user_id no Supabase Auth';
+  RAISE NOTICE '3. Teste criar uma nova venda';
+  RAISE NOTICE '4. Acesse /franqueada/comissoes para ver as vendas';
+  RAISE NOTICE '5. Acesse /admin/comissoes para ver todas as vendas';
+END $$;
