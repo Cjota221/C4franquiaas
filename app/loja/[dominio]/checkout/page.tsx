@@ -3,7 +3,7 @@ import { useLojaInfo } from '@/contexts/LojaContext';
 import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import CheckoutForm from '@/components/loja/CheckoutForm';
 import OrderSummary from '@/components/loja/OrderSummary';
 
@@ -45,10 +45,10 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Minimalista - Apenas Logo e Avisos de Segurança */}
+      {/* Header Minimalista - Logo e Badge de Confiança */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href={`/loja/${loja.dominio}`} className="flex items-center">
               {loja.logo ? (
@@ -57,7 +57,7 @@ export default function CheckoutPage() {
                   alt={loja.nome}
                   width={120}
                   height={40}
-                  className="h-8 w-auto"
+                  className="h-10 w-auto"
                   unoptimized
                 />
               ) : (
@@ -67,26 +67,16 @@ export default function CheckoutPage() {
               )}
             </Link>
 
-            {/* Selo Compra Segura - Desktop */}
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
-              <ShieldCheck size={20} className="text-green-600" />
-              <span className="text-sm font-semibold text-green-700">
-                Compra 100% Segura
-              </span>
-            </div>
-          </div>
-
-          {/* Aviso de Segurança - Importante */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <div className="flex items-start gap-3">
-              <Lock size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-amber-900 mb-1">
-                  Para sua segurança: realize o pagamento somente neste site oficial
-                </p>
-                <p className="text-xs text-amber-700">
-                  Não efetue pagamentos via PIX externo ou links de terceiros. Pagamentos seguros são processados apenas aqui.
-                </p>
+            {/* Badge Verde de Segurança - Mobile e Desktop */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
+              <Lock size={18} className="text-green-600" />
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-green-700 leading-tight">
+                  Compra Segura
+                </span>
+                <span className="text-[10px] text-green-600 leading-tight hidden sm:block">
+                  Seus dados protegidos
+                </span>
               </div>
             </div>
           </div>
