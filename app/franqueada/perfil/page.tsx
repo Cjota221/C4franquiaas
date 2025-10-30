@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Wallet } from 'lucide-react';
+import { FormDadosPagamento } from '@/components/franqueada/FormDadosPagamento';
 
 type Franqueada = {
   id: string;
@@ -182,6 +183,15 @@ export default function FranqueadaPerfilPage() {
             Editar Perfil (Em breve)
           </button>
         </div>
+      </div>
+
+      {/* Dados de Pagamento PIX */}
+      <div className="mt-8 max-w-2xl">
+        <div className="mb-4 flex items-center gap-2">
+          <Wallet className="w-6 h-6 text-pink-600" />
+          <h2 className="text-xl font-semibold text-gray-800">Dados de Recebimento</h2>
+        </div>
+        <FormDadosPagamento />
       </div>
     </div>
   );

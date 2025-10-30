@@ -16,7 +16,7 @@
 
 3. **Cole no SQL Editor** e clique em **RUN**
 
-4. **Resultado esperado**: 
+4. **Resultado esperado**:
    ```
    Success. No rows returned
    ```
@@ -28,9 +28,9 @@
 Execute esta query para confirmar:
 
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
   AND table_name IN ('franqueadas_dados_pagamento', 'pagamentos_comissao');
 ```
 
@@ -42,8 +42,8 @@ WHERE table_schema = 'public'
 
 ```sql
 SELECT column_name, data_type, is_nullable
-FROM information_schema.columns 
-WHERE table_name = 'vendas' 
+FROM information_schema.columns
+WHERE table_name = 'vendas'
   AND column_name IN ('status_comissao', 'data_pagamento_comissao', 'pago_por')
 ORDER BY column_name;
 ```
@@ -75,10 +75,10 @@ import { gerarPayloadPix, gerarQRCodePix } from '@/lib/pix';
 
 const dadosTeste = {
   chave: '12345678900',
-  valor: 150.00,
+  valor: 150.0,
   nome: 'Maria Silva',
   cidade: 'Sao Paulo',
-  descricao: 'Teste de Comissao'
+  descricao: 'Teste de Comissao',
 };
 
 const payload = gerarPayloadPix(dadosTeste);
@@ -89,6 +89,7 @@ console.log('QR Code gerado! Tamanho:', qrCode.length);
 ```
 
 Execute:
+
 ```bash
 npx ts-node scripts/test-pix.ts
 ```
@@ -109,14 +110,17 @@ Após aplicar a migration com sucesso:
 ## 🐛 POSSÍVEIS ERROS
 
 ### Erro: "relation already exists"
+
 **Causa**: Tabela já foi criada antes  
 **Solução**: A migration usa `IF NOT EXISTS`, então pode ignorar
 
 ### Erro: "column already exists"
+
 **Causa**: Coluna já foi adicionada antes  
 **Solução**: A migration usa `IF NOT EXISTS`, então pode ignorar
 
 ### Erro: "foreign key constraint"
+
 **Causa**: ID de franqueada inválido  
 **Solução**: Use apenas IDs que existem na tabela `auth.users`
 
@@ -139,6 +143,7 @@ Após aplicar a migration com sucesso:
 ## 📞 SUPORTE
 
 Se encontrar algum erro, me envie:
+
 1. Print do erro do Supabase
 2. Query SQL que executou
 3. Resultado do SELECT de verificação
