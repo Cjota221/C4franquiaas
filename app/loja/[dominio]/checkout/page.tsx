@@ -4,7 +4,7 @@ import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
-import CheckoutForm from '@/components/loja/CheckoutForm';
+import CheckoutForm from '@/components/loja/CheckoutFormTransparente'; // 🆕 CHECKOUT TRANSPARENTE ATIVADO
 import OrderSummary from '@/components/loja/OrderSummary';
 import CheckoutFooter from '@/components/loja/CheckoutFooter';
 

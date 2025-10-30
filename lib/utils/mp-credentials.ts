@@ -55,6 +55,30 @@ async function getConfiguracoesGlobais() {
 }
 
 /**
+ * Busca APENAS a Public Key do Mercado Pago (seguro para uso no frontend)
+ * Esta função retorna apenas a chave pública, que pode ser exposta no cliente.
+ */
+export async function getMercadoPagoPublicKey(): Promise<string> {
+  console.log('🔑 [MP Public Key] Buscando public key...');
+  
+  const config = await getConfiguracoesGlobais();
+  const isProduction = config.mp_modo_producao;
+
+  console.log(`🔑 [MP Public Key] Modo: ${isProduction ? 'PRODUÇÃO' : 'TESTE'}`);
+
+  const publicKey = isProduction
+    ? process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_PROD
+    : process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_TEST;
+
+  if (!publicKey) {
+    const varName = `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY_${isProduction ? 'PROD' : 'TEST'}`;
+    throw new Error(`${varName} não configurada`);
+  }
+
+  return publicKey;
+}
+
+/**
  * Retorna as credenciais corretas (Teste ou Produção) baseado na config GLOBAL
  */
 export async function getMercadoPagoCredentials(): Promise<MercadoPagoCredentials> {
