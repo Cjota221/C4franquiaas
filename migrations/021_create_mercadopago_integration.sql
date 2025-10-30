@@ -4,14 +4,10 @@
 -- Adicionar colunas de configuração do Mercado Pago na tabela lojas
 ALTER TABLE lojas ADD COLUMN IF NOT EXISTS mp_ativado BOOLEAN DEFAULT false;
 ALTER TABLE lojas ADD COLUMN IF NOT EXISTS mp_modo_producao BOOLEAN DEFAULT false;
-ALTER TABLE lojas ADD COLUMN IF NOT EXISTS mp_client_id VARCHAR(255);
-ALTER TABLE lojas ADD COLUMN IF NOT EXISTS mp_client_secret VARCHAR(255);
 
 -- Comentários
 COMMENT ON COLUMN lojas.mp_ativado IS 'Indica se a integração com Mercado Pago está ativa';
 COMMENT ON COLUMN lojas.mp_modo_producao IS 'true = Produção | false = Teste/Sandbox';
-COMMENT ON COLUMN lojas.mp_client_id IS 'Client ID do Mercado Pago (OAuth - futuro)';
-COMMENT ON COLUMN lojas.mp_client_secret IS 'Client Secret do Mercado Pago (OAuth - futuro)';
 
 -- Criar tabela de pedidos (se não existir)
 CREATE TABLE IF NOT EXISTS pedidos (
