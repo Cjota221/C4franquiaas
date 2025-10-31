@@ -1,6 +1,7 @@
 # ✅ CHECKLIST: Ativar Atualização Automática de Pagamentos
 
 ## 🎯 Objetivo
+
 Fazer o status do pedido mudar AUTOMATICAMENTE de "pending" para "approved" quando o cliente pagar.
 
 ---
@@ -14,11 +15,11 @@ Fazer o status do pedido mudar AUTOMATICAMENTE de "pending" para "approved" quan
 3. Vá em: **Site settings** → **Environment variables**
 4. Adicione as seguintes variáveis:
 
-| Nome | Valor | Onde encontrar |
-|------|-------|----------------|
-| `SUPABASE_SERVICE_ROLE_KEY` | `eyJh...` (sua service role key) | Supabase → Project Settings → API → **service_role** key (⚠️ secret!) |
-| `MP_ACCESS_TOKEN` | `APP_USR-...` (seu access token) | Mercado Pago → [Suas integrações](https://www.mercadopago.com.br/developers/panel/app) → Produção → **Credenciais** |
-| `NEXT_PUBLIC_MP_PUBLIC_KEY` | `APP_USR-...` (sua public key) | Mesma página de credenciais (Public Key) |
+| Nome                        | Valor                            | Onde encontrar                                                                                                      |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJh...` (sua service role key) | Supabase → Project Settings → API → **service_role** key (⚠️ secret!)                                               |
+| `MP_ACCESS_TOKEN`           | `APP_USR-...` (seu access token) | Mercado Pago → [Suas integrações](https://www.mercadopago.com.br/developers/panel/app) → Produção → **Credenciais** |
+| `NEXT_PUBLIC_MP_PUBLIC_KEY` | `APP_USR-...` (sua public key)   | Mesma página de credenciais (Public Key)                                                                            |
 
 5. Clique em **Save**
 
@@ -40,6 +41,7 @@ Fazer o status do pedido mudar AUTOMATICAMENTE de "pending" para "approved" quan
 4. Clique em: **Adicionar webhook** ou **Configurar notificações**
 
 **Configure assim**:
+
 ```
 URL de notificação:
 https://SEU_DOMINIO.netlify.app/api/webhook/mercadopago
@@ -49,6 +51,7 @@ Exemplo: https://c4-franquias-admin.netlify.app/api/webhook/mercadopago
 ```
 
 **Eventos**:
+
 - ✅ Marque: **Pagamentos** (payment)
 - ✅ Marque: **Pedidos de comerciante** (merchant_order)
 
@@ -89,15 +92,18 @@ Exemplo: https://c4-franquias-admin.netlify.app/api/webhook/mercadopago
    ```
 
 **Se NÃO aparecer logs**:
+
 - ❌ Webhook não está chegando
 - Verifique a URL configurada no Mercado Pago
 - Verifique se colocou o domínio correto
 
 **Se aparecer erro "MP_ACCESS_TOKEN não configurado"**:
+
 - ❌ Variável de ambiente faltando
 - Volte no passo 1️⃣ e adicione `MP_ACCESS_TOKEN`
 
 **Se aparecer erro "Venda não encontrada"**:
+
 - ⚠️ Possível problema: `mp_payment_id` não foi salvo na venda
 - Verifique o console do navegador ao finalizar compra
 
@@ -106,6 +112,7 @@ Exemplo: https://c4-franquias-admin.netlify.app/api/webhook/mercadopago
 ## 🎉 RESULTADO ESPERADO
 
 **✅ SUCESSO se você ver**:
+
 1. Cliente finaliza compra → Status fica "pending" (normal)
 2. Após 5-10 segundos → Status muda automaticamente para "approved"
 3. Estoque é atualizado automaticamente
@@ -118,13 +125,16 @@ Exemplo: https://c4-franquias-admin.netlify.app/api/webhook/mercadopago
 ## 🆘 PRECISA DE AJUDA?
 
 **Problema**: "Webhook não chega"
+
 - ✅ Solução: Teste a URL no navegador: `https://seu-dominio.netlify.app/api/webhook/mercadopago`
 - ✅ Deve retornar: `{"status":"ok","message":"Webhook Mercado Pago endpoint is running"}`
 
 **Problema**: "Erro 401 Unauthorized"
+
 - ✅ Solução: Adicione `MP_ACCESS_TOKEN` nas variáveis de ambiente e redeploy
 
 **Problema**: "Status não muda mesmo com webhook"
+
 - ✅ Solução: Verifique se `SUPABASE_SERVICE_ROLE_KEY` está configurado (webhook precisa disso para bypassing RLS)
 
 ---
