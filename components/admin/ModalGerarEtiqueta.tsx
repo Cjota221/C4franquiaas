@@ -127,26 +127,28 @@ export default function ModalGerarEtiqueta({
         .eq('ativo', true)
         .single();
 
-      if (configError) {
+      if (configError || !configData) {
         throw new Error('Configuração EnvioEcom não encontrada. Configure em Admin → Configurações → Envio');
       }
 
-      setConfig(configData);
+      // Type assertion para ConfigEnvioEcom
+      const typedConfig = configData as unknown as ConfigEnvioEcom;
+      setConfig(typedConfig);
 
       // 2. Fazer cotação de frete
       const cotacaoRequest: CotacaoRequest = {
         origem: {
-          cep: configData.cep_origem,
+          cep: typedConfig.endereco_origem.cep,
         },
         destino: {
           cep: pedido.endereco_completo.cep.replace(/\D/g, ''),
         },
         pacotes: [
           {
-            peso: configData.dimensoes_padrao.peso || 500,
-            altura: configData.dimensoes_padrao.altura || 10,
-            largura: configData.dimensoes_padrao.largura || 15,
-            comprimento: configData.dimensoes_padrao.comprimento || 20,
+            peso: typedConfig.dimensoes_padrao.peso || 500,
+            altura: typedConfig.dimensoes_padrao.altura || 10,
+            largura: typedConfig.dimensoes_padrao.largura || 15,
+            comprimento: typedConfig.dimensoes_padrao.comprimento || 20,
             valor_declarado: pedido.valor_total,
           },
         ],
@@ -156,8 +158,8 @@ export default function ModalGerarEtiqueta({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${configData.etoken}`,
-          'X-User-Slug': configData.slug,
+          Authorization: `Bearer ${typedConfig.etoken}`,
+          'X-User-Slug': typedConfig.slug,
         },
         body: JSON.stringify(cotacaoRequest),
       });
@@ -182,23 +184,26 @@ export default function ModalGerarEtiqueta({
   const gerarEtiqueta = async () => {
     if (!servicoSelecionado || !config) return;
 
+    // Type assertion para garantir tipagem
+    const typedConfig = config as ConfigEnvioEcom;
+
     setStep('gerando');
     try {
       // Preparar dados da etiqueta
       const etiquetaRequest: EtiquetaRequest = {
         servico_id: servicoSelecionado.servico_id,
         remetente: {
-          nome: config.endereco_origem.nome,
-          telefone: config.endereco_origem.telefone,
-          email: config.endereco_origem.email,
-          documento: config.endereco_origem.documento || '',
-          endereco: config.endereco_origem.endereco,
-          numero: config.endereco_origem.numero,
-          complemento: config.endereco_origem.complemento || '',
-          bairro: config.endereco_origem.bairro,
-          cidade: config.endereco_origem.cidade,
-          estado: config.endereco_origem.estado,
-          cep: config.endereco_origem.cep,
+          nome: typedConfig.endereco_origem.nome,
+          telefone: typedConfig.endereco_origem.telefone,
+          email: typedConfig.endereco_origem.email,
+          documento: typedConfig.endereco_origem.documento || '',
+          endereco: typedConfig.endereco_origem.endereco,
+          numero: typedConfig.endereco_origem.numero,
+          complemento: typedConfig.endereco_origem.complemento || '',
+          bairro: typedConfig.endereco_origem.bairro,
+          cidade: typedConfig.endereco_origem.cidade,
+          estado: typedConfig.endereco_origem.estado,
+          cep: typedConfig.endereco_origem.cep,
         },
         destinatario: {
           nome: pedido.cliente_nome,
@@ -215,10 +220,10 @@ export default function ModalGerarEtiqueta({
         },
         pacotes: [
           {
-            peso: config.dimensoes_padrao.peso || 500,
-            altura: config.dimensoes_padrao.altura || 10,
-            largura: config.dimensoes_padrao.largura || 15,
-            comprimento: config.dimensoes_padrao.comprimento || 20,
+            peso: typedConfig.dimensoes_padrao.peso || 500,
+            altura: typedConfig.dimensoes_padrao.altura || 10,
+            largura: typedConfig.dimensoes_padrao.largura || 15,
+            comprimento: typedConfig.dimensoes_padrao.comprimento || 20,
             valor_declarado: pedido.valor_total,
           },
         ],
@@ -235,8 +240,8 @@ export default function ModalGerarEtiqueta({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.etoken}`,
-          'X-User-Slug': config.slug,
+          Authorization: `Bearer ${typedConfig.etoken}`,
+          'X-User-Slug': typedConfig.slug,
         },
         body: JSON.stringify(etiquetaRequest),
       });
