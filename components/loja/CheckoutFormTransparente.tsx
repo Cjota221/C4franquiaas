@@ -37,7 +37,12 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   
   // Calcular totais
   const subtotal = getTotal();
-  const frete = subtotal >= 99 ? 0 : 15.90;
+  
+  // Frete grátis baseado na configuração da loja
+  const valorMinimoFreteGratis = loja.frete_gratis_valor || 150; // Default: R$ 150
+  const valorFrete = loja.valor_frete || 15.90; // Default: R$ 15,90
+  const frete = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
+  
   const total = subtotal + frete;
   
   // Estados do checkout
@@ -202,9 +207,9 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         }
       }
 
-      // Calcular comissão da franqueada
+      // Calcular comissão da franqueada (APENAS sobre o valor dos produtos, SEM frete)
       const percentualComissao = loja.margem_lucro || 30; // Default 30%
-      const comissaoFranqueada = (total * percentualComissao) / 100;
+      const comissaoFranqueada = (subtotal * percentualComissao) / 100; // ✅ SUBTOTAL (sem frete)
 
       const vendaData = {
         loja_id: loja.id,

@@ -20,7 +20,12 @@ export default function OrderSummary({ loja, items }: OrderSummaryProps) {
 
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + (item.preco_final * item.quantidade), 0);
-  const shipping = subtotal > 99 ? 0 : 15.90;
+  
+  // Frete grátis baseado na configuração da loja
+  const valorMinimoFreteGratis = loja.frete_gratis_valor || 150; // Default: R$ 150
+  const valorFrete = loja.valor_frete || 15.90; // Default: R$ 15,90
+  const shipping = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
+  
   const discount = appliedCoupon ? subtotal * 0.1 : 0; // 10% de desconto exemplo
   const total = subtotal + shipping - discount;
 

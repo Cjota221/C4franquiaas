@@ -82,6 +82,10 @@ export interface LojaInfo {
   modo_catalogo: boolean;
   mensagem_whatsapp: string;
   
+  // Frete e Promoções
+  frete_gratis_valor?: number | null; // Valor mínimo para frete grátis
+  valor_frete?: number | null; // Valor do frete padrão
+  
   // 🆕 Franqueada
   franqueada_id?: string | null;
   margem_lucro?: number; // Percentual de comissão
