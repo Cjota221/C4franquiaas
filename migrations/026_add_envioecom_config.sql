@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS config_envioecom (
   slug TEXT NOT NULL UNIQUE,
   etoken TEXT NOT NULL,
   
-  -- Endereço de origem (remetente)
-  cep_origem TEXT NOT NULL,
+  -- Endereço de origem (remetente) como JSONB
   endereco_origem JSONB NOT NULL DEFAULT '{
     "nome": "",
     "telefone": "",
     "email": "",
+    "documento": "",
     "endereco": "",
     "numero": "",
     "complemento": "",
@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS config_envioecom (
 COMMENT ON TABLE config_envioecom IS 'Configurações da integração com EnvioEcom';
 COMMENT ON COLUMN config_envioecom.slug IS 'SLUG da conta EnvioEcom';
 COMMENT ON COLUMN config_envioecom.etoken IS 'Token de autenticação EnvioEcom';
+COMMENT ON COLUMN config_envioecom.endereco_origem IS 'Dados do endereço de origem (remetente) em formato JSON';
+COMMENT ON COLUMN config_envioecom.dimensoes_padrao IS 'Dimensões padrão dos pacotes (peso em gramas, medidas em cm)';
 COMMENT ON COLUMN config_envioecom.geracao_automatica IS 'Se true, gera etiqueta automaticamente após pagamento aprovado';
 COMMENT ON COLUMN config_envioecom.servico_padrao_id IS 'ID do serviço de frete padrão para geração automática';
 
