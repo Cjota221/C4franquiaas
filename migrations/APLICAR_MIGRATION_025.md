@@ -32,7 +32,7 @@ Ou:
 ```
 ALTER TABLE
 COMMENT
-COMMENT  
+COMMENT
 UPDATE X rows
 ```
 
@@ -41,7 +41,7 @@ UPDATE X rows
 Execute esta query de validação:
 
 ```sql
-SELECT 
+SELECT
   id,
   dominio,
   frete_gratis_valor,
