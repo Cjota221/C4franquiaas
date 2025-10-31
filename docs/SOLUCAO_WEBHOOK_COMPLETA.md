@@ -13,9 +13,10 @@
 O **webhook do Mercado Pago NÃO está configurado** ou **NÃO está sendo chamado**.
 
 Por isso:
+
 - ✅ Pagamento é aprovado no Mercado Pago
 - ❌ Sistema não recebe notificação
-- ❌ Status não muda para "approved"  
+- ❌ Status não muda para "approved"
 - ❌ Pedido não aparece (porque a query filtra por franqueada_id)
 
 ---
@@ -66,13 +67,17 @@ Por isso:
 4. Clique em: **Adicionar webhook** ou **Configurar notificações** ou **Add notification URL**
 
 5. Preencha:
+
    - **URL de notificação:**
+
      ```
      https://SEU_DOMINIO.netlify.app/api/webhook/mercadopago
      ```
+
      ⚠️ **IMPORTANTE:** Substitua `SEU_DOMINIO` pelo domínio real do Netlify!
-     
+
      Exemplo correto:
+
      ```
      https://c4-franquias-admin.netlify.app/api/webhook/mercadopago
      ```
@@ -94,6 +99,7 @@ Por isso:
 
 1. **Faça uma compra teste** na sua loja
 2. Use **cartão de teste** (para aprovar instantaneamente):
+
    ```
    Número: 5031 4332 1540 6351
    CVV: 123
@@ -121,6 +127,7 @@ Por isso:
 **Causa:** URL está errada ou deploy não terminou
 
 **Solução:**
+
 1. Verifique se o deploy terminou (deve estar "Published")
 2. Teste acessar: `https://seu-dominio.netlify.app/api/webhook/mercadopago`
 3. Deve retornar: `{"status":"ok","message":"Webhook Mercado Pago endpoint is running"}`
@@ -132,6 +139,7 @@ Por isso:
 **Causa:** Webhook não está sendo chamado
 
 **Solução:**
+
 1. Vá no Netlify → **Functions** → procure por "webhook"
 2. Verifique se tem logs recentes
 3. Se NÃO tiver logs: Webhook não está chegando
@@ -144,6 +152,7 @@ Por isso:
 **Causa:** `MP_ACCESS_TOKEN` não configurado ou inválido
 
 **Solução:**
+
 1. Vá no Netlify → Site settings → Environment variables
 2. Verifique se `MP_ACCESS_TOKEN` existe
 3. Copie o valor de `MERCADOPAGO_ACCESS_TOKEN_PROD`
@@ -157,6 +166,7 @@ Por isso:
 **Causa:** `mp_payment_id` não está sendo salvo na venda
 
 **Solução:**
+
 1. Abra o Console do navegador (F12) ao finalizar compra
 2. Procure por: `[Venda] Payment ID:` ou `mp_payment_id`
 3. Se aparecer: Código está funcionando
@@ -167,6 +177,7 @@ Por isso:
 ## 📊 COMO VERIFICAR SE FUNCIONOU
 
 ### **No Netlify Functions (logs do webhook):**
+
 ```
 🔔 [Webhook MP] Recebido
 📦 [Webhook MP] Body: {...}
@@ -181,12 +192,14 @@ Por isso:
 ```
 
 ### **No painel da franqueada:**
+
 - ✅ Venda aparece na lista
 - ✅ Status está "approved" (não "pending")
 - ✅ Nome da franqueada aparece (não "N/A")
 - ✅ Comissão está calculada
 
 ### **No painel admin:**
+
 - ✅ Venda aparece em /admin/pedidos
 - ✅ Venda aparece em /admin/comissoes
 - ✅ Status está "approved"
@@ -197,6 +210,7 @@ Por isso:
 ## ⏱️ TEMPO ESPERADO
 
 **Após pagamento aprovado:**
+
 - ⏱️ **5-10 segundos** → Webhook é chamado
 - ⏱️ **Instantâneo** → Status muda para "approved"
 - ⏱️ **Instantâneo** → Estoque é atualizado
