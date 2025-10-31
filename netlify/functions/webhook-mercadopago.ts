@@ -1,4 +1,18 @@
-import { Handler } from '@netlify/functions';
+// Lightweight local types to avoid requiring '@netlify/functions' types in this environment
+type NetlifyEvent = {
+  httpMethod: string;
+  body?: string | null;
+  headers?: Record<string, string>;
+  // add other fields if you need them (e.g., path, queryStringParameters, etc.)
+};
+
+type NetlifyResult = {
+  statusCode: number;
+  body: string;
+};
+
+type Handler = (event: NetlifyEvent) => Promise<NetlifyResult>;
+
 import { createClient } from '@supabase/supabase-js';
 
 // Criar cliente Supabase com service role (bypassa RLS)
