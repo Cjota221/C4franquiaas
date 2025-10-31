@@ -45,6 +45,18 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   
   const total = subtotal + frete;
   
+  // 🔍 DEBUG: Verificar valores de frete
+  console.log('🚚 [Frete Debug]', {
+    'Subtotal': `R$ ${subtotal.toFixed(2)}`,
+    'Mínimo para Frete Grátis (loja.frete_gratis_valor)': loja.frete_gratis_valor,
+    'Valor Mínimo Usado': `R$ ${valorMinimoFreteGratis.toFixed(2)}`,
+    'Valor do Frete (loja.valor_frete)': loja.valor_frete,
+    'Valor Frete Usado': `R$ ${valorFrete.toFixed(2)}`,
+    'Frete Cobrado': `R$ ${frete.toFixed(2)}`,
+    'É Frete Grátis?': subtotal >= valorMinimoFreteGratis,
+    'Total': `R$ ${total.toFixed(2)}`
+  });
+  
   // Estados do checkout
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('form');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodType | null>(null);

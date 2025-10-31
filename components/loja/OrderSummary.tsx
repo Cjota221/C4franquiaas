@@ -26,6 +26,15 @@ export default function OrderSummary({ loja, items }: OrderSummaryProps) {
   const valorFrete = loja.valor_frete || 15.90; // Default: R$ 15,90
   const shipping = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
   
+  // 🔍 DEBUG: Verificar valores de frete
+  console.log('🚚 [OrderSummary Frete Debug]', {
+    'Subtotal': `R$ ${subtotal.toFixed(2)}`,
+    'loja.frete_gratis_valor': loja.frete_gratis_valor,
+    'Mínimo Usado': `R$ ${valorMinimoFreteGratis.toFixed(2)}`,
+    'Frete Grátis?': subtotal >= valorMinimoFreteGratis,
+    'Shipping': `R$ ${shipping.toFixed(2)}`
+  });
+  
   const discount = appliedCoupon ? subtotal * 0.1 : 0; // 10% de desconto exemplo
   const total = subtotal + shipping - discount;
 
