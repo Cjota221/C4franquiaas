@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ENVIOECOM_BASE_URL = 'https://api.envioecom.com.br/v1';
 
 export async function POST(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -95,63 +94,75 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Integração REAL com EnvioEcom
+    // Integração com API dos Correios (REAL - grátis)
     try {
-      const cotacaoRequest = {
-        origem: {
-          cep: cepOrigem,
-        },
-        destino: {
-          cep: cepLimpo,
-        },
-        pacotes: [
-          {
-            peso: peso || 500, // 500g padrão
-            altura: altura || 10, // 10cm padrão
-            largura: largura || 15, // 15cm padrão
-            comprimento: comprimento || 20, // 20cm padrão
-            valor_declarado: valorCarrinho || 100, // R$ 100 padrão
-          },
-        ],
-      };
+      console.log('[Calcular Frete] 📡 Chamando API dos Correios...');
 
-      console.log('[Calcular Frete] 📡 Chamando EnvioEcom API:', cotacaoRequest);
+      const correiosResponse = await fetch(
+        `https://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?` +
+        `nCdEmpresa=&sDsSenha=&nCdServico=04014,04510&` + // PAC e SEDEX
+        `sCepOrigem=${cepOrigem}&sCepDestino=${cepLimpo}&` +
+        `nVlPeso=${(peso || 500) / 1000}&` + // converter gramas para kg
+        `nCdFormato=1&` + // caixa/pacote
+        `nVlComprimento=${comprimento || 20}&` +
+        `nVlAltura=${altura || 10}&` +
+        `nVlLargura=${largura || 15}&` +
+        `nVlDiametro=0&` +
+        `sCdMaoPropria=N&` +
+        `nVlValorDeclarado=${valorCarrinho || 0}&` +
+        `sCdAvisoRecebimento=N`,
+        {
+          method: 'GET',
+        }
+      );
 
-      const envioecomResponse = await fetch(`${ENVIOECOM_BASE_URL}/cotacao`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${eToken}`,
-          'X-User-Slug': slug,
-        },
-        body: JSON.stringify(cotacaoRequest),
-      });
-
-      console.log('[Calcular Frete] 📥 Response status:', envioecomResponse.status);
-
-      if (!envioecomResponse.ok) {
-        const errorText = await envioecomResponse.text();
-        console.error('[Calcular Frete] ❌ EnvioEcom erro:', errorText);
-        throw new Error(`EnvioEcom retornou erro: ${envioecomResponse.status} - ${errorText}`);
+      if (!correiosResponse.ok) {
+        throw new Error(`Correios retornou erro: ${correiosResponse.status}`);
       }
 
-      const envioecomData = await envioecomResponse.json();
-      console.log('[Calcular Frete] ✅ EnvioEcom resposta:', envioecomData);
+      const correiosText = await correiosResponse.text();
+      console.log('[Calcular Frete] 📥 Correios resposta:', correiosText.substring(0, 500));
 
-      if (!envioecomData.sucesso || !envioecomData.servicos) {
-        console.error('[Calcular Frete] ❌ EnvioEcom não retornou serviços válidos');
-        throw new Error('EnvioEcom não retornou serviços válidos');
+      // Parse XML dos Correios
+      const opcoes: Array<{
+        nome: string;
+        valor: number;
+        prazo: string;
+        codigo: string;
+        transportadora: string;
+        servico_id: string;
+      }> = [];
+      
+      // Regex para extrair PAC
+      const pacMatch = correiosText.match(/<Codigo>04014<\/Codigo>[\s\S]*?<Valor>([\d,]+)<\/Valor>[\s\S]*?<PrazoEntrega>(\d+)<\/PrazoEntrega>/);
+      if (pacMatch) {
+        opcoes.push({
+          nome: 'PAC',
+          valor: parseFloat(pacMatch[1].replace(',', '.')),
+          prazo: `${pacMatch[2]} dias úteis`,
+          codigo: '04014',
+          transportadora: 'Correios',
+          servico_id: 'PAC',
+        });
       }
 
-      // Formatar opções de frete
-      const opcoes = envioecomData.servicos.map((servico: { nome?: string; transportadora?: string; preco?: number; prazo_entrega?: number; servico_id?: string }) => ({
-        nome: servico.nome || servico.transportadora,
-        valor: servico.preco || 0,
-        prazo: `${servico.prazo_entrega || 0} dias úteis`,
-        codigo: servico.servico_id || servico.nome,
-        transportadora: servico.transportadora,
-        servico_id: servico.servico_id, // Necessário para gerar etiqueta depois
-      }));
+      // Regex para extrair SEDEX
+      const sedexMatch = correiosText.match(/<Codigo>04510<\/Codigo>[\s\S]*?<Valor>([\d,]+)<\/Valor>[\s\S]*?<PrazoEntrega>(\d+)<\/PrazoEntrega>/);
+      if (sedexMatch) {
+        opcoes.push({
+          nome: 'SEDEX',
+          valor: parseFloat(sedexMatch[1].replace(',', '.')),
+          prazo: `${sedexMatch[2]} dias úteis`,
+          codigo: '04510',
+          transportadora: 'Correios',
+          servico_id: 'SEDEX',
+        });
+      }
+
+      // Se não conseguiu extrair, usar fallback
+      if (opcoes.length === 0) {
+        throw new Error('Não foi possível extrair dados dos Correios');
+      }
 
       // Adicionar frete grátis se configurado
       const freteGratisValor = loja.frete_gratis_valor;
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         cep: cepLimpo,
-        usando_envioecom: true,
+        usando_correios: true,
         opcoes,
         configuracao: {
           freteGratisValor,
@@ -177,18 +188,18 @@ export async function POST(request: NextRequest) {
         },
       });
 
-    } catch (envioecomError) {
-      console.error('[Calcular Frete] Erro na EnvioEcom:', envioecomError);
+    } catch (correiosError) {
+      console.error('[Calcular Frete] ❌ Erro nos Correios:', correiosError);
       
-      // Fallback: retornar valores fixos em caso de erro na EnvioEcom
+      // Fallback: retornar valores fixos em caso de erro
       const valorFrete = loja.valor_frete || 15.90;
       const freteGratisValor = loja.frete_gratis_valor || 150.00;
 
       return NextResponse.json({
         success: true,
         cep: cepLimpo,
-        usando_envioecom: false,
-        erro_envioecom: envioecomError instanceof Error ? envioecomError.message : 'Erro desconhecido',
+        usando_correios: false,
+        erro_correios: correiosError instanceof Error ? correiosError.message : 'Erro desconhecido',
         opcoes: [
           {
             nome: 'Correios - PAC',
