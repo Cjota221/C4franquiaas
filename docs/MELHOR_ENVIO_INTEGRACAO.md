@@ -7,6 +7,7 @@ Este guia documenta a integração completa com o Melhor Envio para cotação de
 ## ✅ O que foi implementado
 
 ### 1. **Migration de Banco de Dados**
+
 - Arquivo: `migrations/029_config_melhorenvio.sql`
 - Tabela: `config_melhorenvio`
 - Campos:
@@ -16,6 +17,7 @@ Este guia documenta a integração completa com o Melhor Envio para cotação de
   - `token_type`: Tipo de token (Bearer)
 
 ### 2. **Painel de Administração**
+
 - Rota: `/admin/melhorenvio`
 - Funcionalidades:
   - Verificar status da autorização
@@ -23,6 +25,7 @@ Este guia documenta a integração completa com o Melhor Envio para cotação de
   - Indicador visual de conexão
 
 ### 3. **Callback OAuth**
+
 - Rota: `/admin/melhorenvio/callback`
 - Funcionalidades:
   - Recebe código de autorização
@@ -33,16 +36,19 @@ Este guia documenta a integração completa com o Melhor Envio para cotação de
 ### 4. **APIs**
 
 #### API de Autorização
+
 - Endpoint: `POST /api/admin/melhorenvio/authorize`
 - Função: Trocar código OAuth por token de acesso
 - Salva token no banco automaticamente
 
 #### API de Status
+
 - Endpoint: `GET /api/admin/melhorenvio/status`
 - Função: Verificar se aplicativo está autorizado
 - Retorna: `{ authorized: boolean, expires_at: string }`
 
 #### API de Cálculo de Frete (Atualizada)
+
 - Endpoint: `POST /api/calcular-frete`
 - Fluxo:
   1. **Tenta usar Melhor Envio** (se autorizado)
@@ -76,7 +82,7 @@ CREATE TABLE IF NOT EXISTS config_melhorenvio (
   expires_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   CONSTRAINT single_row CHECK (id = 1)
 );
 
@@ -108,6 +114,7 @@ MELHORENVIO_SANDBOX=true
 Vá em: **Site configuration → Environment variables**
 
 Adicione:
+
 - `MELHORENVIO_CLIENT_ID` = `7341`
 - `MELHORENVIO_CLIENT_SECRET` = `D2CKz52bxlmBjjMrUMdwW6dmvAvb6AZ0oYiCGWCG`
 - `MELHORENVIO_SANDBOX` = `true`
@@ -125,6 +132,7 @@ Adicione:
 ### **5. Testar Integração**
 
 Após autorizar, a calculadora de frete irá:
+
 - ✅ Buscar token do banco
 - ✅ Chamar API do Melhor Envio
 - ✅ Retornar cotações reais (PAC, SEDEX, Jadlog, etc)
@@ -157,7 +165,7 @@ Content-Type: application/json
   "opcoes": [
     {
       "nome": "PAC",
-      "valor": 18.50,
+      "valor": 18.5,
       "prazo": "7-10 dias úteis",
       "codigo": "Correios",
       "transportadora": "Correios",
@@ -170,7 +178,7 @@ Content-Type: application/json
     },
     {
       "nome": "SEDEX",
-      "valor": 28.90,
+      "valor": 28.9,
       "prazo": "2-3 dias úteis",
       "codigo": "Correios",
       "transportadora": "Correios",
@@ -178,7 +186,7 @@ Content-Type: application/json
     },
     {
       "nome": "Jadlog",
-      "valor": 22.40,
+      "valor": 22.4,
       "prazo": "4-5 dias úteis",
       "codigo": "Jadlog",
       "transportadora": "Jadlog",
@@ -203,14 +211,14 @@ Content-Type: application/json
   "opcoes": [
     {
       "nome": "Correios - PAC",
-      "valor": 15.90,
+      "valor": 15.9,
       "prazo": "7 dias úteis",
       "codigo": "PAC",
       "transportadora": "Correios"
     },
     {
       "nome": "Correios - SEDEX",
-      "valor": 25.90,
+      "valor": 25.9,
       "prazo": "3 dias úteis",
       "codigo": "SEDEX",
       "transportadora": "Correios"
@@ -271,19 +279,25 @@ Content-Type: application/json
 ## 🐛 Troubleshooting
 
 ### Problema: "Token não encontrado"
+
 **Solução:** Aplicar migration 029 no Supabase
 
 ### Problema: "Melhor Envio não disponível"
+
 **Solução:** Verificar se autorização foi feita (acessar `/admin/melhorenvio`)
 
 ### Problema: "Retornando valores fixos R$15.90"
-**Solução:** 
+
+**Solução:**
+
 1. Verificar se token está válido no banco
 2. Verificar se `expires_at` não passou
 3. Re-autorizar se necessário
 
 ### Problema: "Sandbox não funciona"
+
 **Solução:** Melhor Envio sandbox pode ter restrições. Para produção:
+
 - Mudar `MELHORENVIO_SANDBOX=false`
 - Usar credenciais de produção
 - Re-autorizar aplicativo
