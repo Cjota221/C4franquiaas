@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     const clientId = process.env.MELHORENVIO_CLIENT_ID;
     const clientSecret = process.env.MELHORENVIO_CLIENT_SECRET;
-    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/admin/melhorenvio/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/admin/configuracoes/melhorenvio/callback`;
 
     if (!clientId || !clientSecret) {
       return NextResponse.json(
