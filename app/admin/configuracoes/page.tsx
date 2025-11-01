@@ -236,19 +236,18 @@ export default function ConfiguracoesPage() {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">EnvioEcom - Integração de Frete</h3>
                   <p className="text-gray-600 mb-4">
-                    Configure sua conta EnvioEcom para gerar etiquetas de envio automaticamente
-                    com os Correios, Jadlog e outras transportadoras.
+                    Configure webhooks para receber atualizações automáticas de rastreamento e status de envio.
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                    <li>✅ Cotação automática de frete</li>
-                    <li>✅ Geração de etiquetas em PDF</li>
-                    <li>✅ Rastreamento de pedidos</li>
-                    <li>✅ Múltiplas transportadoras</li>
+                    <li>✅ Rastreamento automático</li>
+                    <li>✅ Atualizações de status</li>
+                    <li>✅ Notificações de entrega</li>
+                    <li>✅ Log de webhooks recebidos</li>
                   </ul>
-                  <Link href="/admin/configuracoes/envio">
+                  <Link href="/admin/configuracoes/envioecom">
                     <Button className="bg-[#DB1472] hover:bg-[#DB1472]/90">
                       <Package className="mr-2 h-4 w-4" />
-                      Configurar EnvioEcom
+                      Configurar Webhook EnvioEcom
                     </Button>
                   </Link>
                 </div>
