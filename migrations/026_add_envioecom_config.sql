@@ -8,6 +8,9 @@
 -- Data: 2025-11-01
 -- ================================================
 
+-- 0. DELETAR TABELA ANTIGA SE EXISTIR (com estrutura errada)
+DROP TABLE IF EXISTS config_envioecom CASCADE;
+
 -- 1. Adicionar colunas de rastreamento na tabela vendas
 ALTER TABLE vendas
 ADD COLUMN IF NOT EXISTS codigo_rastreio TEXT,
