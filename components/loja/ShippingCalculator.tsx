@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { Truck, Loader2, MapPin } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 interface FreteOpcao {
   servico: string;
@@ -28,6 +29,9 @@ export function ShippingCalculator({
   className = '',
   corPrimaria = '#DB1472',
 }: ShippingCalculatorProps) {
+  const params = useParams();
+  const dominio = params.dominio as string;
+  
   const [cep, setCep] = useState('');
   const [loading, setLoading] = useState(false);
   const [opcoes, setOpcoes] = useState<FreteOpcao[]>([]);
@@ -60,13 +64,13 @@ export function ShippingCalculator({
     setOpcoes([]);
 
     try {
-      // TODO: Integrar com API real de frete (Envioecom, Correios, etc)
+      // Integrar com API de cálculo de frete
       const response = await fetch(`/api/calcular-frete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cep: cepNumeros,
-          produtoId,
+          dominio,
         }),
       });
 
