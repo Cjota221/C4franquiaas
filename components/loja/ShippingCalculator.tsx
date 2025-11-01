@@ -11,9 +11,12 @@ import { Truck, Loader2, MapPin } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 interface FreteOpcao {
-  servico: string;
-  prazo: string;
+  nome: string;
   valor: number;
+  prazo: string;
+  codigo: string;
+  transportadora: string;
+  servico_id?: string;
 }
 
 interface ShippingCalculatorProps {
@@ -160,9 +163,16 @@ export function ShippingCalculator({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div>
-                <p className="font-semibold text-gray-900">{opcao.servico}</p>
+                <p className="font-semibold text-gray-900">
+                  {opcao.nome}
+                  {opcao.transportadora && (
+                    <span className="text-xs text-gray-500 ml-2">
+                      ({opcao.transportadora})
+                    </span>
+                  )}
+                </p>
                 <p className="text-sm text-gray-600">
-                  Entrega em até {opcao.prazo}
+                  {opcao.prazo}
                 </p>
               </div>
               <div className="text-right">
