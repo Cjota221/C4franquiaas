@@ -9,16 +9,19 @@ A calculadora de frete agora está **integrada com a EnvioEcom** para buscar **v
 ## ✅ Funcionalidades
 
 ### 1. **Integração Real com EnvioEcom**
+
 - Busca opções de frete **em tempo real** via API EnvioEcom
 - Retorna **múltiplas transportadoras** (PAC, SEDEX, etc) com valores reais
 - Calcula prazo de entrega baseado no CEP de origem e destino
 
 ### 2. **Fallback Inteligente**
+
 - Se EnvioEcom não estiver configurada: usa valores fixos da tabela `lojas`
 - Se houver erro na API: retorna valores padrão automaticamente
 - Sistema **nunca quebra** - sempre retorna alguma opção de frete
 
 ### 3. **Frete Grátis Automático**
+
 - Se o valor do carrinho >= `frete_gratis_valor`: adiciona opção "Frete Grátis"
 - Funciona tanto com EnvioEcom quanto com valores fixos
 
@@ -51,6 +54,7 @@ NEXT_PUBLIC_ENVIOECOM_ETOKEN=seu_token_aqui
 ```
 
 **Onde encontrar essas credenciais:**
+
 1. Acesse: https://painel.envioecom.com.br/
 2. Vá em **Configurações → API**
 3. Copie o **SLUG** e o **E_TOKEN**
@@ -60,8 +64,8 @@ NEXT_PUBLIC_ENVIOECOM_ETOKEN=seu_token_aqui
 Por padrão, todas as lojas usam CEP `01310100` (São Paulo). Para alterar:
 
 ```sql
-UPDATE lojas 
-SET cep_origem = '12345678' 
+UPDATE lojas
+SET cep_origem = '12345678'
 WHERE dominio = 'seudominio.com';
 ```
 
@@ -80,13 +84,13 @@ WHERE dominio = 'seudominio.com';
 3. API busca dados da loja (cep_origem, frete_gratis_valor)
    ↓
 4. API verifica se EnvioEcom está configurada
-   
+
    ┌─ SIM → Chama API EnvioEcom
    │   ├─ Sucesso → Retorna opções reais (PAC, SEDEX, etc)
    │   └─ Erro → Fallback para valores fixos
    │
    └─ NÃO → Retorna valores fixos da tabela lojas
-   
+
 5. Retorna JSON com opções de frete
 ```
 
@@ -119,7 +123,7 @@ Content-Type: application/json
   "opcoes": [
     {
       "nome": "PAC",
-      "valor": 18.50,
+      "valor": 18.5,
       "prazo": "7 dias úteis",
       "codigo": "pac_correios",
       "transportadora": "Correios",
@@ -127,7 +131,7 @@ Content-Type: application/json
     },
     {
       "nome": "SEDEX",
-      "valor": 35.90,
+      "valor": 35.9,
       "prazo": "3 dias úteis",
       "codigo": "sedex_correios",
       "transportadora": "Correios",
@@ -143,7 +147,7 @@ Content-Type: application/json
     }
   ],
   "configuracao": {
-    "freteGratisValor": 150.00,
+    "freteGratisValor": 150.0,
     "cepOrigem": "01310100"
   }
 }
@@ -159,15 +163,15 @@ Content-Type: application/json
   "opcoes": [
     {
       "nome": "Correios - PAC",
-      "valor": 15.90,
+      "valor": 15.9,
       "prazo": "7-10 dias úteis",
       "codigo": "PAC",
       "transportadora": "Correios"
     }
   ],
   "configuracao": {
-    "valorFrete": 15.90,
-    "freteGratisValor": 150.00
+    "valorFrete": 15.9,
+    "freteGratisValor": 150.0
   }
 }
 ```
@@ -236,12 +240,14 @@ Content-Type: application/json
 ## 📊 Diferenças: Antes vs Depois
 
 ### ANTES (Fake)
+
 - ❌ Valores fixos no banco de dados
 - ❌ Sempre retorna R$ 15,90
 - ❌ Prazo genérico "7-10 dias"
 - ❌ Não considera CEP de destino
 
 ### DEPOIS (Real)
+
 - ✅ Integração com EnvioEcom
 - ✅ Valores reais calculados por transportadora
 - ✅ Múltiplas opções (PAC, SEDEX, etc)

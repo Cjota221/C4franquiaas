@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { cep, dominio, valorCarrinho, peso, altura, largura, comprimento } = body;
 
+    console.log('[Calcular Frete] 🚀 Request recebido:', { cep, dominio, valorCarrinho });
+
     if (!cep) {
       return NextResponse.json(
         { error: 'CEP é obrigatório' },
@@ -34,9 +36,12 @@ export async function POST(request: NextRequest) {
       .eq('ativo', true)
       .single();
 
+    console.log('[Calcular Frete] 📦 Dados da loja:', { loja, lojaError });
+
     if (lojaError || !loja) {
+      console.error('[Calcular Frete] ❌ Loja não encontrada:', lojaError);
       return NextResponse.json(
-        { error: 'Loja não encontrada' },
+        { error: 'Loja não encontrada', details: lojaError },
         { status: 404 }
       );
     }
@@ -58,8 +63,13 @@ export async function POST(request: NextRequest) {
     const slug = process.env.NEXT_PUBLIC_ENVIOECOM_SLUG;
     const eToken = process.env.NEXT_PUBLIC_ENVIOECOM_ETOKEN;
 
+    console.log('[Calcular Frete] 🔑 Credenciais EnvioEcom:', { 
+      slug: slug ? '✅ Configurado' : '❌ Não configurado',
+      eToken: eToken ? '✅ Configurado' : '❌ Não configurado'
+    });
+
     if (!slug || !eToken) {
-      console.warn('[Calcular Frete] EnvioEcom não configurado, usando valores padrão');
+      console.warn('[Calcular Frete] ⚠️ EnvioEcom não configurado, usando valores padrão');
       
       // Fallback: retornar valores fixos do banco
       const valorFrete = loja.valor_frete || 15.90;
@@ -105,6 +115,8 @@ export async function POST(request: NextRequest) {
         ],
       };
 
+      console.log('[Calcular Frete] 📡 Chamando EnvioEcom API:', cotacaoRequest);
+
       const envioecomResponse = await fetch(`${ENVIOECOM_BASE_URL}/cotacao`, {
         method: 'POST',
         headers: {
@@ -115,13 +127,19 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(cotacaoRequest),
       });
 
+      console.log('[Calcular Frete] 📥 Response status:', envioecomResponse.status);
+
       if (!envioecomResponse.ok) {
-        throw new Error(`EnvioEcom retornou erro: ${envioecomResponse.status}`);
+        const errorText = await envioecomResponse.text();
+        console.error('[Calcular Frete] ❌ EnvioEcom erro:', errorText);
+        throw new Error(`EnvioEcom retornou erro: ${envioecomResponse.status} - ${errorText}`);
       }
 
       const envioecomData = await envioecomResponse.json();
+      console.log('[Calcular Frete] ✅ EnvioEcom resposta:', envioecomData);
 
       if (!envioecomData.sucesso || !envioecomData.servicos) {
+        console.error('[Calcular Frete] ❌ EnvioEcom não retornou serviços válidos');
         throw new Error('EnvioEcom não retornou serviços válidos');
       }
 

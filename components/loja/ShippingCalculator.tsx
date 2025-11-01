@@ -64,6 +64,8 @@ export function ShippingCalculator({
     setOpcoes([]);
 
     try {
+      console.log('[ShippingCalculator] 🚀 Calculando frete:', { cep: cepNumeros, dominio });
+
       // Integrar com API de cálculo de frete
       const response = await fetch(`/api/calcular-frete`, {
         method: 'POST',
@@ -74,16 +76,22 @@ export function ShippingCalculator({
         }),
       });
 
+      console.log('[ShippingCalculator] 📥 Response status:', response.status);
+
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[ShippingCalculator] ❌ Erro na API:', errorData);
         throw new Error('Erro ao calcular frete');
       }
 
       const data = await response.json();
+      console.log('[ShippingCalculator] ✅ Dados recebidos:', data);
+
       setOpcoes(data.opcoes || []);
       onFreteCalculado?.(data.opcoes || []);
     } catch (err) {
       setError('Não foi possível calcular o frete. Tente novamente.');
-      console.error('Erro ao calcular frete:', err);
+      console.error('[ShippingCalculator] ❌ Erro ao calcular frete:', err);
     } finally {
       setLoading(false);
     }
