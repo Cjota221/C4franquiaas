@@ -227,27 +227,27 @@ export default function ConfiguracoesPage() {
           </div>
 
           <div className="space-y-6">
-            {/* Card EnvioEcom */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            {/* Card Melhor Envio */}
+            <div className="border-2 border-dashed border-blue-300 rounded-lg p-6">
               <div className="flex items-start gap-4">
                 <div className="bg-blue-100 p-3 rounded-lg">
                   <Truck className="h-8 w-8 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">EnvioEcom - Integração de Frete</h3>
+                  <h3 className="text-lg font-semibold mb-2">Melhor Envio - Integração Ativa</h3>
                   <p className="text-gray-600 mb-4">
-                    Configure webhooks para receber atualizações automáticas de rastreamento e status de envio.
+                    Sistema integrado com Melhor Envio para cotação de frete em tempo real.
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                    <li>✅ Rastreamento automático</li>
-                    <li>✅ Atualizações de status</li>
-                    <li>✅ Notificações de entrega</li>
-                    <li>✅ Log de webhooks recebidos</li>
+                    <li>✅ Cotação em tempo real</li>
+                    <li>✅ Múltiplas transportadoras (PAC, SEDEX, Jadlog, etc)</li>
+                    <li>✅ Geração de etiquetas (em breve)</li>
+                    <li>✅ Rastreamento integrado (em breve)</li>
                   </ul>
-                  <Link href="/admin/configuracoes/envioecom">
+                  <Link href="/admin/melhorenvio">
                     <Button className="bg-[#DB1472] hover:bg-[#DB1472]/90">
                       <Package className="mr-2 h-4 w-4" />
-                      Configurar Webhook EnvioEcom
+                      Gerenciar Melhor Envio
                     </Button>
                   </Link>
                 </div>
@@ -258,18 +258,13 @@ export default function ConfiguracoesPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Precisa de uma conta EnvioEcom?</strong>
+                <strong>Precisa autorizar o Melhor Envio?</strong>
                 <br />
-                Acesse{' '}
-                <a
-                  href="https://envioecom.com.br"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  envioecom.com.br
-                </a>{' '}
-                para criar sua conta e obter suas credenciais (SLUG e E-TOKEN).
+                Acesse a página de{' '}
+                <Link href="/admin/melhorenvio" className="text-blue-600 hover:underline">
+                  configuração do Melhor Envio
+                </Link>{' '}
+                para autorizar o aplicativo e começar a usar cotações reais.
               </AlertDescription>
             </Alert>
           </div>

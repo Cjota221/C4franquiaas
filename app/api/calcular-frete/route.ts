@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar configurações da loja (CEP de origem + credenciais EnvioEcom)
+    // Buscar configurações da loja (CEP de origem para cálculo de frete)
     const { data: loja, error: lojaError } = await supabase
       .from('lojas')
       .select('id, nome, frete_gratis_valor, valor_frete, cep_origem, franqueada_id')

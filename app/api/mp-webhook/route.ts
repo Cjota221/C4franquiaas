@@ -205,12 +205,12 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [MP Webhook] Pedido atualizado com sucesso!');
 
-    // 7. Se pagamento aprovado, disparar integração com Envioecom
+    // 7. Se pagamento aprovado, pode gerar etiqueta Melhor Envio (futuro)
     if (payment.status === 'approved') {
-      console.log('📦 [MP Webhook] TODO: Disparar integração Envioecom para gerar etiqueta');
+      console.log('📦 [MP Webhook] TODO: Gerar etiqueta Melhor Envio quando implementado');
       
-      // TODO: Implementar em próxima fase
-      // await gerarEtiquetaEnvioecom(pedido.id);
+      // TODO: Implementar geração de etiqueta Melhor Envio
+      // await gerarEtiquetaMelhorEnvio(pedido.id);
       
       // Por enquanto, atualiza status para PROCESSANDO_ENVIO
       await supabase
