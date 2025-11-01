@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -81,42 +81,43 @@ export default function ConfiguracoesEnvioPage() {
   });
 
   // Carregar configuração existente
-  useEffect(() => {
-    carregarConfig();
-  }, []);
-
-  const carregarConfig = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('config_envioecom')
-        .select('*')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+    const carregarConfig = useCallback(async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('config_envioecom')
+          .select('*')
+          .single();
+  
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+  
+        if (data) {
+          setConfig(prev => ({
+            ...prev,
+            id: data.id,
+            slug: data.slug || '',
+            etoken: data.etoken || '',
+            cep_origem: data.cep_origem || prev.cep_origem || '',
+            endereco_origem: data.endereco_origem || prev.endereco_origem,
+            dimensoes_padrao: data.dimensoes_padrao || prev.dimensoes_padrao,
+            ativo: data.ativo ?? true,
+            geracao_automatica: data.geracao_automatica ?? false,
+            servico_padrao_id: data.servico_padrao_id || prev.servico_padrao_id || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configuração:', error);
+        toast.error('Erro ao carregar configurações');
+      } finally {
+        setLoading(false);
       }
-
-      if (data) {
-        setConfig({
-          id: data.id,
-          slug: data.slug || '',
-          etoken: data.etoken || '',
-          cep_origem: data.cep_origem || '',
-          endereco_origem: data.endereco_origem || config.endereco_origem,
-          dimensoes_padrao: data.dimensoes_padrao || config.dimensoes_padrao,
-          ativo: data.ativo ?? true,
-          geracao_automatica: data.geracao_automatica ?? false,
-          servico_padrao_id: data.servico_padrao_id || '',
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
-      toast.error('Erro ao carregar configurações');
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, [supabase]);
+  
+    useEffect(() => {
+      carregarConfig();
+    }, [carregarConfig]);
 
   const salvarConfig = async () => {
     setSaving(true);

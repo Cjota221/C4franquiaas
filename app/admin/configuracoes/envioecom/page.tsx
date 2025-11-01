@@ -68,7 +68,7 @@ export default function EnvioEcomConfigPage() {
       const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
       setWebhookToken(token);
       toast.success("Token gerado!");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao gerar token");
     } finally {
       setGenerating(false);
@@ -104,7 +104,7 @@ export default function EnvioEcomConfigPage() {
 
       if (result.error) throw result.error;
       toast.success("Salvo!");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao salvar");
     } finally {
       setSaving(false);
@@ -125,7 +125,7 @@ export default function EnvioEcomConfigPage() {
         setTimeout(() => setCopiedSlug(false), 2000);
       }
       toast.success("Copiado!");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao copiar");
     }
   }
