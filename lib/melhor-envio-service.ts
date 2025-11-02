@@ -96,6 +96,7 @@ export interface CalculoFreteInput {
 
 export async function calcularFrete(input: CalculoFreteInput) {
   console.log('[MelhorEnvio] calcularFrete - Iniciando...');
+  console.log('[MelhorEnvio] Input recebido:', JSON.stringify(input, null, 2));
   
   const config = await getConfig();
   const apiUrl = getApiUrl(config.sandbox);
@@ -107,9 +108,27 @@ export async function calcularFrete(input: CalculoFreteInput) {
   
   if (input.from && input.to && input.package) {
     // Formato novo (simples)
+    const fromCep = input.from.postal_code.replace(/\D/g, '');
+    const toCep = input.to.postal_code.replace(/\D/g, '');
+    
+    console.log('[MelhorEnvio] CEPs processados:', { 
+      from_original: input.from.postal_code,
+      from_clean: fromCep,
+      to_original: input.to.postal_code,
+      to_clean: toCep
+    });
+    
+    // Validar CEPs
+    if (!fromCep || fromCep.length !== 8) {
+      throw new Error(`CEP de origem inválido: "${input.from.postal_code}" -> "${fromCep}" (deve ter 8 dígitos)`);
+    }
+    if (!toCep || toCep.length !== 8) {
+      throw new Error(`CEP de destino inválido: "${input.to.postal_code}" -> "${toCep}" (deve ter 8 dígitos)`);
+    }
+    
     payload = {
-      from: { postal_code: input.from.postal_code.replace(/\D/g, '') },
-      to: { postal_code: input.to.postal_code.replace(/\D/g, '') },
+      from: { postal_code: fromCep },
+      to: { postal_code: toCep },
       package: input.package,
       options: {
         insurance_value: 100, // Valor padrão
@@ -119,10 +138,27 @@ export async function calcularFrete(input: CalculoFreteInput) {
     };
   } else {
     // Formato antigo (com produtos)
-    const cepOrigem = input.cep_origem || '01310100';
+    const cepOrigem = (input.cep_origem || '01310100').replace(/\D/g, '');
+    const cepDestino = (input.cep_destino || '').replace(/\D/g, '');
+    
+    console.log('[MelhorEnvio] CEPs processados (formato antigo):', { 
+      origem_original: input.cep_origem,
+      origem_clean: cepOrigem,
+      destino_original: input.cep_destino,
+      destino_clean: cepDestino
+    });
+    
+    // Validar CEPs
+    if (!cepOrigem || cepOrigem.length !== 8) {
+      throw new Error(`CEP de origem inválido: "${input.cep_origem}" -> "${cepOrigem}" (deve ter 8 dígitos)`);
+    }
+    if (!cepDestino || cepDestino.length !== 8) {
+      throw new Error(`CEP de destino inválido: "${input.cep_destino}" -> "${cepDestino}" (deve ter 8 dígitos)`);
+    }
+    
     payload = {
       from: { postal_code: cepOrigem },
-      to: { postal_code: input.cep_destino! },
+      to: { postal_code: cepDestino },
       package: {
         weight: input.produtos!.reduce((sum, p) => sum + (p.peso * (p.quantidade || 1)), 0),
         height: Math.max(...input.produtos!.map(p => p.altura)),
