@@ -18,3 +18,6 @@ export function createBrowserClient(): SupabaseClient {
   
   return browserClient;
 }
+
+// Export createClient para compatibilidade
+export { createClient };

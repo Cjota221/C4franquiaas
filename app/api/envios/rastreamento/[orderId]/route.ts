@@ -21,10 +21,10 @@ const supabase = createClient(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const { orderId } = params;
+    const { orderId } = await context.params;
 
     console.log('[Rastreamento] Buscando para order ID:', orderId);
 
