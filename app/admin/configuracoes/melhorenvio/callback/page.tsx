@@ -44,8 +44,11 @@ function CallbackContent() {
           setTimeout(() => router.push('/admin/configuracoes/melhorenvio'), 2000);
         } else {
           setStatus('error');
-          setMessage(data.error || 'Erro ao processar autorização');
-          setTimeout(() => router.push('/admin/configuracoes/melhorenvio'), 3000);
+          // Mostrar detalhes do erro se disponível
+          const errorMsg = data.error || 'Erro ao processar autorização';
+          const details = data.details ? JSON.stringify(data.details, null, 2) : '';
+          setMessage(`${errorMsg}\n\nDetalhes: ${details}\n\nStatus HTTP: ${data.status || 'desconhecido'}`);
+          setTimeout(() => router.push('/admin/configuracoes/melhorenvio'), 5000);
         }
       })
       .catch(err => {
@@ -88,9 +91,11 @@ function CallbackContent() {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Erro
             </h2>
-            <p className="text-gray-600">{message}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Redirecionando...
+            <pre className="text-gray-600 text-sm whitespace-pre-wrap text-left bg-gray-100 p-4 rounded max-w-lg overflow-auto max-h-64">
+              {message}
+            </pre>
+            <p className="text-sm text-gray-500 mt-4">
+              Redirecionando em 5 segundos...
             </p>
           </>
         )}
