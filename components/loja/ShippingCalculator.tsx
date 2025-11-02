@@ -19,8 +19,20 @@ interface FreteOpcao {
   servico_id?: string;
 }
 
+interface MelhorEnvioCotacao {
+  id: number;
+  name: string;
+  price: number;
+  delivery_time: number;
+  company: {
+    id: number;
+    name: string;
+    picture: string;
+  };
+}
+
 interface ShippingCalculatorProps {
-  produtoId: string;
+  produtoId?: string;
   onFreteCalculado?: (opcoes: FreteOpcao[]) => void;
   className?: string;
   corPrimaria?: string;
@@ -69,13 +81,28 @@ export function ShippingCalculator({
     try {
       console.log('[ShippingCalculator] 🚀 Calculando frete:', { cep: cepNumeros, dominio });
 
-      // Integrar com API de cálculo de frete
-      const response = await fetch(`/api/calcular-frete`, {
+      // Usar nova API do Melhor Envio com validação de CEP
+      const response = await fetch(`/api/shipping/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cep: cepNumeros,
-          dominio,
+          to: {
+            postal_code: cepNumeros,
+          },
+          from: {
+            postal_code: '13560340', // CEP padrão de origem
+          },
+          package: {
+            height: 10, // cm
+            width: 15,  // cm
+            length: 20, // cm
+            weight: 0.5 // kg
+          },
+          options: {
+            insurance_value: 50,
+            receipt: false,
+            own_hand: false
+          }
         }),
       });
 
@@ -84,14 +111,24 @@ export function ShippingCalculator({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('[ShippingCalculator] ❌ Erro na API:', errorData);
-        throw new Error('Erro ao calcular frete');
+        throw new Error(errorData.error || 'Erro ao calcular frete');
       }
 
       const data = await response.json();
       console.log('[ShippingCalculator] ✅ Dados recebidos:', data);
 
-      setOpcoes(data.opcoes || []);
-      onFreteCalculado?.(data.opcoes || []);
+      // Converter formato da API nova para o formato esperado
+      const opcoesFormatadas = data.map((cotacao: MelhorEnvioCotacao) => ({
+        nome: cotacao.name,
+        valor: cotacao.price,
+        prazo: `${cotacao.delivery_time} dias úteis`,
+        codigo: cotacao.id.toString(),
+        transportadora: cotacao.company.name,
+        servico_id: cotacao.id.toString()
+      }));
+
+      setOpcoes(opcoesFormatadas);
+      onFreteCalculado?.(opcoesFormatadas);
     } catch (err) {
       setError('Não foi possível calcular o frete. Tente novamente.');
       console.error('[ShippingCalculator] ❌ Erro ao calcular frete:', err);
