@@ -13,7 +13,7 @@ export async function GET() {
       clientSecret: clientSecret ? `${clientSecret.substring(0, 10)}...` : 'NÃO CONFIGURADO',
       sandbox: sandbox || 'NÃO CONFIGURADO',
       baseUrl: baseUrl || 'NÃO CONFIGURADO',
-      redirectUri: `${baseUrl}/admin/melhorenvio/callback`,
+      redirectUri: `${baseUrl}/admin/configuracoes/melhorenvio/callback`,
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret,
       sandboxMode: sandbox === 'true',
