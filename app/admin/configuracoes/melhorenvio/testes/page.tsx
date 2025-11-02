@@ -137,7 +137,7 @@ export default function MelhorEnvioTestPage() {
     };
     
     loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const reload = () => {

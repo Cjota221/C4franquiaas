@@ -63,14 +63,23 @@ function getHeaders(token: string) {
 // ========================================
 
 export interface CalculoFreteInput {
-  cep_destino: string;
+  from?: { postal_code: string };
+  to?: { postal_code: string };
+  package?: {
+    weight: number;
+    width: number;
+    height: number;
+    length: number;
+  };
+  // Formato alternativo (legado)
+  cep_destino?: string;
   cep_origem?: string;
-  produtos: Array<{
-    peso: number; // kg
-    altura: number; // cm
-    largura: number; // cm
-    comprimento: number; // cm
-    valor: number; // R$
+  produtos?: Array<{
+    peso: number;
+    altura: number;
+    largura: number;
+    comprimento: number;
+    valor: number;
     quantidade?: number;
   }>;
 }
@@ -79,24 +88,42 @@ export async function calcularFrete(input: CalculoFreteInput) {
   const config = await getConfig();
   const apiUrl = getApiUrl(config.sandbox);
 
-  // Origem padrão (você pode salvar isso nas configurações)
-  const cepOrigem = input.cep_origem || '01310100'; // Av. Paulista, SP
+  // Suportar ambos os formatos de entrada
+  let payload;
+  
+  if (input.from && input.to && input.package) {
+    // Formato novo (simples)
+    payload = {
+      from: { postal_code: input.from.postal_code.replace(/\D/g, '') },
+      to: { postal_code: input.to.postal_code.replace(/\D/g, '') },
+      package: input.package,
+      options: {
+        insurance_value: 100, // Valor padrão
+        receipt: false,
+        own_hand: false,
+      },
+    };
+  } else {
+    // Formato antigo (com produtos)
+    const cepOrigem = input.cep_origem || '01310100';
+    payload = {
+      from: { postal_code: cepOrigem },
+      to: { postal_code: input.cep_destino! },
+      package: {
+        weight: input.produtos!.reduce((sum, p) => sum + (p.peso * (p.quantidade || 1)), 0),
+        height: Math.max(...input.produtos!.map(p => p.altura)),
+        width: Math.max(...input.produtos!.map(p => p.largura)),
+        length: Math.max(...input.produtos!.map(p => p.comprimento)),
+      },
+      options: {
+        insurance_value: input.produtos!.reduce((sum, p) => sum + (p.valor * (p.quantidade || 1)), 0),
+        receipt: false,
+        own_hand: false,
+      },
+    };
+  }
 
-  const payload = {
-    from: { postal_code: cepOrigem },
-    to: { postal_code: input.cep_destino },
-    package: {
-      weight: input.produtos.reduce((sum, p) => sum + (p.peso * (p.quantidade || 1)), 0),
-      height: Math.max(...input.produtos.map(p => p.altura)),
-      width: Math.max(...input.produtos.map(p => p.largura)),
-      length: Math.max(...input.produtos.map(p => p.comprimento)),
-    },
-    options: {
-      insurance_value: input.produtos.reduce((sum, p) => sum + (p.valor * (p.quantidade || 1)), 0),
-      receipt: false,
-      own_hand: false,
-    },
-  };
+  console.log('[MelhorEnvio] Calculando frete:', payload);
 
   const response = await fetch(`${apiUrl}/me/shipment/calculate`, {
     method: 'POST',
@@ -105,11 +132,15 @@ export async function calcularFrete(input: CalculoFreteInput) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Erro ao calcular frete: ${JSON.stringify(error)}`);
+    const errorText = await response.text();
+    console.error('[MelhorEnvio] Erro na API:', response.status, errorText);
+    throw new Error(`Erro ao calcular frete (${response.status}): ${errorText}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('[MelhorEnvio] Resultado:', result?.length || 0, 'cotações');
+  
+  return result;
 }
 
 // ========================================
