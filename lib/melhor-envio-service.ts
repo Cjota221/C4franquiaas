@@ -339,8 +339,8 @@ export async function criarEnvioReverso(input: {
   // Similar ao processo normal, mas com flag de logística reversa
   // O Melhor Envio trata reversa da mesma forma, só inverte origem/destino
   
-  const config = await getConfig();
-  const apiUrl = getApiUrl(config.sandbox);
+  // const config = await getConfig(); // TODO: Implementar logística reversa completa
+  // const apiUrl = getApiUrl(config.sandbox);
 
   // Buscar dados do pedido original
   const { data: envioOriginal } = await supabase
@@ -359,6 +359,44 @@ export async function criarEnvioReverso(input: {
   return { success: true, message: 'Logística reversa criada' };
 }
 
+/**
+ * Obter lista de transportadoras
+ */
+async function getCompanies() {
+  const config = await getConfig();
+  const apiUrl = getApiUrl(config.sandbox);
+
+  const response = await fetch(`${apiUrl}/me/shipment/companies`, {
+    method: 'GET',
+    headers: getHeaders(config.access_token),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar transportadoras: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Obter lista de serviços de envio disponíveis
+ */
+async function getServices() {
+  const config = await getConfig();
+  const apiUrl = getApiUrl(config.sandbox);
+
+  const response = await fetch(`${apiUrl}/me/shipment/services`, {
+    method: 'GET',
+    headers: getHeaders(config.access_token),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar serviços: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
 export const MelhorEnvioService = {
   calcularFrete,
   adicionarAoCarrinho,
@@ -368,4 +406,6 @@ export const MelhorEnvioService = {
   rastrearEnvio,
   cancelarEnvio,
   criarEnvioReverso,
+  getCompanies,
+  getServices,
 };
