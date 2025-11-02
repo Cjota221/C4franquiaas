@@ -126,15 +126,23 @@ export async function calcularFrete(input: CalculoFreteInput) {
       throw new Error(`CEP de destino inválido: "${input.to.postal_code}" -> "${toCep}" (deve ter 8 dígitos)`);
     }
     
+    // Melhor Envio exige formato específico
     payload = {
-      from: { postal_code: fromCep },
-      to: { postal_code: toCep },
-      package: input.package,
-      options: {
-        insurance_value: 100, // Valor padrão
-        receipt: false,
-        own_hand: false,
+      from: { 
+        postal_code: fromCep 
       },
+      to: { 
+        postal_code: toCep 
+      },
+      products: [{
+        id: "1",
+        width: input.package.width,
+        height: input.package.height,
+        length: input.package.length,
+        weight: input.package.weight,
+        insurance_value: 50,
+        quantity: 1
+      }]
     };
   } else {
     // Formato antigo (com produtos)
@@ -156,20 +164,21 @@ export async function calcularFrete(input: CalculoFreteInput) {
       throw new Error(`CEP de destino inválido: "${input.cep_destino}" -> "${cepDestino}" (deve ter 8 dígitos)`);
     }
     
+    // Formato antigo - converter para products
+    const produtos = input.produtos!.map((p, idx) => ({
+      id: String(idx + 1),
+      width: p.largura,
+      height: p.altura,
+      length: p.comprimento,
+      weight: p.peso,
+      insurance_value: p.valor,
+      quantity: p.quantidade || 1
+    }));
+    
     payload = {
       from: { postal_code: cepOrigem },
       to: { postal_code: cepDestino },
-      package: {
-        weight: input.produtos!.reduce((sum, p) => sum + (p.peso * (p.quantidade || 1)), 0),
-        height: Math.max(...input.produtos!.map(p => p.altura)),
-        width: Math.max(...input.produtos!.map(p => p.largura)),
-        length: Math.max(...input.produtos!.map(p => p.comprimento)),
-      },
-      options: {
-        insurance_value: input.produtos!.reduce((sum, p) => sum + (p.valor * (p.quantidade || 1)), 0),
-        receipt: false,
-        own_hand: false,
-      },
+      products: produtos
     };
   }
 
