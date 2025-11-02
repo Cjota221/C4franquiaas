@@ -50,8 +50,19 @@ export async function POST(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('[Melhor Envio] Erro ao obter token:', errorData);
+      console.error('[Melhor Envio] Status:', tokenResponse.status);
+      console.error('[Melhor Envio] Payload enviado:', {
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+      });
       return NextResponse.json(
-        { success: false, error: 'Erro ao obter token do Melhor Envio' },
+        { 
+          success: false, 
+          error: 'Erro ao obter token do Melhor Envio',
+          details: errorData,
+          status: tokenResponse.status
+        },
         { status: 500 }
       );
     }
