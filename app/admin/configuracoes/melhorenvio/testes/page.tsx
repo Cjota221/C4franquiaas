@@ -44,7 +44,7 @@ export default function MelhorEnvioTestPage() {
       if (!data.authorized) {
         setError('Não autorizado. Clique em "Autorizar Melhor Envio" primeiro.');
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao verificar autorização');
       setIsAuthorized(false);
     }
@@ -61,7 +61,7 @@ export default function MelhorEnvioTestPage() {
       } else {
         setError(data.error || 'Erro ao buscar transportadoras');
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao buscar transportadoras');
     }
   };
@@ -77,7 +77,7 @@ export default function MelhorEnvioTestPage() {
       } else {
         setError(data.error || 'Erro ao buscar serviços');
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao buscar serviços');
     }
   };
@@ -119,7 +119,7 @@ export default function MelhorEnvioTestPage() {
       } else {
         alert(data.error || 'Erro ao calcular frete');
       }
-    } catch (err) {
+    } catch {
       alert('Erro ao calcular frete');
     } finally {
       setIsCalculating(false);
