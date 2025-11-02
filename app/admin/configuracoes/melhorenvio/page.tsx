@@ -17,6 +17,10 @@ interface ConfigGeral {
   taxa_embalagem: number;
   frete_gratis_acima: number | null;
   prazo_adicional: number;
+  peso_padrao: number;
+  altura_padrao: number;
+  largura_padrao: number;
+  comprimento_padrao: number;
 }
 
 interface MelhorEnvioService {
@@ -41,6 +45,10 @@ export default function MelhorEnvioPage() {
     taxa_embalagem: 0,
     frete_gratis_acima: null,
     prazo_adicional: 0,
+    peso_padrao: 0.3,
+    altura_padrao: 5,
+    largura_padrao: 12,
+    comprimento_padrao: 25,
   });
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [servicosDisponiveis, setServicosDisponiveis] = useState<MelhorEnvioService[]>([]);
@@ -358,6 +366,113 @@ export default function MelhorEnvioPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Dias extras no prazo de entrega
+                </p>
+              </div>
+            </div>
+
+            {/* Dimensões Padrão */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Dimensões Padrão do Pacote
+              </h4>
+              <p className="text-sm text-gray-600 mb-4">
+                Configure as dimensões e peso padrão que serão usados para calcular o frete de todos os produtos.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Peso */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Peso (kg)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={configGeral.peso_padrao}
+                    onChange={(e) => setConfigGeral(prev => ({
+                      ...prev,
+                      peso_padrao: parseFloat(e.target.value) || 0.3
+                    }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.30"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ex: 0.3 = 300g
+                  </p>
+                </div>
+
+                {/* Comprimento */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Comprimento (cm)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={configGeral.comprimento_padrao}
+                    onChange={(e) => setConfigGeral(prev => ({
+                      ...prev,
+                      comprimento_padrao: parseInt(e.target.value) || 25
+                    }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="25"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lado maior
+                  </p>
+                </div>
+
+                {/* Largura */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Largura (cm)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={configGeral.largura_padrao}
+                    onChange={(e) => setConfigGeral(prev => ({
+                      ...prev,
+                      largura_padrao: parseInt(e.target.value) || 12
+                    }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="12"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lado médio
+                  </p>
+                </div>
+
+                {/* Altura */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Altura (cm)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={configGeral.altura_padrao}
+                    onChange={(e) => setConfigGeral(prev => ({
+                      ...prev,
+                      altura_padrao: parseInt(e.target.value) || 5
+                    }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="5"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lado menor
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Dica:</strong> Para rasteirinhas, sugerimos: <strong>Peso: 0.2-0.3 kg</strong>, <strong>Dimensões: 27x15x8 cm</strong> (caixa de sapato pequena)
                 </p>
               </div>
             </div>

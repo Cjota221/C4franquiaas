@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Preparar dados para o Melhor Envio
+    // Preparar dados para o Melhor Envio usando dimensões configuradas
     const input = {
       from: {
         postal_code: fromCep,
@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
         postal_code: toCep,
       },
       package: {
-        weight: pkg?.weight || 1,
-        width: pkg?.width || 20,
-        height: pkg?.height || 10,
-        length: pkg?.length || 30,
+        weight: pkg?.weight || configGeral?.peso_padrao || 0.3,
+        width: pkg?.width || configGeral?.largura_padrao || 12,
+        height: pkg?.height || configGeral?.altura_padrao || 5,
+        length: pkg?.length || configGeral?.comprimento_padrao || 25,
       },
     };
 

@@ -38,6 +38,10 @@ export async function GET() {
         taxa_embalagem: 0,
         frete_gratis_acima: null,
         prazo_adicional: 0,
+        peso_padrao: 0.3,
+        altura_padrao: 5,
+        largura_padrao: 12,
+        comprimento_padrao: 25,
       },
       servicos: servicos || [],
     });
@@ -70,6 +74,10 @@ export async function POST(request: Request) {
           taxa_embalagem: configGeral.taxa_embalagem || 0,
           frete_gratis_acima: configGeral.frete_gratis_acima || null,
           prazo_adicional: configGeral.prazo_adicional || 0,
+          peso_padrao: configGeral.peso_padrao || 0.3,
+          altura_padrao: configGeral.altura_padrao || 5,
+          largura_padrao: configGeral.largura_padrao || 12,
+          comprimento_padrao: configGeral.comprimento_padrao || 25,
           updated_at: new Date().toISOString(),
         })
         .eq('id', 1);
