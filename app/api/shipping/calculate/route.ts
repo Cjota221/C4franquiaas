@@ -133,7 +133,30 @@ export async function POST(request: NextRequest) {
     console.log('[Shipping Calculate] Input preparado:', JSON.stringify(input, null, 2));
 
     // Chamar Melhor Envio
-    const quotes = await MelhorEnvioService.calcularFrete(input);
+    let quotes;
+    try {
+      quotes = await MelhorEnvioService.calcularFrete(input);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('[Shipping Calculate] Erro do Melhor Envio:', errorMessage);
+      
+      // Se for erro 422 (CEP inválido), retornar mensagem amigável
+      if (errorMessage?.includes('422')) {
+        return NextResponse.json({
+          success: false,
+          error: 'CEP não encontrado ou sem cobertura de entrega. Verifique se o CEP está correto.',
+          quotes: [],
+        }, { status: 400 });
+      }
+      
+      // Outros erros
+      return NextResponse.json({
+        success: false,
+        error: 'Erro ao calcular frete. Tente novamente.',
+        details: errorMessage,
+        quotes: [],
+      }, { status: 500 });
+    }
 
     console.log('[Shipping Calculate] Quotes recebidas:', quotes?.length || 0);
 
