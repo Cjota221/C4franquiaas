@@ -35,29 +35,35 @@ export async function POST(request: NextRequest) {
     console.log('[Melhor Envio] Ambiente:', isSandbox ? 'SANDBOX' : 'PRODUÇÃO');
 
     // Trocar code por access_token
+    // Muitos provedores OAuth2 (incluindo implementações que exigem conformidade estrita)
+    // esperam application/x-www-form-urlencoded no endpoint /oauth/token.
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId || '',
+      client_secret: clientSecret || '',
+      redirect_uri: redirectUri,
+      code: code,
+    });
+
     const tokenResponse = await fetch(`${baseUrl}/oauth/token`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        code: code,
-      }),
+      body: params.toString(),
     });
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('[Melhor Envio] Erro ao obter token:', errorData);
       console.error('[Melhor Envio] Status:', tokenResponse.status);
-      console.error('[Melhor Envio] Payload enviado:', {
+      // Não logar client_secret em texto claro. Mostramos apenas client_id e o resto da payload.
+      console.error('[Melhor Envio] Payload enviado (sem client_secret):', {
         grant_type: 'authorization_code',
         client_id: clientId,
         redirect_uri: redirectUri,
+        code: code,
       });
       return NextResponse.json(
         { 
