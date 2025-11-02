@@ -93,10 +93,10 @@ export function ShippingCalculator({
             postal_code: '13560340', // CEP padrão de origem
           },
           package: {
-            height: 10, // cm
-            width: 15,  // cm
-            length: 20, // cm
-            weight: 0.5 // kg
+            height: 5,   // cm - altura do calçado na caixa
+            width: 12,   // cm - largura da caixa
+            length: 25,  // cm - comprimento da caixa de sapato
+            weight: 0.3  // kg - peso médio de rasteirinha + embalagem
           },
           options: {
             insurance_value: 50,
