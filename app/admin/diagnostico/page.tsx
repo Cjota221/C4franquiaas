@@ -228,15 +228,18 @@ export default function DiagnosticoCompleto() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        const validQuotes = data.quotes?.filter((q: ShippingQuote) => q.price && q.delivery_time) || [];
+        const invalidCount = (data.quotes?.length || 0) - validQuotes.length;
+        
         return {
           name: '6. Cálculo de Frete',
           status: 'success',
-          message: `${data.quotes?.length || 0} opções de frete encontradas`,
-          details: data.quotes?.map((q: ShippingQuote) => ({
+          message: `${validQuotes.length} opções válidas encontradas${invalidCount > 0 ? ` (${invalidCount} indisponíveis)` : ''}`,
+          details: validQuotes.map((q: ShippingQuote) => ({
             company: q.company.name,
             service: q.name,
-            price: `R$ ${q.price}`,
-            delivery_time: `${q.delivery_time} dias`
+            price: `R$ ${q.price.toFixed(2)}`,
+            delivery_time: `${q.delivery_time} dia${q.delivery_time > 1 ? 's' : ''}`
           }))
         };
       } else {
