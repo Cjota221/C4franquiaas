@@ -140,7 +140,8 @@ export function ShippingCalculator({
       setOpcoes(opcoesFormatadas);
       onFreteCalculado?.(opcoesFormatadas);
     } catch (err) {
-      setError('Não foi possível calcular o frete. Tente novamente.');
+      const errorMessage = err instanceof Error ? err.message : 'Não foi possível calcular o frete. Tente novamente.';
+      setError(errorMessage);
       console.error('[ShippingCalculator] ❌ Erro ao calcular frete:', err);
     } finally {
       setLoading(false);
