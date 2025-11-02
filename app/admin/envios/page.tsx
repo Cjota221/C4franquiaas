@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Truck, CheckCircle, XCircle, Printer, Eye, RefreshCw } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface Envio {
   id: string;
@@ -31,11 +34,7 @@ export default function EnviosPage() {
   const [filtroStatus, setFiltroStatus] = useState('all');
   const [selecionados, setSelecionados] = useState<string[]>([]);
 
-  useEffect(() => {
-    carregarEnvios();
-  }, [filtroStatus]);
-
-  async function carregarEnvios() {
+  const carregarEnvios = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -64,36 +63,36 @@ export default function EnviosPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filtroStatus]);
 
-  async function imprimirEtiquetas() {
+  useEffect(() => {
+    carregarEnvios();
+  }, [carregarEnvios]);
+
+  const imprimirEtiquetas = async () => {
     if (selecionados.length === 0) {
-      alert('Selecione pelo menos um envio');
       return;
     }
 
     try {
-      const response = await fetch('/api/envios/imprimir', {
+      const response = await fetch('/api/melhorenvio/print-labels', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           order_ids: selecionados,
         }),
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        // Abrir PDF em nova aba
-        window.open(result.pdf_url, '_blank');
-        setSelecionados([]);
-        carregarEnvios();
-      }
+      await response.json();
+      setSelecionados([]);
+      carregarEnvios();
     } catch (error) {
       console.error('Erro ao imprimir etiquetas:', error);
       alert('Erro ao imprimir etiquetas');
     }
-  }
+  };
 
   const statusConfig: Record<string, { label: string; color: string; icon: React.JSX.Element }> = {
     pending: { label: 'Pendente', color: 'bg-gray-100 text-gray-800', icon: <Package className="w-4 h-4" /> },

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Processar evento
     switch (event) {
       case 'order.paid':
-        await handleOrderPaid(envio, data);
+        await handleOrderPaid(envio);
         break;
 
       case 'order.generated':
@@ -68,15 +68,15 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'order.posted':
-        await handleOrderPosted(envio, data);
+        await handleOrderPosted(envio);
         break;
 
       case 'order.delivered':
-        await handleOrderDelivered(envio, data);
+        await handleOrderDelivered(envio);
         break;
 
       case 'order.canceled':
-        await handleOrderCanceled(envio, data);
+        await handleOrderCanceled(envio);
         break;
 
       case 'tracking.update':
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 // HANDLERS DE EVENTOS
 // ========================================
 
-async function handleOrderPaid(envio: Record<string, unknown>, data: Record<string, unknown>) {
+async function handleOrderPaid(envio: Record<string, unknown>) {
   console.log('[Webhook] Order Paid:', envio.id);
 
   await supabase
@@ -139,7 +139,7 @@ async function handleOrderGenerated(envio: Record<string, unknown>, data: Record
   await enviarNotificacao(envio, 'etiqueta_gerada');
 }
 
-async function handleOrderPosted(envio: Record<string, unknown>, data: Record<string, unknown>) {
+async function handleOrderPosted(envio: Record<string, unknown>) {
   console.log('[Webhook] Order Posted:', envio.id);
 
   await supabase
@@ -162,7 +162,7 @@ async function handleOrderPosted(envio: Record<string, unknown>, data: Record<st
   await enviarNotificacao(envio, 'enviado');
 }
 
-async function handleOrderDelivered(envio: Record<string, unknown>, _data: Record<string, unknown>) {
+async function handleOrderDelivered(envio: Record<string, unknown>) {
   console.log('[Webhook] Order Delivered:', envio.id);
 
   await supabase
