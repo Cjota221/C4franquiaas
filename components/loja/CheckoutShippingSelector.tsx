@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Truck, Loader2, MapPin, AlertCircle } from 'lucide-react';
-import Image from 'next/image';
+
 
 interface FreteOpcao {
   id: number;
@@ -199,13 +199,7 @@ export default function CheckoutShippingSelector({
               />
               <div className="flex items-center gap-3 flex-1">
                 {opcao.logo && (
-                  <Image
-                    src={opcao.logo}
-                    alt={opcao.nome}
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 object-contain"
-                  />
+                  <img src={opcao.logo} alt={opcao.nome} className="w-12 h-12 object-contain" />
                 )}
                 <div>
                   <p className="font-semibold text-gray-900">{opcao.nome}</p>
@@ -234,3 +228,4 @@ export default function CheckoutShippingSelector({
     </div>
   );
 }
+
