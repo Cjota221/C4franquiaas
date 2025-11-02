@@ -19,6 +19,8 @@ interface MelhorEnvioConfig {
  * Obter configuração e token do Melhor Envio
  */
 async function getConfig(): Promise<MelhorEnvioConfig> {
+  console.log('[MelhorEnvio] Buscando configuração do banco...');
+  
   const { data, error } = await supabase
     .from('config_melhorenvio')
     .select('access_token')
@@ -26,10 +28,18 @@ async function getConfig(): Promise<MelhorEnvioConfig> {
     .single();
 
   if (error || !data?.access_token) {
+    console.error('[MelhorEnvio] Erro ao buscar token:', error);
     throw new Error('Token do Melhor Envio não configurado');
   }
 
-  const sandbox = process.env.MELHORENVIO_SANDBOX === 'true';
+  const sandbox = process.env.NEXT_PUBLIC_MELHORENVIO_SANDBOX === 'true';
+  
+  console.log('[MelhorEnvio] Config obtida:', {
+    has_token: !!data.access_token,
+    token_preview: data.access_token.substring(0, 30) + '...',
+    sandbox,
+    env_sandbox: process.env.NEXT_PUBLIC_MELHORENVIO_SANDBOX
+  });
 
   return {
     access_token: data.access_token,
@@ -85,8 +95,12 @@ export interface CalculoFreteInput {
 }
 
 export async function calcularFrete(input: CalculoFreteInput) {
+  console.log('[MelhorEnvio] calcularFrete - Iniciando...');
+  
   const config = await getConfig();
   const apiUrl = getApiUrl(config.sandbox);
+  
+  console.log('[MelhorEnvio] API URL:', apiUrl);
 
   // Suportar ambos os formatos de entrada
   let payload;
@@ -123,13 +137,16 @@ export async function calcularFrete(input: CalculoFreteInput) {
     };
   }
 
-  console.log('[MelhorEnvio] Calculando frete:', payload);
+  console.log('[MelhorEnvio] Payload preparado:', JSON.stringify(payload, null, 2));
+  console.log('[MelhorEnvio] Token preview:', config.access_token.substring(0, 30) + '...');
 
   const response = await fetch(`${apiUrl}/me/shipment/calculate`, {
     method: 'POST',
     headers: getHeaders(config.access_token),
     body: JSON.stringify(payload),
   });
+
+  console.log('[MelhorEnvio] Response status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
