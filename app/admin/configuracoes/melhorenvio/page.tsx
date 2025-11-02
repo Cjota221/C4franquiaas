@@ -26,11 +26,13 @@ export default function MelhorEnvioPage() {
   const handleAuthorize = () => {
     // Redirecionar para OAuth do Melhor Envio
     const clientId = '20735';
-    const redirectUri = encodeURIComponent('https://c4franquiaas.netlify.app/admin/configuracoes/melhorenvio/callback');
+    const isSandbox = process.env.NEXT_PUBLIC_MELHORENVIO_SANDBOX === 'true';
+    const baseUrl = isSandbox ? 'https://sandbox.melhorenvio.com.br' : 'https://melhorenvio.com.br';
+    const redirectUri = encodeURIComponent(`${process.env.NEXT_PUBLIC_BASE_URL}/admin/configuracoes/melhorenvio/callback`);
     const scope = 'cart-read cart-write companies-read companies-write coupons-read coupons-write notifications-read orders-read products-read products-write purchases-read shipping-calculate shipping-cancel shipping-checkout shipping-companies shipping-generate shipping-preview shipping-print shipping-share shipping-tracking ecommerce-shipping transactions-read';
     const state = Math.random().toString(36).substring(7);
     
-    const authUrl = `https://sandbox.melhorenvio.com.br/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}`;
+    const authUrl = `${baseUrl}/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}`;
     
     window.location.href = authUrl;
   };

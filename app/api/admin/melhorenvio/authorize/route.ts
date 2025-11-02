@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
 
     const clientId = process.env.MELHORENVIO_CLIENT_ID;
     const clientSecret = process.env.MELHORENVIO_CLIENT_SECRET;
+    const isSandbox = process.env.MELHORENVIO_SANDBOX === 'true';
+    const baseUrl = isSandbox ? 'https://sandbox.melhorenvio.com.br' : 'https://melhorenvio.com.br';
     const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/admin/configuracoes/melhorenvio/callback`;
 
     if (!clientId || !clientSecret) {
@@ -30,9 +32,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Melhor Envio] Trocando code por token...');
+    console.log('[Melhor Envio] Ambiente:', isSandbox ? 'SANDBOX' : 'PRODUÇÃO');
 
     // Trocar code por access_token
-    const tokenResponse = await fetch('https://sandbox.melhorenvio.com.br/oauth/token', {
+    const tokenResponse = await fetch(`${baseUrl}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
