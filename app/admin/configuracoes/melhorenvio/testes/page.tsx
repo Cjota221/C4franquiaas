@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { CheckCircle, XCircle, Loader2, Package, Truck, DollarSign, RefreshCw } from 'lucide-react';
 
 interface Service {
@@ -223,9 +224,11 @@ export default function MelhorEnvioTestPage() {
                 key={company.id}
                 className="flex flex-col items-center p-4 border rounded-lg hover:shadow-lg transition-shadow"
               >
-                <img
+                <Image
                   src={company.picture}
                   alt={company.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 object-contain mb-2"
                 />
                 <span className="text-sm font-medium text-center">
@@ -266,13 +269,15 @@ export default function MelhorEnvioTestPage() {
               <tbody>
                 {services.map((service) => (
                   <tr key={service.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-2 font-mono text-xs">{service.id}</td>
-                    <td className="px-4 py-2 font-medium">{service.name}</td>
+                    <td className="px-4 py-2">{service.id}</td>
+                    <td className="px-4 py-2">{service.name}</td>
                     <td className="px-4 py-2">{service.company.name}</td>
                     <td className="px-4 py-2">
-                      <img
+                      <Image
                         src={service.company.picture}
                         alt={service.company.name}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 object-contain"
                       />
                     </td>
@@ -317,33 +322,32 @@ export default function MelhorEnvioTestPage() {
         </div>
 
         {testResult.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Resultados:</h3>
-            <div className="space-y-2">
-              {testResult.map((quote) => (
-                <div key={quote.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={quote.company.picture}
-                      alt={quote.company.name}
-                      className="w-12 h-12 object-contain"
-                    />
-                    <div>
-                      <p className="font-medium">{quote.name}</p>
-                      <p className="text-sm text-gray-500">{quote.company.name}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-600">
-                      R$ {quote.price}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {quote.delivery_time} dias úteis
-                    </p>
+          <div className="space-y-3">
+            {testResult.map((quote) => (
+              <div key={quote.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-4">
+                  <Image
+                    src={quote.company.picture}
+                    alt={quote.company.name}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 object-contain"
+                  />
+                  <div>
+                    <p className="font-medium">{quote.name}</p>
+                    <p className="text-sm text-gray-500">{quote.company.name}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-600">
+                    R$ {quote.price}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {quote.delivery_time} dias úteis
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
