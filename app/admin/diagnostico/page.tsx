@@ -22,7 +22,7 @@ interface Service {
 interface ShippingQuote {
   company: Company;
   name: string;
-  price: string;
+  price: number;
   delivery_time: number;
 }
 
@@ -228,19 +228,24 @@ export default function DiagnosticoCompleto() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const validQuotes = data.quotes?.filter((q: ShippingQuote) => q.price && q.delivery_time) || [];
+        const validQuotes = data.quotes?.filter((q: ShippingQuote) => 
+          q.price && !isNaN(Number(q.price)) && q.delivery_time
+        ) || [];
         const invalidCount = (data.quotes?.length || 0) - validQuotes.length;
         
         return {
           name: '6. Cálculo de Frete',
           status: 'success',
           message: `${validQuotes.length} opções válidas encontradas${invalidCount > 0 ? ` (${invalidCount} indisponíveis)` : ''}`,
-          details: validQuotes.map((q: ShippingQuote) => ({
-            company: q.company.name,
-            service: q.name,
-            price: `R$ ${q.price.toFixed(2)}`,
-            delivery_time: `${q.delivery_time} dia${q.delivery_time > 1 ? 's' : ''}`
-          }))
+          details: validQuotes.map((q: ShippingQuote) => {
+            const priceValue = typeof q.price === 'number' ? q.price : Number(q.price);
+            return {
+              company: q.company.name,
+              service: q.name,
+              price: `R$ ${priceValue.toFixed(2)}`,
+              delivery_time: `${q.delivery_time} dia${q.delivery_time > 1 ? 's' : ''}`
+            };
+          })
         };
       } else {
         return {
