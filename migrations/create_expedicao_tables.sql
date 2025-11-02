@@ -9,7 +9,7 @@
 -- =====================================================
 
 ALTER TABLE pedidos 
-ADD COLUMN IF NOT EXISTS status_expedicao VARCHAR(50) DEFAULT ''pendente'',
+ADD COLUMN IF NOT EXISTS status_expedicao VARCHAR(50) DEFAULT 'pendente',
 ADD COLUMN IF NOT EXISTS data_separacao TIMESTAMP,
 ADD COLUMN IF NOT EXISTS data_postagem TIMESTAMP,
 ADD COLUMN IF NOT EXISTS data_entrega TIMESTAMP,
@@ -130,8 +130,9 @@ CREATE TABLE IF NOT EXISTS expedicao_metricas (
 
 INSERT INTO transportadoras_config (nome, codigo, ativo, prioridade, prazo_medio) 
 VALUES 
-    (''Melhor Envio'', ''melhor_envio'', true, 1, 5),
-    (''Correios PAC'', ''correios_pac'', true, 2, 12),
-    (''Correios SEDEX'', ''correios_sedex'', true, 3, 5),
-    (''Jadlog'', ''jadlog'', false, 4, 7)
+    ('Melhor Envio', 'melhor_envio', true, 1, 5),
+    ('Correios PAC', 'correios_pac', true, 2, 12),
+    ('Correios SEDEX', 'correios_sedex', true, 3, 5),
+    ('Jadlog', 'jadlog', false, 4, 7)
 ON CONFLICT (codigo) DO NOTHING;
+
