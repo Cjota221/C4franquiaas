@@ -1,13 +1,15 @@
--- Migration 031: Configuração de Transportadoras
--- Permite ativar/desativar transportadoras e adicionar taxa de embalagem
+-- Migration 031: Configuração de Serviços de Frete
+-- Permite ativar/desativar SERVIÇOS (PAC, SEDEX, Jadlog Package, etc) e adicionar taxa de embalagem
 
--- Tabela de configuração por transportadora
-CREATE TABLE IF NOT EXISTS config_transportadoras (
+-- Tabela de configuração por SERVIÇO (não company!)
+CREATE TABLE IF NOT EXISTS config_servicos_frete (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id INTEGER NOT NULL UNIQUE, -- ID da transportadora no Melhor Envio
-  company_name TEXT NOT NULL, -- Nome (Correios, Jadlog, etc)
-  ativo BOOLEAN DEFAULT true, -- Se está ativa no site
-  taxa_adicional DECIMAL(10,2) DEFAULT 0.00, -- Taxa extra (embalagem)
+  servico_id INTEGER NOT NULL UNIQUE, -- ID do serviço no Melhor Envio
+  servico_nome TEXT NOT NULL, -- Nome (PAC, SEDEX, Jadlog .Package, etc)
+  company_id INTEGER NOT NULL, -- ID da transportadora
+  company_name TEXT NOT NULL, -- Nome da transportadora (Correios, Jadlog)
+  ativo BOOLEAN DEFAULT true, -- Se está ativo no site
+  taxa_adicional DECIMAL(10,2) DEFAULT 0.00, -- Taxa extra específica deste serviço
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -28,13 +30,14 @@ VALUES (1, 0.00, NULL, 0)
 ON CONFLICT (id) DO NOTHING;
 
 -- Índices
-CREATE INDEX IF NOT EXISTS idx_config_transportadoras_ativo ON config_transportadoras(ativo);
-CREATE INDEX IF NOT EXISTS idx_config_transportadoras_company_id ON config_transportadoras(company_id);
+CREATE INDEX IF NOT EXISTS idx_config_servicos_ativo ON config_servicos_frete(ativo);
+CREATE INDEX IF NOT EXISTS idx_config_servicos_servico_id ON config_servicos_frete(servico_id);
+CREATE INDEX IF NOT EXISTS idx_config_servicos_company_id ON config_servicos_frete(company_id);
 
 -- Comentários
-COMMENT ON TABLE config_transportadoras IS 'Configuração individual de cada transportadora';
+COMMENT ON TABLE config_servicos_frete IS 'Configuração individual de cada SERVIÇO de frete (PAC, SEDEX, etc)';
 COMMENT ON TABLE config_frete_geral IS 'Configuração geral de frete (taxa embalagem, frete grátis, etc)';
-COMMENT ON COLUMN config_transportadoras.ativo IS 'Se true, aparece no site para clientes';
-COMMENT ON COLUMN config_transportadoras.taxa_adicional IS 'Taxa adicional específica desta transportadora';
+COMMENT ON COLUMN config_servicos_frete.ativo IS 'Se true, aparece no site para clientes';
+COMMENT ON COLUMN config_servicos_frete.taxa_adicional IS 'Taxa adicional específica deste serviço';
 COMMENT ON COLUMN config_frete_geral.taxa_embalagem IS 'Taxa global adicionada a TODOS os fretes';
 COMMENT ON COLUMN config_frete_geral.frete_gratis_acima IS 'Se compra >= este valor, frete grátis';

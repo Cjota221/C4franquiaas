@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Package, CheckCircle, XCircle, Loader2, Truck, Settings, DollarSign, Save, AlertCircle } from 'lucide-react';
 
-interface Transportadora {
+interface Servico {
   id?: string;
+  servico_id: number;
+  servico_nome: string;
   company_id: number;
   company_name: string;
   ativo: boolean;
@@ -17,10 +20,14 @@ interface ConfigGeral {
   prazo_adicional: number;
 }
 
-interface Company {
+interface MelhorEnvioService {
   id: number;
   name: string;
-  picture: string;
+  company: {
+    id: number;
+    name: string;
+    picture: string;
+  };
 }
 
 export default function MelhorEnvioPage() {
@@ -36,8 +43,8 @@ export default function MelhorEnvioPage() {
     frete_gratis_acima: null,
     prazo_adicional: 0,
   });
-  const [transportadoras, setTransportadoras] = useState<Transportadora[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [servicos, setServicos] = useState<Servico[]>([]);
+  const [servicosDisponiveis, setServicosDisponiveis] = useState<MelhorEnvioService[]>([]);
 
   useEffect(() => {
     checkAuthorization();
@@ -45,7 +52,7 @@ export default function MelhorEnvioPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      loadCompanies();
+      loadServices();
       loadConfig();
     }
   }, [isAuthorized]);
@@ -62,15 +69,16 @@ export default function MelhorEnvioPage() {
     }
   };
 
-  const loadCompanies = async () => {
+  const loadServices = async () => {
     try {
-      const response = await fetch('/api/admin/melhorenvio/companies');
+      const response = await fetch('/api/admin/melhorenvio/services');
       const data = await response.json();
-      if (data.success && data.companies) {
-        setCompanies(data.companies);
+      if (data.success && data.services) {
+        console.log('[Melhor Envio Config] Serviços carregados:', data.services.length);
+        setServicosDisponiveis(data.services);
       }
     } catch (err) {
-      console.error('Erro ao carregar transportadoras:', err);
+      console.error('Erro ao carregar serviços:', err);
     }
   };
 
@@ -82,7 +90,8 @@ export default function MelhorEnvioPage() {
       
       if (data.success) {
         setConfigGeral(data.configGeral);
-        setTransportadoras(data.transportadoras);
+        setServicos(data.servicos || []);
+        console.log('[Melhor Envio Config] Config carregada:', data.servicos?.length || 0, 'serviços');
       }
     } catch (err) {
       console.error('Erro ao carregar configurações:', err);
@@ -96,12 +105,14 @@ export default function MelhorEnvioPage() {
     setMessage(null);
     
     try {
-      // Criar lista de transportadoras mesclando companies com config
-      const transportadorasParaSalvar = companies.map(company => {
-        const existing = transportadoras.find(t => t.company_id === company.id);
+      // Criar lista de serviços mesclando disponíveis com config
+      const servicosParaSalvar = servicosDisponiveis.map(service => {
+        const existing = servicos.find(s => s.servico_id === service.id);
         return {
-          company_id: company.id,
-          company_name: company.name,
+          servico_id: service.id,
+          servico_nome: service.name,
+          company_id: service.company.id,
+          company_name: service.company.name,
           ativo: existing?.ativo !== undefined ? existing.ativo : true,
           taxa_adicional: existing?.taxa_adicional || 0,
         };
@@ -112,7 +123,7 @@ export default function MelhorEnvioPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           configGeral,
-          transportadoras: transportadorasParaSalvar,
+          servicos: servicosParaSalvar,
         }),
       });
 
@@ -132,18 +143,21 @@ export default function MelhorEnvioPage() {
     }
   };
 
-  const toggleTransportadora = (companyId: number) => {
-    setTransportadoras(prev => {
-      const existing = prev.find(t => t.company_id === companyId);
+  const toggleServico = (servicoId: number) => {
+    setServicos(prev => {
+      const existing = prev.find(s => s.servico_id === servicoId);
       if (existing) {
-        return prev.map(t => 
-          t.company_id === companyId ? { ...t, ativo: !t.ativo } : t
+        return prev.map(s => 
+          s.servico_id === servicoId ? { ...s, ativo: !s.ativo } : s
         );
       } else {
-        const company = companies.find(c => c.id === companyId);
+        const service = servicosDisponiveis.find(s => s.id === servicoId);
+        if (!service) return prev;
         return [...prev, {
-          company_id: companyId,
-          company_name: company?.name || '',
+          servico_id: servicoId,
+          servico_nome: service.name,
+          company_id: service.company.id,
+          company_name: service.company.name,
           ativo: false,
           taxa_adicional: 0,
         }];
@@ -151,18 +165,21 @@ export default function MelhorEnvioPage() {
     });
   };
 
-  const updateTaxaAdicional = (companyId: number, taxa: number) => {
-    setTransportadoras(prev => {
-      const existing = prev.find(t => t.company_id === companyId);
+  const updateTaxaAdicional = (servicoId: number, taxa: number) => {
+    setServicos(prev => {
+      const existing = prev.find(s => s.servico_id === servicoId);
       if (existing) {
-        return prev.map(t => 
-          t.company_id === companyId ? { ...t, taxa_adicional: taxa } : t
+        return prev.map(s => 
+          s.servico_id === servicoId ? { ...s, taxa_adicional: taxa } : s
         );
       } else {
-        const company = companies.find(c => c.id === companyId);
+        const service = servicosDisponiveis.find(s => s.id === servicoId);
+        if (!service) return prev;
         return [...prev, {
-          company_id: companyId,
-          company_name: company?.name || '',
+          servico_id: servicoId,
+          servico_nome: service.name,
+          company_id: service.company.id,
+          company_name: service.company.name,
           ativo: true,
           taxa_adicional: taxa,
         }];
@@ -191,6 +208,19 @@ export default function MelhorEnvioPage() {
     );
   }
 
+  // Agrupar serviços por transportadora
+  const servicosAgrupados = servicosDisponiveis.reduce((acc, service) => {
+    const companyName = service.company.name;
+    if (!acc[companyName]) {
+      acc[companyName] = {
+        company: service.company,
+        services: []
+      };
+    }
+    acc[companyName].services.push(service);
+    return acc;
+  }, {} as Record<string, { company: { id: number; name: string; picture: string }, services: MelhorEnvioService[] }>);
+
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
@@ -198,7 +228,7 @@ export default function MelhorEnvioPage() {
           Configurações Melhor Envio
         </h1>
         <p className="text-gray-600">
-          Configure transportadoras e taxas de frete
+          Configure serviços de frete e taxas
         </p>
       </div>
 
@@ -334,89 +364,103 @@ export default function MelhorEnvioPage() {
             </div>
           </div>
 
-          {/* Transportadoras */}
+          {/* Serviços de Frete */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex items-center gap-3 mb-6">
               <Truck className="w-6 h-6 text-gray-700" />
-              <h3 className="text-xl font-semibold">Transportadoras</h3>
+              <h3 className="text-xl font-semibold">Serviços de Frete</h3>
+              <span className="text-sm text-gray-500">
+                ({servicosDisponiveis.length} serviços disponíveis)
+              </span>
             </div>
 
             {loadingConfig ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
-            ) : companies.length === 0 ? (
+            ) : Object.keys(servicosAgrupados).length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                Nenhuma transportadora disponível
+                Nenhum serviço disponível
               </p>
             ) : (
-              <div className="space-y-4">
-                {companies.map(company => {
-                  const config = transportadoras.find(t => t.company_id === company.id);
-                  const isAtivo = config?.ativo !== false;
-                  const taxaAdicional = config?.taxa_adicional || 0;
+              <div className="space-y-6">
+                {Object.entries(servicosAgrupados).map(([companyName, { company, services }]) => (
+                  <div key={companyName}>
+                    {/* Cabeçalho da Transportadora */}
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
+                      <Image
+                        src={company.picture}
+                        alt={company.name}
+                        width={40}
+                        height={40}
+                        className="w-10 h-10 object-contain"
+                      />
+                      <h4 className="text-lg font-bold text-gray-900">{company.name}</h4>
+                      <span className="text-sm text-gray-500">({services.length} serviços)</span>
+                    </div>
 
-                  return (
-                    <div
-                      key={company.id}
-                      className={`border rounded-lg p-4 transition-all ${
-                        isAtivo ? 'border-green-300 bg-green-50' : 'border-gray-300 bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
-                          {/* Logo */}
-                          <img
-                            src={company.picture}
-                            alt={company.name}
-                            className="w-12 h-12 object-contain"
-                          />
+                    {/* Lista de Serviços */}
+                    <div className="space-y-2">
+                      {services.map(service => {
+                        const config = servicos.find(s => s.servico_id === service.id);
+                        const isAtivo = config?.ativo !== false;
+                        const taxaAdicional = config?.taxa_adicional || 0;
 
-                          {/* Nome */}
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">
-                              {company.name}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {isAtivo ? '✅ Ativa no site' : '❌ Desativada'}
-                            </p>
-                          </div>
-
-                          {/* Taxa Adicional */}
-                          <div className="w-48">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              Taxa Adicional (R$)
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={taxaAdicional}
-                              onChange={(e) => updateTaxaAdicional(
-                                company.id,
-                                parseFloat(e.target.value) || 0
-                              )}
-                              className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
-                              disabled={!isAtivo}
-                            />
-                          </div>
-
-                          {/* Toggle Ativo */}
-                          <button
-                            onClick={() => toggleTransportadora(company.id)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                              isAtivo
-                                ? 'bg-green-600 text-white hover:bg-green-700'
-                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        return (
+                          <div
+                            key={service.id}
+                            className={`border rounded-lg p-3 transition-all ${
+                              isAtivo ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'
                             }`}
                           >
-                            {isAtivo ? 'Ativo' : 'Desativado'}
-                          </button>
-                        </div>
-                      </div>
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Nome do Serviço */}
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-semibold text-gray-900 truncate">
+                                  {service.name}
+                                </h5>
+                                <p className="text-xs text-gray-600">
+                                  {isAtivo ? '✅ Ativo no site' : '❌ Desativado'}
+                                </p>
+                              </div>
+
+                              {/* Taxa Adicional */}
+                              <div className="w-40">
+                                <label className="block text-xs text-gray-600 mb-1">
+                                  Taxa Adicional (R$)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={taxaAdicional}
+                                  onChange={(e) => updateTaxaAdicional(
+                                    service.id,
+                                    parseFloat(e.target.value) || 0
+                                  )}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                  disabled={!isAtivo}
+                                />
+                              </div>
+
+                              {/* Toggle */}
+                              <button
+                                onClick={() => toggleServico(service.id)}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
+                                  isAtivo
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                                }`}
+                              >
+                                {isAtivo ? 'Ativo' : 'Desativado'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>

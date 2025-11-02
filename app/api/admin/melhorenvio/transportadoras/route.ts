@@ -6,7 +6,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export const dynamic = 'force-dynamic';
 
-// GET - Buscar configurações de transportadoras
+// GET - Buscar configurações de SERVIÇOS (não transportadoras!)
 export async function GET() {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -19,17 +19,17 @@ export async function GET() {
       .single();
 
     if (errorGeral) {
-      console.error('[Config Transportadoras] Erro ao buscar config geral:', errorGeral);
+      console.error('[Config Serviços] Erro ao buscar config geral:', errorGeral);
     }
 
-    // Buscar transportadoras configuradas
-    const { data: transportadoras, error: errorTrans } = await supabase
-      .from('config_transportadoras')
+    // Buscar serviços configurados
+    const { data: servicos, error: errorServicos } = await supabase
+      .from('config_servicos_frete')
       .select('*')
-      .order('company_name');
+      .order('company_name, servico_nome');
 
-    if (errorTrans) {
-      console.error('[Config Transportadoras] Erro ao buscar transportadoras:', errorTrans);
+    if (errorServicos) {
+      console.error('[Config Serviços] Erro ao buscar serviços:', errorServicos);
     }
 
     return NextResponse.json({
@@ -39,11 +39,11 @@ export async function GET() {
         frete_gratis_acima: null,
         prazo_adicional: 0,
       },
-      transportadoras: transportadoras || [],
+      servicos: servicos || [],
     });
 
   } catch (error) {
-    console.error('[Config Transportadoras] Erro:', error);
+    console.error('[Config Serviços] Erro:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -58,7 +58,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { configGeral, transportadoras } = body;
+    const { configGeral, servicos } = body;
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -79,23 +79,25 @@ export async function POST(request: Request) {
       }
     }
 
-    // Atualizar transportadoras
-    if (transportadoras && Array.isArray(transportadoras)) {
-      for (const trans of transportadoras) {
+    // Atualizar serviços
+    if (servicos && Array.isArray(servicos)) {
+      for (const servico of servicos) {
         const { error } = await supabase
-          .from('config_transportadoras')
+          .from('config_servicos_frete')
           .upsert({
-            company_id: trans.company_id,
-            company_name: trans.company_name,
-            ativo: trans.ativo !== undefined ? trans.ativo : true,
-            taxa_adicional: trans.taxa_adicional || 0,
+            servico_id: servico.servico_id,
+            servico_nome: servico.servico_nome,
+            company_id: servico.company_id,
+            company_name: servico.company_name,
+            ativo: servico.ativo !== undefined ? servico.ativo : true,
+            taxa_adicional: servico.taxa_adicional || 0,
             updated_at: new Date().toISOString(),
           }, {
-            onConflict: 'company_id'
+            onConflict: 'servico_id'
           });
 
         if (error) {
-          console.error(`[Config Transportadoras] Erro ao salvar ${trans.company_name}:`, error);
+          console.error(`[Config Serviços] Erro ao salvar ${servico.servico_nome}:`, error);
         }
       }
     }
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('[Config Transportadoras] Erro ao salvar:', error);
+    console.error('[Config Serviços] Erro ao salvar:', error);
     return NextResponse.json(
       { 
         success: false, 
