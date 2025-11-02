@@ -9,12 +9,43 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    console.log('[Shipping Calculate] Body recebido:', JSON.stringify(body, null, 2));
+    
     const { to, from, package: pkg } = body;
 
     // Validações
     if (!to?.postal_code) {
+      console.error('[Shipping Calculate] CEP de destino não fornecido');
       return NextResponse.json(
         { success: false, error: 'CEP de destino obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    // Limpar e validar CEPs
+    const toCep = to.postal_code.toString().replace(/\D/g, '');
+    const fromCep = (from?.postal_code || '13560340').toString().replace(/\D/g, '');
+    
+    console.log('[Shipping Calculate] CEPs limpos:', {
+      to_original: to.postal_code,
+      to_clean: toCep,
+      from_original: from?.postal_code,
+      from_clean: fromCep
+    });
+    
+    // Validar tamanho dos CEPs
+    if (toCep.length !== 8) {
+      console.error('[Shipping Calculate] CEP de destino inválido:', toCep, 'length:', toCep.length);
+      return NextResponse.json(
+        { success: false, error: `CEP de destino inválido: "${to.postal_code}". Deve ter 8 dígitos.` },
+        { status: 400 }
+      );
+    }
+    
+    if (fromCep.length !== 8) {
+      console.error('[Shipping Calculate] CEP de origem inválido:', fromCep, 'length:', fromCep.length);
+      return NextResponse.json(
+        { success: false, error: `CEP de origem inválido: "${from?.postal_code}". Deve ter 8 dígitos.` },
         { status: 400 }
       );
     }
@@ -22,10 +53,10 @@ export async function POST(request: NextRequest) {
     // Preparar dados para o Melhor Envio
     const input = {
       from: {
-        postal_code: from?.postal_code || '13560340', // CEP padrão (configure o seu)
+        postal_code: fromCep,
       },
       to: {
-        postal_code: to.postal_code.replace(/\D/g, ''),
+        postal_code: toCep,
       },
       package: {
         weight: pkg?.weight || 1,
@@ -35,7 +66,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    console.log('[Shipping Calculate] Input:', input);
+    console.log('[Shipping Calculate] Input preparado:', JSON.stringify(input, null, 2));
 
     // Chamar Melhor Envio
     const quotes = await MelhorEnvioService.calcularFrete(input);
