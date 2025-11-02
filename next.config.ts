@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -11,7 +11,9 @@ const nextConfig: NextConfig = {
       'arquivos.facilzap.app.br', 
       'placehold.co', 
       'c4franquiaas.netlify.app',
-      'rprucmoavblepodvanga.supabase.co' // Supabase Storage
+      'rprucmoavblepodvanga.supabase.co', // Supabase Storage
+      'www.melhorenvio.com.br', // Melhor Envio
+      'melhorenvio.com.br' // Melhor Envio
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
@@ -24,6 +26,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'c4franquiaas.netlify.app', pathname: '/.netlify/functions/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'rprucmoavblepodvanga.supabase.co', pathname: '/storage/v1/object/public/logos/**' },
+      { protocol: 'https', hostname: 'www.melhorenvio.com.br', pathname: '/**' },
+      { protocol: 'https', hostname: 'melhorenvio.com.br', pathname: '/**' },
     ],
   },
 };
