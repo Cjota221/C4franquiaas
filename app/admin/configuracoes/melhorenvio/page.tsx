@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Package, CheckCircle, XCircle, Loader2, Truck, Settings, DollarSign, Save, AlertCircle } from 'lucide-react';
 
 interface Servico {
@@ -385,15 +384,13 @@ export default function MelhorEnvioPage() {
             ) : (
               <div className="space-y-6">
                 {Object.entries(servicosAgrupados).map(([companyName, { company, services }]) => (
-                  <div key={companyName}>
+                  <div key={companyName} className="border-2 border-gray-200 rounded-lg p-4">
                     {/* Cabeçalho da Transportadora */}
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-                      <Image
+                      <img
                         src={company.picture}
                         alt={company.name}
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 object-contain"
+                        className="w-12 h-12 object-contain"
                       />
                       <h4 className="text-lg font-bold text-gray-900">{company.name}</h4>
                       <span className="text-sm text-gray-500">({services.length} serviços)</span>
