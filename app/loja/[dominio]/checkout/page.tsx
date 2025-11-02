@@ -8,10 +8,21 @@ import { ArrowLeft, Lock } from 'lucide-react';
 import CheckoutForm from '@/components/loja/CheckoutFormTransparente'; // 🆕 CHECKOUT TRANSPARENTE ATIVADO
 import OrderSummary from '@/components/loja/OrderSummary';
 import CheckoutFooter from '@/components/loja/CheckoutFooter';
+import CheckoutShippingSelector from '@/components/loja/CheckoutShippingSelector';
+
+interface FreteOpcao {
+  id: number;
+  nome: string;
+  preco: number;
+  prazo: number;
+  logo: string;
+  servico_id: string;
+}
 
 export default function CheckoutPage() {
   const loja = useLojaInfo();
   const [mounted, setMounted] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<FreteOpcao | null>(null);
   
   // 🔧 Usar Zustand em vez de CartContext
   const items = useCarrinhoStore(state => state.items);
@@ -123,10 +134,18 @@ export default function CheckoutPage() {
       <div className="max-w-7xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Coluna Esquerda - Formulários (60%) */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 space-y-6">
+            {/* Seleção de Frete */}
+            <CheckoutShippingSelector
+              onSelectShipping={setSelectedShipping}
+              selectedShipping={selectedShipping}
+              corPrimaria={corPrimaria}
+            />
+            
+            {/* Formulário de Checkout */}
             <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
               <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                Finalizar Compra
+                Dados de Pagamento
               </h1>
               
               <CheckoutForm loja={loja} />
@@ -136,7 +155,12 @@ export default function CheckoutPage() {
           {/* Coluna Direita - Resumo (40%) */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-24">
-              <OrderSummary loja={loja} items={convertedItems} />
+              <OrderSummary 
+                loja={loja} 
+                items={convertedItems}
+                shippingValue={selectedShipping?.preco || null}
+                shippingName={selectedShipping?.nome || null}
+              />
             </div>
           </div>
         </div>

@@ -8,9 +8,11 @@ import { CartItem } from '@/contexts/CartContext';
 interface OrderSummaryProps {
   loja: LojaInfo;
   items: CartItem[];
+  shippingValue?: number | null;
+  shippingName?: string | null;
 }
 
-export default function OrderSummary({ loja, items }: OrderSummaryProps) {
+export default function OrderSummary({ loja, items, shippingValue = null, shippingName = null }: OrderSummaryProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(false);
@@ -21,18 +23,24 @@ export default function OrderSummary({ loja, items }: OrderSummaryProps) {
   // Cálculos
   const subtotal = items.reduce((sum, item) => sum + (item.preco_final * item.quantidade), 0);
   
-  // Frete grátis baseado na configuração da loja
-  const valorMinimoFreteGratis = loja.frete_gratis_valor || 150; // Default: R$ 150
-  const valorFrete = loja.valor_frete || 15.90; // Default: R$ 15,90
-  const shipping = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
+  // Usar frete selecionado ou calcular baseado na configuração da loja
+  let shipping: number;
+  if (shippingValue !== null && shippingValue !== undefined) {
+    // Usar frete selecionado pelo cliente
+    shipping = shippingValue;
+  } else {
+    // Fallback: usar lógica antiga de frete grátis
+    const valorMinimoFreteGratis = loja.frete_gratis_valor || 150;
+    const valorFrete = loja.valor_frete || 15.90;
+    shipping = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
+  }
   
   // 🔍 DEBUG: Verificar valores de frete
   console.log('🚚 [OrderSummary Frete Debug]', {
     'Subtotal': `R$ ${subtotal.toFixed(2)}`,
-    'loja.frete_gratis_valor': loja.frete_gratis_valor,
-    'Mínimo Usado': `R$ ${valorMinimoFreteGratis.toFixed(2)}`,
-    'Frete Grátis?': subtotal >= valorMinimoFreteGratis,
-    'Shipping': `R$ ${shipping.toFixed(2)}`
+    'Frete Selecionado': shippingValue,
+    'Nome Frete': shippingName,
+    'Shipping Final': `R$ ${shipping.toFixed(2)}`
   });
   
   const discount = appliedCoupon ? subtotal * 0.1 : 0; // 10% de desconto exemplo
@@ -143,7 +151,12 @@ export default function OrderSummary({ loja, items }: OrderSummaryProps) {
         )}
 
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Frete</span>
+          <div className="flex flex-col">
+            <span className="text-gray-600">Frete</span>
+            {shippingName && (
+              <span className="text-xs text-gray-500 mt-1">{shippingName}</span>
+            )}
+          </div>
           <span className="font-medium text-gray-900">
             {shipping === 0 ? (
               <span style={{ color: corPrimaria }} className="font-semibold">
