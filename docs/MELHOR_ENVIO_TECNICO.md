@@ -11,12 +11,12 @@
 
 1️⃣ CLIENTE NA LOJA
    └─> Digite CEP: [01310-100] [OK]
-   
+
 2️⃣ FRONTEND (ShippingCalculator.tsx)
    └─> Limpa CEP: "01310-100" → "01310100"
    └─> Valida: 8 dígitos? ✅
    └─> Chama API: POST /api/shipping/calculate
-   
+
 3️⃣ API ROUTE (app/api/shipping/calculate/route.ts)
    └─> Recebe JSON:
        {
@@ -26,18 +26,18 @@
        }
    └─> Valida CEP (8 dígitos)
    └─> Chama MelhorEnvioService.calcularFrete()
-   
+
 4️⃣ SERVICE LAYER (lib/melhor-envio-service.ts)
    └─> Busca token no banco: config_melhorenvio.access_token
    └─> Verifica expiração: expires_at > hoje?
    └─> Chama Melhor Envio API:
        POST https://melhorenvio.com.br/api/v2/me/shipment/calculate
-   
+
 5️⃣ MELHOR ENVIO (API Externa)
    └─> Consulta 7 transportadoras
    └─> Calcula 14 serviços
    └─> Retorna cotações com preços reais
-   
+
 6️⃣ RESPOSTA
    └─> API converte formato
    └─> Frontend exibe para cliente:
@@ -50,14 +50,17 @@
 ## 📁 ARQUIVOS IMPORTANTES
 
 ### 1. **ShippingCalculator.tsx** (Calculadora da Loja)
+
 **Localização:** `components/loja/ShippingCalculator.tsx`
 
 **O que faz:**
+
 - Componente visual que o cliente vê
 - Input de CEP + Botão "OK"
 - Exibe opções de frete
 
 **Mudança que fizemos:**
+
 ```typescript
 // ANTES (API antiga, preço fixo)
 fetch('/api/calcular-frete', { ... })
@@ -67,6 +70,7 @@ fetch('/api/shipping/calculate', { ... })
 ```
 
 **Valores atuais (FIXOS - precisa melhorar depois):**
+
 - CEP Origem: `13560340` (São Carlos)
 - Peso: `0.5 kg`
 - Dimensões: `10 x 15 x 20 cm`
@@ -75,14 +79,17 @@ fetch('/api/shipping/calculate', { ... })
 ---
 
 ### 2. **/api/shipping/calculate** (API Nova)
+
 **Localização:** `app/api/shipping/calculate/route.ts`
 
 **O que faz:**
+
 - Valida CEP (exatamente 8 dígitos)
 - Chama Melhor Envio Service
 - Retorna cotações
 
 **Validações implementadas:**
+
 ```typescript
 // 1. CEP não pode estar vazio
 if (!to?.postal_code) {
@@ -94,18 +101,23 @@ const toCep = to.postal_code.toString().replace(/\D/g, '');
 
 // 3. Valida exatamente 8 dígitos
 if (toCep.length !== 8) {
-  return NextResponse.json({ 
-    error: `CEP inválido: "${to.postal_code}". Deve ter 8 dígitos.` 
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      error: `CEP inválido: "${to.postal_code}". Deve ter 8 dígitos.`,
+    },
+    { status: 400 },
+  );
 }
 ```
 
 ---
 
 ### 3. **MelhorEnvioService** (Biblioteca)
+
 **Localização:** `lib/melhor-envio-service.ts`
 
 **O que faz:**
+
 - Gerencia toda comunicação com Melhor Envio
 - 10 métodos disponíveis:
   1. `calcularFrete()` - Cotação
@@ -120,6 +132,7 @@ if (toCep.length !== 8) {
   10. `verificarSaldo()` - Saldo
 
 **Como funciona o token:**
+
 ```typescript
 // 1. Busca no banco
 const { data: config } = await supabase
@@ -144,6 +157,7 @@ headers: {
 ## 🗃️ BANCO DE DADOS
 
 ### Tabela: **config_melhorenvio**
+
 ```sql
 CREATE TABLE config_melhorenvio (
   id INTEGER PRIMARY KEY,
@@ -157,6 +171,7 @@ CREATE TABLE config_melhorenvio (
 ```
 
 **Dados atuais:**
+
 ```
 id: 1
 access_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
@@ -169,12 +184,14 @@ expires_at: 2026-11-02 00:00:00 (1 ano de validade!)
 ## 🌍 AMBIENTES
 
 ### Produção (ATUAL - onde você está)
+
 ```env
 NEXT_PUBLIC_MELHORENVIO_SANDBOX=false
 BASE_URL=https://melhorenvio.com.br/api/v2
 ```
 
 **Características:**
+
 - ✅ Transportadoras reais
 - ✅ Preços reais
 - ✅ Gera etiquetas de verdade
@@ -182,12 +199,14 @@ BASE_URL=https://melhorenvio.com.br/api/v2
 - ✅ Token válido até 02/11/2026
 
 ### Sandbox (Teste - NÃO está ativado)
+
 ```env
 NEXT_PUBLIC_MELHORENVIO_SANDBOX=true
 BASE_URL=https://sandbox.melhorenvio.com.br/api/v2
 ```
 
 **Características:**
+
 - 🎮 Modo simulação
 - 💰 Dinheiro fake
 - 📦 Entregas fake
@@ -200,6 +219,7 @@ BASE_URL=https://sandbox.melhorenvio.com.br/api/v2
 ## 🔑 VARIÁVEIS DE AMBIENTE (Netlify)
 
 ### Obrigatórias (já configuradas)
+
 ```env
 # Melhor Envio
 NEXT_PUBLIC_MELHORENVIO_CLIENT_ID=20735
@@ -220,7 +240,9 @@ NEXT_PUBLIC_BASE_URL=https://c4franquiaas.netlify.app
 ## 🎯 PRÓXIMAS MELHORIAS TÉCNICAS
 
 ### 1. Peso e Dimensões Dinâmicas
+
 **Problema atual:**
+
 ```typescript
 // Valores fixos em ShippingCalculator.tsx
 package: {
@@ -232,6 +254,7 @@ package: {
 ```
 
 **Solução:**
+
 ```typescript
 // Buscar do banco de dados
 const { data: produto } = await supabase
@@ -249,6 +272,7 @@ package: {
 ```
 
 **Impacto:**
+
 - Frete correto para cada produto
 - Produtos pesados = frete mais caro
 - Produtos leves = frete mais barato
@@ -256,14 +280,17 @@ package: {
 ---
 
 ### 2. Gerar Etiqueta no Pagamento
+
 **Localização:** `app/api/mp-webhook/route.ts`
 
 **Fluxo:**
+
 ```
 Cliente paga → Mercado Pago webhook → Gera etiqueta → Salva no banco
 ```
 
 **Código a implementar:**
+
 ```typescript
 // Quando payment.status === 'approved'
 const etiqueta = await MelhorEnvioService.gerarEtiqueta({
@@ -277,21 +304,24 @@ await supabase.from('pedidos_envio').insert({
   pedido_id,
   etiqueta_id: etiqueta.id,
   rastreio: etiqueta.tracking,
-  status: 'pendente'
+  status: 'pendente',
 });
 ```
 
 ---
 
 ### 3. Rastreamento Automático
+
 **Localização:** `app/api/envios/webhook/route.ts`
 
 **Fluxo:**
+
 ```
 Melhor Envio webhook → Atualiza status → Notifica cliente
 ```
 
 **Eventos:**
+
 ```
 order.paid → Pago
 order.generated → Etiqueta gerada
@@ -305,6 +335,7 @@ tracking.update → Atualização de rastreio
 ## 📊 DIAGNÓSTICO - Checklist Técnico
 
 ### ✅ Testes que passam (6/6)
+
 1. **Config DB** - Tabela config_melhorenvio existe
 2. **Env Vars** - CLIENT_ID configurado
 3. **Auth** - Token válido no banco
@@ -313,6 +344,7 @@ tracking.update → Atualização de rastreio
 6. **Calculate** - Cálculo de frete funciona
 
 ### ⏳ Pendente
+
 1. **Migration 030** - Tabelas de envio (pedidos_envio, rastreamento, notificações)
 2. **Webhook** - Configurar URL no painel Melhor Envio
 3. **Integração MP** - Gerar etiqueta ao receber pagamento
@@ -323,11 +355,13 @@ tracking.update → Atualização de rastreio
 ## 🐛 DEBUGGING
 
 ### Como ver logs no Netlify
+
 1. Acesse: https://app.netlify.com/sites/c4franquiaas/functions
 2. Clique na function: `shipping-calculate`
 3. Veja os logs em tempo real
 
 ### Logs importantes
+
 ```typescript
 console.log('[ShippingCalculator] 🚀 Calculando frete:', { cep });
 console.log('[API] 📥 Body recebido:', body);
@@ -337,6 +371,7 @@ console.log('[Service] ✅ Cotações recebidas:', cotacoes.length);
 ```
 
 ### Erros comuns
+
 ```
 422 - CEP inválido → Verificar se tem 8 dígitos
 401 - Token expirado → Renovar token no Melhor Envio
@@ -349,15 +384,18 @@ console.log('[Service] ✅ Cotações recebidas:', cotacoes.length);
 ## 🔐 SEGURANÇA
 
 ### Token de Acesso
+
 - **Validade:** 1 ano (até 02/11/2026)
 - **Armazenamento:** Banco Supabase (criptografado)
 - **Uso:** Apenas no backend (NEVER no frontend!)
 
 ### Refresh Token
+
 - **Valor atual:** `not-applicable` (token manual)
 - **Quando usar:** Se precisar renovar automaticamente
 
 ### Client Secret
+
 - **Onde está:** Variável de ambiente Netlify
 - **Nunca expor:** No código ou frontend
 

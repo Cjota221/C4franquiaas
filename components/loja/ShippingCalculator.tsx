@@ -117,8 +117,16 @@ export function ShippingCalculator({
       const data = await response.json();
       console.log('[ShippingCalculator] ✅ Dados recebidos:', data);
 
+      // Verificar se a resposta tem o formato esperado
+      if (!data.success || !data.quotes || !Array.isArray(data.quotes)) {
+        console.error('[ShippingCalculator] ❌ Formato de resposta inválido:', data);
+        throw new Error(data.error || 'Formato de resposta inválido');
+      }
+
+      console.log('[ShippingCalculator] 📦 Total de cotações:', data.quotes.length);
+
       // Converter formato da API nova para o formato esperado
-      const opcoesFormatadas = data.map((cotacao: MelhorEnvioCotacao) => ({
+      const opcoesFormatadas = data.quotes.map((cotacao: MelhorEnvioCotacao) => ({
         nome: cotacao.name,
         valor: cotacao.price,
         prazo: `${cotacao.delivery_time} dias úteis`,
@@ -126,6 +134,8 @@ export function ShippingCalculator({
         transportadora: cotacao.company.name,
         servico_id: cotacao.id.toString()
       }));
+
+      console.log('[ShippingCalculator] ✅ Opções formatadas:', opcoesFormatadas.length);
 
       setOpcoes(opcoesFormatadas);
       onFreteCalculado?.(opcoesFormatadas);
