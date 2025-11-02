@@ -62,18 +62,30 @@ export default function DiagnosticoCompleto() {
 
   const testDatabaseConfig = async (): Promise<TestResult> => {
     try {
-      const response = await fetch('/api/admin/melhorenvio/config');
+      const response = await fetch('/api/admin/melhorenvio/verificar-config');
+      
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('[Diagnostico] Erro na API:', response.status, text);
+        return {
+          name: '1. Configuração no Banco de Dados',
+          status: 'error',
+          message: `Erro HTTP ${response.status}`,
+          details: text.substring(0, 200)
+        };
+      }
+      
       const data = await response.json();
 
-      if (response.ok && data.config) {
+      if (data.success && data.config) {
         return {
           name: '1. Configuração no Banco de Dados',
           status: 'success',
           message: `Token encontrado (criado em ${new Date(data.config.created_at).toLocaleString('pt-BR')})`,
           details: {
             token_type: data.config.token_type,
-            has_access_token: !!data.config.access_token,
-            token_preview: data.config.access_token?.substring(0, 30) + '...'
+            has_access_token: !!data.config.has_access_token,
+            token_preview: data.config.access_token
           }
         };
       } else {
