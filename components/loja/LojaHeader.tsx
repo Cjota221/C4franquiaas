@@ -185,13 +185,13 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
     if (logoPos === 'centro') {
       // Logo no centro: maior destaque
       return loja.logo_formato === 'redondo' 
-        ? 'w-28 h-28 md:w-32 md:h-32' // Redondo: 112x112px mobile, 128x128px desktop (aumentado)
-        : 'h-24 md:h-28 w-auto max-w-[320px]'; // Horizontal: altura 96-112px (aumentado)
+        ? 'w-20 h-20 md:w-32 md:h-32' // Redondo: 112x112px mobile, 128x128px desktop (aumentado)
+        : 'h-16 md:h-28 w-auto max-w-[160px] md:max-w-[320px]'; // Horizontal: altura 96-112px (aumentado)
     } else {
       // Logo nas laterais: mais compacto
       return loja.logo_formato === 'redondo'
-        ? 'w-16 h-16 md:w-20 md:h-20' // Redondo: 64x64px mobile, 80x80px desktop (aumentado)
-        : 'h-14 md:h-16 w-auto max-w-[240px]'; // Horizontal: altura 56-64px (aumentado)
+        ? 'w-14 h-14 md:w-20 md:h-20' // Redondo: 64x64px mobile, 80x80px desktop (aumentado)
+        : 'h-12 md:h-16 w-auto max-w-[140px] md:max-w-[240px]'; // Horizontal: altura 56-64px (aumentado)
     }
   };
 
