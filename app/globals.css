@@ -1,5 +1,7 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
+@import "design-system.css";
+
 
 /* CSS variables used by the app (light + dark via .dark class) */
 :root {
@@ -87,7 +89,7 @@
   }
 }
 
-/* Animação para slider de anúncios */
+/* AnimaÃ§Ã£o para slider de anÃºncios */
 @keyframes fadeIn {
   from {
     opacity: 0;
