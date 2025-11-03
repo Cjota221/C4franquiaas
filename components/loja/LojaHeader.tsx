@@ -342,7 +342,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 </Link>
 
                 {/* User + Carrinho */}
-                <div className="flex items-center gap-2 md:gap-4 flex-1 justify-end">
+                <div className="flex items-center gap-1 md:gap-4 flex-1 justify-end">
                   <Link 
                     href="/login" 
                     className="hidden md:flex items-center gap-2 hover:opacity-80 transition"
@@ -355,16 +355,16 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <Link
                     href={`/loja/${dominio}/favoritos`}
                     data-testid="favoritos-button"
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
                     title="Meus Favoritos"
                   >
                     <Heart 
-                      size={24} 
+                      className="w-5 h-5 md:w-6 md:h-6" 
                       style={{ color: loja.cor_primaria }} 
                     />
                     {totalFavoritos > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 min-w-[16px] md:min-w-[20px] h-4 md:h-5 flex items-center justify-center rounded-full text-white text-[10px] md:text-xs font-bold px-1"
                         style={{ backgroundColor: loja.cor_primaria }}
                       >
                         {totalFavoritos}
@@ -374,15 +374,15 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   
                   <Link
                     href={`/loja/${dominio}/carrinho`}
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
                   >
                     <ShoppingCart 
-                      size={24} 
+                      className="w-5 h-5 md:w-6 md:h-6" 
                       style={{ color: loja.cor_primaria }} 
                     />
                     {totalItens > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 min-w-[16px] md:min-w-[20px] h-4 md:h-5 flex items-center justify-center rounded-full text-white text-[10px] md:text-xs font-bold px-1"
                         style={{ backgroundColor: loja.cor_primaria }}
                       >
                         {totalItens}
@@ -439,16 +439,16 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <Link
                     href={`/loja/${dominio}/favoritos`}
                     data-testid="favoritos-button"
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
                     title="Meus Favoritos"
                   >
                     <Heart 
-                      size={24} 
+                      className="w-5 h-5 md:w-6 md:h-6" 
                       style={{ color: loja.cor_primaria }} 
                     />
                     {totalFavoritos > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 min-w-[16px] md:min-w-[20px] h-4 md:h-5 flex items-center justify-center rounded-full text-white text-[10px] md:text-xs font-bold px-1"
                         style={{ backgroundColor: loja.cor_primaria }}
                       >
                         {totalFavoritos}
@@ -458,15 +458,15 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   
                   <Link
                     href={`/loja/${dominio}/carrinho`}
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
                   >
                     <ShoppingCart 
-                      size={24} 
+                      className="w-5 h-5 md:w-6 md:h-6" 
                       style={{ color: loja.cor_primaria }} 
                     />
                     {totalItens > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 min-w-[16px] md:min-w-[20px] h-4 md:h-5 flex items-center justify-center rounded-full text-white text-[10px] md:text-xs font-bold px-1"
                         style={{ backgroundColor: loja.cor_primaria }}
                       >
                         {totalItens}
@@ -527,7 +527,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <Package size={24} />
+                            <Package className="w-5 h-5 md:w-6 md:h-6" />
                           </div>
                         )}
                       </div>
