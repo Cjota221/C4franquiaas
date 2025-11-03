@@ -1,6 +1,6 @@
 ﻿@import "tailwindcss";
 @import "tw-animate-css";
-@import "design-system.css";
+@import "./design-system.css";
 
 
 /* CSS variables used by the app (light + dark via .dark class) */
