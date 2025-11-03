@@ -223,7 +223,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
 
   // Links do menu
   const menuLinks = [
-    { href: '', label: 'InÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­cio', icon: Home },
+    { href: '', label: 'Início', icon: Home },
     { href: '/produtos', label: 'Produtos', icon: Package },
     { href: '/sobre', label: 'Sobre', icon: Info },
     { href: '/contato', label: 'Contato', icon: Phone },
@@ -268,7 +268,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 {/* Logo Centralizada */}
                 <Link 
                   href={`/loja/${dominio}`} 
-                  className="hover:opacity-90 transition flex-shrink-0"
+                  className="hover:opacity-90 transition flex-shrink-0 mx-auto"
                   title={loja.nome}
                 >
                   {(() => {
@@ -555,7 +555,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     className="block p-3 text-center text-sm font-medium transition"
                     style={{ color: loja.cor_primaria }}
                   >
-                    Ver todos os resultados ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢
+                    Ver todos os resultados ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢
                   </Link>
                 </div>
               )}
