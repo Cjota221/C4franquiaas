@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
+import { useFavoritosStore } from '@/lib/store/favoritosStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { ShoppingCart, Home, Package, Info, Phone, User, Search } from 'lucide-react';
+import { ShoppingCart, Home, Package, Info, Phone, User, Search, Heart } from 'lucide-react';
 import CategorySidebar from './CategorySidebar';
 import AnnouncementSlider from './AnnouncementSlider';
 
@@ -20,6 +21,7 @@ type Suggestion = {
 export default function LojaHeader({ dominio }: { dominio: string }) {
   const loja = useLojaInfo();
   const totalItens = useCarrinhoStore((state) => state.getTotalItens());
+  const totalFavoritos = useFavoritosStore((state) => state.getTotalItens());
   const router = useRouter();
 
   const [logoLoadError, setLogoLoadError] = useState(false);
@@ -33,7 +35,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Configurações dinâmicas do banco
+  // ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes dinÃƒÆ’Ã‚Â¢micas do banco
   const logoPos = loja.logo_posicao || 'centro';
   const menuTipo = loja.menu_tipo || 'horizontal';
   const topoFlutuante = loja.topo_flutuante ?? true;
@@ -42,7 +44,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const barraTopoAtiva = loja.barra_topo_ativa ?? true;
   const mensagensRegua = Array.isArray(loja.mensagens_regua) ? loja.mensagens_regua : [];
 
-  // Customizações da Logo (Migration 017)
+  // CustomizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes da Logo (Migration 017)
   const logoLarguraMax = loja.logo_largura_max ?? 280;
   const logoAlturaMax = loja.logo_altura_max ?? 80;
   const logoPadding = loja.logo_padding ?? 0;
@@ -52,10 +54,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const logoMostrarSombra = loja.logo_mostrar_sombra ?? false;
 
   // ========================================================================
-  // DEBOUNCE: Atraso de 300ms para otimizar chamadas à API
+  // DEBOUNCE: Atraso de 300ms para otimizar chamadas ÃƒÆ’Ã‚Â  API
   // ========================================================================
   useEffect(() => {
-    // Se a query estiver vazia, limpa as sugestões imediatamente
+    // Se a query estiver vazia, limpa as sugestÃƒÆ’Ã‚Âµes imediatamente
     if (!searchQuery.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -67,12 +69,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
       fetchSuggestions(searchQuery);
     }, 300);
 
-    // Cleanup: cancela o timeout anterior se o usuário continuar digitando
+    // Cleanup: cancela o timeout anterior se o usuÃƒÆ’Ã‚Â¡rio continuar digitando
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ========================================================================
-  // FUNÇÃO DE BUSCA: Chama a API e atualiza as sugestões
+  // FUNÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DE BUSCA: Chama a API e atualiza as sugestÃƒÆ’Ã‚Âµes
   // ========================================================================
   const fetchSuggestions = async (query: string) => {
     if (!query.trim()) {
@@ -95,12 +97,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
       }
 
       const data = await response.json();
-      console.log('[LojaHeader] Sugestões recebidas:', data.suggestions?.length || 0);
+      console.log('[LojaHeader] SugestÃƒÆ’Ã‚Âµes recebidas:', data.suggestions?.length || 0);
 
       setSuggestions(data.suggestions || []);
       setShowSuggestions((data.suggestions || []).length > 0);
     } catch (error) {
-      console.error('[LojaHeader] Erro ao buscar sugestões:', error);
+      console.error('[LojaHeader] Erro ao buscar sugestÃƒÆ’Ã‚Âµes:', error);
       setSuggestions([]);
     } finally {
       setIsSearching(false);
@@ -122,7 +124,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   }, []);
 
   // ========================================================================
-  // SUBMIT: Redireciona para página de produtos com query
+  // SUBMIT: Redireciona para pÃƒÆ’Ã‚Â¡gina de produtos com query
   // ========================================================================
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +135,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   };
 
   // ========================================================================
-  // CLICK NA SUGESTÃO: Fecha dropdown e limpa busca
+  // CLICK NA SUGESTÃƒÆ’Ã†â€™O: Fecha dropdown e limpa busca
   // ========================================================================
   const handleSuggestionClick = () => {
     setShowSuggestions(false);
@@ -154,31 +156,31 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
       dominio
     });
 
-    // Verifica se a URL da logo é do Supabase
+    // Verifica se a URL da logo ÃƒÆ’Ã‚Â© do Supabase
     if (loja.logo?.includes('supabase')) {
-      console.log('[LojaHeader] ✅ URL da logo é do Supabase:', {
+      console.log('[LojaHeader] ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ URL da logo ÃƒÆ’Ã‚Â© do Supabase:', {
         url: loja.logo,
         bucket: loja.logo.split('/logos/')[1]
       });
     } else if (loja.logo) {
-      console.log('[LojaHeader] ℹ️ URL da logo (outro domínio):', loja.logo);
+      console.log('[LojaHeader] ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¹ÃƒÂ¯Ã‚Â¸Ã‚Â URL da logo (outro domÃƒÆ’Ã‚Â­nio):', loja.logo);
     } else {
-      console.warn('[LojaHeader] ⚠️ Logo está null/undefined');
+      console.warn('[LojaHeader] ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Logo estÃƒÆ’Ã‚Â¡ null/undefined');
     }
 
     // Log quando houver erro ao carregar
     if (logoLoadError) {
-      console.error('[LojaHeader] ❌ Erro ao carregar logo:', {
+      console.error('[LojaHeader] ÃƒÂ¢Ã‚ÂÃ…â€™ Erro ao carregar logo:', {
         url: loja.logo,
         fallbackAtivo: true
       });
     }
   }, [loja, logoPos, menuTipo, topoFlutuante, logoLoadError, dominio]);
 
-  // Classes dinâmicas baseadas nas configurações
+  // Classes dinÃƒÆ’Ã‚Â¢micas baseadas nas configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
   const headerClass = topoFlutuante ? 'sticky top-0 z-50' : 'relative';
   
-  // Tamanhos recomendados de logo baseados na posição
+  // Tamanhos recomendados de logo baseados na posiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
   const getLogoSize = () => {
     if (logoPos === 'centro') {
       // Logo no centro: maior destaque
@@ -196,7 +198,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   const logoSizeClass = getLogoSize();
   const logoRoundedClass = loja.logo_formato === 'redondo' ? 'rounded-full' : 'rounded-lg';
 
-  // Gera estilos dinâmicos baseados nas customizações
+  // Gera estilos dinÃƒÆ’Ã‚Â¢micos baseados nas customizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
   const getLogoContainerStyle = (): React.CSSProperties => {
     const styles: React.CSSProperties = {
       maxWidth: `${logoLarguraMax}px`,
@@ -226,7 +228,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
 
   // Links do menu
   const menuLinks = [
-    { href: '', label: 'Início', icon: Home },
+    { href: '', label: 'InÃƒÆ’Ã‚Â­cio', icon: Home },
     { href: '/produtos', label: 'Produtos', icon: Package },
     { href: '/sobre', label: 'Sobre', icon: Info },
     { href: '/contato', label: 'Contato', icon: Phone },
@@ -235,7 +237,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   return (
 
     <>
-      {/* Só exibe UMA barra de topo: se houver mensagens na régua, mostra só a régua; senão, mostra barra fixa */}
+      {/* SÃƒÆ’Ã‚Â³ exibe UMA barra de topo: se houver mensagens na rÃƒÆ’Ã‚Â©gua, mostra sÃƒÆ’Ã‚Â³ a rÃƒÆ’Ã‚Â©gua; senÃƒÆ’Ã‚Â£o, mostra barra fixa */}
       {barraTopoAtiva && (
         mensagensRegua.length > 0 ? (
           <AnnouncementSlider 
@@ -259,7 +261,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
 
       <header className={`${headerClass} shadow-md bg-white`}>
         <div className="container mx-auto px-4 flex flex-col">
-          {/* SEÇÃO SUPERIOR: Menu + Logo + Carrinho */}
+          {/* SEÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O SUPERIOR: Menu + Logo + Carrinho */}
           <div className="flex items-center justify-between py-4">
             {/* Layout baseado em logo_posicao */}
             {logoPos === 'centro' ? (
@@ -276,14 +278,14 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   title={loja.nome}
                 >
                   {(() => {
-                    console.log('[LojaHeader] Renderizando logo - Decisão:', {
+                    console.log('[LojaHeader] Renderizando logo - DecisÃƒÆ’Ã‚Â£o:', {
                       temLogo: !!loja.logo,
                       logoLoadError,
                       logoUrl: loja.logo
                     });
                     
                     if (loja.logo && !logoLoadError) {
-                      console.log('[LojaHeader] → Renderizando <img> direto (sem Next/Image)');
+                      console.log('[LojaHeader] ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Renderizando <img> direto (sem Next/Image)');
                       return (
                         <div 
                           className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
@@ -304,13 +306,13 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                               setLogoLoadError(true);
                             }}
                             onLoad={() => {
-                              console.log('[LojaHeader] ✅ Logo carregada com sucesso!');
+                              console.log('[LojaHeader] ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Logo carregada com sucesso!');
                             }}
                           />
                         </div>
                       );
                     } else if (loja.logo && logoLoadError) {
-                      console.log('[LojaHeader] → Renderizando <img> fallback');
+                      console.log('[LojaHeader] ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Renderizando <img> fallback');
                       return (
                         <div 
                           className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
@@ -326,7 +328,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         </div>
                       );
                     } else {
-                      console.log('[LojaHeader] → Renderizando fallback de inicial');
+                      console.log('[LojaHeader] ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Renderizando fallback de inicial');
                       return (
                         <div 
                           className={`${logoSizeClass} ${logoRoundedClass} flex items-center justify-center text-white font-bold text-2xl shadow-md`}
@@ -371,7 +373,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
               </>
             ) : (
               <>
-                {/* Esquerda/Direita: Menu + Logo (COM TEXTO) à esquerda, User + Carrinho à direita */}
+                {/* Esquerda/Direita: Menu + Logo (COM TEXTO) ÃƒÆ’Ã‚Â  esquerda, User + Carrinho ÃƒÆ’Ã‚Â  direita */}
                 <div className="flex items-center gap-3 flex-1">
                   <CategorySidebar />
                   <Link href={`/loja/${dominio}`} className="flex items-center gap-3 hover:opacity-90 transition">
@@ -436,10 +438,10 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             )}
           </div>
 
-          {/* SEÇÃO INFERIOR: Campo de Busca em Formato Pílula com Autocomplete */}
+          {/* SEÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O INFERIOR: Campo de Busca em Formato PÃƒÆ’Ã‚Â­lula com Autocomplete */}
           <div className="flex items-center justify-center pb-4 pt-2">
             <div ref={searchRef} className="relative w-full max-w-[600px]">
-              {/* Formulário de Busca */}
+              {/* FormulÃƒÆ’Ã‚Â¡rio de Busca */}
               <form onSubmit={handleSearchSubmit}>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -450,7 +452,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                    placeholder="O que você procura?"
+                    placeholder="O que vocÃƒÆ’Ã‚Âª procura?"
                     className="w-full rounded-full border border-gray-300 py-3 pl-12 pr-6 text-sm outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100 hover:border-gray-400"
                     style={{
                       fontSize: '15px',
@@ -464,7 +466,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 </div>
               </form>
 
-              {/* Dropdown de Sugestões (Autocomplete) */}
+              {/* Dropdown de SugestÃƒÆ’Ã‚Âµes (Autocomplete) */}
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[400px] overflow-y-auto z-50">
                   {suggestions.map((suggestion) => (
@@ -490,7 +492,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         )}
                       </div>
 
-                      {/* Informações do Produto */}
+                      {/* InformaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes do Produto */}
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium text-gray-900 truncate">
                           {suggestion.nome}
@@ -502,12 +504,12 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         )}
                         {suggestion.codigo_barras && (
                           <p className="text-xs text-gray-400 mt-0.5 font-mono">
-                            Cód: {suggestion.codigo_barras}
+                            CÃƒÆ’Ã‚Â³d: {suggestion.codigo_barras}
                           </p>
                         )}
                       </div>
 
-                      {/* Preço */}
+                      {/* PreÃƒÆ’Ã‚Â§o */}
                       <div className="flex-shrink-0">
                         <p className="text-sm font-bold" style={{ color: loja.cor_primaria }}>
                           R$ {suggestion.preco.toFixed(2).replace('.', ',')}
@@ -523,7 +525,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     className="block p-3 text-center text-sm font-medium transition"
                     style={{ color: loja.cor_primaria }}
                   >
-                    Ver todos os resultados →
+                    Ver todos os resultados ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
                   </Link>
                 </div>
               )}
@@ -561,7 +563,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             </nav>
           )}
 
-          {/* Bottom Bar Mobile (fixed bottom) - sempre visível no mobile */}
+          {/* Bottom Bar Mobile (fixed bottom) - sempre visÃƒÆ’Ã‚Â­vel no mobile */}
           <nav className="fixed md:hidden bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg">
             <div className="flex items-center justify-around py-3">
               {menuLinks.map(({ href, label, icon: Icon }) => (
