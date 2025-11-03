@@ -1,0 +1,82 @@
+﻿/* DESIGN SYSTEM - E-COMMERCE PREMIUM */
+
+:root {
+  /* Cores da Franqueada (personalizáveis) */
+  --brand-primary: var(--franchisee-primary-color, #DB1472);
+  --brand-primary-hover: var(--franchisee-primary-hover, #B01059);
+  --brand-secondary: var(--franchisee-secondary-color, #F8B81F);
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Botões Premium */
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--brand-secondary);
+  color: #1F2937;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+/* Cards de Produto */
+.product-card {
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #F3F4F6;
+  transition: all 0.3s;
+}
+
+.product-card:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px);
+}
+
+.product-card-image {
+  transition: transform 0.3s;
+}
+
+.product-card:hover .product-card-image {
+  transform: scale(1.08);
+}
+
+/* Grade Responsiva */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
