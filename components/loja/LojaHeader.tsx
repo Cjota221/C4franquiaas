@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -353,8 +353,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   </Link>
                   
                   <Link
-                    href={`/loja/${dominio}/favoritos`}
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    href={`/loja/${dominio}/favoritos`}`n                    data-testid="favoritos-button"`n                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                     title="Meus Favoritos"
                   >
                     <Heart 
@@ -436,8 +435,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   </Link>
                   
                   <Link
-                    href={`/loja/${dominio}/favoritos`}
-                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    href={`/loja/${dominio}/favoritos`}`n                    data-testid="favoritos-button"`n                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                     title="Meus Favoritos"
                   >
                     <Heart 
