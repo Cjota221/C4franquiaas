@@ -267,8 +267,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             {logoPos === 'centro' ? (
               <>
                 {/* Centro: Menu esquerda + Logo centro (SEM TEXTO) + User/Carrinho direita */}
-                <div className="flex items-center gap-2 flex-1">
-                  <CategorySidebar />
+                <div className="flex items-center gap-2 flex-shrink min-w-0">`n                  <CategorySidebar />
                 </div>
                 
                 {/* Logo Centralizada */}
@@ -342,7 +341,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 </Link>
 
                 {/* User + Carrinho */}
-                <div className="flex items-center gap-1 md:gap-4 flex-1 justify-end">
+                <div className="flex items-center gap-1 md:gap-4 flex-1 justify-end min-w-[100px]">
                   <Link 
                     href="/login" 
                     className="hidden md:flex items-center gap-2 hover:opacity-80 transition"
@@ -355,7 +354,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <Link
                     href={`/loja/${dominio}/favoritos`}
                     data-testid="favoritos-button"
-                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center flex-shrink-0"
                     title="Meus Favoritos"
                   >
                     <Heart 
@@ -374,7 +373,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   
                   <Link
                     href={`/loja/${dominio}/carrinho`}
-                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center flex-shrink-0"
                   >
                     <ShoppingCart 
                       className="w-5 h-5 md:w-6 md:h-6" 
@@ -439,7 +438,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <Link
                     href={`/loja/${dominio}/favoritos`}
                     data-testid="favoritos-button"
-                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center flex-shrink-0"
                     title="Meus Favoritos"
                   >
                     <Heart 
@@ -458,7 +457,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   
                   <Link
                     href={`/loja/${dominio}/carrinho`}
-                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
+                    className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition flex items-center justify-center flex-shrink-0"
                   >
                     <ShoppingCart 
                       className="w-5 h-5 md:w-6 md:h-6" 
