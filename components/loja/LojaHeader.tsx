@@ -353,7 +353,9 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   </Link>
                   
                   <Link
-                    href={`/loja/${dominio}/favoritos`}`n                    data-testid="favoritos-button"`n                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    href={`/loja/${dominio}/favoritos`}
+                    data-testid="favoritos-button"
+                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                     title="Meus Favoritos"
                   >
                     <Heart 
@@ -435,7 +437,9 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   </Link>
                   
                   <Link
-                    href={`/loja/${dominio}/favoritos`}`n                    data-testid="favoritos-button"`n                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    href={`/loja/${dominio}/favoritos`}
+                    data-testid="favoritos-button"
+                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                     title="Meus Favoritos"
                   >
                     <Heart 
@@ -687,3 +691,4 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
     </>
   );
 }
+
