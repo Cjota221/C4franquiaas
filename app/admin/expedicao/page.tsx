@@ -53,7 +53,7 @@
           <li className="text-gray-700">
             Verifique se as tabelas foram criadas com sucesso executando:
             <code className="bg-blue-100 px-2 py-1 rounded text-sm block mt-2 ml-6">
-              {SELECT table_name FROM information_schema.tables WHERE table_name LIKE '%expedicao%';}
+              SELECT table_name FROM information_schema.tables WHERE table_name LIKE &apos;%expedicao%&apos;;
             </code>
           </li>
         </ol>
