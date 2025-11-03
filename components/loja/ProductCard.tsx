@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 type Produto = {
   id: string;
@@ -32,7 +32,6 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
   const temDesconto = produto.preco_venda && produto.preco_venda < produto.preco_base;
 
   const handleMouseEnter = () => {
-    // Desktop: trocar para segunda imagem no hover
     if (produto.imagens.length > 1) {
       setImagemAtual(1);
     }
@@ -74,7 +73,7 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
           />
         </button>
 
-        {/* Imagem do Produto - Proporção 4:5 (MAIOR) */}
+        {/* Imagem do Produto - QUALIDADE MÁXIMA 100 */}
         <div 
           className="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden"
           style={{ aspectRatio: '4 / 5' }}
@@ -87,8 +86,9 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               alt={produto.nome}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 300px"
-              quality={90}
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 400px"
+              quality={100}
+              priority={imagemAtual === 0}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
@@ -129,14 +129,14 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
           )}
         </div>
 
-        {/* Informações do Produto - ESPAÇOSO */}
+        {/* Informações do Produto - CLEAN (SEM BOTÃO) */}
         <div className="p-5 md:p-6 space-y-3">
-          {/* Nome - Maior e mais legível */}
+          {/* Nome */}
           <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug line-clamp-2 min-h-[3rem] group-hover:text-gray-700 transition-colors">
             {produto.nome}
           </h3>
 
-          {/* Preços - DESTAQUE MÁXIMO */}
+          {/* Preços */}
           <div className="space-y-1">
             {temDesconto && (
               <p className="text-sm text-gray-400 line-through">
@@ -153,40 +153,10 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
             </div>
           </div>
 
-          {/* Parcelamento - Mais visível */}
-          <p className="text-sm text-gray-600 font-medium">
+          {/* Parcelamento */}
+          <p className="text-sm text-gray-600 font-medium pb-2">
             ou <span className="font-bold text-gray-900">{produto.parcelamento.parcelas}x</span> de <span className="font-bold">R$ {produto.parcelamento.valor.toFixed(2).replace('.', ',')}</span>
           </p>
-
-          {/* Botão Adicionar ao Carrinho - MAIOR E MAIS CHAMATIVO */}
-          {loja.permitir_carrinho && !loja.modo_catalogo && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                console.log('Adicionar ao carrinho:', produto.id);
-              }}
-              className="w-full mt-4 py-4 px-6 rounded-full text-white font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
-              style={{ backgroundColor: loja.cor_botao }}
-            >
-              <ShoppingCart size={22} strokeWidth={2.5} />
-              <span>Comprar Agora</span>
-            </button>
-          )}
-
-          {/* Botão WhatsApp (Modo Catálogo) - MAIOR */}
-          {loja.modo_catalogo && (
-            <a
-              href={`https://wa.me/${loja.whatsapp}?text=${encodeURIComponent(
-                `${loja.mensagem_whatsapp}\n\n${produto.nome}\nPreço: R$ ${precoFinal.toFixed(2)}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="w-full mt-4 py-4 px-6 rounded-full bg-green-600 text-white font-bold text-base hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-center block"
-            >
-              Consultar no WhatsApp
-            </a>
-          )}
         </div>
       </div>
     </Link>
