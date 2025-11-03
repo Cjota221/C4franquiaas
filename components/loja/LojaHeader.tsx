@@ -688,7 +688,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
           </nav>
         </div>
       </header>
-      <MobileDebugPanel totalFavoritos={totalFavoritos} totalItens={totalItens} loja={loja} />
+      <MobileDebugPanel totalFavoritos={totalFavoritos} totalItens={totalItens} />
     </>
   );
 }
