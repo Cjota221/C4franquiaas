@@ -1,0 +1,21 @@
+﻿/* Sobrescrever cores Tailwind com variáveis do design system */
+.text-\[#DB1472\] {
+  color: var(--brand-primary) !important;
+}
+
+.bg-\[#DB1472\] {
+  background-color: var(--brand-primary) !important;
+}
+
+.bg-\[#F8B81F\] {
+  background-color: var(--brand-secondary) !important;
+}
+
+.hover\:bg-\[#F8B81F\]\/90:hover {
+  background-color: var(--brand-secondary) !important;
+  filter: brightness(0.95);
+}
+
+.hover\:text-\[#DB1472\]:hover {
+  color: var(--brand-primary) !important;
+}
