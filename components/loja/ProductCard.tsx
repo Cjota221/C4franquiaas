@@ -1,9 +1,10 @@
 ﻿"use client";
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { Heart } from 'lucide-react';
+import { useFavoritosStore } from '@/lib/store/favoritosStore';
 
 type Produto = {
   id: string;
@@ -25,8 +26,11 @@ type ProductCardProps = {
 
 export default function ProductCard({ produto, dominio }: ProductCardProps) {
   const loja = useLojaInfo();
-  const [imagemAtual, setImagemAtual] = useState(0);
-  const [favoritado, setFavoritado] = useState(false);
+  const [imagemAtual, setImagemAtual] = React.useState(0);
+  
+  // Zustand store de favoritos
+  const isFavorito = useFavoritosStore(state => state.isFavorito(produto.id));
+  const toggleFavorito = useFavoritosStore(state => state.toggleFavorito);
 
   const precoFinal = produto.preco_venda || produto.preco_base;
   const temDesconto = produto.preco_venda && produto.preco_venda < produto.preco_base;
@@ -41,9 +45,17 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
     setImagemAtual(0);
   };
 
-  const toggleFavorito = (e: React.MouseEvent) => {
+  const handleToggleFavorito = (e: React.MouseEvent) => {
     e.preventDefault();
-    setFavoritado(!favoritado);
+    e.stopPropagation();
+    
+    toggleFavorito({
+      id: produto.id,
+      nome: produto.nome,
+      preco: precoFinal,
+      imagem: produto.imagens[0] || '',
+      slug: produto.id
+    });
   };
 
   return (
@@ -59,17 +71,18 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
           </div>
         )}
 
-        {/* Botão Favoritar */}
+        {/* Botão Favoritar - COM ANIMAÇÃO */}
         <button
-          onClick={toggleFavorito}
+          onClick={handleToggleFavorito}
           className="absolute top-3 right-3 z-10 p-2.5 bg-white rounded-full shadow-lg hover:scale-110 transition-all duration-300"
-          aria-label="Favoritar"
+          aria-label={isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
           <Heart 
             size={20} 
-            fill={favoritado ? loja.cor_primaria : 'none'}
-            stroke={favoritado ? loja.cor_primaria : '#666'}
+            fill={isFavorito ? loja.cor_primaria : 'none'}
+            stroke={isFavorito ? loja.cor_primaria : '#666'}
             strokeWidth={2}
+            className={isFavorito ? 'animate-pulse' : ''}
           />
         </button>
 
