@@ -353,6 +353,25 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   </Link>
                   
                   <Link
+                    href={`/loja/${dominio}/favoritos`}
+                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    title="Meus Favoritos"
+                  >
+                    <Heart 
+                      size={24} 
+                      style={{ color: loja.cor_primaria }} 
+                    />
+                    {totalFavoritos > 0 && (
+                      <span 
+                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        style={{ backgroundColor: loja.cor_primaria }}
+                      >
+                        {totalFavoritos}
+                      </span>
+                    )}
+                  </Link>
+                  
+                  <Link
                     href={`/loja/${dominio}/carrinho`}
                     className="relative p-2 hover:bg-gray-100 rounded-lg transition"
                   >
@@ -414,6 +433,25 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   >
                     <User size={20} />
                     <span className="text-sm font-medium">Entrar</span>
+                  </Link>
+                  
+                  <Link
+                    href={`/loja/${dominio}/favoritos`}
+                    className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+                    title="Meus Favoritos"
+                  >
+                    <Heart 
+                      size={24} 
+                      style={{ color: loja.cor_primaria }} 
+                    />
+                    {totalFavoritos > 0 && (
+                      <span 
+                        className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1"
+                        style={{ backgroundColor: loja.cor_primaria }}
+                      >
+                        {totalFavoritos}
+                      </span>
+                    )}
                   </Link>
                   
                   <Link
