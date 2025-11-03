@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from 'react';
 import ProductCard from './ProductCard';
@@ -29,8 +29,8 @@ export default function ProductGrid({
 }: ProductGridProps) {
   if (!produtos || produtos.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="text-gray-400 text-lg">
+      <div className="text-center py-20 md:py-24">
+        <div className="text-gray-400 text-lg md:text-xl font-medium">
           Nenhum produto disponível no momento
         </div>
       </div>
@@ -38,25 +38,25 @@ export default function ProductGrid({
   }
 
   return (
-    <section className="py-8 md:py-12">
-      {/* Cabeçalho da Seção */}
+    <section className="py-10 md:py-16 lg:py-20">
+      {/* Cabeçalho da Seção - MAIOR */}
       {(titulo || subtitulo) && (
-        <div className="text-center mb-8 md:mb-12">
+        <div className="text-center mb-10 md:mb-14 lg:mb-16">
           {titulo && (
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 tracking-tight">
               {titulo}
             </h2>
           )}
           {subtitulo && (
-            <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
+            <p className="text-gray-600 text-base md:text-lg lg:text-xl font-medium max-w-3xl mx-auto leading-relaxed">
               {subtitulo}
             </p>
           )}
         </div>
       )}
 
-      {/* Grid Responsivo: 2 cols mobile → 3 cols tablet → 4 cols desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+      {/* Grid Responsivo ESPAÇOSO: 2 cols mobile  3 cols tablet  4 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
         {produtos.map((produto) => (
           <ProductCard
             key={produto.id}

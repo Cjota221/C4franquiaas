@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -49,11 +49,11 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
 
   return (
     <Link href={`/loja/${dominio}/produto/${produto.id}`}>
-      <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+      <div className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100">
         {/* Badge de Tag */}
         {produto.tag && (
           <div 
-            className="absolute top-2 left-2 z-10 px-2 py-1 rounded text-white text-xs font-bold"
+            className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-lg text-white text-xs font-bold shadow-lg"
             style={{ backgroundColor: loja.cor_secundaria }}
           >
             {produto.tag}
@@ -63,20 +63,21 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
         {/* Botão Favoritar */}
         <button
           onClick={toggleFavorito}
-          className="absolute top-2 right-2 z-10 p-2 bg-white rounded-full shadow-md hover:scale-110 transition"
+          className="absolute top-3 right-3 z-10 p-2.5 bg-white rounded-full shadow-lg hover:scale-110 transition-all duration-300"
           aria-label="Favoritar"
         >
           <Heart 
-            size={18} 
+            size={20} 
             fill={favoritado ? loja.cor_primaria : 'none'}
             stroke={favoritado ? loja.cor_primaria : '#666'}
+            strokeWidth={2}
           />
         </button>
 
-        {/* Imagem do Produto - Proporção 3:4 (960x1280) */}
+        {/* Imagem do Produto - Proporção 4:5 (MAIOR) */}
         <div 
-          className="relative bg-gray-100 overflow-hidden"
-          style={{ aspectRatio: '3 / 4' }}
+          className="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden"
+          style={{ aspectRatio: '4 / 5' }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -85,11 +86,10 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               src={produto.imagens[imagemAtual]}
               alt={produto.nome}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
               sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 300px"
-              quality={85}
+              quality={90}
               onError={(e) => {
-                // Se a imagem falhar ao carregar, usar placeholder
                 const target = e.target as HTMLImageElement;
                 target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
               }}
@@ -106,9 +106,12 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
             </div>
           )}
 
+          {/* Overlay sutil no hover */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-500" />
+
           {/* Dots de Navegação (Mobile) */}
           {produto.imagens.length > 1 && (
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 md:hidden">
+            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 md:hidden">
               {produto.imagens.map((_, idx) => (
                 <button
                   key={idx}
@@ -116,8 +119,8 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
                     e.preventDefault();
                     setImagemAtual(idx);
                   }}
-                  className={`w-2 h-2 rounded-full transition ${
-                    idx === imagemAtual ? 'bg-white' : 'bg-white/50'
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    idx === imagemAtual ? 'bg-white w-6' : 'bg-white/60'
                   }`}
                   aria-label={`Imagem ${idx + 1}`}
                 />
@@ -126,50 +129,51 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
           )}
         </div>
 
-        {/* Informações do Produto */}
-        <div className="p-3 md:p-4">
-          {/* Nome */}
-          <h3 className="font-semibold text-sm md:text-base text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem]">
+        {/* Informações do Produto - ESPAÇOSO */}
+        <div className="p-5 md:p-6 space-y-3">
+          {/* Nome - Maior e mais legível */}
+          <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug line-clamp-2 min-h-[3rem] group-hover:text-gray-700 transition-colors">
             {produto.nome}
           </h3>
 
-          {/* Preços */}
-          <div className="mb-2">
+          {/* Preços - DESTAQUE MÁXIMO */}
+          <div className="space-y-1">
             {temDesconto && (
-              <p className="text-xs text-gray-400 line-through">
-                R$ {produto.preco_base.toFixed(2)}
+              <p className="text-sm text-gray-400 line-through">
+                R$ {produto.preco_base.toFixed(2).replace('.', ',')}
               </p>
             )}
-            <p 
-              className="text-xl md:text-2xl font-bold"
-              style={{ color: loja.cor_primaria }}
-            >
-              R$ {precoFinal.toFixed(2)}
-            </p>
+            <div className="flex items-baseline gap-2">
+              <p 
+                className="text-2xl md:text-3xl font-black tracking-tight"
+                style={{ color: loja.cor_primaria }}
+              >
+                R$ {precoFinal.toFixed(2).replace('.', ',')}
+              </p>
+            </div>
           </div>
 
-          {/* Parcelamento */}
-          <p className="text-xs text-gray-600 mb-3">
-            ou {produto.parcelamento.parcelas}x de R$ {produto.parcelamento.valor.toFixed(2)}
+          {/* Parcelamento - Mais visível */}
+          <p className="text-sm text-gray-600 font-medium">
+            ou <span className="font-bold text-gray-900">{produto.parcelamento.parcelas}x</span> de <span className="font-bold">R$ {produto.parcelamento.valor.toFixed(2).replace('.', ',')}</span>
           </p>
 
-          {/* Botão Adicionar ao Carrinho */}
+          {/* Botão Adicionar ao Carrinho - MAIOR E MAIS CHAMATIVO */}
           {loja.permitir_carrinho && !loja.modo_catalogo && (
             <button
               onClick={(e) => {
                 e.preventDefault();
-                // TODO: Abrir modal de variações ou adicionar direto
                 console.log('Adicionar ao carrinho:', produto.id);
               }}
-              className="w-full py-2 px-4 rounded-full text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+              className="w-full mt-4 py-4 px-6 rounded-full text-white font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
               style={{ backgroundColor: loja.cor_botao }}
             >
-              <ShoppingCart size={18} />
-              <span className="text-sm">Adicionar</span>
+              <ShoppingCart size={22} strokeWidth={2.5} />
+              <span>Comprar Agora</span>
             </button>
           )}
 
-          {/* Botão WhatsApp (Modo Catálogo) */}
+          {/* Botão WhatsApp (Modo Catálogo) - MAIOR */}
           {loja.modo_catalogo && (
             <a
               href={`https://wa.me/${loja.whatsapp}?text=${encodeURIComponent(
@@ -178,7 +182,7 @@ export default function ProductCard({ produto, dominio }: ProductCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full py-2 px-4 rounded-full bg-green-600 text-white font-semibold text-sm hover:bg-green-700 transition text-center block"
+              className="w-full mt-4 py-4 px-6 rounded-full bg-green-600 text-white font-bold text-base hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-center block"
             >
               Consultar no WhatsApp
             </a>
