@@ -77,7 +77,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
   // ========================================================================
   // FUNÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢O DE BUSCA: Chama a API e atualiza as sugestÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes
   // ========================================================================
-  const fetchSuggestions = async (query: string) => {
+  async function fetchSuggestions(query: string) {
     if (!query.trim()) {
       setSuggestions([]);
       return;
@@ -98,7 +98,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
       }
 
       const data = await response.json();
-      
+
       setSuggestions(data.suggestions || []);
       setShowSuggestions((data.suggestions || []).length > 0);
     } catch (error) {
@@ -107,7 +107,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
     } finally {
       setIsSearching(false);
     }
-  };
+  }
 
   // ========================================================================
   // CLICK OUTSIDE: Fecha o dropdown ao clicar fora
