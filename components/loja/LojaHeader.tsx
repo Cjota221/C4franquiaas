@@ -7,7 +7,6 @@ import { useFavoritosStore } from '@/lib/store/favoritosStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { ShoppingCart, Home, Package, Info, Phone, User, Search, Heart } from 'lucide-react';
 import CategorySidebar from './CategorySidebar';
-import MobileDebugPanel from './MobileDebugPanel';
 import AnnouncementSlider from './AnnouncementSlider';
 
 type Suggestion = {
@@ -644,8 +643,6 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             </div>
           </nav>
         </div>
-      </header>
-      <MobileDebugPanel totalFavoritos={totalFavoritos} totalItens={totalItens} />
-    </>
+      </header>    </>
   );
 }
