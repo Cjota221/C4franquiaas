@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -262,7 +262,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             {logoPos === 'centro' ? (
               <>
                 {/* Centro: Menu esquerda + Logo centro (SEM TEXTO) + User/Carrinho direita */}
-                <div className="flex items-center gap-2 flex-shrink min-w-0">`n                  <CategorySidebar />
+                <div className="flex items-center gap-2 flex-shrink min-w-0">                  <CategorySidebar />
                 </div>
                 
                 {/* Logo Centralizada */}
@@ -482,7 +482,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                    placeholder="O que vocÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª procura?"
+                    placeholder="O que você procura?"
                     className="w-full rounded-full border border-gray-300 py-3 pl-12 pr-6 text-sm outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100 hover:border-gray-400"
                     style={{
                       fontSize: '15px',
@@ -534,7 +534,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                         )}
                         {suggestion.codigo_barras && (
                           <p className="text-xs text-gray-400 mt-0.5 font-mono">
-                            CÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³d: {suggestion.codigo_barras}
+                            Cód: {suggestion.codigo_barras}
                           </p>
                         )}
                       </div>
