@@ -262,8 +262,7 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
             {logoPos === 'centro' ? (
               <>
                 {/* Centro: Menu esquerda + Logo centro (SEM TEXTO) + User/Carrinho direita */}
-                <div className="flex items-center gap-2 flex-shrink min-w-0">
-                  <CategorySidebar />
+                <div className="flex items-center gap-2 flex-shrink min-w-0">`n                  <CategorySidebar />
                 </div>
                 
                 {/* Logo Centralizada */}
