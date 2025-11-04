@@ -641,39 +641,6 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                 )}
               </Link>
               
-              {/* Favoritos - Mobile */}
-              <Link
-                href={`/loja/${dominio}/favoritos`}
-                className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition relative"
-              >
-                <Heart size={20} style={{ color: loja.cor_primaria }} />
-                <span>Favoritos</span>
-                {totalFavoritos > 0 && (
-                  <span 
-                    className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1"
-                    style={{ backgroundColor: loja.cor_primaria }}
-                  >
-                    {totalFavoritos}
-                  </span>
-                )}
-              </Link>
-              
-              {/* Carrinho - Mobile */}
-              <Link
-                href={`/loja/${dominio}/carrinho`}
-                className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition relative"
-              >
-                <ShoppingCart size={20} style={{ color: loja.cor_primaria }} />
-                <span>Carrinho</span>
-                {totalItens > 0 && (
-                  <span 
-                    className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1"
-                    style={{ backgroundColor: loja.cor_primaria }}
-                  >
-                    {totalItens}
-                  </span>
-                )}
-              </Link>
             </div>
           </nav>
         </div>
@@ -682,4 +649,3 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
     </>
   );
 }
-
