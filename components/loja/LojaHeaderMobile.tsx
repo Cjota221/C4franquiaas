@@ -280,6 +280,17 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
         lojaNome={loja.nome}
         corPrimaria={loja.cor_primaria}
       />
+      {/* Menu Fixo Inferior - Mobile */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg md:hidden">
+        <div className="flex items-center justify-around py-3">
+          <Link href={`/loja/${dominio}`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition"><Home size={20} /><span>Início</span></Link>
+          <Link href={`/loja/${dominio}/produtos`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition"><Package size={20} /><span>Produtos</span></Link>
+          <Link href={`/loja/${dominio}/sobre`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition"><Info size={20} /><span>Sobre</span></Link>
+          <Link href={`/loja/${dominio}/contato`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition"><Phone size={20} /><span>Contato</span></Link>
+          <Link href={`/loja/${dominio}/favoritos`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition relative"><Heart size={20} style={{ color: loja.cor_primaria }} /><span>Favoritos</span>{totalFavoritos > 0 && (<span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1" style={{ backgroundColor: loja.cor_primaria }}>{totalFavoritos}</span>)}</Link>
+          <Link href={`/loja/${dominio}/carrinho`} className="flex flex-col items-center gap-1 text-gray-700 hover:text-pink-600 text-xs transition relative"><ShoppingCart size={20} style={{ color: loja.cor_primaria }} /><span>Carrinho</span>{totalItens > 0 && (<span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1" style={{ backgroundColor: loja.cor_primaria }}>{totalItens}</span>)}</Link>
+        </div>
+      </nav>
     </>
   );
 }
