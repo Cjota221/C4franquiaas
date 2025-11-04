@@ -3,9 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
-import { useFavoritosStore } from '@/lib/store/favoritosStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { ShoppingCart, Search, Menu, X, Heart, Home, Package, Info, Phone } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import AnnouncementSlider from './AnnouncementSlider';
 
@@ -18,9 +17,7 @@ type Suggestion = {
 
 export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
   const loja = useLojaInfo();
-  const totalItens = useCarrinhoStore((state) => state.getTotalItens());
-  const totalFavoritos = useFavoritosStore((state) => state.getTotalItens());
-  const router = useRouter();
+  const totalItens = useCarrinhoStore((state) => state.getTotalItens());  const router = useRouter();
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
