@@ -12,13 +12,14 @@ type ProductWithPrice = {
   finalPrice: number;
 };
 
-export default async function CatalogoPublico({ params }: { params: { slug: string } }) {
+export default async function CatalogoPublico({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = await createClient();
 
   const { data: reseller } = await supabase
     .from('resellers')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single();
 
   if (!reseller) {
