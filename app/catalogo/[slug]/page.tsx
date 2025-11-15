@@ -3,6 +3,15 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Search, MessageCircle } from 'lucide-react';
 
+type ProductWithPrice = {
+  id: string;
+  nome: string;
+  descricao?: string;
+  preco: number;
+  imagem_url?: string;
+  finalPrice: number;
+};
+
 export default async function CatalogoPublico({ params }: { params: { slug: string } }) {
   const supabase = await createClient();
 
@@ -36,7 +45,7 @@ export default async function CatalogoPublico({ params }: { params: { slug: stri
   const primaryColor = reseller.colors?.primary || '#ec4899';
   const secondaryColor = reseller.colors?.secondary || '#8b5cf6';
 
-  const productsWithPrice = products?.map(p => ({
+  const productsWithPrice: ProductWithPrice[] = products?.map(p => ({
     ...p.produtos,
     finalPrice: p.produtos.preco * (1 + (p.margin_percent || 0) / 100),
   })) || [];
@@ -75,7 +84,7 @@ export default async function CatalogoPublico({ params }: { params: { slug: stri
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {productsWithPrice.map((product: any) => {
+          {productsWithPrice.map((product) => {
             const whatsappMsg = `Olá! Tenho interesse no produto: ${product.nome} - R$ ${product.finalPrice.toFixed(2)}`;
             const whatsappUrl = `https://wa.me/${reseller.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMsg)}`;
 
