@@ -1,6 +1,6 @@
 'use client';
 
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 
 interface Venda {
@@ -23,7 +23,7 @@ export default function DebugVendasPage() {
   useEffect(() => {
     const fetchVendas = async () => {
       try {
-        const supabase = createBrowserClient();
+        const supabase = createClient();
         
         // Buscar TODAS as vendas (sem RLS)
         const { data, error } = await supabase

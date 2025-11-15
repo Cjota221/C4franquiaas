@@ -5,11 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function CustomizacoesPromocoes() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState({
     desconto_progressivo_ativo: false,
@@ -48,7 +48,7 @@ export default function CustomizacoesPromocoes() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configuraÃ§Ãµes:', error);
     }
   }, [supabase]);
 
@@ -60,7 +60,7 @@ export default function CustomizacoesPromocoes() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const { data: franqueada } = await supabase
         .from('franqueadas')
@@ -68,7 +68,7 @@ export default function CustomizacoesPromocoes() {
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) throw new Error('Franqueada não encontrada');
+      if (!franqueada) throw new Error('Franqueada nÃ£o encontrada');
 
       const { error } = await supabase
         .from('lojas')
@@ -77,10 +77,10 @@ export default function CustomizacoesPromocoes() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setLoading(false);
     }
@@ -109,13 +109,13 @@ export default function CustomizacoesPromocoes() {
       <Card>
         <CardHeader>
           <CardTitle>Contador Regressivo</CardTitle>
-          <CardDescription>Urgência nas ofertas com timer</CardDescription>
+          <CardDescription>UrgÃªncia nas ofertas com timer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Ativar Contador Regressivo</Label>
-              <p className="text-sm text-gray-500">Timer de contagem regressiva em promoções</p>
+              <p className="text-sm text-gray-500">Timer de contagem regressiva em promoÃ§Ãµes</p>
             </div>
             <Switch checked={config.contador_regressivo_ativo} onCheckedChange={(checked) => setConfig({ ...config, contador_regressivo_ativo: checked })} />
           </div>
@@ -126,20 +126,20 @@ export default function CustomizacoesPromocoes() {
       <Card>
         <CardHeader>
           <CardTitle>Brindes</CardTitle>
-          <CardDescription>Oferecer brindes por produto ou valor mínimo</CardDescription>
+          <CardDescription>Oferecer brindes por produto ou valor mÃ­nimo</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Ativar Sistema de Brindes</Label>
-              <p className="text-sm text-gray-500">Brinde automático ao atingir condições</p>
+              <p className="text-sm text-gray-500">Brinde automÃ¡tico ao atingir condiÃ§Ãµes</p>
             </div>
             <Switch checked={config.brinde_ativo} onCheckedChange={(checked) => setConfig({ ...config, brinde_ativo: checked })} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Fidelização */}
+      {/* FidelizaÃ§Ã£o */}
       <Card>
         <CardHeader>
           <CardTitle>Programa de Fidelidade</CardTitle>
@@ -156,15 +156,15 @@ export default function CustomizacoesPromocoes() {
         </CardContent>
       </Card>
 
-      {/* Frete Grátis */}
+      {/* Frete GrÃ¡tis */}
       <Card>
         <CardHeader>
-          <CardTitle>Frete Grátis</CardTitle>
-          <CardDescription>Valor mínimo para frete gratuito</CardDescription>
+          <CardTitle>Frete GrÃ¡tis</CardTitle>
+          <CardDescription>Valor mÃ­nimo para frete gratuito</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Valor Mínimo para Frete Grátis (R$)</Label>
+            <Label>Valor MÃ­nimo para Frete GrÃ¡tis (R$)</Label>
             <Input
               type="number"
               step="0.01"
@@ -177,10 +177,10 @@ export default function CustomizacoesPromocoes() {
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={loading} size="lg">
-          {loading ? 'Salvando...' : 'Salvar Configurações'}
+          {loading ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
         </Button>
       </div>
     </div>

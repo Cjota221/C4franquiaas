@@ -1,25 +1,25 @@
 /**
  * Componente: Checkout Form com Checkout Transparente
  * 
- * Versão atualizada que usa checkout transparente do Mercado Pago
- * com PIX (QR Code) e Cartão de Crédito processados na própria página.
+ * VersÃ£o atualizada que usa checkout transparente do Mercado Pago
+ * com PIX (QR Code) e CartÃ£o de CrÃ©dito processados na prÃ³pria pÃ¡gina.
  * 
- * DIFERENÇAS DA VERSÃO ANTERIOR:
- * - ❌ Não redireciona para site do Mercado Pago
- * - ✅ PIX: Gera QR Code na página
- * - ✅ Cartão: Formulário seguro com tokenização
- * - ✅ Aprovação/recusa instantânea
+ * DIFERENÃ‡AS DA VERSÃƒO ANTERIOR:
+ * - âŒ NÃ£o redireciona para site do Mercado Pago
+ * - âœ… PIX: Gera QR Code na pÃ¡gina
+ * - âœ… CartÃ£o: FormulÃ¡rio seguro com tokenizaÃ§Ã£o
+ * - âœ… AprovaÃ§Ã£o/recusa instantÃ¢nea
  */
 
 "use client";
 import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
-import { useCarrinhoStore } from '@/lib/store/carrinhoStore'; // 🔧 Usar Zustand
+import { useCarrinhoStore } from '@/lib/store/carrinhoStore'; // ðŸ”§ Usar Zustand
 import PaymentMethodSelector, { type PaymentMethodType } from './PaymentMethodSelector';
 import PixPayment from './PixPayment';
 import CardPayment from './CardPayment';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface CheckoutFormProps {
   loja: LojaInfo;
@@ -30,7 +30,7 @@ type CheckoutStep = 'form' | 'payment' | 'processing' | 'success' | 'error';
 export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
   
-  // 🔧 Usar Zustand em vez de CartContext
+  // ðŸ”§ Usar Zustand em vez de CartContext
   const items = useCarrinhoStore(state => state.items);
   const clearCarrinho = useCarrinhoStore(state => state.clearCarrinho);
   const getTotal = useCarrinhoStore(state => state.getTotal);
@@ -38,23 +38,23 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   // Calcular totais
   const subtotal = getTotal();
   
-  // Frete grátis baseado na configuração da loja
+  // Frete grÃ¡tis baseado na configuraÃ§Ã£o da loja
   const valorMinimoFreteGratis = loja.frete_gratis_valor || 150; // Default: R$ 150
   const valorFrete = loja.valor_frete || 15.90; // Default: R$ 15,90
   const frete = subtotal >= valorMinimoFreteGratis ? 0 : valorFrete;
   
   const total = subtotal + frete;
   
-  // 🔍 DEBUG: Verificar valores de frete
-  console.log('🚚 [Frete Debug] VALORES DO BANCO:', {
+  // ðŸ” DEBUG: Verificar valores de frete
+  console.log('ðŸšš [Frete Debug] VALORES DO BANCO:', {
     'loja.frete_gratis_valor (do banco)': loja.frete_gratis_valor,
     'loja.valor_frete (do banco)': loja.valor_frete,
   });
-  console.log('🚚 [Frete Debug] CÁLCULO:', {
+  console.log('ðŸšš [Frete Debug] CÃLCULO:', {
     'Subtotal': `R$ ${subtotal.toFixed(2)}`,
-    'Valor Mínimo Usado (com fallback)': `R$ ${valorMinimoFreteGratis.toFixed(2)}`,
+    'Valor MÃ­nimo Usado (com fallback)': `R$ ${valorMinimoFreteGratis.toFixed(2)}`,
     'Valor Frete Usado (com fallback)': `R$ ${valorFrete.toFixed(2)}`,
-    'Condição (subtotal >= minimo)': `${subtotal.toFixed(2)} >= ${valorMinimoFreteGratis.toFixed(2)} = ${subtotal >= valorMinimoFreteGratis}`,
+    'CondiÃ§Ã£o (subtotal >= minimo)': `${subtotal.toFixed(2)} >= ${valorMinimoFreteGratis.toFixed(2)} = ${subtotal >= valorMinimoFreteGratis}`,
     'Frete Cobrado': `R$ ${frete.toFixed(2)}`,
     'Total': `R$ ${total.toFixed(2)}`
   });
@@ -99,10 +99,10 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         const data = await response.json();
         if (data.publicKey) {
           setPublicKey(data.publicKey);
-          console.log('✅ Public Key carregada');
+          console.log('âœ… Public Key carregada');
         }
       } catch (error) {
-        console.error('❌ Erro ao carregar Public Key:', error);
+        console.error('âŒ Erro ao carregar Public Key:', error);
       }
     }
     loadPublicKey();
@@ -129,81 +129,81 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     }
   };
 
-  // Validar formulário
+  // Validar formulÃ¡rio
   const validateForm = (): boolean => {
-    console.log('🔍 [Validação] Dados do formulário:', formData);
+    console.log('ðŸ” [ValidaÃ§Ã£o] Dados do formulÃ¡rio:', formData);
     
     if (!formData.email || !formData.fullName || !formData.cpf) {
-      const erro = 'Preencha todos os campos obrigatórios (Nome, Email, CPF)';
+      const erro = 'Preencha todos os campos obrigatÃ³rios (Nome, Email, CPF)';
       setError(erro);
-      console.error('❌ [Validação]', erro);
+      console.error('âŒ [ValidaÃ§Ã£o]', erro);
       // Scroll para o topo para mostrar o erro
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     if (!formData.whatsapp) {
-      const erro = 'WhatsApp é obrigatório';
+      const erro = 'WhatsApp Ã© obrigatÃ³rio';
       setError(erro);
-      console.error('❌ [Validação]', erro);
+      console.error('âŒ [ValidaÃ§Ã£o]', erro);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     if (!formData.cep || !formData.address || !formData.number) {
-      const erro = 'Complete o endereço de entrega (CEP, Rua, Número)';
+      const erro = 'Complete o endereÃ§o de entrega (CEP, Rua, NÃºmero)';
       setError(erro);
-      console.error('❌ [Validação]', erro);
+      console.error('âŒ [ValidaÃ§Ã£o]', erro);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     
-    console.log('✅ [Validação] Formulário válido!');
+    console.log('âœ… [ValidaÃ§Ã£o] FormulÃ¡rio vÃ¡lido!');
     return true;
   };
 
-  // Avançar para escolha de pagamento
+  // AvanÃ§ar para escolha de pagamento
   const handleContinueToPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 [Checkout] Botão clicado!');
+    console.log('ðŸš€ [Checkout] BotÃ£o clicado!');
     
     if (items.length === 0) {
       setError('Carrinho vazio');
-      console.error('❌ [Checkout] Carrinho vazio');
+      console.error('âŒ [Checkout] Carrinho vazio');
       return;
     }
 
-    console.log('📋 [Checkout] Validando formulário...');
+    console.log('ðŸ“‹ [Checkout] Validando formulÃ¡rio...');
     if (!validateForm()) {
-      console.error('❌ [Checkout] Validação falhou');
+      console.error('âŒ [Checkout] ValidaÃ§Ã£o falhou');
       return;
     }
 
-    console.log('✅ [Checkout] Avançando para pagamento!');
+    console.log('âœ… [Checkout] AvanÃ§ando para pagamento!');
     setError(null);
     setCheckoutStep('payment');
   };
 
-  // 🆕 Salvar venda no banco de dados
+  // ðŸ†• Salvar venda no banco de dados
   const salvarVenda = async (paymentId: string, metodo: string) => {
-    console.log('🔄 [Venda] Iniciando salvamento...');
-    console.log('🔄 [Venda] Payment ID:', paymentId);
-    console.log('🔄 [Venda] Método:', metodo);
-    console.log('🔄 [Venda] Loja ID:', loja.id);
-    console.log('🔄 [Venda] Loja Franqueada ID:', loja.franqueada_id);
+    console.log('ðŸ”„ [Venda] Iniciando salvamento...');
+    console.log('ðŸ”„ [Venda] Payment ID:', paymentId);
+    console.log('ðŸ”„ [Venda] MÃ©todo:', metodo);
+    console.log('ðŸ”„ [Venda] Loja ID:', loja.id);
+    console.log('ðŸ”„ [Venda] Loja Franqueada ID:', loja.franqueada_id);
     
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
 
-      // 🔍 Verificar se usuário está autenticado
+      // ðŸ” Verificar se usuÃ¡rio estÃ¡ autenticado
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('👤 [Venda] Usuário autenticado:', user?.id || 'NÃO AUTENTICADO');
+      console.log('ðŸ‘¤ [Venda] UsuÃ¡rio autenticado:', user?.id || 'NÃƒO AUTENTICADO');
       
       if (authError) {
-        console.error('❌ [Venda] Erro de autenticação:', authError);
+        console.error('âŒ [Venda] Erro de autenticaÃ§Ã£o:', authError);
       }
 
-      // 🔧 CORREÇÃO: Buscar user_id da franqueada
-      // loja.franqueada_id → franqueadas.id
-      // Precisamos buscar franqueadas.user_id para vincular à venda
+      // ðŸ”§ CORREÃ‡ÃƒO: Buscar user_id da franqueada
+      // loja.franqueada_id â†’ franqueadas.id
+      // Precisamos buscar franqueadas.user_id para vincular Ã  venda
       let franqueadaUserId = null;
       
       if (loja.franqueada_id) {
@@ -214,20 +214,20 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
           .single();
         
         if (franqueadaError) {
-          console.error('❌ [Venda] Erro ao buscar franqueada:', franqueadaError);
+          console.error('âŒ [Venda] Erro ao buscar franqueada:', franqueadaError);
         } else if (franqueadaData) {
           franqueadaUserId = franqueadaData.user_id;
-          console.log('✅ [Venda] Franqueada User ID encontrado:', franqueadaUserId);
+          console.log('âœ… [Venda] Franqueada User ID encontrado:', franqueadaUserId);
         }
       }
 
-      // Calcular comissão da franqueada (APENAS sobre o valor dos produtos, SEM frete)
+      // Calcular comissÃ£o da franqueada (APENAS sobre o valor dos produtos, SEM frete)
       const percentualComissao = loja.margem_lucro || 30; // Default 30%
-      const comissaoFranqueada = (subtotal * percentualComissao) / 100; // ✅ SUBTOTAL (sem frete)
+      const comissaoFranqueada = (subtotal * percentualComissao) / 100; // âœ… SUBTOTAL (sem frete)
 
       const vendaData = {
         loja_id: loja.id,
-        franqueada_id: franqueadaUserId, // 🔧 CORRIGIDO: usar user_id da franqueada
+        franqueada_id: franqueadaUserId, // ðŸ”§ CORRIGIDO: usar user_id da franqueada
         items: items.map(item => ({
           id: item.id,
           nome: item.nome,
@@ -258,7 +258,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         }
       };
 
-      console.log('📦 [Venda] Dados preparados:', JSON.stringify(vendaData, null, 2));
+      console.log('ðŸ“¦ [Venda] Dados preparados:', JSON.stringify(vendaData, null, 2));
 
       const { data, error } = await supabase
         .from('vendas')
@@ -266,18 +266,18 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         .select();
 
       if (error) {
-        console.error('❌ [Venda] Erro no INSERT:', error);
-        console.error('❌ [Venda] Error code:', error.code);
-        console.error('❌ [Venda] Error message:', error.message);
-        console.error('❌ [Venda] Error details:', error.details);
+        console.error('âŒ [Venda] Erro no INSERT:', error);
+        console.error('âŒ [Venda] Error code:', error.code);
+        console.error('âŒ [Venda] Error message:', error.message);
+        console.error('âŒ [Venda] Error details:', error.details);
         throw error;
       }
 
-      console.log('✅ [Venda] Salva com sucesso!', data);
-      console.log('✅ [Venda] Payment ID:', paymentId);
+      console.log('âœ… [Venda] Salva com sucesso!', data);
+      console.log('âœ… [Venda] Payment ID:', paymentId);
     } catch (error) {
-      console.error('❌ [Venda] EXCEPTION ao salvar:', error);
-      // Não bloquear o checkout se falhar ao salvar
+      console.error('âŒ [Venda] EXCEPTION ao salvar:', error);
+      // NÃ£o bloquear o checkout se falhar ao salvar
     }
   };
 
@@ -331,13 +331,13 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         external_reference: result.external_reference,
       });
 
-      // 🆕 Salvar venda no banco de dados
+      // ðŸ†• Salvar venda no banco de dados
       await salvarVenda(result.paymentId, 'pix');
 
       setCheckoutStep('processing');
 
     } catch (err) {
-      console.error('❌ Erro ao criar pagamento PIX:', err);
+      console.error('âŒ Erro ao criar pagamento PIX:', err);
       setError(err instanceof Error ? err.message : 'Erro ao processar PIX');
     } finally {
       setLoading(false);
@@ -356,11 +356,11 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     setPixData(null);
   };
 
-  // Callbacks do Cartão
+  // Callbacks do CartÃ£o
   const handleCardPaymentSuccess = async (paymentIdResult: string) => {
     setPaymentId(paymentIdResult);
     
-    // 🆕 Salvar venda no banco de dados
+    // ðŸ†• Salvar venda no banco de dados
     await salvarVenda(paymentIdResult, 'credit_card');
     
     setCheckoutStep('success');
@@ -387,7 +387,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
   };
 
   // ==========================================
-  // RENDERIZAÇÃO CONDICIONAL POR ETAPA
+  // RENDERIZAÃ‡ÃƒO CONDICIONAL POR ETAPA
   // ==========================================
 
   // ETAPA: Sucesso
@@ -399,10 +399,10 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Pagamento Confirmado! 🎉
+            Pagamento Confirmado! ðŸŽ‰
           </h2>
           <p className="text-gray-600 mb-6">
-            Seu pedido foi recebido e está sendo processado
+            Seu pedido foi recebido e estÃ¡ sendo processado
           </p>
           {paymentId && (
             <p className="text-sm text-gray-500 mb-4">
@@ -412,11 +412,11 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h3 className="font-semibold text-blue-900 mb-2">📧 Próximos Passos</h3>
+          <h3 className="font-semibold text-blue-900 mb-2">ðŸ“§ PrÃ³ximos Passos</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Enviamos um e-mail de confirmação para {formData.email}</li>
-            <li>• Você receberá atualizações do pedido no WhatsApp</li>
-            <li>• Prazo de entrega: 5-7 dias úteis</li>
+            <li>â€¢ Enviamos um e-mail de confirmaÃ§Ã£o para {formData.email}</li>
+            <li>â€¢ VocÃª receberÃ¡ atualizaÃ§Ãµes do pedido no WhatsApp</li>
+            <li>â€¢ Prazo de entrega: 5-7 dias Ãºteis</li>
           </ul>
         </div>
 
@@ -440,7 +440,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
             <XCircle className="w-12 h-12 text-red-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Pagamento Não Aprovado
+            Pagamento NÃ£o Aprovado
           </h2>
           <p className="text-gray-600 mb-4">
             {error || 'Ocorreu um erro ao processar seu pagamento'}
@@ -448,12 +448,12 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         </div>
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-          <h3 className="font-semibold text-yellow-900 mb-2">💡 Sugestões</h3>
+          <h3 className="font-semibold text-yellow-900 mb-2">ðŸ’¡ SugestÃµes</h3>
           <ul className="text-sm text-yellow-800 space-y-1 text-left">
-            <li>• Verifique os dados do cartão</li>
-            <li>• Certifique-se de que há saldo disponível</li>
-            <li>• Tente outro cartão ou método de pagamento</li>
-            <li>• Entre em contato com seu banco se necessário</li>
+            <li>â€¢ Verifique os dados do cartÃ£o</li>
+            <li>â€¢ Certifique-se de que hÃ¡ saldo disponÃ­vel</li>
+            <li>â€¢ Tente outro cartÃ£o ou mÃ©todo de pagamento</li>
+            <li>â€¢ Entre em contato com seu banco se necessÃ¡rio</li>
           </ul>
         </div>
 
@@ -498,7 +498,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     );
   }
 
-  // ETAPA: Escolha de Método de Pagamento
+  // ETAPA: Escolha de MÃ©todo de Pagamento
   if (checkoutStep === 'payment') {
     return (
       <div className="max-w-2xl mx-auto">
@@ -521,7 +521,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
             <div className="flex justify-between">
               <span className="text-gray-600">Frete</span>
               <span className="font-medium">
-                {frete === 0 ? 'GRÁTIS' : `R$ ${frete.toFixed(2).replace('.', ',')}`}
+                {frete === 0 ? 'GRÃTIS' : `R$ ${frete.toFixed(2).replace('.', ',')}`}
               </span>
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
@@ -531,7 +531,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
           </div>
         </div>
 
-        {/* Seletor de Método */}
+        {/* Seletor de MÃ©todo */}
         <PaymentMethodSelector
           selectedMethod={selectedPaymentMethod}
           onSelectMethod={setSelectedPaymentMethod}
@@ -541,11 +541,11 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         {/* Erro */}
         {error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm">❌ {error}</p>
+            <p className="text-red-800 text-sm">âŒ {error}</p>
           </div>
         )}
 
-        {/* Formulário de Pagamento */}
+        {/* FormulÃ¡rio de Pagamento */}
         {selectedPaymentMethod === 'pix' && (
           <div className="mt-6">
             <button
@@ -572,18 +572,18 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
             {typeof window !== 'undefined' && window.location.protocol === 'http:' && (
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-yellow-800 text-sm font-semibold mb-2">
-                  ⚠️ Pagamento com Cartão Requer HTTPS
+                  âš ï¸ Pagamento com CartÃ£o Requer HTTPS
                 </p>
                 <p className="text-yellow-700 text-xs">
-                  O Mercado Pago exige conexão segura (HTTPS) para processar cartões.
-                  Para testar cartão em localhost, você precisa:
+                  O Mercado Pago exige conexÃ£o segura (HTTPS) para processar cartÃµes.
+                  Para testar cartÃ£o em localhost, vocÃª precisa:
                 </p>
                 <ul className="text-yellow-700 text-xs mt-2 ml-4 list-disc">
-                  <li>Fazer deploy para produção (Netlify tem HTTPS automático)</li>
+                  <li>Fazer deploy para produÃ§Ã£o (Netlify tem HTTPS automÃ¡tico)</li>
                   <li>Ou configurar certificado SSL local</li>
                 </ul>
                 <p className="text-yellow-700 text-xs mt-2 font-semibold">
-                  💡 Use o PIX para testar localmente!
+                  ðŸ’¡ Use o PIX para testar localmente!
                 </p>
               </div>
             )}
@@ -614,13 +614,13 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
     );
   }
 
-  // ETAPA: Formulário (padrão)
+  // ETAPA: FormulÃ¡rio (padrÃ£o)
   return (
     <form onSubmit={handleContinueToPayment} className="space-y-8">
-      {/* 1. Informações de Contato */}
+      {/* 1. InformaÃ§Ãµes de Contato */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          1. Informações de Contato
+          1. InformaÃ§Ãµes de Contato
         </h2>
         
         <div className="space-y-4">
@@ -648,7 +648,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-opacity-50 focus:border-transparent transition-all"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="MÃ­nimo 6 caracteres"
               minLength={6}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -737,10 +737,10 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         </div>
       </section>
 
-      {/* 3. Endereço de Entrega */}
+      {/* 3. EndereÃ§o de Entrega */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          3. Endereço de Entrega
+          3. EndereÃ§o de Entrega
         </h2>
         
         <div className="space-y-4">
@@ -770,7 +770,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Endereço *
+              EndereÃ§o *
             </label>
             <input
               type="text"
@@ -785,7 +785,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Número *
+                NÃºmero *
               </label>
               <input
                 type="text"
@@ -856,7 +856,7 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
         </div>
       </section>
 
-      {/* Botão Continuar */}
+      {/* BotÃ£o Continuar */}
       <div className="pt-6 border-t border-gray-200">
         {error && (
           <div className="mb-4 p-4 bg-red-50 border-2 border-red-400 rounded-lg shadow-lg animate-pulse">
@@ -879,12 +879,12 @@ export default function CheckoutFormTransparente({ loja }: CheckoutFormProps) {
               Processando...
             </span>
           ) : (
-            'Continuar para Pagamento →'
+            'Continuar para Pagamento â†’'
           )}
         </button>
         
         <p className="text-xs text-gray-500 text-center mt-4">
-          🔒 Seus dados estão seguros e serão usados apenas para processar seu pedido
+          ðŸ”’ Seus dados estÃ£o seguros e serÃ£o usados apenas para processar seu pedido
         </p>
       </div>
     </form>

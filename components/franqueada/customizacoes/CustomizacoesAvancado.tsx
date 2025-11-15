@@ -6,11 +6,11 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function CustomizacoesAvancado() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState({
     scripts_personalizados: '',
@@ -55,7 +55,7 @@ export default function CustomizacoesAvancado() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configuraÃ§Ãµes:', error);
     }
   }, [supabase]);
 
@@ -67,7 +67,7 @@ export default function CustomizacoesAvancado() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const { data: franqueada } = await supabase
         .from('franqueadas')
@@ -75,7 +75,7 @@ export default function CustomizacoesAvancado() {
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) throw new Error('Franqueada não encontrada');
+      if (!franqueada) throw new Error('Franqueada nÃ£o encontrada');
 
       const { error } = await supabase
         .from('lojas')
@@ -84,10 +84,10 @@ export default function CustomizacoesAvancado() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setLoading(false);
     }
@@ -98,8 +98,8 @@ export default function CustomizacoesAvancado() {
       {/* SEO */}
       <Card>
         <CardHeader>
-          <CardTitle>SEO (Otimização para Buscadores)</CardTitle>
-          <CardDescription>Configurações de meta tags</CardDescription>
+          <CardTitle>SEO (OtimizaÃ§Ã£o para Buscadores)</CardTitle>
+          <CardDescription>ConfiguraÃ§Ãµes de meta tags</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -107,7 +107,7 @@ export default function CustomizacoesAvancado() {
             <Input
               value={config.meta_title}
               onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
-              placeholder="Título que aparece no Google"
+              placeholder="TÃ­tulo que aparece no Google"
             />
           </div>
 
@@ -116,7 +116,7 @@ export default function CustomizacoesAvancado() {
             <Textarea
               value={config.meta_description}
               onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
-              placeholder="Descrição que aparece no Google"
+              placeholder="DescriÃ§Ã£o que aparece no Google"
               rows={3}
             />
           </div>
@@ -127,7 +127,7 @@ export default function CustomizacoesAvancado() {
       <Card>
         <CardHeader>
           <CardTitle>Analytics e Rastreamento</CardTitle>
-          <CardDescription>Ferramentas de análise de tráfego</CardDescription>
+          <CardDescription>Ferramentas de anÃ¡lise de trÃ¡fego</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -154,11 +154,11 @@ export default function CustomizacoesAvancado() {
       <Card>
         <CardHeader>
           <CardTitle>Scripts Personalizados</CardTitle>
-          <CardDescription>Código HTML/JavaScript customizado</CardDescription>
+          <CardDescription>CÃ³digo HTML/JavaScript customizado</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Scripts (avançado)</Label>
+            <Label>Scripts (avanÃ§ado)</Label>
             <Textarea
               value={config.scripts_personalizados}
               onChange={(e) => setConfig({ ...config, scripts_personalizados: e.target.value })}
@@ -166,7 +166,7 @@ export default function CustomizacoesAvancado() {
               rows={6}
               className="font-mono text-sm"
             />
-            <p className="text-sm text-gray-500">⚠️ Apenas para usuários avançados. Scripts incorretos podem quebrar o site.</p>
+            <p className="text-sm text-gray-500">âš ï¸ Apenas para usuÃ¡rios avanÃ§ados. Scripts incorretos podem quebrar o site.</p>
           </div>
         </CardContent>
       </Card>
@@ -175,7 +175,7 @@ export default function CustomizacoesAvancado() {
       <Card>
         <CardHeader>
           <CardTitle>Avisos e Alertas</CardTitle>
-          <CardDescription>Notificações para os visitantes</CardDescription>
+          <CardDescription>NotificaÃ§Ãµes para os visitantes</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -188,28 +188,28 @@ export default function CustomizacoesAvancado() {
         </CardContent>
       </Card>
 
-      {/* Manutenção */}
+      {/* ManutenÃ§Ã£o */}
       <Card>
         <CardHeader>
-          <CardTitle>Modo Manutenção</CardTitle>
+          <CardTitle>Modo ManutenÃ§Ã£o</CardTitle>
           <CardDescription>Desativar temporariamente a loja</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Loja em Manutenção</Label>
-              <p className="text-sm text-gray-500">⚠️ Visitantes verão apenas uma página de manutenção</p>
+              <Label>Loja em ManutenÃ§Ã£o</Label>
+              <p className="text-sm text-gray-500">âš ï¸ Visitantes verÃ£o apenas uma pÃ¡gina de manutenÃ§Ã£o</p>
             </div>
             <Switch checked={config.loja_em_manutencao} onCheckedChange={(checked) => setConfig({ ...config, loja_em_manutencao: checked })} />
           </div>
 
           {config.loja_em_manutencao && (
             <div className="space-y-2">
-              <Label>Mensagem de Manutenção</Label>
+              <Label>Mensagem de ManutenÃ§Ã£o</Label>
               <Textarea
                 value={config.manutencao_mensagem}
                 onChange={(e) => setConfig({ ...config, manutencao_mensagem: e.target.value })}
-                placeholder="Estamos em manutenção. Voltaremos em breve!"
+                placeholder="Estamos em manutenÃ§Ã£o. Voltaremos em breve!"
                 rows={3}
               />
             </div>
@@ -217,10 +217,10 @@ export default function CustomizacoesAvancado() {
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={loading} size="lg">
-          {loading ? 'Salvando...' : 'Salvar Configurações'}
+          {loading ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
         </Button>
       </div>
     </div>

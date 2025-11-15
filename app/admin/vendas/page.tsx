@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, Package, Calendar, User, ShoppingBag } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function VendasAdminPage() {
   const carregarVendas = useCallback(async () => {
     try {
       setLoading(true);
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       
       // Buscar vendas com dados da loja
       const { data: vendasData, error } = await supabase
@@ -121,7 +121,7 @@ export default function VendasAdminPage() {
         <Card className="p-6 bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-pink-700 mb-1">Total Comissões</p>
+              <p className="text-sm font-medium text-pink-700 mb-1">Total ComissÃµes</p>
               <p className="text-3xl font-bold text-pink-900">
                 R$ {totalComissoes.toFixed(2)}
               </p>
@@ -136,11 +136,11 @@ export default function VendasAdminPage() {
         <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-700 mb-1">Lucro Líquido</p>
+              <p className="text-sm font-medium text-green-700 mb-1">Lucro LÃ­quido</p>
               <p className="text-3xl font-bold text-green-900">
                 R$ {totalLucro.toFixed(2)}
               </p>
-              <p className="text-xs text-green-600 mt-1">Após comissões</p>
+              <p className="text-xs text-green-600 mt-1">ApÃ³s comissÃµes</p>
             </div>
             <div className="p-3 bg-green-500 rounded-full">
               <TrendingUp className="w-6 h-6 text-white" />
@@ -173,10 +173,10 @@ export default function VendasAdminPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Franqueada</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Produtos</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Valor</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Comissão</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">ComissÃ£o</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Lucro</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Pagamento</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Comissão</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">ComissÃ£o</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -264,7 +264,7 @@ export default function VendasAdminPage() {
 
                     <div className="mb-3">
                       <p className="font-medium text-gray-900">{venda.cliente_nome}</p>
-                      <p className="text-sm text-gray-500">{venda.loja_nome} • {venda.franqueada_nome}</p>
+                      <p className="text-sm text-gray-500">{venda.loja_nome} â€¢ {venda.franqueada_nome}</p>
                     </div>
 
                     <div className="mb-3">
@@ -280,7 +280,7 @@ export default function VendasAdminPage() {
                         <p className="text-sm font-semibold text-blue-900">R$ {Number(venda.valor_total).toFixed(2)}</p>
                       </div>
                       <div className="bg-pink-50 p-2 rounded">
-                        <p className="text-xs text-pink-700">Comissão</p>
+                        <p className="text-xs text-pink-700">ComissÃ£o</p>
                         <p className="text-sm font-semibold text-pink-900">R$ {Number(venda.comissao_franqueada || 0).toFixed(2)}</p>
                       </div>
                       <div className="bg-green-50 p-2 rounded">
@@ -290,7 +290,7 @@ export default function VendasAdminPage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">Status Comissão:</span>
+                      <span className="text-xs text-gray-500">Status ComissÃ£o:</span>
                       {getStatusComissaoBadge(venda.status_comissao)}
                     </div>
                   </div>
@@ -325,14 +325,14 @@ function getStatusComissaoBadge(status: string) {
   if (status === 'paga') {
     return (
       <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-        ✓ Paga
+        âœ“ Paga
       </Badge>
     );
   }
 
   return (
     <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
-      ⏳ Pendente
+      â³ Pendente
     </Badge>
   );
 }

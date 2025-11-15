@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function CustomizacoesHeader() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState({
     menu_tipo: 'horizontal',
@@ -25,7 +25,7 @@ export default function CustomizacoesHeader() {
     barra_topo_texto_cor: '#ffffff',
     barra_topo_font_size: 14,
     barra_topo_speed: 50,
-    mensagens_regua: ['Frete grátis acima de R$ 150', 'Parcele em até 6x sem juros'],
+    mensagens_regua: ['Frete grÃ¡tis acima de R$ 150', 'Parcele em atÃ© 6x sem juros'],
   });
 
   const carregarConfig = useCallback(async () => {
@@ -64,7 +64,7 @@ export default function CustomizacoesHeader() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configuraÃ§Ãµes:', error);
     }
   }, [supabase]);
 
@@ -76,7 +76,7 @@ export default function CustomizacoesHeader() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const { data: franqueada } = await supabase
         .from('franqueadas')
@@ -84,7 +84,7 @@ export default function CustomizacoesHeader() {
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) throw new Error('Franqueada não encontrada');
+      if (!franqueada) throw new Error('Franqueada nÃ£o encontrada');
 
       const { error } = await supabase
         .from('lojas')
@@ -93,10 +93,10 @@ export default function CustomizacoesHeader() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setLoading(false);
     }
@@ -104,10 +104,10 @@ export default function CustomizacoesHeader() {
 
   return (
     <div className="space-y-6">
-      {/* Régua de Anúncios */}
+      {/* RÃ©gua de AnÃºncios */}
       <Card>
         <CardHeader>
-          <CardTitle>Régua de Anúncios Deslizante</CardTitle>
+          <CardTitle>RÃ©gua de AnÃºncios Deslizante</CardTitle>
           <CardDescription>
             Mensagens rotativas no topo do site (passam automaticamente a cada 4 segundos)
           </CardDescription>
@@ -118,13 +118,13 @@ export default function CustomizacoesHeader() {
             <Textarea
               value={config.mensagens_regua.join('\n')}
               onChange={(e) => setConfig({ ...config, mensagens_regua: e.target.value.split('\n').filter(m => m.trim()) })}
-              placeholder="Frete grátis acima de R$ 150&#10;Parcele em até 6x sem juros&#10;Cupom BEMVINDO10 - 10% OFF"
+              placeholder="Frete grÃ¡tis acima de R$ 150&#10;Parcele em atÃ© 6x sem juros&#10;Cupom BEMVINDO10 - 10% OFF"
               rows={4}
               className="font-mono text-sm"
             />
             <p className="text-xs text-gray-500">
-              💡 {config.mensagens_regua.length} mensagem(ns) configurada(s). 
-              {config.mensagens_regua.length > 1 ? ' Deslizarão automaticamente.' : config.mensagens_regua.length === 1 ? ' Adicione mais para ativar o slider.' : ' Adicione mensagens para exibir.'}
+              ðŸ’¡ {config.mensagens_regua.length} mensagem(ns) configurada(s). 
+              {config.mensagens_regua.length > 1 ? ' DeslizarÃ£o automaticamente.' : config.mensagens_regua.length === 1 ? ' Adicione mais para ativar o slider.' : ' Adicione mensagens para exibir.'}
             </p>
             <div className="grid grid-cols-2 gap-3 mt-2">
               <div>
@@ -152,12 +152,12 @@ export default function CustomizacoesHeader() {
       <Card>
         <CardHeader>
           <CardTitle>Logo</CardTitle>
-          <CardDescription>Configurações de exibição da logo</CardDescription>
+          <CardDescription>ConfiguraÃ§Ãµes de exibiÃ§Ã£o da logo</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Posição</Label>
+              <Label>PosiÃ§Ã£o</Label>
               <Select value={config.logo_posicao} onValueChange={(value) => setConfig({ ...config, logo_posicao: value })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -188,8 +188,8 @@ export default function CustomizacoesHeader() {
       {/* Menu */}
       <Card>
         <CardHeader>
-          <CardTitle>Menu de Navegação</CardTitle>
-          <CardDescription>Configurações do menu</CardDescription>
+          <CardTitle>Menu de NavegaÃ§Ã£o</CardTitle>
+          <CardDescription>ConfiguraÃ§Ãµes do menu</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -208,15 +208,15 @@ export default function CustomizacoesHeader() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Topo Flutuante (Mobile)</Label>
-              <p className="text-sm text-gray-500">Header fixo ao rolar a página</p>
+              <p className="text-sm text-gray-500">Header fixo ao rolar a pÃ¡gina</p>
             </div>
             <Switch checked={config.topo_flutuante} onCheckedChange={(checked) => setConfig({ ...config, topo_flutuante: checked })} />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Mostrar Ícones no Menu</Label>
-              <p className="text-sm text-gray-500">Exibir ícones ao lado dos nomes das categorias</p>
+              <Label>Mostrar Ãcones no Menu</Label>
+              <p className="text-sm text-gray-500">Exibir Ã­cones ao lado dos nomes das categorias</p>
             </div>
             <Switch checked={config.mostrar_icones_menu} onCheckedChange={(checked) => setConfig({ ...config, mostrar_icones_menu: checked })} />
           </div>
@@ -227,7 +227,7 @@ export default function CustomizacoesHeader() {
       <Card>
         <CardHeader>
           <CardTitle>Barra do Topo</CardTitle>
-          <CardDescription>Texto fixo acima da régua de anúncios</CardDescription>
+          <CardDescription>Texto fixo acima da rÃ©gua de anÃºncios</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -248,10 +248,10 @@ export default function CustomizacoesHeader() {
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={loading} size="lg">
-          {loading ? 'Salvando...' : 'Salvar Configurações'}
+          {loading ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
         </Button>
       </div>
     </div>

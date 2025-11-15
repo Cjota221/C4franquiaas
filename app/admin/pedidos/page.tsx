@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, Calendar, User, Eye, Truck } from "lucide-react";
@@ -39,7 +39,7 @@ export default function PedidosAdminPage() {
   const carregarPedidos = useCallback(async () => {
     try {
       setLoading(true);
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       
       const { data, error } = await supabase
         .from("vendas")
@@ -101,10 +101,10 @@ export default function PedidosAdminPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Package className="w-8 h-8 text-pink-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Gestão de Pedidos</h1>
+          <h1 className="text-3xl font-bold text-gray-900">GestÃ£o de Pedidos</h1>
         </div>
         <p className="text-gray-600">
-          Conferência e envio de pedidos. Central de operações.
+          ConferÃªncia e envio de pedidos. Central de operaÃ§Ãµes.
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export default function PedidosAdminPage() {
                   Status Envio
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Ações
+                  AÃ§Ãµes
                 </th>
               </tr>
             </thead>
@@ -191,7 +191,7 @@ export default function PedidosAdminPage() {
                       {getStatusEnvioBadge(pedido.status_envio || 'A_PREPARAR')}
                     </td>
 
-                    {/* Ações */}
+                    {/* AÃ§Ãµes */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => setPedidoSelecionado(pedido)}
@@ -213,7 +213,7 @@ export default function PedidosAdminPage() {
           <div className="text-center py-12">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 font-medium">Nenhum pedido encontrado</p>
-            <p className="text-sm text-gray-400 mt-1">Os pedidos aparecerão aqui após as vendas.</p>
+            <p className="text-sm text-gray-400 mt-1">Os pedidos aparecerÃ£o aqui apÃ³s as vendas.</p>
           </div>
         )}
       </Card>
@@ -229,13 +229,13 @@ export default function PedidosAdminPage() {
                   onClick={() => setPedidoSelecionado(null)}
                   className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
                 >
-                  ×
+                  Ã—
                 </button>
               </div>
 
               <div className="space-y-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-900 mb-2">Informações do Cliente</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">InformaÃ§Ãµes do Cliente</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Nome:</span>

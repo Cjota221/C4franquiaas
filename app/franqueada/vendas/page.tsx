@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { DollarSign, Package, Calendar, Check, X, Clock, TrendingUp } from 'lucide-react';
 
 interface Venda {
@@ -26,7 +26,7 @@ export default function VendasFranqueadaPage() {
   const carregarVendas = useCallback(async () => {
     try {
       setLoading(true);
-      const supabase = createBrowserClient();
+      const supabase = createClient();
 
       let query = supabase
         .from('vendas')
@@ -93,7 +93,7 @@ export default function VendasFranqueadaPage() {
           <div className="flex items-center gap-3">
             <TrendingUp className="w-10 h-10 text-blue-600" />
             <div>
-              <p className="text-sm text-gray-600">Minhas Comissões</p>
+              <p className="text-sm text-gray-600">Minhas ComissÃµes</p>
               <p className="text-2xl font-bold text-blue-600">R$ {totalComissoes.toFixed(2)}</p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function VendasFranqueadaPage() {
                     {getStatusBadge(venda.status_pagamento)}
                     <p className="text-lg font-bold mt-1">R$ {venda.valor_total.toFixed(2)}</p>
                     <p className="text-sm text-green-600">
-                      Comissão: R$ {venda.comissao_franqueada.toFixed(2)}
+                      ComissÃ£o: R$ {venda.comissao_franqueada.toFixed(2)}
                     </p>
                   </div>
                 </div>

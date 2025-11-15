@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, Calendar, User } from "lucide-react";
@@ -19,7 +19,7 @@ export default function ComissoesAdminPage() {
   const carregarVendas = useCallback(async () => {
     try {
       setLoading(true);
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       
       // Buscar vendas com dados da loja
       const { data: vendasData, error } = await supabase
@@ -77,7 +77,7 @@ export default function ComissoesAdminPage() {
   const totalComissoes = vendas.reduce((sum, v) => sum + Number(v.comissao_franqueada || 0), 0);
   const totalLucro = totalVendas - totalComissoes;
 
-  // Helper para badge de status comissão
+  // Helper para badge de status comissÃ£o
   const getStatusComissaoBadge = (status: string) => {
     const styles: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string, className: string }> = {
       paga: { variant: "default", label: "Paga", className: "bg-green-500 text-white" },
@@ -101,10 +101,10 @@ export default function ComissoesAdminPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <DollarSign className="w-8 h-8 text-pink-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Controle de Comissões</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Controle de ComissÃµes</h1>
         </div>
         <p className="text-gray-600">
-          Gestão financeira: vendas, comissões e pagamentos às franqueadas.
+          GestÃ£o financeira: vendas, comissÃµes e pagamentos Ã s franqueadas.
         </p>
       </div>
 
@@ -128,11 +128,11 @@ export default function ComissoesAdminPage() {
           </div>
         </Card>
 
-        {/* Total Comissões */}
+        {/* Total ComissÃµes */}
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-pink-500 to-pink-600 p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium opacity-90">Total Comissões</h3>
+              <h3 className="text-sm font-medium opacity-90">Total ComissÃµes</h3>
               <DollarSign className="w-5 h-5 opacity-75" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -141,16 +141,16 @@ export default function ComissoesAdminPage() {
               </span>
             </div>
             <p className="text-xs opacity-75 mt-2">
-              A pagar às franqueadas
+              A pagar Ã s franqueadas
             </p>
           </div>
         </Card>
 
-        {/* Lucro Líquido */}
+        {/* Lucro LÃ­quido */}
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium opacity-90">Lucro Líquido</h3>
+              <h3 className="text-sm font-medium opacity-90">Lucro LÃ­quido</h3>
               <TrendingUp className="w-5 h-5 opacity-75" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -159,7 +159,7 @@ export default function ComissoesAdminPage() {
               </span>
             </div>
             <p className="text-xs opacity-75 mt-2">
-              Vendas - Comissões
+              Vendas - ComissÃµes
             </p>
           </div>
         </Card>
@@ -184,10 +184,10 @@ export default function ComissoesAdminPage() {
                   Valor da Venda
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Comissão
+                  ComissÃ£o
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status Comissão
+                  Status ComissÃ£o
                 </th>
               </tr>
             </thead>
@@ -228,7 +228,7 @@ export default function ComissoesAdminPage() {
                     </div>
                   </td>
 
-                  {/* Comissão */}
+                  {/* ComissÃ£o */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-semibold text-pink-600">
                       R$ {Number(venda.comissao_franqueada).toFixed(2)}
@@ -238,7 +238,7 @@ export default function ComissoesAdminPage() {
                     </div>
                   </td>
 
-                  {/* Status Comissão */}
+                  {/* Status ComissÃ£o */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusComissaoBadge(venda.status_comissao || 'pendente')}
                   </td>
@@ -253,7 +253,7 @@ export default function ComissoesAdminPage() {
           <div className="text-center py-12">
             <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 font-medium">Nenhuma venda encontrada</p>
-            <p className="text-sm text-gray-400 mt-1">As vendas aparecerão aqui após as compras.</p>
+            <p className="text-sm text-gray-400 mt-1">As vendas aparecerÃ£o aqui apÃ³s as compras.</p>
           </div>
         )}
       </Card>
@@ -283,7 +283,7 @@ export default function ComissoesAdminPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Comissão</div>
+                  <div className="text-xs text-gray-500">ComissÃ£o</div>
                   <div className="font-semibold text-pink-600">
                     R$ {Number(venda.comissao_franqueada).toFixed(2)}
                   </div>

@@ -5,11 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function CustomizacoesCarrinho() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState({
     carrinho_tipo: 'lateral',
@@ -46,7 +46,7 @@ export default function CustomizacoesCarrinho() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configuraÃ§Ãµes:', error);
     }
   }, [supabase]);
 
@@ -58,7 +58,7 @@ export default function CustomizacoesCarrinho() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const { data: franqueada } = await supabase
         .from('franqueadas')
@@ -66,7 +66,7 @@ export default function CustomizacoesCarrinho() {
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) throw new Error('Franqueada não encontrada');
+      if (!franqueada) throw new Error('Franqueada nÃ£o encontrada');
 
       const { error } = await supabase
         .from('lojas')
@@ -75,10 +75,10 @@ export default function CustomizacoesCarrinho() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function CustomizacoesCarrinho() {
       <Card>
         <CardHeader>
           <CardTitle>Carrinho de Compras</CardTitle>
-          <CardDescription>Configurações do carrinho</CardDescription>
+          <CardDescription>ConfiguraÃ§Ãµes do carrinho</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -101,7 +101,7 @@ export default function CustomizacoesCarrinho() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="lateral">Carrinho Lateral (Sidebar)</SelectItem>
-                <SelectItem value="pagina">Página Completa</SelectItem>
+                <SelectItem value="pagina">PÃ¡gina Completa</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -116,35 +116,35 @@ export default function CustomizacoesCarrinho() {
         </CardContent>
       </Card>
 
-      {/* Compra Rápida */}
+      {/* Compra RÃ¡pida */}
       <Card>
         <CardHeader>
-          <CardTitle>Compra Rápida</CardTitle>
-          <CardDescription>Funcionalidades de checkout rápido</CardDescription>
+          <CardTitle>Compra RÃ¡pida</CardTitle>
+          <CardDescription>Funcionalidades de checkout rÃ¡pido</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Compra Rápida Completa</Label>
-              <p className="text-sm text-gray-500">Com seleção de variações e quantidade</p>
+              <Label>Compra RÃ¡pida Completa</Label>
+              <p className="text-sm text-gray-500">Com seleÃ§Ã£o de variaÃ§Ãµes e quantidade</p>
             </div>
             <Switch checked={config.compra_rapida_completa} onCheckedChange={(checked) => setConfig({ ...config, compra_rapida_completa: checked })} />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Compra Rápida Simples</Label>
-              <p className="text-sm text-gray-500">Apenas para produtos sem variação</p>
+              <Label>Compra RÃ¡pida Simples</Label>
+              <p className="text-sm text-gray-500">Apenas para produtos sem variaÃ§Ã£o</p>
             </div>
             <Switch checked={config.compra_rapida_simples} onCheckedChange={(checked) => setConfig({ ...config, compra_rapida_simples: checked })} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={loading} size="lg">
-          {loading ? 'Salvando...' : 'Salvar Configurações'}
+          {loading ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
         </Button>
       </div>
     </div>

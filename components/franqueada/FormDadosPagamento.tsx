@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import type { TipoChavePix, DadosPagamentoPix } from '@/types/financeiro';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export function FormDadosPagamento() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -69,19 +69,19 @@ export function FormDadosPagamento() {
     const novosErros: Record<string, string> = {};
 
     if (!formData.chave_pix.trim()) {
-      novosErros.chave_pix = 'Chave PIX é obrigatória';
+      novosErros.chave_pix = 'Chave PIX Ã© obrigatÃ³ria';
     } else if (!validarChavePix(formData.chave_pix, formData.tipo_chave_pix)) {
-      novosErros.chave_pix = `Formato inválido para ${formData.tipo_chave_pix}`;
+      novosErros.chave_pix = `Formato invÃ¡lido para ${formData.tipo_chave_pix}`;
     }
 
     if (!formData.nome_completo.trim()) {
-      novosErros.nome_completo = 'Nome completo é obrigatório';
+      novosErros.nome_completo = 'Nome completo Ã© obrigatÃ³rio';
     } else if (formData.nome_completo.length < 3) {
       novosErros.nome_completo = 'Nome muito curto';
     }
 
     if (!formData.cidade.trim()) {
-      novosErros.cidade = 'Cidade é obrigatória';
+      novosErros.cidade = 'Cidade Ã© obrigatÃ³ria';
     }
 
     setErros(novosErros);
@@ -101,7 +101,7 @@ export function FormDadosPagamento() {
       setMensagem(null);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const dadosSalvar = {
         franqueada_id: user.id,
@@ -150,11 +150,11 @@ export function FormDadosPagamento() {
   };
 
   const descricoes: Record<TipoChavePix, string> = {
-    CPF: 'Digite apenas números (11 dígitos)',
-    CNPJ: 'Digite apenas números (14 dígitos)',
-    EMAIL: 'Digite um email válido',
+    CPF: 'Digite apenas nÃºmeros (11 dÃ­gitos)',
+    CNPJ: 'Digite apenas nÃºmeros (14 dÃ­gitos)',
+    EMAIL: 'Digite um email vÃ¡lido',
     CELULAR: 'Formato: +55 11 99999-9999',
-    ALEATORIA: 'Cole a chave aleatória completa'
+    ALEATORIA: 'Cole a chave aleatÃ³ria completa'
   };
 
   if (loading) {
@@ -170,7 +170,7 @@ export function FormDadosPagamento() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Dados de Recebimento PIX</h2>
         <p className="text-gray-600">
-          Configure sua chave PIX para receber as comissões das vendas.
+          Configure sua chave PIX para receber as comissÃµes das vendas.
         </p>
       </div>
 
@@ -208,7 +208,7 @@ export function FormDadosPagamento() {
               <SelectItem value="CNPJ">CNPJ</SelectItem>
               <SelectItem value="EMAIL">E-mail</SelectItem>
               <SelectItem value="CELULAR">Celular</SelectItem>
-              <SelectItem value="ALEATORIA">Chave Aleatória</SelectItem>
+              <SelectItem value="ALEATORIA">Chave AleatÃ³ria</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -233,7 +233,7 @@ export function FormDadosPagamento() {
           {formData.chave_pix && !erros.chave_pix && validarChavePix(formData.chave_pix, formData.tipo_chave_pix) && (
             <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4" />
-              Chave válida: {formatarChavePix(formData.chave_pix, formData.tipo_chave_pix)}
+              Chave vÃ¡lida: {formatarChavePix(formData.chave_pix, formData.tipo_chave_pix)}
             </p>
           )}
         </div>
@@ -254,7 +254,7 @@ export function FormDadosPagamento() {
             maxLength={25}
           />
           <p className="text-sm text-gray-500 mt-1">
-            Esse nome aparecerá no PIX para quem for pagar ({formData.nome_completo.length}/25)
+            Esse nome aparecerÃ¡ no PIX para quem for pagar ({formData.nome_completo.length}/25)
           </p>
           {erros.nome_completo && <p className="text-sm text-red-500 mt-1">{erros.nome_completo}</p>}
         </div>
@@ -275,12 +275,12 @@ export function FormDadosPagamento() {
             maxLength={15}
           />
           <p className="text-sm text-gray-500 mt-1">
-            Máximo 15 caracteres ({formData.cidade.length}/15)
+            MÃ¡ximo 15 caracteres ({formData.cidade.length}/15)
           </p>
           {erros.cidade && <p className="text-sm text-red-500 mt-1">{erros.cidade}</p>}
         </div>
 
-        {/* Botão Salvar */}
+        {/* BotÃ£o Salvar */}
         <div className="flex gap-3">
           <Button type="submit" disabled={salvando} className="flex-1">
             {salvando ? 'Salvando...' : dadosExistentes ? 'Atualizar Dados' : 'Salvar Dados'}
@@ -291,8 +291,8 @@ export function FormDadosPagamento() {
       {dadosExistentes && (
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>✅ Seus dados PIX estão configurados!</strong><br />
-            Você receberá as comissões nesta chave PIX.
+            <strong>âœ… Seus dados PIX estÃ£o configurados!</strong><br />
+            VocÃª receberÃ¡ as comissÃµes nesta chave PIX.
           </p>
         </div>
       )}

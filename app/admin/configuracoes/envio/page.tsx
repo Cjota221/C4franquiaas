@@ -1,8 +1,8 @@
 /**
- * Página: Configurações de Envio (EnvioEcom)
+ * PÃ¡gina: ConfiguraÃ§Ãµes de Envio (EnvioEcom)
  * Rota: /admin/configuracoes/envio
  * 
- * Permite configurar credenciais e parâmetros da integração EnvioEcom
+ * Permite configurar credenciais e parÃ¢metros da integraÃ§Ã£o EnvioEcom
  */
 
 "use client";
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle2, XCircle, Package, Truck } from 'lucide-react';
 
@@ -47,7 +47,7 @@ interface ConfigEnvioEcom {
 }
 
 export default function ConfiguracoesEnvioPage() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -80,7 +80,7 @@ export default function ConfiguracoesEnvioPage() {
     servico_padrao_id: '',
   });
 
-  // Carregar configuração existente
+  // Carregar configuraÃ§Ã£o existente
     const carregarConfig = useCallback(async () => {
       setLoading(true);
       try {
@@ -108,8 +108,8 @@ export default function ConfiguracoesEnvioPage() {
           }));
         }
       } catch (error) {
-        console.error('Erro ao carregar configuração:', error);
-        toast.error('Erro ao carregar configurações');
+        console.error('Erro ao carregar configuraÃ§Ã£o:', error);
+        toast.error('Erro ao carregar configuraÃ§Ãµes');
       } finally {
         setLoading(false);
       }
@@ -122,14 +122,14 @@ export default function ConfiguracoesEnvioPage() {
   const salvarConfig = async () => {
     setSaving(true);
     try {
-      // Validações
+      // ValidaÃ§Ãµes
       if (!config.slug || !config.etoken) {
-        toast.error('SLUG e E-TOKEN são obrigatórios');
+        toast.error('SLUG e E-TOKEN sÃ£o obrigatÃ³rios');
         return;
       }
 
       if (!config.cep_origem) {
-        toast.error('CEP de origem é obrigatório');
+        toast.error('CEP de origem Ã© obrigatÃ³rio');
         return;
       }
 
@@ -168,10 +168,10 @@ export default function ConfiguracoesEnvioPage() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setSaving(false);
     }
@@ -191,7 +191,7 @@ export default function ConfiguracoesEnvioPage() {
         return;
       }
 
-      // Fazer requisição de teste à API EnvioEcom
+      // Fazer requisiÃ§Ã£o de teste Ã  API EnvioEcom
       const response = await fetch('https://api.envioecom.com.br/v1/cotacao', {
         method: 'POST',
         headers: {
@@ -219,7 +219,7 @@ export default function ConfiguracoesEnvioPage() {
       if (data.sucesso) {
         setTestResult({
           success: true,
-          message: `✅ Conexão bem-sucedida! Encontrados ${data.servicos?.length || 0} serviços de frete disponíveis.`,
+          message: `âœ… ConexÃ£o bem-sucedida! Encontrados ${data.servicos?.length || 0} serviÃ§os de frete disponÃ­veis.`,
         });
       } else {
         setTestResult({
@@ -231,7 +231,7 @@ export default function ConfiguracoesEnvioPage() {
       console.error('Erro ao testar:', error);
       setTestResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao testar conexão',
+        message: error instanceof Error ? error.message : 'Erro ao testar conexÃ£o',
       });
     } finally {
       setTesting(false);
@@ -278,10 +278,10 @@ export default function ConfiguracoesEnvioPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
           <Truck className="w-8 h-8" />
-          Configurações de Envio
+          ConfiguraÃ§Ãµes de Envio
         </h1>
         <p className="text-gray-600 mt-2">
-          Configure a integração com EnvioEcom para cotação e geração de etiquetas
+          Configure a integraÃ§Ã£o com EnvioEcom para cotaÃ§Ã£o e geraÃ§Ã£o de etiquetas
         </p>
       </div>
 
@@ -290,7 +290,7 @@ export default function ConfiguracoesEnvioPage() {
         <CardHeader>
           <CardTitle>Credenciais EnvioEcom</CardTitle>
           <CardDescription>
-            Obtenha em: <a href="https://painel.envioecom.com.br/" target="_blank" rel="noopener" className="text-blue-600 hover:underline">painel.envioecom.com.br</a> → Configurações → API
+            Obtenha em: <a href="https://painel.envioecom.com.br/" target="_blank" rel="noopener" className="text-blue-600 hover:underline">painel.envioecom.com.br</a> â†’ ConfiguraÃ§Ãµes â†’ API
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -310,7 +310,7 @@ export default function ConfiguracoesEnvioPage() {
                 type="password"
                 value={config.etoken}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfig({ ...config, etoken: e.target.value })}
-                placeholder="••••••••••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export default function ConfiguracoesEnvioPage() {
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Testar Conexão
+                  Testar ConexÃ£o
                 </>
               )}
             </Button>
@@ -348,12 +348,12 @@ export default function ConfiguracoesEnvioPage() {
         </CardContent>
       </Card>
 
-      {/* Endereço de Origem */}
+      {/* EndereÃ§o de Origem */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Endereço de Origem (Remetente)</CardTitle>
+          <CardTitle>EndereÃ§o de Origem (Remetente)</CardTitle>
           <CardDescription>
-            Endereço de onde os produtos serão enviados
+            EndereÃ§o de onde os produtos serÃ£o enviados
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -376,7 +376,7 @@ export default function ConfiguracoesEnvioPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Nome/Razão Social *</Label>
+              <Label>Nome/RazÃ£o Social *</Label>
               <Input
                 type="text"
                 value={config.endereco_origem.nome}
@@ -420,7 +420,7 @@ export default function ConfiguracoesEnvioPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <Label>Endereço *</Label>
+              <Label>EndereÃ§o *</Label>
               <Input
                 type="text"
                 value={config.endereco_origem.endereco}
@@ -433,7 +433,7 @@ export default function ConfiguracoesEnvioPage() {
               />
             </div>
             <div>
-              <Label>Número *</Label>
+              <Label>NÃºmero *</Label>
               <Input
                 type="text"
                 value={config.endereco_origem.numero}
@@ -512,15 +512,15 @@ export default function ConfiguracoesEnvioPage() {
         </CardContent>
       </Card>
 
-      {/* Dimensões Padrão */}
+      {/* DimensÃµes PadrÃ£o */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            Dimensões Padrão do Pacote
+            DimensÃµes PadrÃ£o do Pacote
           </CardTitle>
           <CardDescription>
-            Usado como base para cotações de frete
+            Usado como base para cotaÃ§Ãµes de frete
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -597,17 +597,17 @@ export default function ConfiguracoesEnvioPage() {
         </CardContent>
       </Card>
 
-      {/* Configurações Avançadas */}
+      {/* ConfiguraÃ§Ãµes AvanÃ§adas */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Configurações Avançadas</CardTitle>
+          <CardTitle>ConfiguraÃ§Ãµes AvanÃ§adas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Integração Ativa</Label>
+              <Label>IntegraÃ§Ã£o Ativa</Label>
               <p className="text-sm text-gray-500">
-                Desabilitar para pausar todas as operações
+                Desabilitar para pausar todas as operaÃ§Ãµes
               </p>
             </div>
             <Switch
@@ -618,9 +618,9 @@ export default function ConfiguracoesEnvioPage() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Geração Automática de Etiquetas</Label>
+              <Label>GeraÃ§Ã£o AutomÃ¡tica de Etiquetas</Label>
               <p className="text-sm text-gray-500">
-                Gerar etiqueta automaticamente após pagamento aprovado
+                Gerar etiqueta automaticamente apÃ³s pagamento aprovado
               </p>
             </div>
             <Switch
@@ -631,7 +631,7 @@ export default function ConfiguracoesEnvioPage() {
 
           {config.geracao_automatica && (
             <div>
-              <Label>ID do Serviço Padrão</Label>
+              <Label>ID do ServiÃ§o PadrÃ£o</Label>
               <Input
                 type="text"
                 value={config.servico_padrao_id}
@@ -646,7 +646,7 @@ export default function ConfiguracoesEnvioPage() {
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={saving} size="lg">
           {saving ? (
@@ -655,7 +655,7 @@ export default function ConfiguracoesEnvioPage() {
               Salvando...
             </>
           ) : (
-            'Salvar Configurações'
+            'Salvar ConfiguraÃ§Ãµes'
           )}
         </Button>
       </div>

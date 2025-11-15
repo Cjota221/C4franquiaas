@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function CustomizacoesComunicacao() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState({
     whatsapp_flutuante: true,
@@ -68,7 +68,7 @@ export default function CustomizacoesComunicacao() {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configuraÃ§Ãµes:', error);
     }
   }, [supabase]);
 
@@ -80,7 +80,7 @@ export default function CustomizacoesComunicacao() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
 
       const { data: franqueada } = await supabase
         .from('franqueadas')
@@ -88,7 +88,7 @@ export default function CustomizacoesComunicacao() {
         .eq('user_id', user.id)
         .single();
 
-      if (!franqueada) throw new Error('Franqueada não encontrada');
+      if (!franqueada) throw new Error('Franqueada nÃ£o encontrada');
 
       const { error } = await supabase
         .from('lojas')
@@ -97,10 +97,10 @@ export default function CustomizacoesComunicacao() {
 
       if (error) throw error;
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('ConfiguraÃ§Ãµes salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configuraÃ§Ãµes');
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ export default function CustomizacoesComunicacao() {
       <Card>
         <CardHeader>
           <CardTitle>WhatsApp Flutuante</CardTitle>
-          <CardDescription>Botão de contato fixo na tela</CardDescription>
+          <CardDescription>BotÃ£o de contato fixo na tela</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ export default function CustomizacoesComunicacao() {
           {config.whatsapp_flutuante && (
             <>
               <div className="space-y-2">
-                <Label>Número do WhatsApp</Label>
+                <Label>NÃºmero do WhatsApp</Label>
                 <Input
                   value={config.whatsapp_numero}
                   onChange={(e) => setConfig({ ...config, whatsapp_numero: e.target.value })}
@@ -132,7 +132,7 @@ export default function CustomizacoesComunicacao() {
               </div>
 
               <div className="space-y-2">
-                <Label>Posição</Label>
+                <Label>PosiÃ§Ã£o</Label>
                 <Select value={config.whatsapp_posicao} onValueChange={(value) => setConfig({ ...config, whatsapp_posicao: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -145,11 +145,11 @@ export default function CustomizacoesComunicacao() {
               </div>
 
               <div className="space-y-2">
-                <Label>Mensagem Padrão</Label>
+                <Label>Mensagem PadrÃ£o</Label>
                 <Textarea
                   value={config.whatsapp_mensagem_padrao}
                   onChange={(e) => setConfig({ ...config, whatsapp_mensagem_padrao: e.target.value })}
-                  placeholder="Olá! Gostaria de mais informações..."
+                  placeholder="OlÃ¡! Gostaria de mais informaÃ§Ãµes..."
                   rows={3}
                 />
               </div>
@@ -182,14 +182,14 @@ export default function CustomizacoesComunicacao() {
                 onChange={(e) => setConfig({ ...config, newsletter_popup_delay: parseInt(e.target.value) })}
                 placeholder="5000"
               />
-              <p className="text-sm text-gray-500">Tempo para aparecer após o usuário entrar no site</p>
+              <p className="text-sm text-gray-500">Tempo para aparecer apÃ³s o usuÃ¡rio entrar no site</p>
             </div>
           )}
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Newsletter no Rodapé</Label>
-              <p className="text-sm text-gray-500">Formulário de cadastro no rodapé</p>
+              <Label>Newsletter no RodapÃ©</Label>
+              <p className="text-sm text-gray-500">FormulÃ¡rio de cadastro no rodapÃ©</p>
             </div>
             <Switch checked={config.newsletter_rodape_ativo} onCheckedChange={(checked) => setConfig({ ...config, newsletter_rodape_ativo: checked })} />
           </div>
@@ -210,7 +210,7 @@ export default function CustomizacoesComunicacao() {
 
           {config.instagram_feed_ativo && (
             <div className="space-y-2">
-              <Label>Usuário do Instagram</Label>
+              <Label>UsuÃ¡rio do Instagram</Label>
               <Input
                 value={config.instagram_usuario}
                 onChange={(e) => setConfig({ ...config, instagram_usuario: e.target.value })}
@@ -225,11 +225,11 @@ export default function CustomizacoesComunicacao() {
       <Card>
         <CardHeader>
           <CardTitle>Redes Sociais</CardTitle>
-          <CardDescription>Links para redes sociais no rodapé</CardDescription>
+          <CardDescription>Links para redes sociais no rodapÃ©</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label>Exibir Ícones no Rodapé</Label>
+            <Label>Exibir Ãcones no RodapÃ©</Label>
             <Switch checked={config.redes_sociais_rodape_ativas} onCheckedChange={(checked) => setConfig({ ...config, redes_sociais_rodape_ativas: checked })} />
           </div>
 
@@ -275,10 +275,10 @@ export default function CustomizacoesComunicacao() {
         </CardContent>
       </Card>
 
-      {/* Botão Salvar */}
+      {/* BotÃ£o Salvar */}
       <div className="flex justify-end">
         <Button onClick={salvarConfig} disabled={loading} size="lg">
-          {loading ? 'Salvando...' : 'Salvar Configurações'}
+          {loading ? 'Salvando...' : 'Salvar ConfiguraÃ§Ãµes'}
         </Button>
       </div>
     </div>

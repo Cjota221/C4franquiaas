@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
@@ -21,7 +21,7 @@ type Banner = {
 };
 
 export default function CustomizacoesPaginaInicial() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [lojaId, setLojaId] = useState<string | null>(null);
 
@@ -135,11 +135,11 @@ export default function CustomizacoesPaginaInicial() {
         <div className="flex-1 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Título</Label>
+              <Label>TÃ­tulo</Label>
               <Input
                 value={banner.titulo}
                 onChange={(e) => atualizarBanner(banner.id, 'titulo', e.target.value)}
-                placeholder="Título do banner"
+                placeholder="TÃ­tulo do banner"
               />
             </div>
             <div className="space-y-2">
@@ -193,7 +193,7 @@ export default function CustomizacoesPaginaInicial() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Banner Hero (Principal)</CardTitle>
-              <CardDescription>Banner principal da página inicial (1920x720px recomendado)</CardDescription>
+              <CardDescription>Banner principal da pÃ¡gina inicial (1920x720px recomendado)</CardDescription>
             </div>
             <Button onClick={() => adicionarBanner('hero')} size="sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -210,13 +210,13 @@ export default function CustomizacoesPaginaInicial() {
         </CardContent>
       </Card>
 
-      {/* Banner Secundário */}
+      {/* Banner SecundÃ¡rio */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Banner Secundário</CardTitle>
-              <CardDescription>Banner no meio da página inicial (1200x250px recomendado)</CardDescription>
+              <CardTitle>Banner SecundÃ¡rio</CardTitle>
+              <CardDescription>Banner no meio da pÃ¡gina inicial (1200x250px recomendado)</CardDescription>
             </div>
             <Button onClick={() => adicionarBanner('secundario')} size="sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -239,7 +239,7 @@ export default function CustomizacoesPaginaInicial() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Banner Mobile</CardTitle>
-              <CardDescription>Banner específico para dispositivos móveis (800x600px recomendado)</CardDescription>
+              <CardDescription>Banner especÃ­fico para dispositivos mÃ³veis (800x600px recomendado)</CardDescription>
             </div>
             <Button onClick={() => adicionarBanner('mobile')} size="sm">
               <Plus className="w-4 h-4 mr-2" />

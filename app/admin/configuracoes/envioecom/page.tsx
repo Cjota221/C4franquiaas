@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Check, AlertCircle, Loader2, RefreshCw } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 export default function EnvioEcomConfigPage() {
@@ -22,7 +22,7 @@ export default function EnvioEcomConfigPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedSlug, setCopiedSlug] = useState(false);
 
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     carregarConfig();

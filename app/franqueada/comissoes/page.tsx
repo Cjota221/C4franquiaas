@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { ResumoComissoes } from '@/components/franqueada/ResumoComissoes';
 import { TabelaMinhasVendas } from '@/components/franqueada/TabelaMinhasVendas';
 import type { VendaComComissao } from '@/types/financeiro';
@@ -9,7 +9,7 @@ import { Wallet, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 export default function MinhasComissoesPage() {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
   
   const [vendas, setVendas] = useState<VendaComComissao[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ export default function MinhasComissoesPage() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setErro('Usuário não autenticado');
+        setErro('UsuÃ¡rio nÃ£o autenticado');
         return;
       }
 
@@ -82,10 +82,10 @@ export default function MinhasComissoesPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Wallet className="w-8 h-8 text-pink-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Minhas Comissões</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Minhas ComissÃµes</h1>
         </div>
         <p className="text-gray-600">
-          Acompanhe suas vendas e comissões a receber.
+          Acompanhe suas vendas e comissÃµes a receber.
         </p>
       </div>
 
@@ -99,7 +99,7 @@ export default function MinhasComissoesPage() {
                 Cadastre seus dados de recebimento
               </h3>
               <p className="text-sm text-yellow-800 mb-3">
-                Para receber suas comissões, você precisa cadastrar sua chave PIX.
+                Para receber suas comissÃµes, vocÃª precisa cadastrar sua chave PIX.
               </p>
               <a
                 href="/franqueada/perfil"
@@ -125,7 +125,7 @@ export default function MinhasComissoesPage() {
         </Card>
       )}
 
-      {/* Resumo de Comissões */}
+      {/* Resumo de ComissÃµes */}
       {!loading && !erro && (
         <ResumoComissoes
           totalPendente={totalPendente}
