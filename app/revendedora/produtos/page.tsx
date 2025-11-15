@@ -4,8 +4,21 @@ import ProductCardRevendedora from '@/components/revendedora/ProductCardRevended
 import { Search, Percent } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
+type ResellerProduct = {
+  id: string;
+  product_id: string;
+  is_active: boolean;
+  margin_percent: number;
+  produtos: {
+    id: string;
+    nome: string;
+    preco: number;
+    imagem_url?: string;
+  };
+};
+
 export default function ProdutosRevendedora() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<ResellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [bulkMargin, setBulkMargin] = useState(30);
@@ -33,7 +46,7 @@ export default function ProdutosRevendedora() {
       `)
       .eq('reseller_id', reseller.id);
 
-    setProducts(data || []);
+    setProducts((data as ResellerProduct[]) || []);
     setLoading(false);
   };
 
