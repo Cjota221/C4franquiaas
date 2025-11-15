@@ -44,7 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_reseller_products_active ON reseller_products(is_
 
 -- STEP 3: Function auto-generate slug
 CREATE OR REPLACE FUNCTION generate_slug_from_store_name()
-RETURNS TRIGGER AS `$`$
+RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.slug IS NULL THEN
     NEW.slug := lower(regexp_replace(
@@ -55,7 +55,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-`$`$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_generate_slug ON resellers;
 CREATE TRIGGER trigger_generate_slug
@@ -64,7 +64,7 @@ CREATE TRIGGER trigger_generate_slug
 
 -- STEP 4: Function update total_products
 CREATE OR REPLACE FUNCTION update_reseller_total_products()
-RETURNS TRIGGER AS `$`$
+RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
     UPDATE resellers SET total_products = (
@@ -80,7 +80,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-`$`$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_update_reseller_total_products ON reseller_products;
 CREATE TRIGGER trigger_update_reseller_total_products
@@ -89,13 +89,13 @@ CREATE TRIGGER trigger_update_reseller_total_products
 
 -- STEP 5: Function increment catalog views
 CREATE OR REPLACE FUNCTION increment_catalog_views(reseller_id_param UUID)
-RETURNS VOID AS `$`$
+RETURNS VOID AS $$
 BEGIN
   UPDATE resellers 
   SET catalog_views = catalog_views + 1 
   WHERE id = reseller_id_param AND is_active = true;
 END;
-`$`$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- STEP 6: RLS Policies
 ALTER TABLE resellers ENABLE ROW LEVEL SECURITY;
