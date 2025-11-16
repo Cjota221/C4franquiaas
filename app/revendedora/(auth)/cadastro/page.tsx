@@ -85,7 +85,29 @@ export default function CadastroRevendedoraPage() {
     try {
       console.log(' Iniciando cadastro de revendedora:', formData.email);
 
-      // 1. Criar usuário no Auth
+      // 1. Verificar se email já existe
+      const { data: emailExists } = await supabase
+        .from('resellers')
+        .select('id')
+        .eq('email', formData.email)
+        .single();
+
+      if (emailExists) {
+        throw new Error('Este e-mail já está cadastrado. Por favor, faça login ou use outro e-mail.');
+      }
+
+      // 2. Verificar se slug já existe (adicionar número se necessário)
+      let slug = gerarSlug(formData.store_name);
+      const { data: slugExists } = await supabase
+        .from('resellers')
+        .select('slug')
+        .eq('slug', slug);
+
+      if (slugExists && slugExists.length > 0) {
+        slug = `${slug}-${Date.now()}`;
+      }
+
+      // 3. Criar usuário no Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -99,6 +121,9 @@ export default function CadastroRevendedoraPage() {
 
       if (authError) {
         console.error(' Erro no signup:', authError);
+        if (authError.message.includes('already registered')) {
+          throw new Error('Este e-mail já está cadastrado no sistema.');
+        }
         throw new Error(authError.message);
       }
 
@@ -108,9 +133,7 @@ export default function CadastroRevendedoraPage() {
 
       console.log(' Usuário criado no Auth:', authData.user.id);
 
-      // 2. Criar registro na tabela resellers
-      const slug = gerarSlug(formData.store_name);
-      
+      // 4. Criar registro na tabela resellers
       const { data: resellerData, error: resellerError } = await supabase
         .from('resellers')
         .insert({
@@ -130,9 +153,9 @@ export default function CadastroRevendedoraPage() {
 
       if (resellerError) {
         console.error(' Erro ao criar revendedora:', resellerError);
-        // Se falhar, deletar o usuário do Auth
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error('Erro ao criar registro de revendedora');
+        // Informar erro mas não tentar deletar (usuário ficará no Auth mas sem reseller)
+        // Admin pode limpar manualmente depois
+        throw new Error('Erro ao criar registro de revendedora. Por favor, entre em contato com o suporte informando seu e-mail.');
       }
 
       console.log(' Revendedora criada:', resellerData);
@@ -359,3 +382,7 @@ export default function CadastroRevendedoraPage() {
     </div>
   );
 }
+
+
+
+
