@@ -14,7 +14,7 @@ export async function GET() {
 
     const { data: todas, error: todasError } = await supabase
       .from('franqueadas')
-      .select('id, nome, email, ativo');
+      .select('id, nome, email, status');
 
     console.log('Busca TODAS - Total:', todas?.length, 'Erro:', todasError?.message);
 
@@ -27,23 +27,23 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    const { data: ativas } = await supabase
+    const { data: aprovadas } = await supabase
       .from('franqueadas')
-      .select('id, nome, ativo')
-      .eq('ativo', true);
+      .select('id, nome, status')
+      .eq('status', 'aprovada');
 
-    console.log('Busca ATIVAS - Total:', ativas?.length);
+    console.log('Busca APROVADAS - Total:', aprovadas?.length);
 
     const resultado = {
       total: todas?.length || 0,
-      ativas_com_eq_true: ativas?.length || 0,
+      aprovadas: aprovadas?.length || 0,
       todas_franqueadas: todas?.map(f => ({
         nome: f.nome,
         email: f.email,
-        ativo: f.ativo,
-        tipo_ativo: typeof f.ativo,
+        status: f.status,
+        tipo_status: typeof f.status,
       })) || [],
-      franqueadas_ativas: ativas?.map(f => f.nome) || [],
+      franqueadas_aprovadas: aprovadas?.map(f => f.nome) || [],
     };
 
     console.log(' Resultado:', resultado);
