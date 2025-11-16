@@ -227,8 +227,14 @@ export default function FranqueadaProdutosPage() {
     return () => clearTimeout(timeoutId);
   }, [carregarProdutos]);
 
-  // OTIMIZAÇÃO: useMemo para evitar recalcular filtro a cada render`n  const produtosFiltrados = useMemo(() => produtos.filter(p =>
-    p.nome.toLowerCase().includes(searchTerm.toLowerCase())`n  ), [produtos, searchTerm]);
+  // OTIMIZAÇÃO: useMemo para evitar recalcular filtro a cada render
+  const produtosFiltrados = useMemo(
+    () =>
+      produtos.filter((p) =>
+        p.nome.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [produtos, searchTerm]
+  );
 
   function toggleSelect(id: string) {
     const newSet = new Set(selectedIds);
