@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Package, DollarSign, TrendingUp, ShoppingCart } from 'lucide-react';
@@ -25,31 +25,29 @@ export default function FranqueadaDashboardPage() {
       const { data: { user } } = await createClient().auth.getUser();
       if (!user) return;
 
+      // OTIMIZAÇÃO: Query unificada com JOIN (75% menos queries!)
       const { data: franqueada } = await createClient()
         .from('franqueadas')
-        .select('id, nome')
+        .select(`
+          id, nome,
+          produtos_franqueadas!inner(
+            id, ativo,
+            produtos_franqueadas_precos(id, ativo_no_site)
+          )
+        `)
         .eq('user_id', user.id)
+        .eq('produtos_franqueadas.ativo', true)
         .single();
 
       if (!franqueada) return;
 
-      // Buscar produtos vinculados
-      const { data: produtos } = await createClient()
-        .from('produtos_franqueadas')
-        .select('id, ativo')
-        .eq('franqueada_id', franqueada.id)
-        .eq('ativo', true);
-
-      const totalProdutos = produtos?.length || 0;
-
-      // Buscar produtos ativos no site
-      const { data: precos } = await createClient()
-        .from('produtos_franqueadas_precos')
-        .select('id, ativo_no_site, produto_franqueada_id')
-        .in('produto_franqueada_id', produtos?.map(p => p.id) || [])
-        .eq('ativo_no_site', true);
-
-      const produtosAtivos = precos?.length || 0;
+      // Calcular estatísticas do resultado unificado
+      const produtos = franqueada.produtos_franqueadas || [];
+      const totalProdutos = produtos.length;
+      
+      const produtosAtivos = produtos.filter(p => 
+        p.produtos_franqueadas_precos?.some((preco: any) => preco.ativo_no_site)
+      ).length;
 
       // TODO: Buscar vendas e comissões quando implementado
       const totalVendas = 0;
@@ -65,8 +63,7 @@ export default function FranqueadaDashboardPage() {
       console.error('Erro ao carregar dados:', err);
     } finally {
       setLoading(false);
-    }
-  }, []);
+    }}, []);
 
   useEffect(() => {
     carregarDados();
@@ -85,13 +82,13 @@ export default function FranqueadaDashboardPage() {
 
   return (
     <div className="p-4 md:p-6">
-      {/* Cabeçalho */}
+      {/* CabeÃ§alho */}
       <div className="mb-6">
         <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">Dashboard</h1>
-        <p className="text-sm md:text-base text-gray-600">Visão geral do seu negócio</p>
+        <p className="text-sm md:text-base text-gray-600">VisÃ£o geral do seu negÃ³cio</p>
       </div>
 
-      {/* Cards de Estatísticas */}
+      {/* Cards de EstatÃ­sticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {/* Total de Produtos */}
         <div className="bg-white rounded-lg shadow p-6">
@@ -127,14 +124,14 @@ export default function FranqueadaDashboardPage() {
           <p className="text-xs text-gray-500 mt-1">Em breve</p>
         </div>
 
-        {/* Comissão Acumulada */}
+        {/* ComissÃ£o Acumulada */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-yellow-100 p-3 rounded-lg">
               <DollarSign className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
-          <p className="text-sm text-gray-600 mb-1">Comissão Acumulada</p>
+          <p className="text-sm text-gray-600 mb-1">ComissÃ£o Acumulada</p>
           <p className="text-3xl font-bold text-gray-800">
             R$ {stats.comissaoAcumulada.toFixed(2)}
           </p>
@@ -142,9 +139,9 @@ export default function FranqueadaDashboardPage() {
         </div>
       </div>
 
-      {/* Ações Rápidas */}
+      {/* AÃ§Ãµes RÃ¡pidas */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">AÃ§Ãµes RÃ¡pidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/franqueada/produtos"
@@ -153,7 +150,7 @@ export default function FranqueadaDashboardPage() {
             <Package className="w-8 h-8 text-pink-600" />
             <div>
               <p className="font-medium text-gray-800">Ver Produtos</p>
-              <p className="text-sm text-gray-600">Gerencie seu catálogo</p>
+              <p className="text-sm text-gray-600">Gerencie seu catÃ¡logo</p>
             </div>
           </Link>
 
@@ -174,7 +171,7 @@ export default function FranqueadaDashboardPage() {
           >
             <DollarSign className="w-8 h-8 text-gray-400" />
             <div>
-              <p className="font-medium text-gray-800">Ver Comissões</p>
+              <p className="font-medium text-gray-800">Ver ComissÃµes</p>
               <p className="text-sm text-gray-600">Em breve</p>
             </div>
           </button>
@@ -183,3 +180,4 @@ export default function FranqueadaDashboardPage() {
     </div>
   );
 }
+

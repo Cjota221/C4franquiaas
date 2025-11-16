@@ -1,5 +1,5 @@
-"use client";
-import React, { useEffect, useState, useCallback } from 'react';
+﻿"use client";
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { Search, Package, DollarSign, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -27,16 +27,11 @@ function ImageGallery({ imagens, nome }: { imagens: string[]; nome: string }) {
   return (
     <div className="w-32 flex-shrink-0">
       <div className="relative w-32 h-32 rounded-lg overflow-hidden group">
-        <Image
-          src={imagens[currentIndex]}
-          alt={`${nome} - Foto ${currentIndex + 1}`}
-          fill
-          className="object-cover"
-        />
+        <Image src={imagens[currentIndex]} alt={`${nome} - Foto ${currentIndex + 1}`} fill className="object-cover" loading="lazy" quality={75} />
         
         {imagens.length > 1 && (
           <>
-            {/* Navegação */}
+            {/* NavegaÃ§Ã£o */}
             <button
               onClick={prev}
               className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-black/70"
@@ -69,7 +64,7 @@ function ImageGallery({ imagens, nome }: { imagens: string[]; nome: string }) {
                 idx === currentIndex ? 'border-pink-600' : 'border-gray-300'
               }`}
             >
-              <Image src={img} alt="" fill className="object-cover" />
+              <Image src={img} alt="" fill className="object-cover" loading="lazy" quality={60} />
             </button>
           ))}
         </div>
@@ -106,7 +101,7 @@ export default function FranqueadaProdutosPage() {
     try {
       const { data: { user } } = await createClient().auth.getUser();
       if (!user) {
-        console.log('[produtos] Usuário não autenticado');
+        console.log('[produtos] UsuÃ¡rio nÃ£o autenticado');
         setLoading(false);
         return;
       }
@@ -126,14 +121,14 @@ export default function FranqueadaProdutosPage() {
       }
 
       if (!franqueada) {
-        console.log('[produtos] Franqueada não encontrada');
+        console.log('[produtos] Franqueada nÃ£o encontrada');
         setLoading(false);
         return;
       }
 
       console.log('[produtos] Franqueada encontrada:', franqueada.id);
 
-      // Buscar produtos vinculados com preços (sem o campo imagens por enquanto)
+      // Buscar produtos vinculados com preÃ§os (sem o campo imagens por enquanto)
       const { data: vinculacoes, error: vinculacoesError } = await createClient()
         .from('produtos_franqueadas')
         .select(`
@@ -151,12 +146,12 @@ export default function FranqueadaProdutosPage() {
         .eq('ativo', true);
 
       if (vinculacoesError) {
-        console.error('[produtos] Erro ao buscar vinculações:', vinculacoesError);
+        console.error('[produtos] Erro ao buscar vinculaÃ§Ãµes:', vinculacoesError);
         setLoading(false);
         return;
       }
 
-      console.log('[produtos] Vinculações encontradas:', vinculacoes?.length || 0);
+      console.log('[produtos] VinculaÃ§Ãµes encontradas:', vinculacoes?.length || 0);
 
       if (!vinculacoes || vinculacoes.length === 0) {
         console.log('[produtos] Nenhum produto vinculado');
@@ -165,7 +160,7 @@ export default function FranqueadaProdutosPage() {
         return;
       }
 
-      // Buscar preços personalizados
+      // Buscar preÃ§os personalizados
       const vinculacaoIds = vinculacoes.map(v => v.id);
       const { data: precos, error: precosError } = await createClient()
         .from('produtos_franqueadas_precos')
@@ -173,10 +168,10 @@ export default function FranqueadaProdutosPage() {
         .in('produto_franqueada_id', vinculacaoIds);
 
       if (precosError) {
-        console.error('[produtos] Erro ao buscar preços:', precosError);
+        console.error('[produtos] Erro ao buscar preÃ§os:', precosError);
       }
 
-      console.log('[produtos] Preços encontrados:', precos?.length || 0);
+      console.log('[produtos] PreÃ§os encontrados:', precos?.length || 0);
 
       // Combinar dados
       const produtosFormatados: Produto[] = vinculacoes.map(v => {
@@ -219,9 +214,9 @@ export default function FranqueadaProdutosPage() {
   }, []);
 
   useEffect(() => {
-    // Timeout de segurança: se não carregar em 10 segundos, para o loading
+    // Timeout de seguranÃ§a: se nÃ£o carregar em 10 segundos, para o loading
     const timeoutId = setTimeout(() => {
-      console.error('[produtos] TIMEOUT: Forçando setLoading(false)');
+      console.error('[produtos] TIMEOUT: ForÃ§ando setLoading(false)');
       setLoading(false);
     }, 10000);
 
@@ -232,9 +227,8 @@ export default function FranqueadaProdutosPage() {
     return () => clearTimeout(timeoutId);
   }, [carregarProdutos]);
 
-  const produtosFiltrados = produtos.filter(p =>
-    p.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // OTIMIZAÇÃO: useMemo para evitar recalcular filtro a cada render`n  const produtosFiltrados = useMemo(() => produtos.filter(p =>
+    p.nome.toLowerCase().includes(searchTerm.toLowerCase())`n  ), [produtos, searchTerm]);
 
   function toggleSelect(id: string) {
     const newSet = new Set(selectedIds);
@@ -280,14 +274,14 @@ export default function FranqueadaProdutosPage() {
         const precoBase = produto.preco_base;
         let precoFinal = precoBase;
 
-        // Calcular preço final
+        // Calcular preÃ§o final
         if (ajusteTipo === 'porcentagem') {
           precoFinal = precoBase * (1 + parseFloat(ajusteValor) / 100);
         } else {
           precoFinal = precoBase + parseFloat(ajusteValor);
         }
 
-        // Inserir ou atualizar preço
+        // Inserir ou atualizar preÃ§o
         await createClient()
           .from('produtos_franqueadas_precos')
           .upsert({
@@ -300,14 +294,14 @@ export default function FranqueadaProdutosPage() {
           }, { onConflict: 'produto_franqueada_id' });
       }
 
-      alert('✅ Preços ajustados com sucesso!');
+      alert('âœ… PreÃ§os ajustados com sucesso!');
       setShowAjusteModal(false);
       setAjusteValor('');
       setSelectedIds(new Set());
       carregarProdutos();
     } catch (err) {
-      console.error('Erro ao ajustar preços:', err);
-      alert('❌ Erro ao ajustar preços');
+      console.error('Erro ao ajustar preÃ§os:', err);
+      alert('âŒ Erro ao ajustar preÃ§os');
     }
   }
 
@@ -318,11 +312,11 @@ export default function FranqueadaProdutosPage() {
       if (!produto) return;
 
       if (ativo && produto.ajuste_tipo === null) {
-        alert('⚠️ Defina a margem de lucro antes de ativar o produto!');
+        alert('âš ï¸ Defina a margem de lucro antes de ativar o produto!');
         return;
       }
 
-      // Buscar ou criar registro de preço
+      // Buscar ou criar registro de preÃ§o
       const { data: precoExistente } = await createClient()
         .from('produtos_franqueadas_precos')
         .select('*')
@@ -350,7 +344,7 @@ export default function FranqueadaProdutosPage() {
       carregarProdutos();
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
-      alert('❌ Erro ao atualizar status');
+      alert('âŒ Erro ao atualizar status');
     }
   }
 
@@ -367,7 +361,7 @@ export default function FranqueadaProdutosPage() {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando produtos...</p>
-          <p className="mt-2 text-xs text-gray-400">Se demorar muito, recarregue a página (F5)</p>
+          <p className="mt-2 text-xs text-gray-400">Se demorar muito, recarregue a pÃ¡gina (F5)</p>
         </div>
       </div>
     );
@@ -375,10 +369,10 @@ export default function FranqueadaProdutosPage() {
 
   return (
     <div className="p-4 md:p-6">
-      {/* Cabeçalho */}
+      {/* CabeÃ§alho */}
       <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">💎 Meus Produtos</h1>
-        <p className="text-sm md:text-base text-gray-600">Gerencie preços e disponibilidade dos produtos</p>
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">ðŸ’Ž Meus Produtos</h1>
+        <p className="text-sm md:text-base text-gray-600">Gerencie preÃ§os e disponibilidade dos produtos</p>
       </div>
 
       {/* Busca */}
@@ -395,13 +389,13 @@ export default function FranqueadaProdutosPage() {
         </div>
       </div>
 
-      {/* Ações em Massa */}
+      {/* AÃ§Ãµes em Massa */}
       <div className="flex flex-wrap gap-4 mb-6">
         <button
           onClick={selectAll}
           className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
         >
-          {selectedIds.size === produtos.length ? '☐ Desselecionar Todos' : '☑️ Selecionar Todos'}
+          {selectedIds.size === produtos.length ? 'â˜ Desselecionar Todos' : 'â˜‘ï¸ Selecionar Todos'}
         </button>
 
         {selectedIds.size > 0 && (
@@ -412,7 +406,7 @@ export default function FranqueadaProdutosPage() {
             >
               <span className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
-                Ajustar Preços ({selectedIds.size})
+                Ajustar PreÃ§os ({selectedIds.size})
               </span>
             </button>
 
@@ -420,39 +414,39 @@ export default function FranqueadaProdutosPage() {
               onClick={() => toggleAtivoEmMassa(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
             >
-              ✓ Ativar ({selectedIds.size})
+              âœ“ Ativar ({selectedIds.size})
             </button>
 
             <button
               onClick={() => toggleAtivoEmMassa(false)}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
             >
-              ✕ Desativar ({selectedIds.size})
+              âœ• Desativar ({selectedIds.size})
             </button>
           </>
         )}
       </div>
 
-      {/* Estatísticas */}
+      {/* EstatÃ­sticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600">Total de Produtos</div>
           <div className="text-2xl font-bold text-gray-800">{produtos.length}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-yellow-600">⚠️ Sem Margem</div>
+          <div className="text-sm text-yellow-600">âš ï¸ Sem Margem</div>
           <div className="text-2xl font-bold text-yellow-600">
             {produtos.filter(p => p.ajuste_tipo === null).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-blue-600">💎 Prontos p/ Ativar</div>
+          <div className="text-sm text-blue-600">ðŸ’Ž Prontos p/ Ativar</div>
           <div className="text-2xl font-bold text-blue-600">
             {produtos.filter(p => p.ajuste_tipo !== null && !p.ativo_no_site).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-green-600">✓ Ativos no Site</div>
+          <div className="text-sm text-green-600">âœ“ Ativos no Site</div>
           <div className="text-2xl font-bold text-green-600">
             {produtos.filter(p => p.ativo_no_site).length}
           </div>
@@ -493,7 +487,7 @@ export default function FranqueadaProdutosPage() {
                   {/* Galeria de Imagens */}
                   <ImageGallery imagens={produto.imagens} nome={produto.nome} />
 
-                  {/* Informações do Produto */}
+                  {/* InformaÃ§Ãµes do Produto */}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -501,17 +495,17 @@ export default function FranqueadaProdutosPage() {
                         <div className="flex gap-2 items-center">
                           {!margemDefinida && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
-                              ⚠️ Defina a margem
+                              âš ï¸ Defina a margem
                             </span>
                           )}
                           {margemDefinida && !produto.ativo_no_site && (
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                              💎 Pronto para ativar
+                              ðŸ’Ž Pronto para ativar
                             </span>
                           )}
                           {produto.ativo_no_site && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                              ✓ Ativo na loja
+                              âœ“ Ativo na loja
                             </span>
                           )}
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -519,29 +513,29 @@ export default function FranqueadaProdutosPage() {
                               ? 'bg-red-100 text-red-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {produto.estoque === 0 ? '❌ Esgotado' : '✓ Disponível'}
+                            {produto.estoque === 0 ? 'âŒ Esgotado' : 'âœ“ DisponÃ­vel'}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Fluxo de Preços - Visual Melhorado */}
+                    {/* Fluxo de PreÃ§os - Visual Melhorado */}
                     <div className="bg-gradient-to-r from-gray-50 to-green-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex items-center gap-3">
-                        {/* Preço Base C4 */}
+                        {/* PreÃ§o Base C4 */}
                         <div className="flex-1">
-                          <div className="text-xs text-gray-600 mb-1 font-medium">💰 Preço Base C4</div>
+                          <div className="text-xs text-gray-600 mb-1 font-medium">ðŸ’° PreÃ§o Base C4</div>
                           <div className="text-2xl font-bold text-gray-700">
                             R$ {produto.preco_base.toFixed(2)}
                           </div>
                         </div>
 
                         {/* Seta */}
-                        <div className="text-2xl text-gray-400">→</div>
+                        <div className="text-2xl text-gray-400">â†’</div>
 
                         {/* Sua Margem */}
                         <div className="flex-1">
-                          <div className="text-xs text-gray-600 mb-1 font-medium">📈 Sua Margem</div>
+                          <div className="text-xs text-gray-600 mb-1 font-medium">ðŸ“ˆ Sua Margem</div>
                           {margemDefinida ? (
                             <>
                               <div className="text-2xl font-bold" style={{ color: '#F8B81F' }}>
@@ -556,17 +550,17 @@ export default function FranqueadaProdutosPage() {
                             </>
                           ) : (
                             <div className="text-sm text-yellow-600 font-medium">
-                              Não definida
+                              NÃ£o definida
                             </div>
                           )}
                         </div>
 
                         {/* Seta */}
-                        <div className="text-2xl text-gray-400">→</div>
+                        <div className="text-2xl text-gray-400">â†’</div>
 
-                        {/* Preço Final */}
+                        {/* PreÃ§o Final */}
                         <div className="flex-1">
-                          <div className="text-xs text-gray-600 mb-1 font-medium">✨ Preço Final</div>
+                          <div className="text-xs text-gray-600 mb-1 font-medium">âœ¨ PreÃ§o Final</div>
                           <div className="text-3xl font-bold text-green-600">
                             R$ {produto.preco_final.toFixed(2)}
                           </div>
@@ -575,26 +569,26 @@ export default function FranqueadaProdutosPage() {
                     </div>
                   </div>
 
-                  {/* Ações */}
+                  {/* AÃ§Ãµes */}
                   <div className="flex flex-col gap-2 w-32">
                     {!margemDefinida ? (
                       <div className="text-center text-xs text-yellow-700 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                         <div className="font-semibold mb-1">Passo 1:</div>
-                        <div>Defina a margem usando o botão &quot;Ajustar Preços&quot;</div>
+                        <div>Defina a margem usando o botÃ£o &quot;Ajustar PreÃ§os&quot;</div>
                       </div>
                     ) : produto.ativo_no_site ? (
                       <button
                         onClick={() => toggleAtivo(produto.produto_franqueada_id, false)}
                         className="px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
                       >
-                        ✓ Ativo no Site
+                        âœ“ Ativo no Site
                       </button>
                     ) : (
                       <button
                         onClick={() => toggleAtivo(produto.produto_franqueada_id, true)}
                         className="px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition animate-pulse"
                       >
-                        🚀 Ativar Agora
+                        ðŸš€ Ativar Agora
                       </button>
                     )}
                   </div>
@@ -605,13 +599,13 @@ export default function FranqueadaProdutosPage() {
         </div>
       )}
 
-      {/* Modal de Ajuste de Preços */}
+      {/* Modal de Ajuste de PreÃ§os */}
       {showAjusteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
               <TrendingUp className="w-6 h-6 text-indigo-600" />
-              Ajustar Preços em Massa
+              Ajustar PreÃ§os em Massa
             </h2>
 
             <div className="space-y-4">
@@ -647,8 +641,8 @@ export default function FranqueadaProdutosPage() {
                 <p className="text-gray-700"><strong>Produtos selecionados:</strong> {selectedIds.size}</p>
                 <p className="mt-1 text-gray-600">
                   {ajusteTipo === 'porcentagem' 
-                    ? `Os preços serão aumentados em ${ajusteValor || '0'}%`
-                    : `Será adicionado R$ ${ajusteValor || '0.00'} ao preço base`
+                    ? `Os preÃ§os serÃ£o aumentados em ${ajusteValor || '0'}%`
+                    : `SerÃ¡ adicionado R$ ${ajusteValor || '0.00'} ao preÃ§o base`
                   }
                 </p>
               </div>
@@ -677,3 +671,6 @@ export default function FranqueadaProdutosPage() {
     </div>
   );
 }
+
+
+
