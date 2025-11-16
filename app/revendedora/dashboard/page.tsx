@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+﻿import { createClient } from '@/lib/supabase/server';
 import { Share2, ExternalLink, Package, Eye, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
@@ -76,7 +76,7 @@ export default async function DashboardRevendedora() {
             <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">1</span>
             <div>
               <p className="font-medium text-gray-900">Adicione produtos ao seu catálogo</p>
-              <p className="text-sm text-gray-500">Vá em &quot;Produtos&quot; e ative os produtos que deseja vender</p>
+              <p className="text-sm text-gray-500">Vá em "Produtos" e ative os produtos que deseja vender</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
