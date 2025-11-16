@@ -46,7 +46,7 @@ export default function FranqueadaDashboardPage() {
       const totalProdutos = produtos.length;
       
       const produtosAtivos = produtos.filter(p => 
-        p.produtos_franqueadas_precos?.some((preco: any) => preco.ativo_no_site)
+        p.produtos_franqueadas_precos?.some((preco) => preco.ativo_no_site)
       ).length;
 
       // TODO: Buscar vendas e comissões quando implementado
