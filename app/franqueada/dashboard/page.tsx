@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import { Package, DollarSign, TrendingUp, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,10 +22,10 @@ export default function FranqueadaDashboardPage() {
 
   const carregarDados = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await createClient().auth.getUser();
       if (!user) return;
 
-      const { data: franqueada } = await supabase
+      const { data: franqueada } = await createClient()
         .from('franqueadas')
         .select('id, nome')
         .eq('user_id', user.id)
@@ -34,7 +34,7 @@ export default function FranqueadaDashboardPage() {
       if (!franqueada) return;
 
       // Buscar produtos vinculados
-      const { data: produtos } = await supabase
+      const { data: produtos } = await createClient()
         .from('produtos_franqueadas')
         .select('id, ativo')
         .eq('franqueada_id', franqueada.id)
@@ -43,7 +43,7 @@ export default function FranqueadaDashboardPage() {
       const totalProdutos = produtos?.length || 0;
 
       // Buscar produtos ativos no site
-      const { data: precos } = await supabase
+      const { data: precos } = await createClient()
         .from('produtos_franqueadas_precos')
         .select('id, ativo_no_site, produto_franqueada_id')
         .in('produto_franqueada_id', produtos?.map(p => p.id) || [])

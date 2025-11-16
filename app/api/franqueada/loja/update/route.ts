@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import { getAuthFranqueada } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
@@ -20,7 +20,7 @@ export async function PUT(req: Request) {
     }
 
     // Verificar se domínio já existe (exceto o próprio)
-    const { data: existente } = await supabase
+    const { data: existente } = await createClient()
       .from('lojas')
       .select('id, franqueada_id')
       .eq('dominio', dominio)
@@ -31,7 +31,7 @@ export async function PUT(req: Request) {
     }
 
     // Atualizar loja com todos os novos campos
-    const { data: loja, error } = await supabase
+    const { data: loja, error } = await createClient()
       .from('lojas')
       .update({
         nome: body.nome,

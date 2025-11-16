@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import { getAuthUser } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
@@ -38,8 +38,8 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
-    // Upload para Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    // Upload para createClient() Storage
+    const { error: uploadError } = await createClient().storage
       .from('logos')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       // Mensagem específica para bucket não encontrado
       if (uploadError.message.includes('not found') || uploadError.message.includes('does not exist')) {
         return NextResponse.json({ 
-          error: 'Bucket "logos" não existe. Crie o bucket no Supabase Storage primeiro.',
+          error: 'Bucket "logos" não existe. Crie o bucket no createClient() Storage primeiro.',
           details: uploadError.message 
         }, { status: 500 });
       }
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     }
 
     // Obter URL pública
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = createClient().storage
       .from('logos')
       .getPublicUrl(fileName);
 

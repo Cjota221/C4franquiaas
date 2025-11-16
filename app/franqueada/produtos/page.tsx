@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { Search, Package, DollarSign, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -104,7 +104,7 @@ export default function FranqueadaProdutosPage() {
   const carregarProdutos = useCallback(async () => {
     console.log('[produtos] Iniciando carregamento...');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await createClient().auth.getUser();
       if (!user) {
         console.log('[produtos] Usuário não autenticado');
         setLoading(false);
@@ -113,7 +113,7 @@ export default function FranqueadaProdutosPage() {
 
       console.log('[produtos] Buscando franqueada para user_id:', user.id);
 
-      const { data: franqueada, error: franqueadaError } = await supabase
+      const { data: franqueada, error: franqueadaError } = await createClient()
         .from('franqueadas')
         .select('id')
         .eq('user_id', user.id)
@@ -134,7 +134,7 @@ export default function FranqueadaProdutosPage() {
       console.log('[produtos] Franqueada encontrada:', franqueada.id);
 
       // Buscar produtos vinculados com preços (sem o campo imagens por enquanto)
-      const { data: vinculacoes, error: vinculacoesError } = await supabase
+      const { data: vinculacoes, error: vinculacoesError } = await createClient()
         .from('produtos_franqueadas')
         .select(`
           id,
@@ -167,7 +167,7 @@ export default function FranqueadaProdutosPage() {
 
       // Buscar preços personalizados
       const vinculacaoIds = vinculacoes.map(v => v.id);
-      const { data: precos, error: precosError } = await supabase
+      const { data: precos, error: precosError } = await createClient()
         .from('produtos_franqueadas_precos')
         .select('*')
         .in('produto_franqueada_id', vinculacaoIds);
@@ -261,10 +261,10 @@ export default function FranqueadaProdutosPage() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await createClient().auth.getUser();
       if (!user) return;
 
-      const { data: franqueada } = await supabase
+      const { data: franqueada } = await createClient()
         .from('franqueadas')
         .select('id')
         .eq('user_id', user.id)
@@ -288,7 +288,7 @@ export default function FranqueadaProdutosPage() {
         }
 
         // Inserir ou atualizar preço
-        await supabase
+        await createClient()
           .from('produtos_franqueadas_precos')
           .upsert({
             produto_franqueada_id: produtoFranqueadaId,
@@ -323,7 +323,7 @@ export default function FranqueadaProdutosPage() {
       }
 
       // Buscar ou criar registro de preço
-      const { data: precoExistente } = await supabase
+      const { data: precoExistente } = await createClient()
         .from('produtos_franqueadas_precos')
         .select('*')
         .eq('produto_franqueada_id', produtoFranqueadaId)
@@ -331,13 +331,13 @@ export default function FranqueadaProdutosPage() {
 
       if (precoExistente) {
         // Atualizar status
-        await supabase
+        await createClient()
           .from('produtos_franqueadas_precos')
           .update({ ativo_no_site: ativo })
           .eq('produto_franqueada_id', produtoFranqueadaId);
       } else {
         // Criar registro inicial
-        await supabase
+        await createClient()
           .from('produtos_franqueadas_precos')
           .insert({
             produto_franqueada_id: produtoFranqueadaId,

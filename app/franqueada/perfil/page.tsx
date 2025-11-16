@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import { User, Mail, Phone, MapPin, Calendar, Wallet } from 'lucide-react';
 import { FormDadosPagamento } from '@/components/franqueada/FormDadosPagamento';
 
@@ -24,10 +24,10 @@ export default function FranqueadaPerfilPage() {
 
   const carregarPerfil = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await createClient().auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await createClient()
         .from('franqueadas')
         .select('*')
         .eq('user_id', user.id)

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import SidebarFranqueada from '@/components/SidebarFranqueada';
 import { Toaster } from 'sonner';
 
@@ -23,7 +23,7 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await createClient().auth.getUser();
 
       if (!user) {
         router.push('/franqueada/login');
@@ -31,7 +31,7 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
       }
 
       // Verificar se usuário está vinculado a franqueada aprovada
-      const { data: franqueada, error } = await supabase
+      const { data: franqueada, error } = await createClient()
         .from('franqueadas')
         .select('id, nome, status')
         .eq('user_id', user.id)
@@ -39,14 +39,14 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
 
       if (error || !franqueada) {
         console.error('[franqueada/layout] Usuário não vinculado a franqueada');
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         router.push('/franqueada/login');
         return;
       }
 
       if (franqueada.status !== 'aprovada') {
         console.error('[franqueada/layout] Franqueada não aprovada');
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         router.push('/franqueada/login');
         return;
       }

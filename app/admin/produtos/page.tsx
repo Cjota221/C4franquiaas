@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
@@ -11,7 +11,7 @@ import ProductDetailsModal from '@/components/ProductDetailsModal';
 import ModalCategorias from '@/components/ModalCategorias';
 import ModalVincularCategoria from '@/components/ModalVincularCategoria';
 import ModalAtualizarPrecos from '@/components/ModalAtualizarPrecos';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 import PageWrapper from '@/components/PageWrapper';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -68,13 +68,13 @@ export default function ProdutosPage(): React.JSX.Element {
   // Carregar categorias disponíveis
   const carregarCategorias = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createClient()
         .from('categorias')
         .select('id, nome')
         .order('nome', { ascending: true });
 
       if (error) {
-        console.error('Erro do Supabase ao carregar categorias:', error);
+        console.error('Erro do createClient() ao carregar categorias:', error);
         throw error;
       }
       setCategorias(data || []);
@@ -94,7 +94,7 @@ export default function ProdutosPage(): React.JSX.Element {
       const from = temBusca ? 0 : (pag - 1) * PAGE_SIZE;
       const to = temBusca ? 9999 : from + PAGE_SIZE - 1; // Carregar muitos quando busca
 
-      let query = supabase
+      let query = createClient()
         .from('produtos')
         .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens', { count: 'exact' })
         .order('nome', { ascending: true });
@@ -110,7 +110,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       // Buscar preços personalizados de TODOS os produtos para identificar "novos"
       const produtoIds = (data || []).map((r: ProdutoRow) => r.id);
-      const { data: precosPersonalizados } = await supabase
+      const { data: precosPersonalizados } = await createClient()
         .from('produtos_franqueadas')
         .select('produto_id')
         .in('produto_id', produtoIds);
@@ -250,7 +250,7 @@ export default function ProdutosPage(): React.JSX.Element {
       const novoStatus = action === 'activate';
       
       // 1. Atualizar status do produto
-      const { error } = await supabase
+      const { error } = await createClient()
         .from('produtos')
         .update({ ativo: novoStatus })
         .in('id', selected);

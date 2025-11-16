@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: { user }, error: signInError } = await createClient().auth.signInWithPassword({
         email,
         password,
       });
@@ -25,7 +25,7 @@ export default function LoginPage() {
       if (signInError) throw new Error(signInError.message);
       if (!user) throw new Error('Usuário não encontrado após o login.');
 
-      const { data: perfil, error: profileError } = await supabase
+      const { data: perfil, error: profileError } = await createClient()
         .from('perfis')
         .select('papel')
         .eq('id', user.id)
@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (perfil && perfil.papel === 'admin') {
         router.push('/admin/dashboard');
       } else {
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         throw new Error('Acesso negado. Apenas administradores podem entrar.');
       }
     } catch (err: unknown) {

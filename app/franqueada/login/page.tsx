@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginFranqueadaPage() {
   const router = useRouter();
@@ -14,8 +14,8 @@ export default function LoginFranqueadaPage() {
     setLoading(true);
 
     try {
-      // Autenticar com Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Autenticar com createClient() Auth
+      const { data: authData, error: authError } = await createClient().auth.signInWithPassword({
         email,
         password: senha
       });
@@ -29,25 +29,25 @@ export default function LoginFranqueadaPage() {
       }
 
       // Verificar se o usuário está vinculado a uma franqueada
-      const { data: franqueada, error: franqueadaError } = await supabase
+      const { data: franqueada, error: franqueadaError } = await createClient()
         .from('franqueadas')
         .select('id, nome, status')
         .eq('user_id', authData.user.id)
         .single();
 
       if (franqueadaError || !franqueada) {
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         throw new Error('Usuário não está vinculado a nenhuma franqueada');
       }
 
       // Verificar se está aprovada
       if (franqueada.status !== 'aprovada') {
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         throw new Error('Seu cadastro ainda não foi aprovado pelo administrador');
       }
 
       // Atualizar último acesso
-      await supabase
+      await createClient()
         .from('franqueadas')
         .update({ ultimo_acesso: new Date().toISOString() })
         .eq('id', franqueada.id);
