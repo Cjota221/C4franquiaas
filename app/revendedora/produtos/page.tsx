@@ -10,7 +10,7 @@ interface Produto {
   nome: string;
   preco_base: number;
   imagem: string | null;
-  categoria: string;
+  categorias: string;
   ativo: boolean;
 }
 
@@ -117,7 +117,7 @@ export default function ProdutosRevendedoraPage() {
       
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
-        .select('id, nome, preco_base, imagem, categoria, ativo')
+        .select('id, nome, preco_base, imagem, categorias, ativo')
         .in('id', produtoIds)
         .order('nome');
 
@@ -265,11 +265,11 @@ export default function ProdutosRevendedoraPage() {
       .eq('id', revendedoraId);
   }
 
-  const categorias = ['todas', ...new Set(produtos.map(p => p.categoria))];
+  const categorias = ['todas', ...new Set(produtos.map(p => p.categorias))];
 
   const produtosFiltrados = produtos.filter(p => {
     const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
-    const matchCategoria = categoriaFiltro === 'todas' || p.categoria === categoriaFiltro;
+    const matchCategoria = categoriaFiltro === 'todas' || p.categorias === categoriaFiltro;
     const matchAtivo = !apenasAtivos || produtosVinculados.get(p.id)?.is_active;
     return matchBusca && matchCategoria && matchAtivo;
   });
@@ -443,7 +443,7 @@ export default function ProdutosRevendedoraPage() {
                   <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
                     {produto.nome}
                   </h3>
-                  <p className="text-xs text-gray-500 mb-3">{produto.categoria}</p>
+                  <p className="text-xs text-gray-500 mb-3">{produto.categorias}</p>
 
                   {/* Preços */}
                   <div className="mb-4 space-y-1">
