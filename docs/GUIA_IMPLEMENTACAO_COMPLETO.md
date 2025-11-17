@@ -34,6 +34,7 @@ c4-franquias-admin/
 ### ETAPA 1: Aplicar Migration 035 (10 min)
 
 #### 1.1 Acessar Supabase Dashboard
+
 ```
 1. Acessar: https://app.supabase.com
 2. Selecionar projeto: [SEU_PROJETO]
@@ -41,6 +42,7 @@ c4-franquias-admin/
 ```
 
 #### 1.2 Executar Migration
+
 ```sql
 -- Copiar TODO o conteúdo de: migrations/035_add_sync_triggers.sql
 -- Colar no SQL Editor
@@ -48,18 +50,20 @@ c4-franquias-admin/
 ```
 
 #### 1.3 Verificar Instalação
+
 ```sql
 -- Verificar trigger
 SELECT * FROM pg_trigger WHERE tgname = 'trg_sync_product_availability';
 
 -- Verificar função
-SELECT proname FROM pg_proc 
+SELECT proname FROM pg_proc
 WHERE proname = 'sync_product_availability_to_franchisees';
 
 -- Deve retornar 1 linha cada
 ```
 
 #### 1.4 Testar Trigger (Opcional)
+
 ```sql
 -- 1. Escolha um produto com vinculações
 SELECT p.id, p.nome, p.ativo, p.estoque
@@ -86,17 +90,20 @@ WHERE pf.produto_id = [ID_DO_PRODUTO];
 ### ETAPA 2: Deploy do Código (5 min)
 
 #### 2.1 Verificar Branch
+
 ```powershell
 git status
 git log --oneline -5
 ```
 
 Deve mostrar commits:
+
 - `13a97e2` - feat: Refatora painel de produtos da franqueada...
 - `dd0e690` - feat: Adiciona sincronização automática...
 - `a6ee5c3` - fix: Aplica correções de formatação...
 
 #### 2.2 Build Local (Teste)
+
 ```powershell
 npm run build
 ```
@@ -104,6 +111,7 @@ npm run build
 Deve completar sem erros.
 
 #### 2.3 Verificar Deploy Netlify
+
 ```
 1. Acessar: https://app.netlify.com
 2. Verificar último deploy
@@ -120,6 +128,7 @@ Deve completar sem erros.
 Siga o checklist completo em: `docs/CHECKLIST_TESTES_FRANQUEADA.md`
 
 #### Testes Críticos (Mínimo):
+
 1. **Carregamento:** Produtos aparecem na tabela?
 2. **Edição de Margem:** Consegue alterar margem inline?
 3. **Toggle Status:** Consegue ativar/desativar produtos?
@@ -133,11 +142,13 @@ Siga o checklist completo em: `docs/CHECKLIST_TESTES_FRANQUEADA.md`
 ### ETAPA 4: Treinamento e Comunicação (15 min)
 
 #### 4.1 Criar Vídeo Demonstrativo (Opcional)
+
 - Gravar tela mostrando nova interface
 - Destacar: edição de margem, filtros, ações em massa
 - Duração: 3-5 minutos
 
 #### 4.2 Enviar Comunicado para Franqueadas
+
 ```markdown
 Assunto: 🚀 Nova Interface de Gestão de Produtos
 
@@ -153,6 +164,7 @@ O QUE MUDOU:
 ✅ Sincronização automática com estoque da C4
 
 PRINCIPAIS MELHORIAS:
+
 - Mais produtos visíveis por vez (densidade alta)
 - Ordenação por nome, preço ou data
 - Aplicação de margem em lote
@@ -176,7 +188,9 @@ Equipe C4 Franquias
 ### Componentes Criados
 
 #### 1. TabelaProdutosFranqueada.tsx (460 linhas)
+
 **Responsabilidades:**
+
 - Renderização de tabela com 9 colunas
 - Edição inline de margem com validação
 - Toggle de status com validações de negócio
@@ -185,6 +199,7 @@ Equipe C4 Franquias
 - Estados de loading e empty state
 
 **Props:**
+
 ```typescript
 {
   produtos: ProdutoFranqueada[];
@@ -201,7 +216,9 @@ Equipe C4 Franquias
 ```
 
 #### 2. FiltrosProdutosFranqueada.tsx (315 linhas)
+
 **Responsabilidades:**
+
 - 6 tipos de filtros (busca, dropdowns, checkbox, range)
 - Tags de filtros ativos com remoção individual
 - Contador de produtos filtrados
@@ -209,6 +226,7 @@ Equipe C4 Franquias
 - Indicador de loading (spinner durante busca)
 
 **Props:**
+
 ```typescript
 {
   filtros: FiltrosProdutos;
@@ -221,7 +239,9 @@ Equipe C4 Franquias
 ```
 
 #### 3. page.tsx Refatorado (670 linhas)
+
 **Mudanças principais:**
+
 - Layout de cards → tabela
 - 4 cards de estatísticas
 - Barra de ações em massa
@@ -235,20 +255,25 @@ Equipe C4 Franquias
 ### Migration 035: Sincronização Automática
 
 #### Função Principal
+
 ```sql
 CREATE FUNCTION sync_product_availability_to_franchisees()
 ```
 
 **Casos tratados:**
+
 1. **Produto desativado:** `ativo: true → false`
+
    - Ação: Desativa em TODAS as franqueadas
    - Campo: `ativo_no_site = false`
 
 2. **Estoque zerado:** `estoque: > 0 → 0`
+
    - Ação: Desativa em TODAS as franqueadas
    - Campo: `ativo_no_site = false`
 
 3. **Produto reativado:** `ativo: false → true`
+
    - Ação: Atualiza timestamp (marca como disponível)
    - Campo: `atualizado_em = NOW()`
    - ⚠️ NÃO ativa automaticamente (franqueada decide)
@@ -259,6 +284,7 @@ CREATE FUNCTION sync_product_availability_to_franchisees()
    - ⚠️ NÃO ativa automaticamente
 
 #### Tabelas Afetadas
+
 - **produtos:** Gatilho (trigger)
 - **produtos_franqueadas_precos:** Atualização (UPDATE)
 
@@ -267,14 +293,19 @@ CREATE FUNCTION sync_product_availability_to_franchisees()
 ## 🔐 Regras de Negócio Implementadas
 
 ### 1. Validação de Ativação
+
 ```typescript
 // NÃO permite ativar se:
-- produto.produto_ativo === false  // Desativado pela C4
-- produto.estoque === 0            // Sem estoque
-- produto.margem_percentual === null // Sem margem configurada
+((-produto.produto_ativo ===
+  false - // Desativado pela C4
+    produto.estoque) ===
+  0 - // Sem estoque
+    produto.margem_percentual) ===
+  null; // Sem margem configurada
 ```
 
 ### 2. Sincronização Automática
+
 ```
 Admin desativa produto
   ↓
@@ -286,6 +317,7 @@ Produto desaparece de TODOS os sites das franqueadas
 ```
 
 ### 3. Cálculo de Preço Final
+
 ```typescript
 // Fórmula:
 preco_final = preco_base * (1 + margem_percentual / 100)
@@ -297,6 +329,7 @@ preco_final = 100 * (1 + 50/100) = 100 * 1.5 = 150.00
 ```
 
 ### 4. Ações em Massa
+
 ```typescript
 // Validações antes de ativar em massa:
 - Todos os produtos devem ter margem configurada
@@ -309,6 +342,7 @@ preco_final = 100 * (1 + 50/100) = 100 * 1.5 = 150.00
 ## 📈 Melhorias de Performance
 
 ### 1. Debounce na Busca
+
 ```typescript
 const buscaDebounced = useDebounce(filtros.busca, 500);
 // Evita buscar a cada letra digitada
@@ -316,6 +350,7 @@ const buscaDebounced = useDebounce(filtros.busca, 500);
 ```
 
 ### 2. useMemo para Filtros
+
 ```typescript
 const produtosFiltrados = useMemo(() => {
   // Cálculo pesado só executa quando dependências mudam
@@ -323,6 +358,7 @@ const produtosFiltrados = useMemo(() => {
 ```
 
 ### 3. Carregamento Otimizado
+
 ```typescript
 // Timeout de segurança
 const timeoutId = setTimeout(() => {
@@ -337,17 +373,20 @@ const timeoutId = setTimeout(() => {
 ## 🐛 Troubleshooting
 
 ### Problema: Produtos não carregam
+
 **Sintomas:** Tela branca ou loading infinito  
 **Soluções:**
+
 1. Verificar console do navegador (F12)
 2. Verificar se user_id está correto
 3. Verificar se franqueada existe no banco
 4. Verificar se há produtos vinculados
 
 **Query de debug:**
+
 ```sql
 -- Verificar vinculações
-SELECT 
+SELECT
   f.nome_fantasia,
   COUNT(pf.id) as total_produtos
 FROM franqueadas f
@@ -357,28 +396,36 @@ GROUP BY f.id;
 ```
 
 ### Problema: Trigger não está funcionando
+
 **Sintomas:** Produtos não desativam automaticamente  
 **Soluções:**
+
 1. Verificar se trigger está habilitado
+
 ```sql
-SELECT tgenabled FROM pg_trigger 
+SELECT tgenabled FROM pg_trigger
 WHERE tgname = 'trg_sync_product_availability';
 ```
+
 2. Ver logs do PostgreSQL
 3. Executar manualmente UPDATE para testar
 4. Verificar permissões da tabela
 
 ### Problema: Margem não salva
+
 **Sintomas:** Valor volta para anterior após editar  
 **Soluções:**
+
 1. Verificar console (erro de rede?)
 2. Verificar permissões da tabela `produtos_franqueadas_precos`
 3. Verificar conflito de `onConflict` no upsert
 4. Testar query direto no Supabase
 
 ### Problema: Build falha no Netlify
+
 **Sintomas:** Erro de tipo TypeScript  
 **Soluções:**
+
 1. Rodar `npm run build` localmente
 2. Verificar erros de tipo no console
 3. Verificar imports (paths corretos?)
@@ -389,15 +436,18 @@ WHERE tgname = 'trg_sync_product_availability';
 ## 📚 Recursos Adicionais
 
 ### Documentação Criada
+
 1. **APLICAR_MIGRATION_035.md:** Guia de aplicação da migration
 2. **CHECKLIST_TESTES_FRANQUEADA.md:** Checklist completo de testes (118 casos)
 3. **GUIA_IMPLEMENTACAO_COMPLETO.md:** Este documento
 
 ### Backups Criados
+
 1. **app/franqueada/produtos/page_OLD_CARDS.tsx:** Versão anterior (cards)
 2. **app/admin/produtos/page_OLD_GRID.tsx:** Versão grid do admin
 
 ### Commits Principais
+
 ```
 dd0e690 - feat: Adiciona sincronização automática e novos componentes
 13a97e2 - feat: Refatora painel de produtos da franqueada
@@ -410,23 +460,26 @@ a6ee5c3 - fix: Aplica correções de formatação
 ## 🎓 Lições Aprendidas
 
 ### O que funcionou bem:
+
 ✅ Separação em componentes reutilizáveis  
 ✅ Uso de TypeScript para type safety  
 ✅ Validações de negócio no frontend e backend  
 ✅ Backup antes de refatorar  
-✅ Documentação detalhada  
+✅ Documentação detalhada
 
 ### Desafios enfrentados:
+
 ⚠️ Tipo ProdutoRow causou erro de build  
 ⚠️ Sincronização via trigger requer teste manual  
-⚠️ Formatação automática às vezes causa conflitos  
+⚠️ Formatação automática às vezes causa conflitos
 
 ### Melhorias futuras (opcional):
+
 💡 Persistência de filtros na URL (query params)  
 💡 Exportar lista de produtos para CSV  
 💡 Gráficos de margem de lucro por categoria  
 💡 Notificações em tempo real (WebSocket)  
-💡 Mobile app nativo  
+💡 Mobile app nativo
 
 ---
 
@@ -452,6 +505,7 @@ Antes de considerar a implementação completa, verifique:
 **Em caso de problemas críticos:**
 
 1. **Rollback do código:**
+
 ```powershell
 # Restaurar versão antiga
 git revert 13a97e2  # Reverter refatoração
@@ -459,11 +513,13 @@ git push origin main
 ```
 
 2. **Desabilitar trigger:**
+
 ```sql
 ALTER TABLE produtos DISABLE TRIGGER trg_sync_product_availability;
 ```
 
 3. **Contato:**
+
 - Email: [SEU_EMAIL]
 - Slack: [SEU_CANAL]
 - Tel: [SEU_TELEFONE]
@@ -472,15 +528,15 @@ ALTER TABLE produtos DISABLE TRIGGER trg_sync_product_availability;
 
 ## 📊 Estatísticas do Projeto
 
-| Métrica | Valor |
-|---------|-------|
-| **Linhas de código adicionadas** | ~2,350 |
-| **Arquivos criados** | 7 |
-| **Arquivos modificados** | 3 |
-| **Commits** | 6 |
-| **Tempo de desenvolvimento** | ~4 horas |
-| **Casos de teste** | 118 |
-| **Documentação** | 4 arquivos |
+| Métrica                          | Valor      |
+| -------------------------------- | ---------- |
+| **Linhas de código adicionadas** | ~2,350     |
+| **Arquivos criados**             | 7          |
+| **Arquivos modificados**         | 3          |
+| **Commits**                      | 6          |
+| **Tempo de desenvolvimento**     | ~4 horas   |
+| **Casos de teste**               | 118        |
+| **Documentação**                 | 4 arquivos |
 
 ---
 
@@ -492,7 +548,7 @@ Esta implementação transforma completamente a experiência de gestão de produ
 ⚡ **Performance otimizada** com debounce e memoização  
 🔒 **Segurança garantida** com validações de negócio  
 🔄 **Sincronização automática** para evitar vendas indevidas  
-📊 **Visibilidade clara** de margens e lucros  
+📊 **Visibilidade clara** de margens e lucros
 
 O sistema está pronto para produção e escalável para futuras melhorias!
 

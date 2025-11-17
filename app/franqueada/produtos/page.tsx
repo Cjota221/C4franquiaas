@@ -169,10 +169,10 @@ export default function FranqueadaProdutosPage() {
             estoque_status: estoqueStatus as 'disponivel' | 'esgotado',
             imagem: produto.imagem,
             imagens: imagensArray,
-            created_at: v.created_at || new Date().toISOString(),
+            created_at: v.created_at ?? new Date().toISOString(),
             produto_ativo: produto.ativo,
             pode_ativar: podeAtivar
-          };
+          } as ProdutoFranqueada;
         })
         .filter((p): p is ProdutoFranqueada => p !== null && 'id' in p);
 

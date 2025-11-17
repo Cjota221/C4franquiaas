@@ -219,6 +219,15 @@ export default function TabelaProdutosFranqueada({
                   {renderSortIcon('created_at')}
                 </div>
               </th>
+
+              {/* Ações */}
+              {onVerDetalhes && (
+                <th className="px-4 py-3 text-left w-24">
+                  <span className="text-xs font-semibold text-gray-600 uppercase">
+                    Ações
+                  </span>
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -393,11 +402,6 @@ export default function TabelaProdutosFranqueada({
                           }`}
                         />
                       </button>
-                      <span className={`text-xs font-medium ${
-                        produto.ativo_no_site ? 'text-green-700' : 'text-gray-500'
-                      }`}>
-                        {produto.ativo_no_site ? 'Ativo' : 'Inativo'}
-                      </span>
                     </div>
                   </td>
 
@@ -410,6 +414,18 @@ export default function TabelaProdutosFranqueada({
                       }
                     </span>
                   </td>
+
+                  {/* Ações */}
+                  {onVerDetalhes && (
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => onVerDetalhes(produto)}
+                        className="text-sm text-pink-600 hover:text-pink-700 font-medium"
+                      >
+                        Detalhes
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
