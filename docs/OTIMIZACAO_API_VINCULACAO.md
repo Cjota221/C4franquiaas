@@ -11,11 +11,13 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ### 1️⃣ **Suporte Dual: Franqueadas + Revendedoras**
 
 **ANTES:**
+
 - ✅ Vinculava apenas para franqueadas
 - ❌ Revendedoras não eram contempladas
 - ❌ Necessário chamar API separadamente para cada tipo
 
 **DEPOIS:**
+
 - ✅ Vincula para franqueadas E revendedoras em uma única chamada
 - ✅ Tabelas suportadas: `produtos_franqueadas` e `produtos_revendedoras`
 - ✅ Performance otimizada com operações paralelas
@@ -25,12 +27,14 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ### 2️⃣ **Logging Melhorado**
 
 **ANTES:**
+
 ```
  [Vincular Franqueadas] Iniciando...
  Produtos encontrados: 10
 ```
 
 **DEPOIS:**
+
 ```
 🔗 [Vincular] Iniciando vinculação automática...
 ✅ 3 franqueadas aprovadas
@@ -50,12 +54,14 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ### 3️⃣ **Validação e Tratamento de Erros Robusto**
 
 #### Validações Adicionadas:
+
 - ✅ Verifica se existem franqueadas **OU** revendedoras aprovadas
 - ✅ Valida se produtos estão ativos antes de vincular
 - ✅ Retorna debug detalhado quando não encontra produtos
 - ✅ Coleta erros parciais (pode vincular franqueadas mesmo se revendedoras falharem)
 
 #### Mensagens de Erro Detalhadas:
+
 ```json
 {
   "error": "Erro ao buscar franqueadas",
@@ -71,6 +77,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 #### Endpoint: `GET /api/admin/produtos/vincular-todas-franqueadas`
 
 **ANTES:**
+
 ```json
 {
   "status": "API ativa",
@@ -85,6 +92,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ```
 
 **DEPOIS:**
+
 ```json
 {
   "status": "API ativa",
@@ -105,6 +113,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ```
 
 #### Status Visual:
+
 - ✅ **Completo** - 100% dos produtos vinculados
 - 🟡 **Parcial** - 50-99% vinculados
 - 🔴 **Baixo** - < 50% vinculados
@@ -116,6 +125,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 #### Endpoint: `POST /api/admin/produtos/vincular-todas-franqueadas`
 
 **Body:**
+
 ```json
 {
   "produto_ids": [1, 2, 3, 4, 5]
@@ -123,6 +133,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ```
 
 **Resposta:**
+
 ```json
 {
   "success": true,
@@ -141,6 +152,7 @@ A API `/api/admin/produtos/vincular-todas-franqueadas` foi **completamente otimi
 ```
 
 **Se houver erros parciais:**
+
 ```json
 {
   "success": true,
@@ -186,6 +198,7 @@ Retorna estatísticas em tempo real de todas as vinculações do sistema.
 ## 🗂️ Estrutura de Tabelas
 
 ### Tabela: `produtos_franqueadas`
+
 ```sql
 CREATE TABLE produtos_franqueadas (
   id SERIAL PRIMARY KEY,
@@ -198,6 +211,7 @@ CREATE TABLE produtos_franqueadas (
 ```
 
 ### Tabela: `produtos_revendedoras`
+
 ```sql
 CREATE TABLE produtos_revendedoras (
   id SERIAL PRIMARY KEY,
@@ -227,6 +241,7 @@ A API trabalha em conjunto com a **Migration 035** (Triggers de Sincronização 
 ## 🎯 Casos de Uso
 
 ### Caso 1: Novo Produto Cadastrado
+
 ```
 1. Admin cadastra produto no sistema
 2. Admin ativa o produto
@@ -235,6 +250,7 @@ A API trabalha em conjunto com a **Migration 035** (Triggers de Sincronização 
 ```
 
 ### Caso 2: Vincular Produtos Antigos (Migração)
+
 ```
 1. Admin seleciona 50 produtos antigos
 2. Chama API POST com array de IDs
@@ -243,6 +259,7 @@ A API trabalha em conjunto com a **Migration 035** (Triggers de Sincronização 
 ```
 
 ### Caso 3: Monitoramento de Vinculações
+
 ```
 1. Admin acessa dashboard
 2. Chama API GET para estatísticas
@@ -255,19 +272,25 @@ A API trabalha em conjunto com a **Migration 035** (Triggers de Sincronização 
 ## ⚠️ Observações Importantes
 
 ### 1. **Permissões**
+
 A API usa `SUPABASE_SERVICE_ROLE_KEY`, o que significa:
+
 - ✅ Bypassa RLS (Row Level Security)
 - ✅ Pode criar registros para qualquer franqueada/revendedora
 - ⚠️ **USO EXCLUSIVO DO ADMIN**
 
 ### 2. **Performance**
+
 Para grandes volumes de produtos:
+
 - 100 produtos × 5 parceiros = **500 vinculações**
 - Tempo estimado: ~2-5 segundos
 - Recomendado: processar em lotes de 50 produtos
 
 ### 3. **Idempotência**
+
 A API usa `upsert` com `onConflict`, o que significa:
+
 - ✅ Pode chamar múltiplas vezes com os mesmos IDs
 - ✅ Não cria registros duplicados
 - ✅ Atualiza registros existentes (se necessário)
@@ -277,14 +300,17 @@ A API usa `upsert` com `onConflict`, o que significa:
 ## 🐛 Troubleshooting
 
 ### Erro: "Nenhuma franqueada ou revendedora aprovada encontrada"
+
 **Causa:** Não existem parceiros com `status = 'aprovada'`  
 **Solução:** Aprovar ao menos uma franqueada ou revendedora no sistema
 
 ### Erro: "relation 'public.produtos_revendedoras' does not exist"
+
 **Causa:** Tabela de revendedoras não foi criada no Supabase  
 **Solução:** Executar migration para criar a tabela ou ignorar erro (API continua vinculando franqueadas)
 
 ### Erro: "Nenhum produto ativo encontrado"
+
 **Causa:** Produtos estão inativos ou IDs inválidos  
 **Solução:** Verificar se produtos estão com `ativo = true` no admin
 

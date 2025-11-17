@@ -10,14 +10,14 @@
 
 ## ⚡ Principais Melhorias
 
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| **Suporte** | Apenas franqueadas | Franqueadas + Revendedoras |
-| **Logging** | Simples (` `) | Emojis e cores (🔗✅❌) |
-| **Erros** | Genéricos | Detalhados com `details` |
-| **Estatísticas** | Básicas | Completas com timestamp |
-| **Performance** | 1 tabela | 2 tabelas paralelas |
-| **Backup** | Sem backup | `route_OLD.ts` criado |
+| Aspecto          | Antes              | Depois                     |
+| ---------------- | ------------------ | -------------------------- |
+| **Suporte**      | Apenas franqueadas | Franqueadas + Revendedoras |
+| **Logging**      | Simples (` `)      | Emojis e cores (🔗✅❌)    |
+| **Erros**        | Genéricos          | Detalhados com `details`   |
+| **Estatísticas** | Básicas            | Completas com timestamp    |
+| **Performance**  | 1 tabela           | 2 tabelas paralelas        |
+| **Backup**       | Sem backup         | `route_OLD.ts` criado      |
 
 ---
 
@@ -26,6 +26,7 @@
 ### POST - Criar Vinculações
 
 #### **ANTES:**
+
 ```json
 {
   "success": true,
@@ -39,6 +40,7 @@
 ```
 
 #### **DEPOIS:**
+
 ```json
 {
   "success": true,
@@ -61,6 +63,7 @@
 ### GET - Estatísticas
 
 #### **ANTES:**
+
 ```json
 {
   "status": "API ativa",
@@ -75,6 +78,7 @@
 ```
 
 #### **DEPOIS:**
+
 ```json
 {
   "status": "API ativa",
@@ -99,12 +103,15 @@
 ## 🔍 Novos Recursos
 
 ### 1. **Status Visual de Vinculação**
+
 - ✅ `Completo` - 100% vinculado
-- 🟡 `Parcial` - 50-99% vinculado  
+- 🟡 `Parcial` - 50-99% vinculado
 - 🔴 `Baixo` - < 50% vinculado
 
 ### 2. **Suporte a Erros Parciais**
+
 Se a vinculação de franqueadas funciona mas a de revendedoras falha:
+
 ```json
 {
   "success": true,
@@ -119,6 +126,7 @@ Se a vinculação de franqueadas funciona mas a de revendedoras falha:
 ```
 
 ### 3. **Logging Detalhado no Console**
+
 ```
 🔗 [Vincular] Iniciando vinculação automática...
 
@@ -139,18 +147,21 @@ Se a vinculação de franqueadas funciona mas a de revendedoras falha:
 ## 🛡️ Validações Adicionadas
 
 ### ✅ Antes de Criar Vinculações:
+
 1. Verifica se existem franqueadas OU revendedoras aprovadas
 2. Valida se produtos estão com `ativo = true`
 3. Confirma se IDs de produtos existem no banco
 4. Retorna debug quando não encontra produtos
 
 ### ✅ Durante a Criação:
+
 1. Usa `upsert` para evitar duplicatas
 2. Define `onConflict` correto para cada tabela
 3. Captura erros individuais por tipo (franqueadas/revendedoras)
 4. Continua processamento mesmo com erro parcial
 
 ### ✅ Ao Retornar Resposta:
+
 1. Inclui contadores separados por tipo
 2. Adiciona timestamp para auditoria
 3. Retorna array de erros (se houver)
@@ -174,6 +185,7 @@ docs/
 ## 🔗 Integração com o Sistema
 
 ### Migration 035 (Sync Triggers)
+
 A API trabalha em conjunto com os triggers automáticos:
 
 ```
@@ -187,6 +199,7 @@ Franqueadas/Revendedoras veem produto
 ```
 
 ### Uso Manual da API
+
 Para vincular produtos antigos ou fazer manutenção em massa:
 
 ```
@@ -204,6 +217,7 @@ Produtos disponíveis imediatamente
 ## 🧪 Como Testar
 
 ### 1️⃣ Testar GET (Estatísticas)
+
 ```bash
 curl -X GET https://seu-dominio.com/api/admin/produtos/vincular-todas-franqueadas
 ```
@@ -213,6 +227,7 @@ curl -X GET https://seu-dominio.com/api/admin/produtos/vincular-todas-franqueada
 ---
 
 ### 2️⃣ Testar POST (Vincular Produtos)
+
 ```bash
 curl -X POST https://seu-dominio.com/api/admin/produtos/vincular-todas-franqueadas \
   -H "Content-Type: application/json" \
@@ -224,6 +239,7 @@ curl -X POST https://seu-dominio.com/api/admin/produtos/vincular-todas-franquead
 ---
 
 ### 3️⃣ Verificar Logs no Netlify/Vercel
+
 1. Acesse painel de deploy
 2. Vá para "Functions" ou "Logs"
 3. Procure por emojis: 🔗 ✅ 🔄 ❌
@@ -232,6 +248,7 @@ curl -X POST https://seu-dominio.com/api/admin/produtos/vincular-todas-franquead
 ---
 
 ### 4️⃣ Validar no Supabase
+
 ```sql
 -- Ver vinculações de franqueadas
 SELECT COUNT(*) FROM produtos_franqueadas WHERE ativo = true;
@@ -240,7 +257,7 @@ SELECT COUNT(*) FROM produtos_franqueadas WHERE ativo = true;
 SELECT COUNT(*) FROM produtos_revendedoras WHERE ativo = true;
 
 -- Produtos vinculados para uma franqueada específica
-SELECT p.nome, pf.ativo 
+SELECT p.nome, pf.ativo
 FROM produtos_franqueadas pf
 JOIN produtos p ON p.id = pf.produto_id
 WHERE pf.franqueada_id = 'uuid-da-franqueada';
@@ -251,12 +268,14 @@ WHERE pf.franqueada_id = 'uuid-da-franqueada';
 ## ⚠️ Observações de Segurança
 
 ### ✅ Seguro:
+
 - Usa `SUPABASE_SERVICE_ROLE_KEY` (admin only)
 - Valida dados antes de inserir
 - Usa `upsert` para evitar duplicatas
 - Retorna erros detalhados apenas em desenvolvimento
 
 ### ⚠️ Importante:
+
 - **NÃO** expor endpoint publicamente
 - **NÃO** permitir acesso de franqueadas/revendedoras
 - **APENAS** admin pode chamar esta API
@@ -268,12 +287,12 @@ WHERE pf.franqueada_id = 'uuid-da-franqueada';
 
 ### Tempo de Resposta Estimado:
 
-| Cenário | Tempo |
-|---------|-------|
-| 10 produtos × 3 parceiros | ~0.5s |
-| 50 produtos × 5 parceiros | ~2s |
-| 100 produtos × 10 parceiros | ~5s |
-| 500 produtos × 20 parceiros | ~30s |
+| Cenário                     | Tempo |
+| --------------------------- | ----- |
+| 10 produtos × 3 parceiros   | ~0.5s |
+| 50 produtos × 5 parceiros   | ~2s   |
+| 100 produtos × 10 parceiros | ~5s   |
+| 500 produtos × 20 parceiros | ~30s  |
 
 **Recomendação:** Para mais de 200 produtos, processar em lotes de 50.
 

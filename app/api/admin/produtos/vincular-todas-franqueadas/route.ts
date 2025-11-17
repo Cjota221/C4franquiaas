@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // 1. Buscar franqueadas aprovadas
     const { data: franqueadas, error: franqueadasError } = await supabase
       .from('franqueadas')
-      .select('id, nome_fantasia')
+      .select('id, nome')
       .eq('status', 'aprovada');
 
     if (franqueadasError) {
@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Buscar revendedoras aprovadas (se tabela existir)
-    let revendedoras: { id: string; nome_fantasia: string }[] = [];
+    let revendedoras: { id: string; store_name: string }[] = [];
     const { data: revendedorasData, error: revendedorasError } = await supabase
       .from('resellers')
-      .select('id, nome_fantasia')
+      .select('id, store_name')
       .eq('status', 'aprovada');
 
     if (!revendedorasError && revendedorasData) {
