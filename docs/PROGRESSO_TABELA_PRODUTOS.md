@@ -11,13 +11,16 @@
 ### ✅ Componentes Criados:
 
 #### 1. **TabelaProdutos.tsx** (380 linhas)
+
 ```
 components/admin/TabelaProdutos.tsx
 ```
 
 **Recursos Implementados:**
+
 - ✅ Layout de tabela responsiva com scroll horizontal
 - ✅ 9 colunas conforme especificação técnica:
+
   - Checkbox (seleção)
   - Imagem (miniatura)
   - Nome do Produto (clicável + badge NOVO)
@@ -29,21 +32,25 @@ components/admin/TabelaProdutos.tsx
   - Ações (Ver Detalhes + Toggle Status)
 
 - ✅ **Ordenação Clicável:**
+
   - Ícones visuais (ArrowUpDown, ArrowUp, ArrowDown)
   - Highlight da coluna ativa em rosa (#DB1472)
   - Suporte para ASC/DESC em todos os campos ordenáveis
 
 - ✅ **Seleção em Massa:**
+
   - Checkbox individual por linha
   - Checkbox "selecionar todos" no header
   - Visual de linha selecionada (fundo rosa claro)
 
 - ✅ **Loading State:**
+
   - Overlay com blur
   - Spinner animado
   - Mensagem "Carregando produtos..."
 
 - ✅ **Empty State:**
+
   - Ícone grande de caixa vazia
   - Mensagem amigável
   - Sugestão de ajustar filtros
@@ -56,12 +63,15 @@ components/admin/TabelaProdutos.tsx
 ---
 
 #### 2. **FiltrosProdutos.tsx** (270 linhas)
+
 ```
 components/admin/FiltrosProdutos.tsx
 ```
 
 **Recursos Implementados:**
+
 - ✅ **7 Filtros Avançados:**
+
   1. Busca por Nome/ID (com ícone de lupa + spinner)
   2. Categoria (dropdown com todas as categorias)
   3. Status de Exibição (Todos/Ativo/Inativo)
@@ -71,17 +81,20 @@ components/admin/FiltrosProdutos.tsx
   7. Apenas Novos (checkbox - últimos 7 dias)
 
 - ✅ **Tags de Filtros Ativos:**
+
   - Exibição visual de cada filtro aplicado
   - Botão X individual para remover
   - Cores diferentes por tipo de filtro
   - Aparece automaticamente quando há filtros ativos
 
 - ✅ **Contador de Filtros:**
+
   - Badge numérico no título
   - Cor rosa (#DB1472)
   - Atualiza em tempo real
 
 - ✅ **Botão "Limpar Filtros":**
+
   - Aparece só quando há filtros ativos
   - Remove todos de uma vez
   - Ícone X
@@ -96,6 +109,7 @@ components/admin/FiltrosProdutos.tsx
 ## 📊 Comparação Visual
 
 ### ANTES (Grid de Cards):
+
 ```
 ┌───────┐ ┌───────┐ ┌───────┐
 │ IMG   │ │ IMG   │ │ IMG   │
@@ -104,11 +118,13 @@ components/admin/FiltrosProdutos.tsx
 │ [BTN] │ │ [BTN] │ │ [BTN] │
 └───────┘ └───────┘ └───────┘
 ```
+
 - Baixa densidade de informação
 - 3 colunas apenas
 - Difícil comparação de dados
 
 ### DEPOIS (Tabela):
+
 ```
 ┌───┬─────┬────────────┬────┬───────┬────────┬────────┬──────────┬────────┐
 │ ☑ │ IMG │ NOME       │ ID │ PREÇO │ ESTOQ. │ STATUS │ DATA     │ AÇÕES  │
@@ -117,6 +133,7 @@ components/admin/FiltrosProdutos.tsx
 │ ☐ │ 🖼  │ Produto 2  │ 02 │ 75,00 │ 🔴 Esg │ ⚪ Ina │ 15/11/25 │ [VER]  │
 └───┴─────┴────────────┴────┴───────┴────────┴────────┴──────────┴────────┘
 ```
+
 - Alta densidade de informação
 - 9 colunas de dados
 - Fácil comparação e análise
@@ -127,17 +144,17 @@ components/admin/FiltrosProdutos.tsx
 
 ## 🎨 Paleta de Cores Usada
 
-| Elemento | Cor | Código |
-|----------|-----|--------|
-| **Primária (Rosa)** | #DB1472 | Botões, badges, highlights |
-| **Verde (Sucesso)** | bg-green-100/text-green-800 | Status Ativo, Disponível |
-| **Vermelho (Erro)** | bg-red-100/text-red-800 | Esgotado |
-| **Cinza (Neutro)** | bg-gray-100/text-gray-800 | Status Inativo |
-| **Laranja (Novo)** | bg-orange-500/text-white | Badge NOVO |
-| **Azul (Filtro)** | bg-blue-100/text-blue-800 | Tag de busca |
-| **Roxo (Filtro)** | bg-purple-100/text-purple-800 | Tag de categoria |
-| **Amarelo (Filtro)** | bg-yellow-100/text-yellow-800 | Tag de estoque |
-| **Rosa (Filtro)** | bg-pink-100/text-pink-800 | Tag de preço |
+| Elemento             | Cor                           | Código                     |
+| -------------------- | ----------------------------- | -------------------------- |
+| **Primária (Rosa)**  | #DB1472                       | Botões, badges, highlights |
+| **Verde (Sucesso)**  | bg-green-100/text-green-800   | Status Ativo, Disponível   |
+| **Vermelho (Erro)**  | bg-red-100/text-red-800       | Esgotado                   |
+| **Cinza (Neutro)**   | bg-gray-100/text-gray-800     | Status Inativo             |
+| **Laranja (Novo)**   | bg-orange-500/text-white      | Badge NOVO                 |
+| **Azul (Filtro)**    | bg-blue-100/text-blue-800     | Tag de busca               |
+| **Roxo (Filtro)**    | bg-purple-100/text-purple-800 | Tag de categoria           |
+| **Amarelo (Filtro)** | bg-yellow-100/text-yellow-800 | Tag de estoque             |
+| **Rosa (Filtro)**    | bg-pink-100/text-pink-800     | Tag de preço               |
 
 ---
 
@@ -164,12 +181,14 @@ c4-franquias-admin/
 ## 🔜 Próximos Passos (FASE 3)
 
 ### 1. Integrar Componentes na Página Principal
+
 - [ ] Importar `TabelaProdutos` e `FiltrosProdutos`
 - [ ] Substituir grid de cards pela tabela
 - [ ] Conectar estados de filtros
 - [ ] Implementar lógica de ordenação
 
 ### 2. Adicionar Estados de Filtros Avançados
+
 ```typescript
 const [filtroStatus, setFiltroStatus] = useState<'todos' | 'ativo' | 'inativo'>('todos');
 const [filtroEstoque, setFiltroEstoque] = useState<'todos' | 'disponivel' | 'esgotado'>('todos');
@@ -179,6 +198,7 @@ const [apenasNovos, setApenasNovos] = useState(false);
 ```
 
 ### 3. Implementar Ordenação no Backend
+
 ```typescript
 // Aplicar ordenação na query Supabase
 if (sortBy === 'nome') {
@@ -188,6 +208,7 @@ if (sortBy === 'nome') {
 ```
 
 ### 4. Aplicar Filtros na Query
+
 ```typescript
 // Filtros avançados
 if (filtroStatus === 'ativo') query = query.eq('ativo', true);
@@ -197,6 +218,7 @@ if (precoMin) query = query.gte('preco_base', parseFloat(precoMin));
 ```
 
 ### 5. Persistir na URL (FASE 5)
+
 ```typescript
 // useSearchParams + useRouter
 const params = new URLSearchParams();
@@ -210,14 +232,14 @@ router.replace(`/admin/produtos?${params.toString()}`);
 
 ## ⏱️ Tempo Estimado Restante
 
-| Fase | Duração | Status |
-|------|---------|--------|
-| ~~FASE 2 - Estrutura~~ | ~~2-3h~~ | ✅ **COMPLETA** |
-| FASE 3 - Ordenação | 1-2h | 🔜 Próxima |
-| FASE 4 - Filtros Avançados | 2-3h | ⏳ Pendente |
-| FASE 5 - URL Parameters | 1h | ⏳ Pendente |
-| FASE 6 - Melhorias UX | 1-2h | ⏳ Pendente |
-| **RESTANTE** | **~6-9h** | - |
+| Fase                       | Duração   | Status          |
+| -------------------------- | --------- | --------------- |
+| ~~FASE 2 - Estrutura~~     | ~~2-3h~~  | ✅ **COMPLETA** |
+| FASE 3 - Ordenação         | 1-2h      | 🔜 Próxima      |
+| FASE 4 - Filtros Avançados | 2-3h      | ⏳ Pendente     |
+| FASE 5 - URL Parameters    | 1h        | ⏳ Pendente     |
+| FASE 6 - Melhorias UX      | 1-2h      | ⏳ Pendente     |
+| **RESTANTE**               | **~6-9h** | -               |
 
 ---
 
@@ -228,6 +250,7 @@ git commit -m "feat: Cria componentes TabelaProdutos e FiltrosProdutos"
 ```
 
 **Arquivos:**
+
 - ✅ `components/admin/TabelaProdutos.tsx` (380 linhas)
 - ✅ `components/admin/FiltrosProdutos.tsx` (270 linhas)
 
