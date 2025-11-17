@@ -13,6 +13,7 @@ export type Produto = {
   codigo_barras?: string | null;
   estoque_display?: number;
   categorias?: { id?: number; nome: string }[] | null;
+  created_at?: string; // ⭐ NOVO: Data de criação do produto (migration 034)
   temMargem?: boolean; // ⭐ NOVO: Identifica se o produto tem preço personalizado (margem configurada)
 };
 
