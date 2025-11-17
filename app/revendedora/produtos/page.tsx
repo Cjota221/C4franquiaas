@@ -9,7 +9,7 @@ interface Produto {
   id: string;
   nome: string;
   preco_base: number;
-  imagem_principal: string;
+  imagem: string | null;
   categoria: string;
   ativo: boolean;
 }
@@ -117,7 +117,7 @@ export default function ProdutosRevendedoraPage() {
       
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
-        .select('id, nome, preco_base, imagem_principal, categoria, ativo')
+        .select('id, nome, preco_base, imagem, categoria, ativo')
         .in('id', produtoIds)
         .order('nome');
 
@@ -416,9 +416,9 @@ export default function ProdutosRevendedoraPage() {
               >
                 {/* Imagem */}
                 <div className="relative h-48 bg-gray-100 rounded-t-lg overflow-hidden">
-                  {produto.imagem_principal ? (
+                  {produto.imagem ? (
                     <Image
-                      src={produto.imagem_principal}
+                      src={produto.imagem}
                       alt={produto.nome}
                       fill
                       className="object-cover"
