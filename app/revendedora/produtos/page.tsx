@@ -8,7 +8,8 @@ import Image from 'next/image';
 interface Produto {
   id: string;
   nome: string;
-  preco: number;
+  preco_base: number;
+  preco_venda?: number;
   imagem_principal: string;
   categoria: string;
   ativo: boolean;
@@ -100,7 +101,7 @@ export default function ProdutosRevendedoraPage() {
       // 3. Buscar detalhes dos produtos vinculados
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
-        .select('id, nome, preco, imagem_principal, categoria, ativo')
+        .select('id, nome, preco_base, preco_venda, imagem_principal, categoria, ativo')
         .in('id', produtoIds)
         .order('nome');
 
@@ -355,7 +356,8 @@ export default function ProdutosRevendedoraPage() {
             const vinculado = produtosVinculados.get(produto.id);
             const isAtivo = vinculado?.is_active || false;
             const margem = vinculado?.margin_percent || 20;
-            const precoFinal = produto.preco * (1 + margem / 100);
+            const precoBase = produto.preco_venda || produto.preco_base;
+            const precoFinal = precoBase * (1 + margem / 100);
 
             return (
               <div
@@ -399,7 +401,7 @@ export default function ProdutosRevendedoraPage() {
                   <div className="mb-4 space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Preço base:</span>
-                      <span className="font-medium">R$ {produto.preco.toFixed(2)}</span>
+                      <span className="font-medium">R$ {precoBase.toFixed(2)}</span>
                     </div>
                     {vinculado && (
                       <>
