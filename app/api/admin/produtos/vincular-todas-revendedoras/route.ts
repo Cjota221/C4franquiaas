@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
 
     const { data: produtos, error: produtosError } = await query;
 
-    if (!produtos || produtos.length === 0) {
+    if (produtosError || !produtos || produtos.length === 0) {
       return NextResponse.json({
         error: 'Nenhum produto ativo com estoque encontrado',
+        details: produtosError?.message,
       }, { status: 400 });
     }
 
