@@ -30,7 +30,17 @@ export default function LoginRevendedoraPage() {
 
       if (authError) {
         console.error('[login]  Erro na autenticação:', authError);
-        throw new Error('Email ou senha incorretos. Verifique seus dados e tente novamente.');
+        
+        // Tratar erros específicos
+        if (authError.message.includes('Email not confirmed')) {
+          throw new Error('Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada ou entre em contato com o suporte.');
+        }
+        
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Email ou senha incorretos. Verifique seus dados e tente novamente.');
+        }
+        
+        throw new Error(authError.message || 'Erro ao fazer login. Tente novamente.');
       }
 
       if (!authData.user) {
