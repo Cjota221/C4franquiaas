@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -20,6 +20,8 @@ export default function LoginRevendedoraPage() {
     setErro('');
 
     try {
+      console.log('[login]  Tentando login com:', email);
+      
       // Autenticar com Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -27,14 +29,15 @@ export default function LoginRevendedoraPage() {
       });
 
       if (authError) {
-        throw new Error('Email ou senha incorretos');
+        console.error('[login]  Erro na autenticação:', authError);
+        throw new Error('Email ou senha incorretos. Verifique seus dados e tente novamente.');
       }
 
       if (!authData.user) {
-        throw new Error('Erro ao autenticar usuário');
+        throw new Error('Erro ao autenticar usuÃ¡rio');
       }
 
-      // Verificar se o usuário está vinculado a uma revendedora
+      // Verificar se o usuÃ¡rio estÃ¡ vinculado a uma revendedora
       const { data: reseller, error: resellerError } = await supabase
         .from('resellers')
         .select('id, name, store_name, is_active')
@@ -43,13 +46,13 @@ export default function LoginRevendedoraPage() {
 
       if (resellerError || !reseller) {
         await supabase.auth.signOut();
-        throw new Error('Usuário não está vinculado a nenhuma revendedora');
+        throw new Error('UsuÃ¡rio nÃ£o estÃ¡ vinculado a nenhuma revendedora');
       }
 
-      // Verificar se está aprovada
+      // Verificar se estÃ¡ aprovada
       if (!reseller.is_active) {
         await supabase.auth.signOut();
-        throw new Error('Seu cadastro ainda não foi aprovado pelo administrador. Você receberá um e-mail quando for aprovado.');
+        throw new Error('Seu cadastro ainda nÃ£o foi aprovado pelo administrador. VocÃª receberÃ¡ um e-mail quando for aprovado.');
       }
 
       console.log('[login]  Login bem-sucedido:', reseller.name);
@@ -129,7 +132,7 @@ export default function LoginRevendedoraPage() {
 
             <div className="text-center text-sm text-gray-600 space-y-2">
               <div>
-                Não tem cadastro?{' '}
+                NÃ£o tem cadastro?{' '}
                 <button
                   type="button"
                   onClick={() => router.push('/cadastro/revendedora')}
