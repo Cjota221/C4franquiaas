@@ -9,7 +9,6 @@ interface Produto {
   id: string;
   nome: string;
   preco_base: number;
-  preco_venda?: number;
   imagem_principal: string;
   categoria: string;
   ativo: boolean;
@@ -101,7 +100,7 @@ export default function ProdutosRevendedoraPage() {
       // 3. Buscar detalhes dos produtos vinculados
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
-        .select('id, nome, preco_base, preco_venda, imagem_principal, categoria, ativo')
+        .select('id, nome, preco_base, imagem_principal, categoria, ativo')
         .in('id', produtoIds)
         .order('nome');
 
@@ -356,7 +355,7 @@ export default function ProdutosRevendedoraPage() {
             const vinculado = produtosVinculados.get(produto.id);
             const isAtivo = vinculado?.is_active || false;
             const margem = vinculado?.margin_percent || 20;
-            const precoBase = produto.preco_venda || produto.preco_base;
+            const precoBase = produto.preco_base;
             const precoFinal = precoBase * (1 + margem / 100);
 
             return (
