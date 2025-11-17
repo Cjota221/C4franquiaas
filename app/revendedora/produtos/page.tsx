@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Package, Search, DollarSign, Check, X, TrendingUp, Filter } from 'lucide-react';
+import { Package, Search, DollarSign, Check, X, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 
 interface Produto {
@@ -33,6 +33,7 @@ export default function ProdutosRevendedoraPage() {
 
   useEffect(() => {
     carregarDados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function carregarDados() {
@@ -51,31 +52,41 @@ export default function ProdutosRevendedoraPage() {
       if (!reseller) throw new Error('Revendedora não encontrada');
       setRevendedoraId(reseller.id);
 
-      // 2. Carregar produtos ativos
+      // 2. Buscar produtos vinculados à revendedora
+      const { data: produtosVinculados, error: vinculacaoError } = await supabase
+        .from('reseller_products')
+        .select('produto_id, margem_lucro, ativo')
+        .eq('reseller_id', reseller.id);
+
+      if (vinculacaoError) throw vinculacaoError;
+
+      const produtoIds = produtosVinculados?.map(p => p.produto_id) || [];
+
+      if (produtoIds.length === 0) {
+        setProdutos([]);
+        setProdutosVinculados(new Map());
+        console.log('⚠️ Nenhum produto vinculado encontrado para esta revendedora');
+        return;
+      }
+
+      // 3. Buscar detalhes dos produtos vinculados
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
         .select('id, nome, preco, imagem_principal, categoria, ativo')
-        .eq('ativo', true)
+        .in('id', produtoIds)
         .order('nome');
 
       if (produtosError) throw produtosError;
       setProdutos(produtosData || []);
 
-      // 3. Carregar produtos já vinculados
-      const { data: vinculados, error: vinculadosError } = await supabase
-        .from('reseller_products')
-        .select('produto_id, margem_lucro, ativo')
-        .eq('reseller_id', reseller.id);
-
-      if (vinculadosError) throw vinculadosError;
-
+      // 4. Criar mapa de produtos vinculados
       const map = new Map<string, ProdutoRevendedora>();
-      vinculados?.forEach(v => map.set(v.produto_id, v));
+      produtosVinculados?.forEach(v => map.set(v.produto_id, v));
       setProdutosVinculados(map);
 
-      console.log(' Dados carregados:', {
+      console.log('✅ Dados carregados:', {
         produtos: produtosData?.length,
-        vinculados: vinculados?.length
+        vinculados: produtosVinculados?.length
       });
     } catch (err) {
       console.error(' Erro ao carregar dados:', err);
