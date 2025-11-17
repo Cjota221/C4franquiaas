@@ -73,6 +73,8 @@ export default function ProdutosRevendedoraPage() {
       setRevendedoraId(reseller.id);
 
       // 2. Buscar produtos vinculados à revendedora
+      console.log('🔍 Buscando produtos vinculados para reseller_id:', reseller.id);
+      
       const { data: produtosVinculados, error: vinculacaoError } = await supabase
         .from('reseller_products')
         .select('product_id, margin_percent, is_active')
@@ -85,19 +87,34 @@ export default function ProdutosRevendedoraPage() {
           hint: vinculacaoError.hint,
           code: vinculacaoError.code
         });
+        
+        // Se for erro de permissão RLS
+        if (vinculacaoError.code === 'PGRST301' || vinculacaoError.message.includes('permission')) {
+          throw new Error('Sem permissão para acessar produtos. Verifique se seu cadastro foi aprovado.');
+        }
+        
         throw new Error(`Erro ao buscar produtos vinculados: ${vinculacaoError.message}`);
       }
 
+      console.log('📊 Produtos vinculados encontrados:', produtosVinculados?.length || 0);
+      
       const produtoIds = produtosVinculados?.map(p => p.product_id) || [];
+      
+      if (produtoIds.length > 0) {
+        console.log('🔑 Primeiros IDs:', produtoIds.slice(0, 5));
+      }
 
       if (produtoIds.length === 0) {
         setProdutos([]);
         setProdutosVinculados(new Map());
         console.log('⚠️ Nenhum produto vinculado encontrado para esta revendedora');
+        console.log('💡 Dica: Vincule produtos pelo painel admin em /admin/produtos');
         return;
       }
 
       // 3. Buscar detalhes dos produtos vinculados
+      console.log(`🔍 Buscando detalhes de ${produtoIds.length} produtos...`);
+      
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
         .select('id, nome, preco_base, imagem_principal, categoria, ativo')
@@ -110,10 +127,13 @@ export default function ProdutosRevendedoraPage() {
           details: produtosError.details,
           hint: produtosError.hint,
           code: produtosError.code,
-          produtoIds: produtoIds
+          totalIds: produtoIds.length,
+          primeirosIds: produtoIds.slice(0, 3)
         });
         throw produtosError;
       }
+      
+      console.log('✅ Produtos carregados:', produtosData?.length || 0);
       setProdutos(produtosData || []);
 
       // 4. Criar mapa de produtos vinculados
@@ -132,8 +152,23 @@ export default function ProdutosRevendedoraPage() {
         stack: err instanceof Error ? err.stack : undefined
       });
       
-      const mensagem = err instanceof Error ? err.message : 'Erro ao carregar produtos';
-      alert(`${mensagem}\n\nRecarregue a página ou entre em contato com o suporte.`);
+      let mensagem = 'Erro ao carregar produtos';
+      let detalhe = 'Recarregue a página ou entre em contato com o suporte.';
+      
+      if (err instanceof Error) {
+        mensagem = err.message;
+        
+        // Mensagens específicas baseadas no erro
+        if (err.message.includes('permission') || err.message.includes('permissão')) {
+          detalhe = 'Verifique se seu cadastro de revendedora foi aprovado pelo administrador.';
+        } else if (err.message.includes('não encontrada')) {
+          detalhe = 'Entre em contato com o administrador para verificar seu cadastro.';
+        } else if (err.message.includes('Nenhum produto')) {
+          detalhe = 'Aguarde o administrador vincular produtos à sua conta.';
+        }
+      }
+      
+      alert(`${mensagem}\n\n${detalhe}`);
     } finally {
       setLoading(false);
     }
@@ -343,11 +378,25 @@ export default function ProdutosRevendedoraPage() {
       </div>
 
       {/* Lista de Produtos */}
-      {produtosFiltrados.length === 0 ? (
+      {produtos.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Nenhum produto vinculado</h3>
+          <p className="text-gray-600 mb-4">
+            Você ainda não possui produtos vinculados à sua conta.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+            <p className="text-sm text-blue-800">
+              <strong>💡 O que fazer?</strong><br/>
+              Entre em contato com o administrador para que ele vincule produtos à sua conta de revendedora.
+            </p>
+          </div>
+        </div>
+      ) : produtosFiltrados.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600 text-lg">Nenhum produto encontrado</p>
-          <p className="text-gray-400 text-sm mt-2">Tente ajustar os filtros</p>
+          <p className="text-gray-400 text-sm mt-2">Tente ajustar os filtros acima</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
