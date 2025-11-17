@@ -41,15 +41,35 @@ export default function ProdutosRevendedoraPage() {
     try {
       // 1. Obter ID da revendedora
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        console.error('❌ Usuário não autenticado');
+        throw new Error('Usuário não autenticado');
+      }
 
-      const { data: reseller } = await supabase
+      console.log('🔍 Buscando revendedora para user_id:', user.id);
+
+      const { data: reseller, error: resellerError } = await supabase
         .from('resellers')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!reseller) throw new Error('Revendedora não encontrada');
+      if (resellerError) {
+        console.error('❌ Erro ao buscar revendedora:', {
+          message: resellerError.message,
+          details: resellerError.details,
+          hint: resellerError.hint,
+          code: resellerError.code
+        });
+        throw new Error(`Erro ao buscar revendedora: ${resellerError.message}`);
+      }
+
+      if (!reseller) {
+        console.error('❌ Revendedora não encontrada para user_id:', user.id);
+        throw new Error('Revendedora não encontrada. Verifique se seu cadastro foi aprovado.');
+      }
+
+      console.log('✅ Revendedora encontrada:', reseller.id);
       setRevendedoraId(reseller.id);
 
       // 2. Buscar produtos vinculados à revendedora
@@ -89,8 +109,14 @@ export default function ProdutosRevendedoraPage() {
         vinculados: produtosVinculados?.length
       });
     } catch (err) {
-      console.error(' Erro ao carregar dados:', err);
-      alert('Erro ao carregar produtos. Recarregue a página.');
+      console.error('❌ Erro ao carregar dados:', {
+        error: err,
+        message: err instanceof Error ? err.message : 'Erro desconhecido',
+        stack: err instanceof Error ? err.stack : undefined
+      });
+      
+      const mensagem = err instanceof Error ? err.message : 'Erro ao carregar produtos';
+      alert(`${mensagem}\n\nRecarregue a página ou entre em contato com o suporte.`);
     } finally {
       setLoading(false);
     }
