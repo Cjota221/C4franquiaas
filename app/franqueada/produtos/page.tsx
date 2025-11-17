@@ -80,13 +80,17 @@ export default function FranqueadaProdutosPage() {
             imagens
           )
         `)
-        .eq('franqueada_id', franqueada.id)
-        .eq('ativo', true);
+        .eq('franqueada_id', franqueada.id);
 
       const { data: vinculacoes, error: vinculacoesError } = await query;
 
       if (vinculacoesError) {
-        console.error('[produtos] Erro ao buscar vinculações:', vinculacoesError);
+        console.error('[produtos] Erro ao buscar vinculações:', {
+          message: vinculacoesError.message,
+          details: vinculacoesError.details,
+          hint: vinculacoesError.hint,
+          code: vinculacoesError.code
+        });
         setLoading(false);
         return;
       }
@@ -126,11 +130,26 @@ export default function FranqueadaProdutosPage() {
 
           const preco = precos?.find(p => p.produto_franqueada_id === v.id);
 
-          // Processar imagens
+          // Processar imagens - garantir que seja sempre array
           let imagensArray: string[] = [];
-          if (produto.imagens && Array.isArray(produto.imagens)) {
-            imagensArray = produto.imagens;
-          } else if (produto.imagem) {
+          if (produto.imagens) {
+            if (Array.isArray(produto.imagens)) {
+              imagensArray = produto.imagens.filter(img => typeof img === 'string');
+            } else if (typeof produto.imagens === 'string') {
+              try {
+                const parsed = JSON.parse(produto.imagens);
+                if (Array.isArray(parsed)) {
+                  imagensArray = parsed.filter(img => typeof img === 'string');
+                }
+              } catch {
+                // Se falhar ao parsear, usar como string única
+                imagensArray = [produto.imagens];
+              }
+            }
+          }
+          
+          // Se não tem imagens no array, usar imagem única como fallback
+          if (imagensArray.length === 0 && produto.imagem) {
             imagensArray = [produto.imagem];
           }
 
@@ -178,7 +197,11 @@ export default function FranqueadaProdutosPage() {
 
       setProdutos(produtosFormatados);
     } catch (err) {
-      console.error('[produtos] Erro ao carregar produtos:', err);
+      console.error('[produtos] Erro ao carregar dados:', {
+        error: err,
+        message: err instanceof Error ? err.message : 'Erro desconhecido',
+        stack: err instanceof Error ? err.stack : undefined
+      });
       setProdutos([]);
     } finally {
       setLoading(false);
