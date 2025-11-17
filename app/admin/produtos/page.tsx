@@ -60,6 +60,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
   const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
+  const [vinculandoRevendedoras, setVinculandoRevendedoras] = useState(false);
 
   // Outros states
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
@@ -542,6 +543,48 @@ export default function ProdutosPage(): React.JSX.Element {
     }
   };
 
+  // Vincular produtos às revendedoras
+  const vincularRevendedoras = async () => {
+    try {
+      setVinculandoRevendedoras(true);
+      setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos às revendedoras...' });
+
+      const selected = Object.keys(selectedIds).filter(id => selectedIds[id]);
+
+      const response = await fetch('/api/admin/produtos/vincular-revendedoras', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          produto_ids: selected.length > 0 ? selected : undefined 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || 'Erro ao vincular produtos');
+      }
+
+      setStatusMsg({ 
+        type: 'success', 
+        text: `✅ ${data.detalhes.vinculacoes} vinculações criadas às revendedoras!` 
+      });
+
+      setTimeout(() => setStatusMsg(null), 5000);
+
+    } catch (err) {
+      console.error('❌ Erro ao vincular:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setStatusMsg({ 
+        type: 'error', 
+        text: `❌ Erro ao vincular: ${errorMessage}` 
+      });
+      setTimeout(() => setStatusMsg(null), 5000);
+    } finally {
+      setVinculandoRevendedoras(false);
+    }
+  };
+
   const selectedCount = Object.values(selectedIds).filter(Boolean).length;
   const totalPages = Math.max(1, Math.ceil(totalProdutos / PAGE_SIZE));
   const temBusca = debouncedSearchTerm.trim().length > 0;
@@ -588,6 +631,26 @@ export default function ProdutosPage(): React.JSX.Element {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Vincular às Franqueadas
+            </>
+          )}
+        </button>
+
+        <button 
+          onClick={vincularRevendedoras}
+          disabled={vinculandoRevendedoras}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
+        >
+          {vinculandoRevendedoras ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              Vinculando...
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Vincular às Revendedoras
             </>
           )}
         </button>
