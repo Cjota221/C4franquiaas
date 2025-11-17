@@ -69,7 +69,6 @@ export default function FranqueadaProdutosPage() {
         .select(`
           id,
           produto_id,
-          created_at,
           produtos:produto_id (
             id,
             nome,
@@ -77,7 +76,8 @@ export default function FranqueadaProdutosPage() {
             estoque,
             ativo,
             imagem,
-            imagens
+            imagens,
+            created_at
           )
         `)
         .eq('franqueada_id', franqueada.id);
@@ -124,6 +124,7 @@ export default function FranqueadaProdutosPage() {
             ativo: boolean;
             imagem: string | null;
             imagens: string[] | null;
+            created_at?: string;
           } | null;
           
           if (!produto) return null;
@@ -188,7 +189,7 @@ export default function FranqueadaProdutosPage() {
             estoque_status: estoqueStatus as 'disponivel' | 'esgotado',
             imagem: produto.imagem,
             imagens: imagensArray,
-            created_at: v.created_at ?? new Date().toISOString(),
+            created_at: produto.created_at ?? new Date().toISOString(),
             produto_ativo: produto.ativo,
             pode_ativar: podeAtivar
           } as ProdutoFranqueada;
