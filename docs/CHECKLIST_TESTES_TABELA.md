@@ -12,6 +12,7 @@
 Acesse: `http://localhost:3000/admin/produtos`
 
 **Verificar:**
+
 - [ ] Tabela está renderizando (não mais grid de cards)
 - [ ] Filtros aparecem acima da tabela
 - [ ] 9 colunas visíveis: `☑ | IMG | NOME | ID | PREÇO | ESTOQUE | STATUS | DATA | AÇÕES`
@@ -24,16 +25,17 @@ Acesse: `http://localhost:3000/admin/produtos`
 
 **Clicar nos headers das colunas:**
 
-| Coluna | Teste 1 (ASC) | Teste 2 (DESC) |
-|--------|---------------|----------------|
-| **Nome** | [ ] A→Z | [ ] Z→A |
-| **ID** | [ ] 1→999 | [ ] 999→1 |
-| **Preço** | [ ] Menor→Maior | [ ] Maior→Menor |
-| **Estoque** | [ ] 0→99 | [ ] 99→0 |
-| **Status** | [ ] Inativo→Ativo | [ ] Ativo→Inativo |
-| **Data** | [ ] Antigo→Novo | [ ] Novo→Antigo |
+| Coluna      | Teste 1 (ASC)     | Teste 2 (DESC)    |
+| ----------- | ----------------- | ----------------- |
+| **Nome**    | [ ] A→Z           | [ ] Z→A           |
+| **ID**      | [ ] 1→999         | [ ] 999→1         |
+| **Preço**   | [ ] Menor→Maior   | [ ] Maior→Menor   |
+| **Estoque** | [ ] 0→99          | [ ] 99→0          |
+| **Status**  | [ ] Inativo→Ativo | [ ] Ativo→Inativo |
+| **Data**    | [ ] Antigo→Novo   | [ ] Novo→Antigo   |
 
 **Verificar:**
+
 - [ ] Ícone muda de `↕` para `↑` ou `↓`
 - [ ] Produtos reordenam instantaneamente
 - [ ] Apenas UMA coluna mostra ícone de ordenação ativa
@@ -43,20 +45,24 @@ Acesse: `http://localhost:3000/admin/produtos`
 ### **3. Teste de Filtros Simples** (5 min)
 
 #### **3.1. Busca por Nome**
+
 - [ ] Digite "bolsa" → Mostra apenas produtos com "bolsa" no nome
 - [ ] Limpe a busca → Volta a mostrar todos
 
 #### **3.2. Filtro de Status**
+
 - [ ] Selecione "Apenas Ativos" → Mostra só produtos ativos
 - [ ] Selecione "Apenas Inativos" → Mostra só produtos inativos
 - [ ] Volte para "Todos" → Mostra todos
 
 #### **3.3. Filtro de Estoque**
+
 - [ ] Selecione "Apenas Disponível" → Mostra só com estoque > 0
 - [ ] Selecione "Apenas Esgotado" → Mostra só estoque = 0
 - [ ] Volte para "Todos"
 
 #### **3.4. Produtos Novos (Últimos 7 dias)**
+
 - [ ] Marque checkbox "Apenas produtos novos (7 dias)"
 - [ ] Verifica se mostra só produtos criados nos últimos 7 dias
 - [ ] Desmarque
@@ -66,17 +72,20 @@ Acesse: `http://localhost:3000/admin/produtos`
 ### **4. Teste de Filtros Avançados** (3 min)
 
 #### **4.1. Faixa de Preço**
+
 - [ ] Preço mín: `50` | máx: `100`
 - [ ] Mostra apenas produtos entre R$ 50 e R$ 100
 - [ ] Limpe os campos
 
 #### **4.2. Tags de Filtros Ativos**
+
 - [ ] Aplique múltiplos filtros
 - [ ] Verifica se tags aparecem abaixo dos filtros
 - [ ] Clique no `X` de uma tag → Remove apenas aquele filtro
 - [ ] Clique em "Limpar Filtros" → Remove todos
 
 #### **4.3. Contador de Filtros**
+
 - [ ] Aplique 3 filtros
 - [ ] Badge mostra "3" ao lado de "Filtros"
 
@@ -95,16 +104,19 @@ Acesse: `http://localhost:3000/admin/produtos`
 ### **6. Teste de Ações** (3 min)
 
 #### **6.1. Ver Detalhes**
+
 - [ ] Clique em "Ver Detalhes" de um produto
 - [ ] Modal de detalhes abre
 - [ ] Feche o modal
 
 #### **6.2. Toggle Status**
+
 - [ ] Clique no botão verde "Ativo" de um produto ativo
 - [ ] Status muda para "Inativo" (botão cinza)
 - [ ] Clique novamente → Volta para "Ativo"
 
 #### **6.3. Ações em Massa**
+
 - [ ] Selecione 2+ produtos
 - [ ] Clique em "Ações (X)" → Menu dropdown abre
 - [ ] Clique em "Ativar Selecionados"
@@ -177,18 +189,22 @@ Acesse: `http://localhost:3000/admin/produtos`
 ## 🐛 Problemas Comuns e Soluções
 
 ### **Problema 1: Coluna "Data Criação" mostra "-"**
+
 **Causa:** Migration 034 não aplicada ou produtos não tem `created_at`
 
 **Solução:**
+
 ```sql
 -- Rodar novamente no Supabase
 UPDATE produtos SET created_at = NOW() WHERE created_at IS NULL;
 ```
 
 ### **Problema 2: Ordenação não funciona**
+
 **Causa:** Possível erro na query
 
 **Debug:**
+
 1. Abra DevTools (F12)
 2. Vá para Network
 3. Clique em um header
@@ -196,17 +212,21 @@ UPDATE produtos SET created_at = NOW() WHERE created_at IS NULL;
 5. Verifique os parâmetros de ordenação
 
 ### **Problema 3: Filtros não aplicam**
+
 **Causa:** Estado não conectado à query
 
 **Debug:**
+
 1. Abra React DevTools
 2. Veja o state dos filtros
 3. Verifique se `carregarProdutos` é chamado ao mudar filtros
 
 ### **Problema 4: Loading infinito**
+
 **Causa:** Erro na API ou Supabase
 
 **Debug:**
+
 1. Veja console do navegador (F12 → Console)
 2. Procure por erros vermelhos
 3. Veja mensagem de erro específica
@@ -234,12 +254,14 @@ Após todos os testes:
 ## 📊 Comparação Final
 
 ### **ANTES (Grid):**
+
 - Navegação lenta em 300+ produtos
 - Filtros limitados
 - Sem ordenação controlada
 - Baixa densidade de informação
 
 ### **DEPOIS (Tabela):**
+
 - ✅ Gestão profissional tipo ERP
 - ✅ 7 filtros avançados
 - ✅ Ordenação em 6 colunas

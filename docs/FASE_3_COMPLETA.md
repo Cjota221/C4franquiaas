@@ -11,6 +11,7 @@
 ### ✅ **O que foi feito:**
 
 #### **1. Página Principal Refatorada** (`app/admin/produtos/page.tsx`)
+
 - **700+ linhas** completamente refatoradas
 - Grid de cards **→** Tabela profissional
 - Layout tipo ERP implementado
@@ -32,33 +33,35 @@ const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
 #### **3. Ordenação Implementada** (6 colunas)
 
-| Coluna | Campo | Implementação |
-|--------|-------|---------------|
-| ✅ Nome | `nome` | `query.order('nome', { ascending })` |
-| ✅ ID | `id` | `query.order('id', { ascending })` |
-| ✅ Preço | `preco_base` | `query.order('preco_base', { ascending, nullsFirst: false })` |
-| ✅ Estoque | `estoque` | `query.order('estoque', { ascending })` |
-| ✅ Status | `ativo` | `query.order('ativo', { ascending })` |
+| Coluna          | Campo        | Implementação                                                 |
+| --------------- | ------------ | ------------------------------------------------------------- |
+| ✅ Nome         | `nome`       | `query.order('nome', { ascending })`                          |
+| ✅ ID           | `id`         | `query.order('id', { ascending })`                            |
+| ✅ Preço        | `preco_base` | `query.order('preco_base', { ascending, nullsFirst: false })` |
+| ✅ Estoque      | `estoque`    | `query.order('estoque', { ascending })`                       |
+| ✅ Status       | `ativo`      | `query.order('ativo', { ascending })`                         |
 | ✅ Data Criação | `created_at` | `query.order('created_at', { ascending, nullsFirst: false })` |
 
 **Lógica:**
+
 - Clique 1x = Ordenação ASC
 - Clique 2x = Ordenação DESC
 - Fallback = `created_at DESC`
 
 #### **4. Filtros Avançados Implementados** (7 filtros)
 
-| # | Filtro | Tipo | Query Supabase |
-|---|--------|------|----------------|
-| 1 | **Busca** | Texto | `.or(nome.ilike.%termo%, id_externo.ilike.%termo%)` |
-| 2 | **Categoria** | Dropdown | (Preparado para migration) |
-| 3 | **Status** | Dropdown | `.eq('ativo', true/false)` |
-| 4 | **Estoque** | Dropdown | `.gt('estoque', 0)` ou `.eq('estoque', 0)` |
-| 5 | **Preço Min** | Number | `.gte('preco_base', minValue)` |
-| 6 | **Preço Max** | Number | `.lte('preco_base', maxValue)` |
-| 7 | **Novos (7d)** | Checkbox | `.gte('created_at', dataLimite.toISOString())` |
+| #   | Filtro         | Tipo     | Query Supabase                                      |
+| --- | -------------- | -------- | --------------------------------------------------- |
+| 1   | **Busca**      | Texto    | `.or(nome.ilike.%termo%, id_externo.ilike.%termo%)` |
+| 2   | **Categoria**  | Dropdown | (Preparado para migration)                          |
+| 3   | **Status**     | Dropdown | `.eq('ativo', true/false)`                          |
+| 4   | **Estoque**    | Dropdown | `.gt('estoque', 0)` ou `.eq('estoque', 0)`          |
+| 5   | **Preço Min**  | Number   | `.gte('preco_base', minValue)`                      |
+| 6   | **Preço Max**  | Number   | `.lte('preco_base', maxValue)`                      |
+| 7   | **Novos (7d)** | Checkbox | `.gte('created_at', dataLimite.toISOString())`      |
 
 **Contador de Filtros Ativos:**
+
 ```typescript
 const filtrosAtivos = [
   searchTerm.trim().length > 0,
@@ -77,7 +80,7 @@ const filtrosAtivos = [
 // Ordenação
 const handleSort = (campo: string) => {
   if (sortBy === campo) {
-    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
   } else {
     setSortBy(campo);
     setSortDirection('asc');
@@ -87,7 +90,7 @@ const handleSort = (campo: string) => {
 // Seleção em massa
 const handleSelectAll = (checked: boolean) => {
   if (checked) {
-    const ids = produtosFiltrados.map(p => p.id);
+    const ids = produtosFiltrados.map((p) => p.id);
     selectAll(ids);
   } else {
     clearSelected();
@@ -150,6 +153,7 @@ const handleLimparFiltros = () => {
 #### **7. Store Atualizado**
 
 `lib/store/produtoStore.ts`:
+
 ```typescript
 export type Produto = {
   // ... campos existentes
@@ -163,6 +167,7 @@ export type Produto = {
 ## 🎨 Interface ANTES vs DEPOIS
 
 ### **ANTES (Grid)**
+
 ```
 ┌──────────┐ ┌──────────┐ ┌──────────┐
 │  [IMG]   │ │  [IMG]   │ │  [IMG]   │
@@ -181,6 +186,7 @@ Problemas:
 ```
 
 ### **DEPOIS (Tabela)**
+
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │ 🔍 [Busca] [Categoria] [Status] [Estoque] [Preço] [Novos]        │
@@ -213,17 +219,20 @@ Benefícios:
 ## 📦 Arquivos Modificados/Criados
 
 ### **Modificados:**
+
 1. ✅ `app/admin/produtos/page.tsx` - Refatoração completa
 2. ✅ `lib/store/produtoStore.ts` - Tipo `Produto` + `created_at`
 3. ✅ `docs/PROGRESSO_TABELA_PRODUTOS.md` - Atualizado
 
 ### **Criados:**
+
 1. ✅ `components/admin/TabelaProdutos.tsx` (380 linhas)
 2. ✅ `components/admin/FiltrosProdutos.tsx` (270 linhas)
 3. ✅ `APLICAR_MIGRATION_034.md` - Guia da migration
 4. ✅ `docs/PLANO_IMPLEMENTACAO_TABELA_PRODUTOS.md` - Plano completo
 
 ### **Backups:**
+
 1. ✅ `app/admin/produtos/page_OLD_GRID.tsx` - Versão anterior
 
 ---
@@ -231,11 +240,13 @@ Benefícios:
 ## ✅ Checklist de Implementação
 
 ### FASE 1 - Preparação Backend
+
 - [x] Migration 034 criada (created_at)
 - [ ] Migration 034 aplicada no Supabase ⚠️ **PENDENTE**
 - [x] Guia de aplicação criado
 
 ### FASE 2 - Estrutura da Tabela
+
 - [x] Componente TabelaProdutos criado
 - [x] 9 colunas implementadas
 - [x] Checkbox seleção individual/massa
@@ -245,6 +256,7 @@ Benefícios:
 - [x] Ícones de ordenação
 
 ### FASE 3 - Integração e Ordenação ✅ **COMPLETA**
+
 - [x] TabelaProdutos integrado
 - [x] FiltrosProdutos integrado
 - [x] Ordenação por Nome
@@ -257,6 +269,7 @@ Benefícios:
 - [x] Handler de ordenação funcional
 
 ### FASE 4 - Filtros Avançados ✅ **COMPLETA**
+
 - [x] Filtro por busca (nome/ID)
 - [x] Filtro por categoria (prep)
 - [x] Filtro por status
@@ -269,6 +282,7 @@ Benefícios:
 - [x] Reset página ao filtrar
 
 ### FASE 5 - Persistência em URL
+
 - [ ] useSearchParams implementado ⏳ **PRÓXIMA**
 - [ ] URL atualizada ao filtrar
 - [ ] URL atualizada ao ordenar
@@ -276,6 +290,7 @@ Benefícios:
 - [ ] Links compartilháveis
 
 ### FASE 6 - Melhorias UX
+
 - [x] Loading states
 - [x] Empty states
 - [x] Indicador de busca
@@ -289,12 +304,14 @@ Benefícios:
 ## 🚀 Próximos Passos
 
 ### **Imediato:**
+
 1. ⚠️ **Aplicar Migration 034** no Supabase
    - Arquivo: `APLICAR_MIGRATION_034.md`
    - Tempo: 5 minutos
    - Crítico para ordenação por `created_at`
 
 ### **FASE 5 - Persistência em URL** (1h estimado)
+
 ```typescript
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -313,10 +330,11 @@ useEffect(() => {
   if (filtroStatus !== 'todos') params.set('status', filtroStatus);
   // ...
   router.replace(`/admin/produtos?${params.toString()}`, { scroll: false });
-}, [sortBy, sortDirection, /* ... filtros */]);
+}, [sortBy, sortDirection /* ... filtros */]);
 ```
 
 ### **FASE 6 - Polish Final** (1-2h estimado)
+
 - [ ] Testes em mobile
 - [ ] Keyboard shortcuts
 - [ ] ARIA labels
@@ -327,27 +345,29 @@ useEffect(() => {
 
 ## 📊 Estatísticas
 
-| Métrica | Valor |
-|---------|-------|
-| **Linhas de código** | 1,350+ |
-| **Componentes criados** | 2 |
-| **Filtros implementados** | 7 |
-| **Colunas ordenáveis** | 6 |
-| **Tempo investido** | ~3h |
-| **Commits** | 3 |
-| **Arquivos modificados** | 9 |
+| Métrica                   | Valor  |
+| ------------------------- | ------ |
+| **Linhas de código**      | 1,350+ |
+| **Componentes criados**   | 2      |
+| **Filtros implementados** | 7      |
+| **Colunas ordenáveis**    | 6      |
+| **Tempo investido**       | ~3h    |
+| **Commits**               | 3      |
+| **Arquivos modificados**  | 9      |
 
 ---
 
 ## 🎯 Impacto
 
 ### **Antes:**
+
 - ❌ Gestão lenta de 300+ produtos
 - ❌ Difícil encontrar produtos específicos
 - ❌ Comparação visual ineficiente
 - ❌ Filtros limitados
 
 ### **Depois:**
+
 - ✅ Gestão profissional tipo ERP
 - ✅ Busca e filtros avançados
 - ✅ Comparação visual imediata
@@ -360,6 +380,7 @@ useEffect(() => {
 ## 🏆 Conclusão
 
 A **FASE 3** foi concluída com sucesso! A página de produtos agora possui:
+
 - ✅ Visualização em tabela profissional
 - ✅ 7 filtros avançados funcionais
 - ✅ Ordenação em 6 colunas
