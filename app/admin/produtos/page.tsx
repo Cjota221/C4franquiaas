@@ -18,21 +18,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 const PAGE_SIZE = 30;
 
-type ProdutoRow = {
-  id: number | string;
-  id_externo: string | null;
-  nome: string | null;
-  estoque: number | null;
-  preco_base: number | null;
-  ativo: boolean | null;
-  imagem: string | null;
-  imagens: string[] | null;
-  created_at: string | null;
-  categorias: { id: number; nome: string }[] | null;
-  variacoes_meta?: { sku?: string; codigo_barras?: string }[] | null;
-  temMargem?: boolean;
-};
-
 export default function ProdutosPage(): React.JSX.Element {
   // Store states
   const selectedIds = useProdutoStore((s) => s.selectedIds);
@@ -192,7 +177,7 @@ export default function ProdutosPage(): React.JSX.Element {
       if (error) throw error;
 
       // Buscar preços personalizados para identificar produtos novos
-      const produtoIds = (data || []).map((r: ProdutoRow) => r.id);
+      const produtoIds = (data || []).map((r) => r.id);
       let produtosComMargem = new Set<number | string>();
       
       if (produtoIds.length > 0) {
@@ -204,7 +189,7 @@ export default function ProdutosPage(): React.JSX.Element {
         produtosComMargem = new Set(precosPersonalizados?.map(p => p.produto_id) || []);
       }
 
-      const mapped: ProdutoType[] = (data || []).map((r: ProdutoRow) => {
+      const mapped: ProdutoType[] = (data || []).map((r) => {
         const id = r.id;
         const id_externo = r.id_externo ?? undefined;
         const nome = r.nome ?? '';
