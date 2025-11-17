@@ -53,9 +53,9 @@ export async function POST(request: NextRequest) {
       for (const revendedora of revendedoras) {
         vinculacoes.push({
           reseller_id: revendedora.id,
-          produto_id: produto.id,
-          margem_lucro: 20,
-          ativo: true,
+          product_id: produto.id,
+          margin_percent: 20,
+          is_active: true,
         });
       }
     }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const { error: vinculacaoError } = await supabase
       .from('reseller_products')
       .upsert(vinculacoes, {
-        onConflict: 'reseller_id,produto_id',
+        onConflict: 'reseller_id,product_id',
         ignoreDuplicates: true,
       });
 
