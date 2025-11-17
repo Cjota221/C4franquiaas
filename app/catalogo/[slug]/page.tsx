@@ -7,8 +7,8 @@ type ProductWithPrice = {
   id: string;
   nome: string;
   descricao?: string;
-  preco: number;
-  imagem_url?: string;
+  preco_base: number;
+  imagem?: string;
   finalPrice: number;
 };
 
@@ -35,9 +35,9 @@ export default async function CatalogoPublico({ params }: { params: Promise<{ sl
       produtos:product_id (
         id,
         nome,
-        descricao,
-        preco,
-        imagem_url
+        preco_base,
+        imagem,
+        estoque
       )
     `)
     .eq('reseller_id', reseller.id)
@@ -47,8 +47,11 @@ export default async function CatalogoPublico({ params }: { params: Promise<{ sl
   const secondaryColor = reseller.colors?.secondary || '#8b5cf6';
 
   const productsWithPrice: ProductWithPrice[] = products?.map(p => ({
-    ...p.produtos,
-    finalPrice: p.produtos.preco * (1 + (p.margin_percent || 0) / 100),
+    id: p.produtos.id,
+    nome: p.produtos.nome,
+    preco_base: p.produtos.preco_base,
+    imagem: p.produtos.imagem,
+    finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
   })) || [];
 
   return (
@@ -93,7 +96,7 @@ export default async function CatalogoPublico({ params }: { params: Promise<{ sl
               <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative aspect-square">
                   <Image
-                    src={product.imagem_url || '/placeholder.png'}
+                    src={product.imagem || '/placeholder.png'}
                     alt={product.nome}
                     fill
                     className="object-cover"
