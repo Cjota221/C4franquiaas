@@ -17,7 +17,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 const PAGE_SIZE = 30;
 
-export default function ProdutosPage(): React.JSX.Element {
+export default function ProdutosPage() {
   // Store states
   const selectedIds = useProdutoStore((s) => s.selectedIds);
   const setSelectedId = useProdutoStore((s) => s.setSelectedId);
@@ -47,9 +47,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
   const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
-  const [vinculandoRevendedoras, setVinculandoRevendedoras] = useState(false);
-  const [filtroApenasComEstoque, setFiltroApenasComEstoque] = useState(true);
-  const [ordenacao, setOrdenacao] = useState<'nome' | 'data-desc' | 'data-asc' | 'preco-desc' | 'preco-asc' | 'estoque-desc'>('data-desc');
+  const [filtroNovos, setFiltroNovos] = useState(false);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -181,8 +179,7 @@ export default function ProdutosPage(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [setStatusMsg, filtroApenasComEstoque, ordenacao]); // Adicionar filtroNovos às dependências
-
+  }, [setStatusMsg, filtroNovos]); // Adicionar filtroNovos às dependências
   function safeDecodeUrl(v?: unknown) {
     if (!v) return null;
     const s = String(v);
