@@ -17,20 +17,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 const PAGE_SIZE = 30;
 
-type ProdutoRow = {
-  id: number | string;
-  id_externo: string | null;
-  nome: string | null;
-  estoque: number | null;
-  preco_base: number | null;
-  ativo: boolean | null;
-  imagem: string | null;
-  imagens: string[] | null;
-  categorias: { id: number; nome: string }[] | null;
-  variacoes_meta?: { sku?: string; codigo_barras?: string }[] | null;
-  temMargem?: boolean; // ⭐ NOVO: Identifica se o produto tem preço personalizado (margem configurada)
-};
-
 export default function ProdutosPage(): React.JSX.Element {
   // Store states
   const selectedIds = useProdutoStore((s) => s.selectedIds);
@@ -111,7 +97,7 @@ export default function ProdutosPage(): React.JSX.Element {
       if (error) throw error;
 
       // Buscar preços personalizados de TODOS os produtos para identificar "novos"
-      const produtoIds = (data || []).map((r: ProdutoRow) => r.id);
+      const produtoIds = (data || []).map((r) => r.id);
       const { data: precosPersonalizados } = await createClient()
         .from('produtos_franqueadas')
         .select('produto_id')
@@ -120,7 +106,7 @@ export default function ProdutosPage(): React.JSX.Element {
       // Criar Set de produtos que JÁ TÊM margem configurada
       const produtosComMargem = new Set(precosPersonalizados?.map(p => p.produto_id) || []);
 
-      const mapped: ProdutoType[] = (data || []).map((r: ProdutoRow) => {
+      const mapped: ProdutoType[] = (data || []).map((r) => {
         const id = r.id;
         const id_externo = r.id_externo ?? undefined;
         const nome = r.nome ?? '';
