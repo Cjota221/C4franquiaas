@@ -78,7 +78,15 @@ export default function ProdutosRevendedoraPage() {
         .select('produto_id, margem_lucro, ativo')
         .eq('reseller_id', reseller.id);
 
-      if (vinculacaoError) throw vinculacaoError;
+      if (vinculacaoError) {
+        console.error('❌ Erro ao buscar produtos vinculados:', {
+          message: vinculacaoError.message,
+          details: vinculacaoError.details,
+          hint: vinculacaoError.hint,
+          code: vinculacaoError.code
+        });
+        throw new Error(`Erro ao buscar produtos vinculados: ${vinculacaoError.message}`);
+      }
 
       const produtoIds = produtosVinculados?.map(p => p.produto_id) || [];
 
