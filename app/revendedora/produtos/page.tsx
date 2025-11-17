@@ -15,9 +15,9 @@ interface Produto {
 }
 
 interface ProdutoRevendedora {
-  produto_id: string;
-  margem_lucro: number;
-  ativo: boolean;
+  product_id: string;
+  margin_percent: number;
+  is_active: boolean;
 }
 
 export default function ProdutosRevendedoraPage() {
@@ -75,7 +75,7 @@ export default function ProdutosRevendedoraPage() {
       // 2. Buscar produtos vinculados à revendedora
       const { data: produtosVinculados, error: vinculacaoError } = await supabase
         .from('reseller_products')
-        .select('produto_id, margem_lucro, ativo')
+        .select('product_id, margin_percent, is_active')
         .eq('reseller_id', reseller.id);
 
       if (vinculacaoError) {
@@ -88,7 +88,7 @@ export default function ProdutosRevendedoraPage() {
         throw new Error(`Erro ao buscar produtos vinculados: ${vinculacaoError.message}`);
       }
 
-      const produtoIds = produtosVinculados?.map(p => p.produto_id) || [];
+      const produtoIds = produtosVinculados?.map(p => p.product_id) || [];
 
       if (produtoIds.length === 0) {
         setProdutos([]);
@@ -109,7 +109,7 @@ export default function ProdutosRevendedoraPage() {
 
       // 4. Criar mapa de produtos vinculados
       const map = new Map<string, ProdutoRevendedora>();
-      produtosVinculados?.forEach(v => map.set(v.produto_id, v));
+      produtosVinculados?.forEach(v => map.set(v.product_id, v));
       setProdutosVinculados(map);
 
       console.log('✅ Dados carregados:', {
@@ -140,15 +140,15 @@ export default function ProdutosRevendedoraPage() {
         // Atualizar status ativo/inativo
         const { error } = await supabase
           .from('reseller_products')
-          .update({ ativo: !vinculado.ativo })
+          .update({ is_active: !vinculado.is_active })
           .eq('reseller_id', revendedoraId)
-          .eq('produto_id', produtoId);
+          .eq('product_id', produtoId);
 
         if (error) throw error;
 
         // Atualizar localmente
         const novoMap = new Map(produtosVinculados);
-        novoMap.set(produtoId, { ...vinculado, ativo: !vinculado.ativo });
+        novoMap.set(produtoId, { ...vinculado, is_active: !vinculado.is_active });
         setProdutosVinculados(novoMap);
       } else {
         // Criar novo vínculo com margem padrão de 20%
@@ -156,16 +156,16 @@ export default function ProdutosRevendedoraPage() {
           .from('reseller_products')
           .insert({
             reseller_id: revendedoraId,
-            produto_id: produtoId,
-            margem_lucro: 20,
-            ativo: true
+            product_id: produtoId,
+            margin_percent: 20,
+            is_active: true
           });
 
         if (error) throw error;
 
         // Atualizar localmente
         const novoMap = new Map(produtosVinculados);
-        novoMap.set(produtoId, { produto_id: produtoId, margem_lucro: 20, ativo: true });
+        novoMap.set(produtoId, { product_id: produtoId, margin_percent: 20, is_active: true });
         setProdutosVinculados(novoMap);
       }
 
@@ -187,9 +187,9 @@ export default function ProdutosRevendedoraPage() {
     try {
       const { error } = await supabase
         .from('reseller_products')
-        .update({ margem_lucro: novaMargem })
+        .update({ margin_percent: novaMargem })
         .eq('reseller_id', revendedoraId)
-        .eq('produto_id', produtoId);
+        .eq('product_id', produtoId);
 
       if (error) throw error;
 
@@ -197,7 +197,7 @@ export default function ProdutosRevendedoraPage() {
       const vinculado = produtosVinculados.get(produtoId);
       if (vinculado) {
         const novoMap = new Map(produtosVinculados);
-        novoMap.set(produtoId, { ...vinculado, margem_lucro: novaMargem });
+        novoMap.set(produtoId, { ...vinculado, margin_percent: novaMargem });
         setProdutosVinculados(novoMap);
       }
     } catch (err) {
@@ -226,14 +226,14 @@ export default function ProdutosRevendedoraPage() {
   const produtosFiltrados = produtos.filter(p => {
     const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
     const matchCategoria = categoriaFiltro === 'todas' || p.categoria === categoriaFiltro;
-    const matchAtivo = !apenasAtivos || produtosVinculados.get(p.id)?.ativo;
+    const matchAtivo = !apenasAtivos || produtosVinculados.get(p.id)?.is_active;
     return matchBusca && matchCategoria && matchAtivo;
   });
 
   const stats = {
     disponiveis: produtos.length,
     vinculados: Array.from(produtosVinculados.values()).length,
-    ativos: Array.from(produtosVinculados.values()).filter(v => v.ativo).length
+    ativos: Array.from(produtosVinculados.values()).filter(v => v.is_active).length
   };
 
   if (loading) {
@@ -344,8 +344,8 @@ export default function ProdutosRevendedoraPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {produtosFiltrados.map(produto => {
             const vinculado = produtosVinculados.get(produto.id);
-            const isAtivo = vinculado?.ativo || false;
-            const margem = vinculado?.margem_lucro || 20;
+            const isAtivo = vinculado?.is_active || false;
+            const margem = vinculado?.margin_percent || 20;
             const precoFinal = produto.preco * (1 + margem / 100);
 
             return (
