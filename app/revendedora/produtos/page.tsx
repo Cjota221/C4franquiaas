@@ -1,0 +1,413 @@
+﻿"use client";
+
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Package, Search, DollarSign, Check, X, TrendingUp, Filter } from 'lucide-react';
+import Image from 'next/image';
+
+interface Produto {
+  id: string;
+  nome: string;
+  preco: number;
+  imagem_principal: string;
+  categoria: string;
+  ativo: boolean;
+}
+
+interface ProdutoRevendedora {
+  produto_id: string;
+  margem_lucro: number;
+  ativo: boolean;
+}
+
+export default function ProdutosRevendedoraPage() {
+  const supabase = createClient();
+  
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtosVinculados, setProdutosVinculados] = useState<Map<string, ProdutoRevendedora>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [revendedoraId, setRevendedoraId] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('todas');
+  const [apenasAtivos, setApenasAtivos] = useState(false);
+
+  useEffect(() => {
+    carregarDados();
+  }, []);
+
+  async function carregarDados() {
+    setLoading(true);
+    try {
+      // 1. Obter ID da revendedora
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data: reseller } = await supabase
+        .from('resellers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!reseller) throw new Error('Revendedora não encontrada');
+      setRevendedoraId(reseller.id);
+
+      // 2. Carregar produtos ativos
+      const { data: produtosData, error: produtosError } = await supabase
+        .from('produtos')
+        .select('id, nome, preco, imagem_principal, categoria, ativo')
+        .eq('ativo', true)
+        .order('nome');
+
+      if (produtosError) throw produtosError;
+      setProdutos(produtosData || []);
+
+      // 3. Carregar produtos já vinculados
+      const { data: vinculados, error: vinculadosError } = await supabase
+        .from('reseller_products')
+        .select('produto_id, margem_lucro, ativo')
+        .eq('reseller_id', reseller.id);
+
+      if (vinculadosError) throw vinculadosError;
+
+      const map = new Map<string, ProdutoRevendedora>();
+      vinculados?.forEach(v => map.set(v.produto_id, v));
+      setProdutosVinculados(map);
+
+      console.log(' Dados carregados:', {
+        produtos: produtosData?.length,
+        vinculados: vinculados?.length
+      });
+    } catch (err) {
+      console.error(' Erro ao carregar dados:', err);
+      alert('Erro ao carregar produtos. Recarregue a página.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function toggleProduto(produtoId: string) {
+    if (!revendedoraId) return;
+
+    const vinculado = produtosVinculados.get(produtoId);
+    
+    try {
+      if (vinculado) {
+        // Atualizar status ativo/inativo
+        const { error } = await supabase
+          .from('reseller_products')
+          .update({ ativo: !vinculado.ativo })
+          .eq('reseller_id', revendedoraId)
+          .eq('produto_id', produtoId);
+
+        if (error) throw error;
+
+        // Atualizar localmente
+        const novoMap = new Map(produtosVinculados);
+        novoMap.set(produtoId, { ...vinculado, ativo: !vinculado.ativo });
+        setProdutosVinculados(novoMap);
+      } else {
+        // Criar novo vínculo com margem padrão de 20%
+        const { error } = await supabase
+          .from('reseller_products')
+          .insert({
+            reseller_id: revendedoraId,
+            produto_id: produtoId,
+            margem_lucro: 20,
+            ativo: true
+          });
+
+        if (error) throw error;
+
+        // Atualizar localmente
+        const novoMap = new Map(produtosVinculados);
+        novoMap.set(produtoId, { produto_id: produtoId, margem_lucro: 20, ativo: true });
+        setProdutosVinculados(novoMap);
+      }
+
+      // Atualizar contador de produtos da revendedora
+      await atualizarContador();
+    } catch (err) {
+      console.error('Erro ao vincular/desvincular produto:', err);
+      alert('Erro ao atualizar produto');
+    }
+  }
+
+  async function atualizarMargem(produtoId: string, novaMargem: number) {
+    if (!revendedoraId) return;
+    if (novaMargem < 0 || novaMargem > 200) {
+      alert('Margem deve estar entre 0% e 200%');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('reseller_products')
+        .update({ margem_lucro: novaMargem })
+        .eq('reseller_id', revendedoraId)
+        .eq('produto_id', produtoId);
+
+      if (error) throw error;
+
+      // Atualizar localmente
+      const vinculado = produtosVinculados.get(produtoId);
+      if (vinculado) {
+        const novoMap = new Map(produtosVinculados);
+        novoMap.set(produtoId, { ...vinculado, margem_lucro: novaMargem });
+        setProdutosVinculados(novoMap);
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar margem:', err);
+      alert('Erro ao atualizar margem de lucro');
+    }
+  }
+
+  async function atualizarContador() {
+    if (!revendedoraId) return;
+
+    const { count } = await supabase
+      .from('reseller_products')
+      .select('*', { count: 'exact', head: true })
+      .eq('reseller_id', revendedoraId)
+      .eq('ativo', true);
+
+    await supabase
+      .from('resellers')
+      .update({ total_products: count || 0 })
+      .eq('id', revendedoraId);
+  }
+
+  const categorias = ['todas', ...new Set(produtos.map(p => p.categoria))];
+
+  const produtosFiltrados = produtos.filter(p => {
+    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
+    const matchCategoria = categoriaFiltro === 'todas' || p.categoria === categoriaFiltro;
+    const matchAtivo = !apenasAtivos || produtosVinculados.get(p.id)?.ativo;
+    return matchBusca && matchCategoria && matchAtivo;
+  });
+
+  const stats = {
+    disponiveis: produtos.length,
+    vinculados: Array.from(produtosVinculados.values()).length,
+    ativos: Array.from(produtosVinculados.values()).filter(v => v.ativo).length
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando produtos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+           Meus Produtos
+        </h1>
+        <p className="text-gray-600">
+          Selecione os produtos que deseja revender e defina sua margem de lucro
+        </p>
+      </div>
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-700 text-sm font-medium">Disponíveis</p>
+              <p className="text-2xl font-bold text-blue-900">{stats.disponiveis}</p>
+            </div>
+            <Package className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+
+        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-700 text-sm font-medium">Vinculados</p>
+              <p className="text-2xl font-bold text-purple-900">{stats.vinculados}</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+
+        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-700 text-sm font-medium">Ativos</p>
+              <p className="text-2xl font-bold text-green-900">{stats.ativos}</p>
+            </div>
+            <Check className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6 space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Busca */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar produto..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Categoria */}
+          <select
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          >
+            {categorias.map(cat => (
+              <option key={cat} value={cat}>
+                {cat === 'todas' ? 'Todas Categorias' : cat}
+              </option>
+            ))}
+          </select>
+
+          {/* Filtro Ativos */}
+          <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+            <input
+              type="checkbox"
+              checked={apenasAtivos}
+              onChange={(e) => setApenasAtivos(e.target.checked)}
+              className="w-4 h-4 text-pink-600 rounded"
+            />
+            <span className="text-sm text-gray-700">Apenas Ativos</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Lista de Produtos */}
+      {produtosFiltrados.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Nenhum produto encontrado</p>
+          <p className="text-gray-400 text-sm mt-2">Tente ajustar os filtros</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {produtosFiltrados.map(produto => {
+            const vinculado = produtosVinculados.get(produto.id);
+            const isAtivo = vinculado?.ativo || false;
+            const margem = vinculado?.margem_lucro || 20;
+            const precoFinal = produto.preco * (1 + margem / 100);
+
+            return (
+              <div
+                key={produto.id}
+                className={`bg-white rounded-lg shadow hover:shadow-lg transition-all border-2 ${
+                  isAtivo ? 'border-green-500' : 'border-gray-200'
+                }`}
+              >
+                {/* Imagem */}
+                <div className="relative h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+                  {produto.imagem_principal ? (
+                    <Image
+                      src={produto.imagem_principal}
+                      alt={produto.nome}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Package className="w-16 h-16 text-gray-300" />
+                    </div>
+                  )}
+                  
+                  {/* Badge Status */}
+                  {isAtivo && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      Ativo
+                    </div>
+                  )}
+                </div>
+
+                {/* Conteúdo */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                    {produto.nome}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-3">{produto.categoria}</p>
+
+                  {/* Preços */}
+                  <div className="mb-4 space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Preço base:</span>
+                      <span className="font-medium">R$ {produto.preco.toFixed(2)}</span>
+                    </div>
+                    {vinculado && (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Margem:</span>
+                          <span className="font-medium text-purple-600">+{margem}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-base font-bold">
+                          <span className="text-gray-900">Seu preço:</span>
+                          <span className="text-green-600">R$ {precoFinal.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Margem de Lucro */}
+                  {vinculado && (
+                    <div className="mb-3">
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Margem de Lucro (%)
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-gray-400" />
+                        <input
+                          type="number"
+                          min="0"
+                          max="200"
+                          value={margem}
+                          onChange={(e) => atualizarMargem(produto.id, Number(e.target.value))}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão Toggle */}
+                  <button
+                    onClick={() => toggleProduto(produto.id)}
+                    className={`w-full py-2 rounded-lg font-medium transition-colors ${
+                      isAtivo
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-green-500 text-white hover:bg-green-600'
+                    }`}
+                  >
+                    {isAtivo ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <X className="w-4 h-4" />
+                        Desativar
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4" />
+                        {vinculado ? 'Ativar' : 'Adicionar ao Catálogo'}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
