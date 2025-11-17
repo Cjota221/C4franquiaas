@@ -104,7 +104,16 @@ export default function ProdutosRevendedoraPage() {
         .in('id', produtoIds)
         .order('nome');
 
-      if (produtosError) throw produtosError;
+      if (produtosError) {
+        console.error('❌ Erro ao buscar produtos:', {
+          message: produtosError.message,
+          details: produtosError.details,
+          hint: produtosError.hint,
+          code: produtosError.code,
+          produtoIds: produtoIds
+        });
+        throw produtosError;
+      }
       setProdutos(produtosData || []);
 
       // 4. Criar mapa de produtos vinculados
