@@ -1,6 +1,7 @@
 # 📡 Webhook FácilZap - Documentação Técnica
 
 ## 🎯 Objetivo
+
 Sincronização em tempo real de produtos e estoque do FácilZap para o sistema C4 Franquias.
 
 ---
@@ -8,16 +9,19 @@ Sincronização em tempo real de produtos e estoque do FácilZap para o sistema 
 ## 🔗 Endpoint do Webhook
 
 ### URL de Produção
+
 ```
 https://c4franquiaas.netlify.app/api/webhook/facilzap
 ```
 
 ### URL de Desenvolvimento
+
 ```
 http://localhost:3000/api/webhook/facilzap
 ```
 
 ### Método HTTP
+
 ```
 POST
 ```
@@ -27,6 +31,7 @@ POST
 ## 🔐 Segurança
 
 ### Header de Autenticação
+
 O webhook valida a origem através de uma assinatura secreta:
 
 ```http
@@ -34,6 +39,7 @@ X-FacilZap-Signature: SUA_CHAVE_SECRETA_AQUI
 ```
 
 ### Variável de Ambiente
+
 Configure no arquivo `.env.local`:
 
 ```env
@@ -45,11 +51,13 @@ FACILZAP_WEBHOOK_SECRET=sua_chave_secreta_compartilhada_com_facilzap
 ## 📦 Eventos Suportados
 
 ### 1. Produto Criado
+
 **Event:** `produto_criado`
 
 Disparado quando um novo produto é criado no FácilZap.
 
 **Payload Exemplo:**
+
 ```json
 {
   "event": "produto_criado",
@@ -57,7 +65,7 @@ Disparado quando um novo produto é criado no FácilZap.
   "timestamp": "2025-11-18T10:30:00Z",
   "data": {
     "nome": "Sandália Nude 37",
-    "preco": 89.90,
+    "preco": 89.9,
     "estoque": 15,
     "imagem": "https://facilzap.com/produtos/imagem123.jpg",
     "ativo": true,
@@ -68,6 +76,7 @@ Disparado quando um novo produto é criado no FácilZap.
 ```
 
 **Ação do Sistema:**
+
 - Cria novo registro na tabela `produtos`
 - Armazena `facilzap_id` para sincronização futura
 - Define `preco_base`, `estoque`, `imagem` e outras informações
@@ -75,11 +84,13 @@ Disparado quando um novo produto é criado no FácilZap.
 ---
 
 ### 2. Produto Atualizado
+
 **Event:** `produto_atualizado`
 
 Disparado quando informações de um produto são alteradas no FácilZap.
 
 **Payload Exemplo:**
+
 ```json
 {
   "event": "produto_atualizado",
@@ -87,13 +98,14 @@ Disparado quando informações de um produto são alteradas no FácilZap.
   "timestamp": "2025-11-18T11:00:00Z",
   "data": {
     "nome": "Sandália Nude 37 - Promoção",
-    "preco": 79.90,
+    "preco": 79.9,
     "imagem": "https://facilzap.com/produtos/imagem123-v2.jpg"
   }
 }
 ```
 
 **Ação do Sistema:**
+
 - Atualiza apenas os campos enviados no payload
 - Mantém outros campos inalterados
 - Atualiza `ultima_sincronizacao`
@@ -101,11 +113,13 @@ Disparado quando informações de um produto são alteradas no FácilZap.
 ---
 
 ### 3. Estoque Atualizado ⭐ (MAIS FREQUENTE)
+
 **Event:** `estoque_atualizado`
 
 Disparado quando o estoque de um produto é alterado.
 
 **Payload Exemplo:**
+
 ```json
 {
   "event": "estoque_atualizado",
@@ -118,6 +132,7 @@ Disparado quando o estoque de um produto é alterado.
 ```
 
 **Ação do Sistema:**
+
 - Atualiza campo `estoque` na tabela `produtos`
 - **REGRA CRÍTICA:** Se `estoque = 0`:
   - Desativa produto em `produtos_franqueadas_precos` (`ativo_no_site = false`)
@@ -151,6 +166,7 @@ graph TD
 ## ✅ Respostas da API
 
 ### Sucesso (200 OK)
+
 ```json
 {
   "success": true,
@@ -164,6 +180,7 @@ graph TD
 ```
 
 ### Erro de Autenticação (401)
+
 ```json
 {
   "error": "Unauthorized: Invalid signature"
@@ -171,6 +188,7 @@ graph TD
 ```
 
 ### Erro de Payload (400)
+
 ```json
 {
   "error": "Invalid payload: missing required fields"
@@ -178,6 +196,7 @@ graph TD
 ```
 
 ### Erro Interno (500)
+
 ```json
 {
   "error": "Internal server error",
@@ -190,10 +209,12 @@ graph TD
 ## 🛠️ Configuração no FácilZap
 
 ### Passo 1: Acessar Configurações
+
 1. Entre no painel do FácilZap
 2. Navegue até **Configurações → Integrações → Webhooks**
 
 ### Passo 2: Adicionar Webhook
+
 - **URL do Webhook:** `https://c4franquiaas.netlify.app/api/webhook/facilzap`
 - **Método:** `POST`
 - **Header Personalizado:**
@@ -201,12 +222,15 @@ graph TD
   - Valor: `SUA_CHAVE_SECRETA` (mesma do `.env`)
 
 ### Passo 3: Selecionar Eventos
+
 Marque os eventos que deseja receber:
+
 - ✅ Produto Criado
 - ✅ Produto Atualizado
 - ✅ Estoque Atualizado
 
 ### Passo 4: Testar Webhook
+
 Use o botão "Testar Webhook" no painel do FácilZap.
 
 ---
@@ -214,6 +238,7 @@ Use o botão "Testar Webhook" no painel do FácilZap.
 ## 🧪 Testando Localmente
 
 ### Usando cURL
+
 ```bash
 curl -X POST http://localhost:3000/api/webhook/facilzap \
   -H "Content-Type: application/json" \
@@ -229,6 +254,7 @@ curl -X POST http://localhost:3000/api/webhook/facilzap \
 ```
 
 ### Usando Postman
+
 1. Método: `POST`
 2. URL: `http://localhost:3000/api/webhook/facilzap`
 3. Headers:
@@ -241,6 +267,7 @@ curl -X POST http://localhost:3000/api/webhook/facilzap \
 ## 📊 Monitoramento
 
 ### Logs do Webhook
+
 Os logs são exibidos no console do servidor:
 
 ```
@@ -254,12 +281,13 @@ Os logs são exibidos no console do servidor:
 ```
 
 ### Tabela de Logs
+
 Os eventos são registrados na tabela `logs_sincronizacao`:
 
 ```sql
-SELECT * FROM logs_sincronizacao 
-WHERE tipo = 'estoque_zerado' 
-ORDER BY timestamp DESC 
+SELECT * FROM logs_sincronizacao
+WHERE tipo = 'estoque_zerado'
+ORDER BY timestamp DESC
 LIMIT 10;
 ```
 
@@ -268,6 +296,7 @@ LIMIT 10;
 ## 🔧 Manutenção
 
 ### Adicionar Nova Coluna ao Produto
+
 Edite a função `handleProdutoAtualizado`:
 
 ```typescript
@@ -275,6 +304,7 @@ if (data.nova_coluna !== undefined) updateData.nova_coluna = data.nova_coluna;
 ```
 
 ### Modificar Regra de Desativação
+
 Edite a função `desativarProdutoEstoqueZero` para adicionar lógica customizada.
 
 ---

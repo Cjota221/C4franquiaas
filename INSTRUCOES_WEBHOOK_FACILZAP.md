@@ -3,6 +3,7 @@
 ## ✅ Checklist de Implementação
 
 ### 1️⃣ **Banco de Dados**
+
 Execute a migration no Supabase SQL Editor:
 
 ```bash
@@ -10,8 +11,9 @@ Arquivo: migrations/WEBHOOK_FACILZAP_MIGRATION.sql
 ```
 
 Isso vai criar:
+
 - ✅ Coluna `facilzap_id` na tabela `produtos`
-- ✅ Coluna `sincronizado_facilzap` 
+- ✅ Coluna `sincronizado_facilzap`
 - ✅ Coluna `ultima_sincronizacao`
 - ✅ Tabela `logs_sincronizacao`
 - ✅ Views para monitoramento
@@ -29,7 +31,8 @@ FACILZAP_WEBHOOK_SECRET=SUA_CHAVE_SECRETA_COMPARTILHADA_COM_FACILZAP
 SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_do_supabase
 ```
 
-⚠️ **IMPORTANTE:** 
+⚠️ **IMPORTANTE:**
+
 - A `FACILZAP_WEBHOOK_SECRET` deve ser a mesma configurada no painel do FácilZap
 - A `SUPABASE_SERVICE_ROLE_KEY` já deve existir (verifique no Supabase Dashboard)
 
@@ -57,6 +60,7 @@ Aguarde o deploy terminar (~2-3 minutos).
 4. Preencha:
 
    **URL do Webhook:**
+
    ```
    https://c4franquiaas.netlify.app/api/webhook/facilzap
    ```
@@ -64,11 +68,13 @@ Aguarde o deploy terminar (~2-3 minutos).
    **Método:** `POST`
 
    **Headers Personalizados:**
+
    ```
    X-FacilZap-Signature: SUA_CHAVE_SECRETA
    ```
 
 5. Selecione os eventos:
+
    - ✅ Produto Criado
    - ✅ Produto Atualizado
    - ✅ Estoque Atualizado
@@ -80,6 +86,7 @@ Aguarde o deploy terminar (~2-3 minutos).
 ### 5️⃣ **Testar o Webhook**
 
 #### Opção A: Teste pelo FácilZap
+
 Use o botão "Testar Webhook" no painel do FácilZap.
 
 #### Opção B: Teste Manual com cURL
@@ -99,6 +106,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
 ```
 
 **Resposta Esperada:**
+
 ```json
 {
   "success": true,
@@ -116,15 +124,17 @@ curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
 ### 6️⃣ **Monitorar Logs**
 
 #### Ver logs no Netlify:
+
 1. Netlify Dashboard → Site → Functions
 2. Procure por `webhook/facilzap`
 3. Veja os logs em tempo real
 
 #### Ver logs no Supabase:
+
 ```sql
 -- Últimos 10 eventos
-SELECT * FROM logs_sincronizacao 
-ORDER BY timestamp DESC 
+SELECT * FROM logs_sincronizacao
+ORDER BY timestamp DESC
 LIMIT 10;
 
 -- Estatísticas de sincronização
@@ -157,16 +167,16 @@ Isso garante que **nenhuma franqueada ou revendedora venda produto sem estoque!*
 
 ```sql
 -- Produtos sincronizados hoje
-SELECT 
+SELECT
   COUNT(*) as total,
   COUNT(*) FILTER (WHERE estoque = 0) as sem_estoque,
   COUNT(*) FILTER (WHERE estoque > 0) as com_estoque
-FROM produtos 
+FROM produtos
 WHERE DATE(ultima_sincronizacao) = CURRENT_DATE
   AND sincronizado_facilzap = true;
 
 -- Eventos de estoque zerado nas últimas 24h
-SELECT 
+SELECT
   l.timestamp,
   p.nome,
   p.facilzap_id,
@@ -178,12 +188,12 @@ WHERE l.tipo = 'estoque_zerado'
 ORDER BY l.timestamp DESC;
 
 -- Produtos desincronizados (facilzap_id nulo)
-SELECT 
+SELECT
   id,
   nome,
   estoque,
   ativo
-FROM produtos 
+FROM produtos
 WHERE facilzap_id IS NULL
   OR sincronizado_facilzap = false
 LIMIT 20;
@@ -194,16 +204,21 @@ LIMIT 20;
 ## 🛠️ Troubleshooting
 
 ### Problema: Webhook retorna 401 Unauthorized
+
 **Solução:** Verifique se o header `X-FacilZap-Signature` está correto e se a variável de ambiente está configurada no Netlify.
 
 ### Problema: Produto não encontrado
+
 **Solução:** O produto precisa ter o `facilzap_id` preenchido. Verifique se o produto foi criado pelo webhook ou se precisa adicionar o ID manualmente.
 
 ### Problema: Estoque não desativa produtos
+
 **Solução:** Verifique os logs da função `desativarProdutoEstoqueZero`. Pode ser problema de permissões RLS ou IDs incorretos.
 
 ### Problema: Muitos logs acumulados
+
 **Solução:** Execute a limpeza manual:
+
 ```sql
 SELECT limpar_logs_sincronizacao_antigos();
 ```
