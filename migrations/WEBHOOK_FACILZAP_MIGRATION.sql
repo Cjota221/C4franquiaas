@@ -83,7 +83,9 @@ SELECT
   COUNT(DISTINCT pfp.id) as franqueadas_ativas,
   COUNT(DISTINCT rp.reseller_id) as revendedoras_ativas
 FROM produtos p
-LEFT JOIN produtos_franqueadas_precos pfp ON pfp.produto_id = p.id AND pfp.ativo_no_site = true
+LEFT JOIN produtos_franqueadas_precos pfp ON pfp.produto_franqueada_id IN (
+  SELECT pf.id FROM produtos_franqueadas pf WHERE pf.produto_id = p.id
+) AND pfp.ativo_no_site = true
 LEFT JOIN reseller_products rp ON rp.product_id = p.id AND rp.is_active = true
 WHERE p.estoque = 0 
   AND p.sincronizado_facilzap = true

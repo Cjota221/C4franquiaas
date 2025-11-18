@@ -278,15 +278,25 @@ async function desativarProdutoEstoqueZero(produtoId: string) {
 
   try {
     // 1. Desativar em produtos_franqueadas_precos
-    const { error: errorFranqueadas } = await supabaseAdmin
-      .from('produtos_franqueadas_precos')
-      .update({ ativo_no_site: false })
+    // Primeiro buscar os IDs de produtos_franqueadas vinculados a este produto
+    const { data: vinculacoesFranqueadas } = await supabaseAdmin
+      .from('produtos_franqueadas')
+      .select('id')
       .eq('produto_id', produtoId);
 
-    if (errorFranqueadas) {
-      console.error('❌ Erro ao desativar em franqueadas:', errorFranqueadas);
-    } else {
-      console.log('✅ Produto desativado em franqueadas');
+    if (vinculacoesFranqueadas && vinculacoesFranqueadas.length > 0) {
+      const produtoFranqueadaIds = vinculacoesFranqueadas.map(v => v.id);
+      
+      const { error: errorFranqueadas } = await supabaseAdmin
+        .from('produtos_franqueadas_precos')
+        .update({ ativo_no_site: false })
+        .in('produto_franqueada_id', produtoFranqueadaIds);
+
+      if (errorFranqueadas) {
+        console.error('❌ Erro ao desativar em franqueadas:', errorFranqueadas);
+      } else {
+        console.log(`✅ Produto desativado em ${vinculacoesFranqueadas.length} franqueadas`);
+      }
     }
 
     // 2. Desativar em reseller_products
