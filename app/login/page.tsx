@@ -25,20 +25,55 @@ export default function LoginPage() {
       if (signInError) throw new Error(signInError.message);
       if (!user) throw new Error('Usuário não encontrado após o login.');
 
-      const { data: perfil, error: profileError } = await createClient()
+      // Verificar se é admin
+      const { data: perfil } = await createClient()
         .from('perfis')
         .select('papel')
         .eq('id', user.id)
-        .single();
-
-      if (profileError) throw new Error('Não foi possível encontrar o perfil do usuário.');
+        .maybeSingle();
 
       if (perfil && perfil.papel === 'admin') {
         router.push('/admin/dashboard');
-      } else {
-        await createClient().auth.signOut();
-        throw new Error('Acesso negado. Apenas administradores podem entrar.');
+        return;
       }
+
+      // Verificar se é revendedora
+      const { data: revendedora } = await createClient()
+        .from('resellers')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (revendedora) {
+        if (revendedora.status === 'aprovada') {
+          router.push('/revendedora/dashboard');
+          return;
+        } else {
+          await createClient().auth.signOut();
+          throw new Error('Sua conta de revendedora ainda não foi aprovada pelo administrador.');
+        }
+      }
+
+      // Verificar se é franqueada
+      const { data: franqueada } = await createClient()
+        .from('franqueadas')
+        .select('id, ativo')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (franqueada) {
+        if (franqueada.ativo) {
+          router.push('/franqueada/dashboard');
+          return;
+        } else {
+          await createClient().auth.signOut();
+          throw new Error('Sua conta de franqueada está inativa. Entre em contato com o administrador.');
+        }
+      }
+
+      // Se não encontrou nenhum perfil
+      await createClient().auth.signOut();
+      throw new Error('Acesso negado. Usuário não possui perfil válido.');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
       setError(errorMessage);
@@ -50,7 +85,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center text-[#DB1472]">C4 Franquias</h1>
-        <p className="text-center text-gray-600">Painel Administrativo</p>
+        <p className="text-center text-gray-600">Acesso ao Sistema</p>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
