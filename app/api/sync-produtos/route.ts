@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
           codigo_barras,
           variacoes_meta,
           last_synced_at: new Date().toISOString(),
+          // 🆕 Novas colunas para sincronização com FácilZap
+          facilzap_id: id_externo, // Mesmo valor do id_externo
+          sincronizado_facilzap: true, // Marca como sincronizado
+          ultima_sincronizacao: new Date().toISOString(), // Timestamp da sync
         };
       });
 
@@ -68,11 +72,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(body, { status: 500 });
       }
 
+      // 🆕 Registrar log de sincronização bem-sucedida
+      const logResult = await supabase.from('logs_sincronizacao').insert({
+        tipo: 'produto_atualizado',
+        facilzap_id: null, // Batch sync, sem ID específico
+        descricao: `Sincronização em lote: ${batch.length} produtos`,
+        payload: { count: batch.length, page: page ?? 'all' },
+        sucesso: true,
+        erro: null,
+      });
+      if (logResult.error) {
+        console.warn('⚠️ Erro ao registrar log (não crítico):', logResult.error);
+      }
+
       // Note: removed automatic categories extraction/upsert to avoid external coupling.
       // Categories should be managed manually in the admin panel and linked to products via the categorias API.
 
       importedCount += batch.length;
     }
+
+    // 🆕 Desativar produtos com estoque zero em todas franqueadas/revendedoras
+    console.log('🔄 Verificando produtos com estoque zero...');
+    await desativarProdutosEstoqueZero(supabase);
 
     return NextResponse.json({ ok: true, imported: importedCount }, { status: 200 });
   } catch (err) {
@@ -80,6 +101,90 @@ export async function POST(request: NextRequest) {
     const body: Record<string, unknown> = { error: msg };
     if (process.env.DEBUG_SYNC === 'true') body['raw'] = err;
     return NextResponse.json(body, { status: 500 });
+  }
+}
+
+/**
+ * 🆕 Desativa automaticamente produtos com estoque zero
+ * em todas franqueadas e revendedoras
+ */
+async function desativarProdutosEstoqueZero(supabase: any) {
+  try {
+    // 1. Buscar produtos com estoque = 0
+    const { data: produtosZero, error: errProdutos } = await supabase
+      .from('produtos')
+      .select('id, nome, facilzap_id')
+      .eq('estoque', 0);
+
+    if (errProdutos) {
+      console.error('❌ Erro ao buscar produtos com estoque zero:', errProdutos);
+      return;
+    }
+
+    if (!produtosZero || produtosZero.length === 0) {
+      console.log('✅ Nenhum produto com estoque zero');
+      return;
+    }
+
+    console.log(`📦 Encontrados ${produtosZero.length} produtos com estoque zero`);
+
+    const produtoIds = produtosZero.map((p: any) => p.id);
+
+    // 2. Buscar IDs das franqueadas com esses produtos
+    const { data: franqueadas, error: errFranqueadas } = await supabase
+      .from('produtos_franqueadas')
+      .select('id, produto_id')
+      .in('produto_id', produtoIds);
+
+    if (errFranqueadas) {
+      console.error('❌ Erro ao buscar produtos_franqueadas:', errFranqueadas);
+      return;
+    }
+
+    if (franqueadas && franqueadas.length > 0) {
+      const franqueadaIds = franqueadas.map((f: any) => f.id);
+
+      // 3. Desativar em produtos_franqueadas_precos
+      const { error: errPrecos } = await supabase
+        .from('produtos_franqueadas_precos')
+        .update({ ativo_no_site: false })
+        .in('produto_franqueada_id', franqueadaIds);
+
+      if (errPrecos) {
+        console.error('❌ Erro ao desativar em franqueadas:', errPrecos);
+      } else {
+        console.log(`✅ Desativados ${franqueadaIds.length} produtos em franqueadas`);
+      }
+    }
+
+    // 4. Desativar em reseller_products
+    const { error: errRevendedoras } = await supabase
+      .from('reseller_products')
+      .update({ is_active: false })
+      .in('product_id', produtoIds);
+
+    if (errRevendedoras) {
+      console.error('❌ Erro ao desativar em revendedoras:', errRevendedoras);
+    } else {
+      console.log(`✅ Produtos desativados em revendedoras`);
+    }
+
+    // 5. Registrar log
+    for (const produto of produtosZero) {
+      await supabase.from('logs_sincronizacao').insert({
+        tipo: 'estoque_zerado',
+        produto_id: (produto as any).id,
+        facilzap_id: (produto as any).facilzap_id,
+        descricao: `Produto "${(produto as any).nome}" desativado automaticamente (estoque = 0)`,
+        payload: { produto_id: (produto as any).id, nome: (produto as any).nome },
+        sucesso: true,
+        erro: null,
+      });
+    }
+
+    console.log('✅ Produtos com estoque zero desativados automaticamente');
+  } catch (error) {
+    console.error('❌ Erro em desativarProdutosEstoqueZero:', error);
   }
 }
 
