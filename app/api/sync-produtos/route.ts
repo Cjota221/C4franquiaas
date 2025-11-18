@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
  * 🆕 Desativa automaticamente produtos com estoque zero
  * em todas franqueadas e revendedoras
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function desativarProdutosEstoqueZero(supabase: any) {
   try {
     // 1. Buscar produtos com estoque = 0
@@ -128,6 +129,7 @@ async function desativarProdutosEstoqueZero(supabase: any) {
 
     console.log(`📦 Encontrados ${produtosZero.length} produtos com estoque zero`);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const produtoIds = produtosZero.map((p: any) => p.id);
 
     // 2. Buscar IDs das franqueadas com esses produtos
@@ -142,6 +144,7 @@ async function desativarProdutosEstoqueZero(supabase: any) {
     }
 
     if (franqueadas && franqueadas.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const franqueadaIds = franqueadas.map((f: any) => f.id);
 
       // 3. Desativar em produtos_franqueadas_precos
@@ -173,9 +176,13 @@ async function desativarProdutosEstoqueZero(supabase: any) {
     for (const produto of produtosZero) {
       await supabase.from('logs_sincronizacao').insert({
         tipo: 'estoque_zerado',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         produto_id: (produto as any).id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         facilzap_id: (produto as any).facilzap_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         descricao: `Produto "${(produto as any).nome}" desativado automaticamente (estoque = 0)`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: { produto_id: (produto as any).id, nome: (produto as any).nome },
         sucesso: true,
         erro: null,
