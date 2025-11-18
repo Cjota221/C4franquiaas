@@ -37,6 +37,23 @@ export default function LoginPage() {
         return;
       }
 
+      // Verificar se é franqueada (prioridade)
+      const { data: franqueada } = await createClient()
+        .from('franqueadas')
+        .select('id, ativo')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (franqueada) {
+        if (franqueada.ativo) {
+          router.push('/franqueada/dashboard');
+          return;
+        } else {
+          await createClient().auth.signOut();
+          throw new Error('Sua conta de franqueada está inativa. Entre em contato com o administrador.');
+        }
+      }
+
       // Verificar se é revendedora
       const { data: revendedora } = await createClient()
         .from('resellers')
@@ -51,23 +68,6 @@ export default function LoginPage() {
         } else {
           await createClient().auth.signOut();
           throw new Error('Sua conta de revendedora ainda não foi aprovada pelo administrador.');
-        }
-      }
-
-      // Verificar se é franqueada
-      const { data: franqueada } = await createClient()
-        .from('franqueadas')
-        .select('id, ativo')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (franqueada) {
-        if (franqueada.ativo) {
-          router.push('/franqueada/dashboard');
-          return;
-        } else {
-          await createClient().auth.signOut();
-          throw new Error('Sua conta de franqueada está inativa. Entre em contato com o administrador.');
         }
       }
 
