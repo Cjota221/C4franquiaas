@@ -56,6 +56,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Dropar trigger se existir e criar novamente
+DROP TRIGGER IF EXISTS trigger_atualizar_sincronizacao ON produtos;
+
 CREATE TRIGGER trigger_atualizar_sincronizacao
   BEFORE UPDATE ON produtos
   FOR EACH ROW
@@ -94,6 +97,8 @@ HAVING COUNT(DISTINCT pfp.id) > 0 OR COUNT(DISTINCT rp.reseller_id) > 0;
 
 -- 10. Política RLS para logs_sincronizacao (apenas admin pode ver)
 ALTER TABLE logs_sincronizacao ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins podem ver logs" ON logs_sincronizacao;
 
 CREATE POLICY "Admins podem ver logs" ON logs_sincronizacao
   FOR SELECT
