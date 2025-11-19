@@ -1,25 +1,13 @@
-import { schedule } from '@netlify/functions';
+import type { Config } from '@netlify/functions';
 
-/**
- * Função Agendada para Sincronização Automática de Produtos
- * 
- * Executa sincronização com FácilZap a cada 1 minuto
- * para manter estoque sempre atualizado em tempo real
- */
-
-// Executar a cada 1 minuto (atualização em tempo real)
-const CRON_PATTERN = '0 */1 * * * *';
-
-export const handler = schedule(CRON_PATTERN, async () => {
+const handler = async () => {
   console.log('🔄 [Cron] Iniciando sincronização automática de produtos...');
   
   try {
-    // URL base do site (Netlify fornece automaticamente)
     const baseUrl = process.env.URL || process.env.DEPLOY_URL || 'https://c4franquiaas.netlify.app';
     
     console.log(`📡 [Cron] Chamando: ${baseUrl}/api/sync-produtos`);
     
-    // Chamar o endpoint de sincronização
     const response = await fetch(`${baseUrl}/api/sync-produtos`, {
       method: 'POST',
       headers: {
@@ -31,42 +19,44 @@ export const handler = schedule(CRON_PATTERN, async () => {
     const data = await response.json();
 
     if (response.ok) {
-      console.log(`✅ [Cron] Sincronização concluída com sucesso!`);
-      console.log(`📦 [Cron] Produtos importados: ${data.imported || 0}`);
+      console.log(`✅ [Cron] Sincronização concluída!`);
+      console.log(`📦 [Cron] Produtos: ${data.imported || 0}`);
       
-      return {
-        statusCode: 200,
-        body: JSON.stringify({
-          success: true,
-          message: 'Sincronização automática concluída',
-          imported: data.imported || 0,
-          timestamp: new Date().toISOString(),
-        }),
-      };
+      return new Response(JSON.stringify({
+        success: true,
+        imported: data.imported || 0,
+        timestamp: new Date().toISOString(),
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     } else {
-      console.error('❌ [Cron] Erro na sincronização:', data);
+      console.error('❌ [Cron] Erro:', data);
       
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          success: false,
-          error: 'Erro ao sincronizar produtos',
-          details: data,
-          timestamp: new Date().toISOString(),
-        }),
-      };
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Erro ao sincronizar',
+        details: data,
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   } catch (error) {
     console.error('❌ [Cron] Erro fatal:', error);
     
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        success: false,
-        error: 'Erro fatal na sincronização',
-        message: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
-      }),
-    };
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-});
+};
+
+export default handler;
+
+export const config: Config = {
+  schedule: '*/5 * * * *',
+};
