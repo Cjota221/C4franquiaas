@@ -18,23 +18,36 @@ export async function POST(request: NextRequest) {
 
   try {
     console.log('🔄 Iniciando sincronização com FácilZap...');
+    console.log('🔑 Token FácilZap presente:', !!process.env.FACILZAP_TOKEN);
     
     let produtos: ProdutoDB[] = [];
+    let totalPages = 0;
+    
     if (page) {
       console.log(`📄 Buscando página ${page} do FácilZap...`);
       const res = await fetchProdutosFacilZapPage(page, length ?? 50);
       produtos = res.produtos ?? [];
+      totalPages = 1;
     } else {
       console.log('📚 Buscando TODOS os produtos do FácilZap...');
+      const inicio = Date.now();
       const res = await fetchAllProdutosFacilZap();
+      const duracao = Date.now() - inicio;
       produtos = res.produtos ?? [];
+      totalPages = res.pages ?? 0;
+      console.log(`⏱️ Tempo de busca: ${duracao}ms, Páginas: ${totalPages}`);
     }
 
     console.log(`✅ Recebidos ${produtos.length} produtos do FácilZap`);
 
     if (!produtos || produtos.length === 0) {
-      console.log('⚠️ Nenhum produto recebido do FácilZap');
-      return NextResponse.json({ ok: true, imported: 0 });
+      console.log('⚠️ ATENÇÃO: Nenhum produto recebido do FácilZap!');
+      console.log('⚠️ Isso pode indicar: Token inválido, API fora do ar, ou erro na requisição');
+      return NextResponse.json({ 
+        ok: true, 
+        imported: 0,
+        warning: 'Nenhum produto recebido do FácilZap'
+      });
     }
 
     const BATCH_SIZE = 50;
