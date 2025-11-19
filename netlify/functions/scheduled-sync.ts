@@ -3,18 +3,12 @@ import { schedule } from '@netlify/functions';
 /**
  * Função Agendada para Sincronização Automática de Produtos
  * 
- * Esta função executa automaticamente a sincronização com FácilZap
- * a cada 15 minutos.
- * 
- * Padrões de cron disponíveis:
- * - "0 *​/15 * * * *" = A cada 15 minutos
- * - "0 *​/30 * * * *" = A cada 30 minutos  
- * - "0 0 * * * *"    = A cada 1 hora
- * - "0 0 *​/6 * * *"  = A cada 6 horas
+ * Executa sincronização com FácilZap a cada 1 minuto
+ * para manter estoque sempre atualizado em tempo real
  */
 
-// Executar a cada 15 minutos
-const CRON_PATTERN = '0 */15 * * * *';
+// Executar a cada 1 minuto (atualização em tempo real)
+const CRON_PATTERN = '0 */1 * * * *';
 
 export const handler = schedule(CRON_PATTERN, async () => {
   console.log('🔄 [Cron] Iniciando sincronização automática de produtos...');
