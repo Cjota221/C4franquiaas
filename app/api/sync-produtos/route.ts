@@ -17,16 +17,25 @@ export async function POST(request: NextRequest) {
   const length = Number(body?.length) > 0 ? Number(body.length) : undefined;
 
   try {
+    console.log('🔄 Iniciando sincronização com FácilZap...');
+    
     let produtos: ProdutoDB[] = [];
     if (page) {
+      console.log(`📄 Buscando página ${page} do FácilZap...`);
       const res = await fetchProdutosFacilZapPage(page, length ?? 50);
       produtos = res.produtos ?? [];
     } else {
+      console.log('📚 Buscando TODOS os produtos do FácilZap...');
       const res = await fetchAllProdutosFacilZap();
       produtos = res.produtos ?? [];
     }
 
-    if (!produtos || produtos.length === 0) return NextResponse.json({ ok: true, imported: 0 });
+    console.log(`✅ Recebidos ${produtos.length} produtos do FácilZap`);
+
+    if (!produtos || produtos.length === 0) {
+      console.log('⚠️ Nenhum produto recebido do FácilZap');
+      return NextResponse.json({ ok: true, imported: 0 });
+    }
 
     const BATCH_SIZE = 50;
     let importedCount = 0;
@@ -64,6 +73,14 @@ export async function POST(request: NextRequest) {
         };
       });
 
+      // 🔍 Log detalhado dos produtos sendo atualizados
+      console.log(`📦 Atualizando batch de ${batch.length} produtos:`);
+      batch.forEach((p, idx) => {
+        if (idx < 3) { // Mostrar apenas os 3 primeiros para não poluir
+          console.log(`  - ${p.nome}: estoque=${p.estoque}, ativo=${p.ativo}`);
+        }
+      });
+
       const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
       if (error) {
         const msg = error?.message ?? 'Erro ao salvar produtos.';
@@ -71,6 +88,8 @@ export async function POST(request: NextRequest) {
         if (process.env.DEBUG_SYNC === 'true') body['raw'] = error;
         return NextResponse.json(body, { status: 500 });
       }
+
+      console.log(`✅ Batch de ${batch.length} produtos atualizado com sucesso`);
 
       // 🆕 Registrar log de sincronização bem-sucedida
       const logResult = await supabase.from('logs_sincronizacao').insert({
@@ -95,6 +114,7 @@ export async function POST(request: NextRequest) {
     console.log('🔄 Verificando produtos com estoque zero...');
     await desativarProdutosEstoqueZero(supabase);
 
+    console.log(`✅ SINCRONIZAÇÃO CONCLUÍDA: ${importedCount} produtos atualizados`);
     return NextResponse.json({ ok: true, imported: importedCount }, { status: 200 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
