@@ -45,6 +45,7 @@ Seu sistema foi transformado em um **ERP bidirecional completo** com sincroniza�
 ### 1️⃣ **FácilZap → Sistema (PULL + WEBHOOK)**
 
 #### A. Scheduled Function (Netlify Cron)
+
 ```typescript
 Execução: */1 * * * * (a cada 1 minuto)
 Endpoint: /api/sync-produtos
@@ -68,6 +69,7 @@ Logs:
 ```
 
 **Código Principal:**
+
 ```typescript
 // lib/facilzapClient.ts - fetchAllProdutosFacilZap()
 // app/api/sync-produtos/route.ts - POST handler
@@ -80,6 +82,7 @@ Logs:
 ```
 
 #### B. Webhook (Tempo Real)
+
 ```typescript
 URL: https://c4franquiaas.netlify.app/api/webhook/facilzap
 Método: POST
@@ -98,6 +101,7 @@ Segurança:
 ```
 
 **Recursos do Webhook Unificado:**
+
 ```typescript
 1. normalizeEstoque(unknown): number
    - Aceita: 10, "10", {quantidade: 10}, {estoque: 10}
@@ -139,6 +143,7 @@ Segurança:
 #### Funções Implementadas em `lib/facilzapClient.ts`:
 
 ##### A. `updateEstoqueFacilZap(facilzapId, novoEstoque)`
+
 ```typescript
 Uso: Atualizar 1 produto após venda
 API: PUT https://api.facilzap.app.br/produtos/{id}
@@ -158,6 +163,7 @@ Erros Tratados:
 ```
 
 ##### B. `updateEstoquesFacilZapBatch(updates[])`
+
 ```typescript
 Uso: Atualizar múltiplos produtos (venda com vários itens)
 Delay: 100ms entre requisições (evitar rate limit)
@@ -173,6 +179,7 @@ const results = await updateEstoquesFacilZapBatch(updates);
 ```
 
 #### Quando Usar Push:
+
 ```typescript
 // 1. Venda no Admin
 // app/api/admin/vendas/route.ts
@@ -196,6 +203,7 @@ await updateEstoquesFacilZapBatch(itensDoPedido);
 ## 🛡️ Segurança e Validação
 
 ### Webhook Authentication:
+
 ```typescript
 // Método 1: HMAC Signature
 const signature = request.headers.get('x-facilzap-signature');
@@ -217,6 +225,7 @@ if (headerSecret !== process.env.FACILZAP_WEBHOOK_SECRET) {
 ```
 
 ### API Push Authentication:
+
 ```typescript
 // Token Bearer em todas as requisições
 headers: {
@@ -230,6 +239,7 @@ headers: {
 ## 📊 Logs e Monitoramento
 
 ### Tabela `logs_sincronizacao`:
+
 ```sql
 CREATE TABLE logs_sincronizacao (
   id BIGSERIAL PRIMARY KEY,
@@ -242,6 +252,7 @@ CREATE TABLE logs_sincronizacao (
 ```
 
 ### Queries Úteis:
+
 ```sql
 -- Últimos 20 eventos
 SELECT created_at, tipo, mensagem, detalhes
@@ -250,7 +261,7 @@ ORDER BY created_at DESC
 LIMIT 20;
 
 -- Eventos por tipo (últimas 24h)
-SELECT 
+SELECT
   tipo,
   COUNT(*) as total,
   MAX(created_at) as ultimo
@@ -266,7 +277,7 @@ ORDER BY created_at DESC
 LIMIT 10;
 
 -- Produtos sincronizados hoje
-SELECT 
+SELECT
   DATE(created_at) as data,
   COUNT(DISTINCT (detalhes->>'produto_id')) as produtos_unicos,
   COUNT(*) as total_eventos
@@ -281,18 +292,20 @@ GROUP BY DATE(created_at);
 ## 🎯 Arquitetura de Erros Corrigidos
 
 ### ✅ ERRO #1: Full Sync Ineficiente
+
 **Problema:** Upsert de TODOS os 354 produtos a cada minuto
 **Solução:** Comparação inteligente antes do upsert
+
 ```typescript
 // Antes: 354 upserts/min = 21.240 upserts/hora
 // Depois: ~5-10 upserts/min (apenas produtos alterados)
 
 const produtosExistentes = await supabase.from('produtos').select('*');
-const mapExistentes = new Map(produtosExistentes.map(p => [p.facilzap_id, p]));
+const mapExistentes = new Map(produtosExistentes.map((p) => [p.facilzap_id, p]));
 
 for (const prod of produtosFacilZap) {
   const existente = mapExistentes.get(prod.id);
-  
+
   if (!existente) {
     metricas.new++;
     // INSERT
@@ -312,8 +325,10 @@ for (const prod of produtosFacilZap) {
 ```
 
 ### ✅ ERRO #2: Sem Retry Logic
+
 **Problema:** Falhas de rede/timeout paravam sincronização
 **Solução:** p-retry com exponential backoff
+
 ```typescript
 import pRetry, { AbortError } from 'p-retry';
 
@@ -327,26 +342,27 @@ const response = await pRetry(
         if ([401, 403, 404].includes(error.response?.status)) {
           throw new AbortError(error.message);
         }
-        
+
         // Aguardar em rate limit
         if (error.response?.status === 429) {
           const retryAfter = error.response.headers['retry-after'];
-          await new Promise(r => setTimeout(r, (retryAfter || 30) * 1000));
+          await new Promise((r) => setTimeout(r, (retryAfter || 30) * 1000));
         }
       }
-      throw error;  // Retry em outros erros
+      throw error; // Retry em outros erros
     }
   },
   {
     retries: 3,
-    minTimeout: 1000,   // 1s
-    maxTimeout: 10000,  // 10s
-    factor: 2,          // Exponencial: 1s → 2s → 4s → 8s
-  }
+    minTimeout: 1000, // 1s
+    maxTimeout: 10000, // 10s
+    factor: 2, // Exponencial: 1s → 2s → 4s → 8s
+  },
 );
 ```
 
 ### ✅ ERRO #3-10: Pendentes
+
 ```typescript
 // ERRO #3: Timeout (10s → 15s/45s)
 // ERRO #4: Token renewal automation
@@ -363,6 +379,7 @@ const response = await pRetry(
 ## 🚀 Deploy e Configuração
 
 ### Variáveis de Ambiente (Netlify):
+
 ```env
 # FácilZap
 FACILZAP_TOKEN=eyJhbGciOi...
@@ -379,14 +396,16 @@ MERCADOPAGO_ACCESS_TOKEN=APP_USR...
 ```
 
 ### Netlify Function Config:
+
 ```typescript
 // netlify/functions/scheduled-sync.ts
 export const config: Config = {
-  schedule: '*/1 * * * *',  // Cron: a cada 1 minuto
+  schedule: '*/1 * * * *', // Cron: a cada 1 minuto
 };
 ```
 
 ### Webhook URL no FácilZap:
+
 ```
 https://c4franquiaas.netlify.app/api/webhook/facilzap
 ```
@@ -396,6 +415,7 @@ https://c4franquiaas.netlify.app/api/webhook/facilzap
 ## 📈 Métricas de Sucesso
 
 ### Antes da Transformação ERP:
+
 - ❌ Sincronização manual (migration única)
 - ❌ Sem atualização automática
 - ❌ Estoque desatualizado após vendas
@@ -403,6 +423,7 @@ https://c4franquiaas.netlify.app/api/webhook/facilzap
 - ❌ 3 webhooks conflitantes
 
 ### Depois da Transformação ERP:
+
 - ✅ Sincronização automática a cada 1 minuto
 - ✅ Webhook em tempo real
 - ✅ Bidirecional (FácilZap ↔ Sistema)
@@ -419,6 +440,7 @@ https://c4franquiaas.netlify.app/api/webhook/facilzap
 ## 🎓 Próximos Passos
 
 ### 1. Implementar Push nos Endpoints de Venda:
+
 ```typescript
 // app/api/admin/vendas/route.ts
 // app/api/franqueada/vendas/route.ts
@@ -432,6 +454,7 @@ if (produto.facilzap_id) {
 ```
 
 ### 2. Completar `handleNovoPedido()`:
+
 ```typescript
 // Quando receber webhook de pedido_criado:
 - Criar cliente (CPF/CNPJ)
@@ -443,6 +466,7 @@ if (produto.facilzap_id) {
 ```
 
 ### 3. Job de Reconciliação:
+
 ```typescript
 // Scheduled function diária (23:00):
 - Comparar estoque Sistema vs FácilZap
@@ -452,6 +476,7 @@ if (produto.facilzap_id) {
 ```
 
 ### 4. Dashboard de Sincronização:
+
 ```typescript
 // app/admin/sincronizacao/page.tsx
 - Status: ✅ Online / ❌ Offline
@@ -469,6 +494,7 @@ if (produto.facilzap_id) {
 Seu sistema agora é um **ERP completo e bidirecional**! 🚀
 
 **Capacidades:**
+
 - 🔄 Sincronização bidirecional (FácilZap ↔ Sistema)
 - ⚡ Tempo real via webhook + scheduled a cada 1 minuto
 - 🛡️ Seguro (HMAC + secret validation)
@@ -480,6 +506,7 @@ Seu sistema agora é um **ERP completo e bidirecional**! 🚀
 - ✅ Classificação de mudanças (evita updates desnecessários)
 
 **Canais Sincronizados:**
+
 1. Admin (painel administrativo)
 2. Franquias (lojas parceiras)
 3. Revendedoras (vendedoras independentes)
