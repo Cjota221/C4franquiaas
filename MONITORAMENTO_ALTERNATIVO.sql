@@ -3,24 +3,40 @@
 -- ============================================
 -- Use estas queries enquanto os logs do Netlify estiverem indisponíveis
 
+-- ⚠️ IMPORTANTE: Execute primeiro DESCOBRIR_ESTRUTURA_LOGS.sql
+--    para saber os nomes corretos das colunas!
+--    Esta tabela pode ter: timestamp, data, criado_em, etc.
+
+-- ============================================
+-- 0️⃣ DESCOBRIR ESTRUTURA DA TABELA (EXECUTE PRIMEIRO!)
+-- ============================================
+SELECT 
+  column_name,
+  data_type
+FROM information_schema.columns
+WHERE table_name = 'logs_sincronizacao'
+ORDER BY ordinal_position;
+
+-- Após ver os nomes das colunas, substitua nas queries abaixo:
+-- - Se for 'timestamp', use 'timestamp' em vez de 'created_at'
+-- - Se for 'data', use 'data' em vez de 'created_at'
+-- - E assim por diante...
+
 -- ============================================
 -- 1️⃣ VERIFICAR SE SCHEDULED FUNCTION ESTÁ RODANDO
 -- ============================================
 -- A scheduled function grava logs na tabela logs_sincronizacao
 -- Se ela está rodando, você verá registros recentes (< 2 minutos)
 
+-- ⚠️ AJUSTE O NOME DA COLUNA DE DATA/HORA CONFORME DESCOBERTO ACIMA
 SELECT 
-  created_at,
+  id,
   tipo,
   mensagem,
-  detalhes->>'total' as total_processados,
-  detalhes->>'new' as novos,
-  detalhes->>'updated' as atualizados,
-  detalhes->>'unchanged' as inalterados,
-  NOW() - created_at as "tempo_atras"
+  detalhes
 FROM logs_sincronizacao
 WHERE tipo = 'scheduled_sync'
-ORDER BY created_at DESC
+ORDER BY id DESC  -- Se não tiver coluna de data, usar ID
 LIMIT 10;
 
 -- ✅ Esperado: Registros a cada 1 minuto
