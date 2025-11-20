@@ -94,11 +94,11 @@ async function handleProdutoEstoque(data: any, eventType: string) {
     .or(`facilzap_id.eq.${facilzapId},id_externo.eq.${facilzapId}`)
     .single();
 
-  // Upsert do produto
+  // 🔑 Upsert do produto usando id_externo (compatível com sync manual)
   const { data: produto, error } = await supabaseAdmin
     .from('produtos')
     .upsert(updateData, { 
-      onConflict: 'facilzap_id',
+      onConflict: 'id_externo', // 🔧 MUDANÇA CRÍTICA: Garante compatibilidade
       ignoreDuplicates: false 
     })
     .select()
