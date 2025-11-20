@@ -9,9 +9,11 @@
 ## 🚨 Problemas Identificados e Corrigidos
 
 ### **Problema #1: Estoque Como Objeto** 🔴
+
 **Sintoma:** Estoque não atualizava, aparecia como `NaN` ou `0` no banco
 
 **Causa:**
+
 ```typescript
 // API FácilZap retorna:
 {
@@ -23,6 +25,7 @@ estoque: produto.estoque  // ❌ Salva [object Object] → erro silencioso
 ```
 
 **Solução:** ✅
+
 ```typescript
 // Adicionada função normalizeEstoque()
 function normalizeEstoque(estoqueField: unknown): number {
@@ -35,32 +38,37 @@ function normalizeEstoque(estoqueField: unknown): number {
 }
 
 // Agora:
-estoque: normalizeEstoque(produto.estoque)  // ✅ Sempre retorna number
+estoque: normalizeEstoque(produto.estoque); // ✅ Sempre retorna number
 ```
 
 ---
 
 ### **Problema #2: Bloqueio RLS (Row Level Security)** 🔴
+
 **Sintoma:** Sync manual falhava ao atualizar múltiplos produtos
 
 **Causa:**
+
 ```typescript
 // Cliente público não tinha permissão para upsert em massa
-const supabase = createClient(URL, ANON_KEY);  // ❌ Limitado por RLS
+const supabase = createClient(URL, ANON_KEY); // ❌ Limitado por RLS
 ```
 
 **Solução:** ✅
+
 ```typescript
 // Agora usa cliente Admin (bypass RLS)
-const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);  // ✅ Sem restrições
+const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY); // ✅ Sem restrições
 ```
 
 ---
 
 ### **Problema #3: Conflito de Chaves** 🔴
+
 **Sintoma:** Produtos duplicados, webhook e sync não conversavam
 
 **Causa:**
+
 ```typescript
 // Sync Manual:
 .upsert(produtos, { onConflict: 'id_externo' })
@@ -73,6 +81,7 @@ const supabaseAdmin = createClient(URL, SERVICE_ROLE_KEY);  // ✅ Sem restriç�
 ```
 
 **Solução:** ✅
+
 ```typescript
 // Ambos agora usam a mesma chave:
 .upsert(produtos, { onConflict: 'id_externo' })  // ✅ UNIFICADO
@@ -92,6 +101,7 @@ ALTER TABLE produtos ADD CONSTRAINT produtos_facilzap_id_key UNIQUE (facilzap_id
 ## ✅ Arquivos Modificados
 
 ### 1. `lib/syncProdutos.ts` (Reescrito 95%)
+
 ```diff
 + import { createClient } from '@supabase/supabase-js';
 + const supabaseAdmin = createClient(..., SERVICE_ROLE_KEY);  // Admin client
@@ -112,37 +122,41 @@ ALTER TABLE produtos ADD CONSTRAINT produtos_facilzap_id_key UNIQUE (facilzap_id
 ```
 
 ### 2. `app/api/webhook/facilzap/route.ts` (1 linha crítica)
+
 ```diff
   const { data: produto, error } = await supabaseAdmin
     .from('produtos')
-    .upsert(updateData, { 
+    .upsert(updateData, {
 -     onConflict: 'facilzap_id',  // ❌ Conflito com sync manual
 +     onConflict: 'id_externo',   // ✅ Compatível
-      ignoreDuplicates: false 
+      ignoreDuplicates: false
     })
     .select()
     .single();
 ```
 
 ### 3. `migrations/035_adicionar_constraint_facilzap_id.sql` (Novo)
+
 ```sql
 -- Preencher facilzap_id vazios
-UPDATE produtos SET facilzap_id = id_externo 
+UPDATE produtos SET facilzap_id = id_externo
 WHERE facilzap_id IS NULL AND id_externo IS NOT NULL;
 
 -- Adicionar constraint UNIQUE
-ALTER TABLE produtos 
-ADD CONSTRAINT produtos_facilzap_id_key 
+ALTER TABLE produtos
+ADD CONSTRAINT produtos_facilzap_id_key
 UNIQUE (facilzap_id);
 
 -- Criar índice para performance
-CREATE INDEX idx_produtos_facilzap_id 
-ON produtos(facilzap_id) 
+CREATE INDEX idx_produtos_facilzap_id
+ON produtos(facilzap_id)
 WHERE facilzap_id IS NOT NULL;
 ```
 
 ### 4. `CORRIGIR_CONFLITO_CHAVES.md` (Novo)
+
 Guia completo com:
+
 - Diagnóstico dos 3 problemas
 - Passo a passo de aplicação
 - Tratamento de duplicatas
@@ -154,16 +168,18 @@ Guia completo com:
 ## 🧪 Como Testar
 
 ### Teste 1: Sync Manual
+
 ```bash
 # Chamar endpoint (ou via migration anterior)
 curl -X POST http://localhost:3000/api/admin/sync-produtos
 ```
 
 **Log Esperado:**
+
 ```
 🔄 Iniciando sincronização manual de produtos...
 📦 354 produtos encontrados. Processando...
-📊 Exemplo de produto normalizado: { 
+📊 Exemplo de produto normalizado: {
   id_externo: "12345",
   facilzap_id: "12345",
   estoque: 15  // ✅ NUMBER (não objeto)
@@ -173,16 +189,18 @@ curl -X POST http://localhost:3000/api/admin/sync-produtos
 ```
 
 ### Teste 2: Verificar Banco
+
 ```sql
 -- Ver se estoque está numérico
-SELECT 
-  id, nome, estoque, 
+SELECT
+  id, nome, estoque,
   pg_typeof(estoque) as tipo  -- Deve ser integer/numeric
-FROM produtos 
+FROM produtos
 LIMIT 5;
 ```
 
 ### Teste 3: Webhook
+
 ```bash
 # Alterar estoque no FácilZap (interface visual)
 # Ou testar manualmente:
@@ -199,6 +217,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
 ```
 
 **Verificar no banco:**
+
 ```sql
 SELECT estoque FROM produtos WHERE facilzap_id = '12345';
 -- Deve retornar: 8 (não um objeto)
@@ -208,28 +227,31 @@ SELECT estoque FROM produtos WHERE facilzap_id = '12345';
 
 ## 📊 Antes vs Depois
 
-| Aspecto | ❌ Antes | ✅ Depois |
-|---------|----------|-----------|
-| **Estoque** | Objeto/String → NaN | normalizeEstoque() → Number |
-| **Cliente** | Público (bloqueado RLS) | Admin (sem restrições) |
-| **Chave Sync** | `id_externo` | `id_externo` ✅ |
-| **Chave Webhook** | `facilzap_id` ❌ | `id_externo` ✅ |
-| **Constraint** | Nenhuma | UNIQUE em facilzap_id |
-| **Duplicatas** | Possíveis | Impossíveis |
-| **Logs** | Básicos | Detalhados |
-| **Sincronização** | ❌ Falhava | ✅ Funciona |
+| Aspecto           | ❌ Antes                | ✅ Depois                   |
+| ----------------- | ----------------------- | --------------------------- |
+| **Estoque**       | Objeto/String → NaN     | normalizeEstoque() → Number |
+| **Cliente**       | Público (bloqueado RLS) | Admin (sem restrições)      |
+| **Chave Sync**    | `id_externo`            | `id_externo` ✅             |
+| **Chave Webhook** | `facilzap_id` ❌        | `id_externo` ✅             |
+| **Constraint**    | Nenhuma                 | UNIQUE em facilzap_id       |
+| **Duplicatas**    | Possíveis               | Impossíveis                 |
+| **Logs**          | Básicos                 | Detalhados                  |
+| **Sincronização** | ❌ Falhava              | ✅ Funciona                 |
 
 ---
 
 ## 🎯 Próximos Passos
 
 ### Imediato (Antes de Usar em Produção):
+
 1. ⏳ **Aplicar Migration 035** no Supabase SQL Editor
+
    ```sql
    -- Copiar e colar: migrations/035_adicionar_constraint_facilzap_id.sql
    ```
 
 2. ⏳ **Testar Sync Manual**
+
    ```bash
    # Verificar se estoque vem como número nos logs
    ```
@@ -239,7 +261,9 @@ SELECT estoque FROM produtos WHERE facilzap_id = '12345';
    - Secret: Definir no Netlify env vars
 
 ### Médio Prazo:
+
 4. ⏳ **Implementar Push nos Endpoints de Venda**
+
    - Adicionar `updateEstoqueFacilZap()` após vendas locais
 
 5. ⏳ **Completar handleNovoPedido()**
@@ -250,16 +274,19 @@ SELECT estoque FROM produtos WHERE facilzap_id = '12345';
 ## 📞 Suporte
 
 ### Se Sync Retornar "Produtos: 0":
+
 1. Verificar token FácilZap (primeiros 20 chars)
 2. Testar API diretamente: `node test-facilzap-direct.mjs`
 3. Ver logs detalhados no Netlify Functions
 
 ### Se Estoque Continuar Errado:
+
 1. Verificar tipo no banco: `pg_typeof(estoque)`
 2. Ver logs do sync: deve mostrar `estoque: 15` (não objeto)
 3. Re-executar sync manual para limpar dados antigos
 
 ### Se Aparecerem Duplicatas:
+
 1. Executar query de verificação (ver `CORRIGIR_CONFLITO_CHAVES.md`)
 2. Aplicar merge de duplicatas (manter mais recente)
 3. Re-aplicar constraint UNIQUE
@@ -281,6 +308,7 @@ SELECT estoque FROM produtos WHERE facilzap_id = '12345';
 ---
 
 **Arquivos de Referência:**
+
 - 📄 `CORRIGIR_CONFLITO_CHAVES.md` - Guia detalhado
 - 📄 `migrations/035_adicionar_constraint_facilzap_id.sql` - SQL da migration
 - 📄 `ERP_BIDIRECIONAL_COMPLETO.md` - Arquitetura geral

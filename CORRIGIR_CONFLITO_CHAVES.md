@@ -1,6 +1,7 @@
 # 🔧 Corrigir Conflito de Chaves: facilzap_id UNIQUE
 
 ## 🎯 Objetivo
+
 Garantir que `facilzap_id` seja **único** na tabela `produtos` para evitar conflitos entre webhook e sincronização manual.
 
 ---
@@ -8,6 +9,7 @@ Garantir que `facilzap_id` seja **único** na tabela `produtos` para evitar conf
 ## 📋 Problema Identificado
 
 ### ❌ **Antes (Conflitante):**
+
 1. **Sync Manual** (`lib/syncProdutos.ts`) usa `onConflict: 'id_externo'`
 2. **Webhook** (`app/api/webhook/facilzap/route.ts`) usava `onConflict: 'facilzap_id'`
 3. Se um produto tem `id_externo` preenchido mas `facilzap_id` é NULL → webhook cria duplicata
@@ -15,6 +17,7 @@ Garantir que `facilzap_id` seja **único** na tabela `produtos` para evitar conf
 5. **Estoque não atualiza** porque objeto é salvo em campo numérico
 
 ### ✅ **Depois (Corrigido):**
+
 - Sync Manual: Usa `id_externo` + **normalizeEstoque()** + Cliente Admin
 - Webhook: **Alterado para usar `id_externo`** também (compatibilidade)
 - Ambos preenchem `facilzap_id` E `id_externo` com o mesmo valor
@@ -31,7 +34,7 @@ Execute no SQL Editor do Supabase:
 
 ```sql
 -- Ver se há produtos duplicados por facilzap_id
-SELECT 
+SELECT
   facilzap_id,
   COUNT(*) as ocorrencias,
   STRING_AGG(id::text, ', ') as ids_duplicados
@@ -53,11 +56,11 @@ ORDER BY ocorrencias DESC;
 UPDATE produtos
 SET facilzap_id = id_externo
 WHERE (facilzap_id IS NULL OR facilzap_id = '')
-  AND id_externo IS NOT NULL 
+  AND id_externo IS NOT NULL
   AND id_externo != '';
 
 -- Ver resultado
-SELECT 
+SELECT
   COUNT(*) as total_produtos,
   COUNT(facilzap_id) as com_facilzap_id,
   COUNT(*) - COUNT(facilzap_id) as sem_facilzap_id
@@ -72,8 +75,8 @@ FROM produtos;
 
 ```sql
 -- Adicionar constraint única em facilzap_id
-ALTER TABLE produtos 
-ADD CONSTRAINT produtos_facilzap_id_key 
+ALTER TABLE produtos
+ADD CONSTRAINT produtos_facilzap_id_key
 UNIQUE (facilzap_id);
 ```
 
@@ -85,8 +88,8 @@ UNIQUE (facilzap_id);
 
 ```sql
 -- Índice para melhorar buscas por facilzap_id
-CREATE INDEX IF NOT EXISTS idx_produtos_facilzap_id 
-ON produtos(facilzap_id) 
+CREATE INDEX IF NOT EXISTS idx_produtos_facilzap_id
+ON produtos(facilzap_id)
 WHERE facilzap_id IS NOT NULL;
 ```
 
@@ -96,7 +99,7 @@ WHERE facilzap_id IS NOT NULL;
 
 ```sql
 -- Ver constraints criadas
-SELECT 
+SELECT
   conname as constraint_name,
   pg_get_constraintdef(oid) as definition
 FROM pg_constraint
@@ -105,6 +108,7 @@ WHERE conrelid = 'produtos'::regclass
 ```
 
 **Resultado Esperado:**
+
 ```
 constraint_name              | definition
 -----------------------------|---------------------------
@@ -116,9 +120,10 @@ produtos_facilzap_id_key     | UNIQUE (facilzap_id)
 ## 🔧 Tratamento de Duplicatas (se necessário)
 
 ### Identificar Duplicatas:
+
 ```sql
 WITH duplicatas AS (
-  SELECT 
+  SELECT
     facilzap_id,
     id,
     nome,
@@ -126,7 +131,7 @@ WITH duplicatas AS (
     ultima_sincronizacao,
     created_at,
     ROW_NUMBER() OVER (
-      PARTITION BY facilzap_id 
+      PARTITION BY facilzap_id
       ORDER BY ultima_sincronizacao DESC NULLS LAST, created_at DESC
     ) as rn
   FROM produtos
@@ -136,13 +141,14 @@ SELECT * FROM duplicatas WHERE rn > 1;
 ```
 
 ### Mesclar Duplicatas (Manter Mais Recente):
+
 ```sql
 -- Deletar duplicatas antigas, mantendo a mais recente
 WITH duplicatas AS (
-  SELECT 
+  SELECT
     id,
     ROW_NUMBER() OVER (
-      PARTITION BY facilzap_id 
+      PARTITION BY facilzap_id
       ORDER BY ultima_sincronizacao DESC NULLS LAST, created_at DESC
     ) as rn
   FROM produtos
@@ -159,12 +165,14 @@ WHERE id IN (
 ## ✅ Testar Correções
 
 ### Teste 1: Sincronização Manual
+
 ```bash
 # Chamar endpoint de sync (ou usar migration anterior)
 curl -X POST http://localhost:3000/api/admin/sync-produtos
 ```
 
 **Log Esperado:**
+
 ```
 🔄 Iniciando sincronização manual de produtos...
 📦 354 produtos encontrados. Processando...
@@ -174,9 +182,10 @@ curl -X POST http://localhost:3000/api/admin/sync-produtos
 ```
 
 ### Teste 2: Verificar Estoque é Numérico
+
 ```sql
 -- Verificar se estoque está como número
-SELECT 
+SELECT
   id,
   nome,
   estoque,
@@ -186,11 +195,13 @@ LIMIT 5;
 ```
 
 **Resultado Esperado:**
+
 ```
 tipo_coluna = integer (ou numeric)
 ```
 
 ### Teste 3: Webhook
+
 ```bash
 curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
   -H "Content-Type: application/json" \
@@ -206,6 +217,7 @@ curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
 ```
 
 **Resultado Esperado:**
+
 ```json
 {
   "success": true,
@@ -214,9 +226,10 @@ curl -X POST https://c4franquiaas.netlify.app/api/webhook/facilzap \
 ```
 
 ### Teste 4: Verificar no Banco
+
 ```sql
 -- Ver se estoque foi atualizado corretamente
-SELECT 
+SELECT
   id,
   nome,
   facilzap_id,
@@ -227,6 +240,7 @@ WHERE facilzap_id = '12345';
 ```
 
 **Resultado Esperado:**
+
 ```
 estoque = 8  // ✅ Convertido de objeto para número
 ```
@@ -236,6 +250,7 @@ estoque = 8  // ✅ Convertido de objeto para número
 ## 📊 Arquivos Modificados
 
 ### ✅ `lib/syncProdutos.ts`
+
 ```typescript
 // ✅ Adicionado:
 - função normalizeEstoque(estoqueField: unknown): number
@@ -250,6 +265,7 @@ estoque = 8  // ✅ Convertido de objeto para número
 ```
 
 ### ✅ `app/api/webhook/facilzap/route.ts`
+
 ```typescript
 // 🔧 Mudança crítica:
 onConflict: 'id_externo'  // Antes era 'facilzap_id'
@@ -261,6 +277,7 @@ onConflict: 'id_externo'  // Antes era 'facilzap_id'
 ```
 
 ### ✅ `migrations/035_adicionar_constraint_facilzap_id.sql`
+
 ```sql
 -- ✅ Criado:
 - Constraint UNIQUE em facilzap_id
@@ -289,18 +306,22 @@ Após aplicar todas as correções:
 ## 📞 Troubleshooting
 
 ### Problema: "Produtos: 0" no log do sync
+
 **Causa:** API retorna estoque como objeto, sync tentava salvar objeto em campo numérico
 **Solução:** ✅ Corrigido com normalizeEstoque()
 
 ### Problema: Webhook cria produtos duplicados
+
 **Causa:** facilzap_id NULL + sem constraint UNIQUE
 **Solução:** ✅ Constraint adicionada + ambos usam id_externo
 
 ### Problema: "violates unique constraint"
+
 **Causa:** Existem duplicatas no banco
 **Solução:** Execute seção "Tratamento de Duplicatas"
 
 ### Problema: Estoque não atualiza após venda no FácilZap
+
 **Causa:** Webhook estava usando chave diferente do sync
 **Solução:** ✅ Ambos usam id_externo agora
 

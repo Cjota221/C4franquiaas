@@ -132,14 +132,18 @@ WHERE facilzap_id IS NULL OR facilzap_id = '';
 -- ✅ Esperado: 0 (todos devem ter facilzap_id)
 
 -- ============================================
--- 🔟 VER ERROS NOS LOGS (SE EXISTIR COLUNA 'nivel')
+-- 🔟 VER TODOS OS LOGS (SEM FILTRO)
 -- ============================================
+-- Mostra todos os logs ordenados por ID
+-- Use esta query para identificar possíveis erros manualmente
 SELECT * FROM logs_sincronizacao
-WHERE mensagem ILIKE '%erro%' 
-   OR mensagem ILIKE '%error%'
-   OR mensagem ILIKE '%falha%'
 ORDER BY id DESC
-LIMIT 10;
+LIMIT 20;
+
+-- Alternativa: Se souber os nomes das colunas, filtre assim:
+-- SELECT * FROM logs_sincronizacao
+-- WHERE [nome_da_coluna_texto] ILIKE '%erro%' 
+-- ORDER BY id DESC;
 
 -- ============================================
 -- ✅ CHECKLIST RÁPIDO
