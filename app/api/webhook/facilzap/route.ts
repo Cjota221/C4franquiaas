@@ -1,347 +1,371 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Cliente Supabase com service role para operações administrativas
+// ============ CONFIGURAÇÃO ============
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Chave secreta para validar requisições do FácilZap
-const FACILZAP_WEBHOOK_SECRET = process.env.FACILZAP_WEBHOOK_SECRET || '';
+const FACILZAP_WEBHOOK_SECRET = process.env.FACILZAP_WEBHOOK_SECRET;
 
-// Tipos de eventos suportados
-type EventType = 'produto_criado' | 'produto_atualizado' | 'estoque_atualizado';
+// ============ TIPOS ============
 
 interface WebhookPayload {
-  event: EventType;
-  produto_id: string; // ID do produto no FácilZap
-  data: {
-    nome?: string;
-    preco?: number;
-    estoque?: number;
-    imagem?: string;
-    ativo?: boolean;
-    sku?: string;
-    descricao?: string;
-  };
+  event: string;
+  data: unknown;
+  produto_id?: string;
   timestamp?: string;
 }
 
+// ============ FUNÇÕES AUXILIARES ============
+
 /**
- * POST /api/webhook/facilzap
- * Endpoint para receber eventos de webhook do FácilZap
+ * Normaliza estoque para número (trata strings, objetos, etc.)
  */
-export async function POST(request: NextRequest) {
-  try {
-    // 1. Validação de segurança
-    const webhookSecret = request.headers.get('x-facilzap-signature');
-    
-    if (FACILZAP_WEBHOOK_SECRET && webhookSecret !== FACILZAP_WEBHOOK_SECRET) {
-      console.error('❌ Webhook: Assinatura inválida');
-      return NextResponse.json(
-        { error: 'Unauthorized: Invalid signature' },
-        { status: 401 }
-      );
-    }
-
-    // 2. Parse do payload
-    const payload: WebhookPayload = await request.json();
-    
-    console.log('📥 Webhook recebido:', {
-      event: payload.event,
-      produto_id: payload.produto_id,
-      timestamp: payload.timestamp || new Date().toISOString()
-    });
-
-    // 3. Validação do payload
-    if (!payload.event || !payload.produto_id || !payload.data) {
-      console.error('❌ Payload inválido:', payload);
-      return NextResponse.json(
-        { error: 'Invalid payload: missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // 4. Processar evento baseado no tipo
-    let result;
-    
-    switch (payload.event) {
-      case 'produto_criado':
-        result = await handleProdutoCriado(payload);
-        break;
-      
-      case 'produto_atualizado':
-        result = await handleProdutoAtualizado(payload);
-        break;
-      
-      case 'estoque_atualizado':
-        result = await handleEstoqueAtualizado(payload);
-        break;
-      
-      default:
-        console.warn('⚠️ Evento não suportado:', payload.event);
-        return NextResponse.json(
-          { error: 'Unsupported event type' },
-          { status: 400 }
-        );
-    }
-
-    // 5. Retornar sucesso
-    return NextResponse.json({
-      success: true,
-      message: `Evento ${payload.event} processado com sucesso`,
-      result
-    });
-
-  } catch (error) {
-    console.error('❌ Erro ao processar webhook:', error);
-    
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+function normalizeEstoque(estoqueField: unknown): number {
+  if (typeof estoqueField === 'number' && Number.isFinite(estoqueField)) {
+    return estoqueField;
   }
+  if (typeof estoqueField === 'string') {
+    const parsed = parseFloat(estoqueField.replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+  if (estoqueField && typeof estoqueField === 'object' && !Array.isArray(estoqueField)) {
+    const obj = estoqueField as Record<string, unknown>;
+    const disponivel = obj.disponivel ?? obj.estoque ?? obj.quantidade ?? obj.qty ?? obj.stock;
+    return normalizeEstoque(disponivel);
+  }
+  return 0;
 }
 
 /**
- * Handler para evento de produto criado
+ * Extrai ID do FácilZap de diferentes formatos
  */
-async function handleProdutoCriado(payload: WebhookPayload) {
-  const { produto_id, data } = payload;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractFacilZapId(data: any): string | null {
+  const id = data.id || data.produto_id || data.codigo || data.code;
+  return id ? String(id) : null;
+}
 
-  console.log('➕ Criando novo produto:', produto_id);
+// ============ HANDLERS DE EVENTOS ============
 
-  // Verificar se produto já existe
-  const { data: produtoExistente } = await supabaseAdmin
-    .from('produtos')
-    .select('id')
-    .eq('facilzap_id', produto_id)
-    .maybeSingle();
-
-  if (produtoExistente) {
-    console.log('⚠️ Produto já existe, atualizando:', produto_id);
-    return handleProdutoAtualizado(payload);
+/**
+ * Processa eventos de produto (criação, atualização, estoque)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleProdutoEstoque(data: any, eventType: string) {
+  const facilzapId = extractFacilZapId(data);
+  
+  if (!facilzapId) {
+    console.error('[Webhook] ❌ ID do produto não encontrado no payload');
+    throw new Error('ID do produto é obrigatório');
   }
 
-  // Criar novo produto
-  const { data: novoProduto, error } = await supabaseAdmin
+  const novoEstoque = normalizeEstoque(data.estoque);
+  
+  console.log(`[Webhook] 📦 Processando: ID=${facilzapId} | Evento=${eventType} | Estoque=${novoEstoque}`);
+
+  // Preparar dados para upsert
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: any = {
+    estoque: novoEstoque,
+    ultima_sincronizacao: new Date().toISOString(),
+    sincronizado_facilzap: true,
+    facilzap_id: facilzapId,
+    id_externo: facilzapId, // Manter ambos para compatibilidade
+  };
+
+  // Adicionar campos opcionais se disponíveis
+  if (data.nome) updateData.nome = String(data.nome);
+  if (data.preco || data.preco_base) {
+    const preco = data.preco_base || data.preco;
+    updateData.preco_base = typeof preco === 'number' ? preco : parseFloat(String(preco)) || null;
+  }
+  if (data.imagem) updateData.imagem = String(data.imagem);
+  if (typeof data.ativo === 'boolean') updateData.ativo = data.ativo;
+  if (typeof data.ativado === 'boolean') updateData.ativo = data.ativado;
+
+  // Buscar produto existente para comparação
+  const { data: produtoExistente } = await supabaseAdmin
     .from('produtos')
-    .insert({
-      facilzap_id: produto_id,
-      nome: data.nome || 'Produto sem nome',
-      preco_base: data.preco || 0,
-      estoque: data.estoque || 0,
-      imagem: data.imagem || null,
-      ativo: data.ativo !== false, // Ativo por padrão
-      sku: data.sku || null,
-      descricao: data.descricao || null,
-      categorias: 'Geral',
-      sincronizado_facilzap: true,
-      ultima_sincronizacao: new Date().toISOString()
+    .select('id, estoque, ativo')
+    .or(`facilzap_id.eq.${facilzapId},id_externo.eq.${facilzapId}`)
+    .single();
+
+  // Upsert do produto
+  const { data: produto, error } = await supabaseAdmin
+    .from('produtos')
+    .upsert(updateData, { 
+      onConflict: 'facilzap_id',
+      ignoreDuplicates: false 
     })
     .select()
     .single();
 
   if (error) {
-    console.error('❌ Erro ao criar produto:', error);
+    console.error('[Webhook] ❌ Erro ao salvar produto:', error);
     throw error;
   }
 
-  console.log('✅ Produto criado com sucesso:', novoProduto.id);
+  console.log(`[Webhook] ✅ Produto ${produtoExistente ? 'atualizado' : 'criado'}: ${produto.nome}`);
 
-  return {
-    produto_id: novoProduto.id,
-    action: 'created'
-  };
-}
-
-/**
- * Handler para evento de produto atualizado
- */
-async function handleProdutoAtualizado(payload: WebhookPayload) {
-  const { produto_id, data } = payload;
-
-  console.log('🔄 Atualizando produto:', produto_id);
-
-  // Buscar produto pelo facilzap_id
-  const { data: produto } = await supabaseAdmin
-    .from('produtos')
-    .select('id, estoque')
-    .eq('facilzap_id', produto_id)
-    .maybeSingle();
-
-  if (!produto) {
-    console.error('❌ Produto não encontrado:', produto_id);
-    throw new Error(`Produto não encontrado: ${produto_id}`);
+  // Regra de negócio: Desativar nas franquias se estoque zerou
+  if (novoEstoque <= 0) {
+    console.log('[Webhook] 🚫 Estoque zerado! Desativando produto nas franquias...');
+    await desativarProdutoNasFranquias(produto.id, facilzapId);
+  } 
+  // Reativar se voltou a ter estoque
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  else if ((produtoExistente as any)?.estoque === 0 && novoEstoque > 0) {
+    console.log('[Webhook] ✅ Estoque restaurado! Reativando produto nas franquias...');
+    await reativarProdutoNasFranquias(produto.id);
   }
 
-  // Preparar dados de atualização
-  const updateData: Record<string, unknown> = {
-    ultima_sincronizacao: new Date().toISOString()
-  };
-
-  if (data.nome !== undefined) updateData.nome = data.nome;
-  if (data.preco !== undefined) updateData.preco_base = data.preco;
-  if (data.estoque !== undefined) updateData.estoque = data.estoque;
-  if (data.imagem !== undefined) updateData.imagem = data.imagem;
-  if (data.ativo !== undefined) updateData.ativo = data.ativo;
-  if (data.sku !== undefined) updateData.sku = data.sku;
-  if (data.descricao !== undefined) updateData.descricao = data.descricao;
-
-  // Atualizar produto
-  const { error } = await supabaseAdmin
-    .from('produtos')
-    .update(updateData)
-    .eq('id', produto.id);
-
-  if (error) {
-    console.error('❌ Erro ao atualizar produto:', error);
-    throw error;
-  }
-
-  console.log('✅ Produto atualizado com sucesso:', produto.id);
-
-  // Se o estoque foi atualizado para zero, desativar em franqueadas/revendedoras
-  if (data.estoque !== undefined && data.estoque === 0) {
-    await desativarProdutoEstoqueZero(produto.id);
-  }
-
-  return {
+  // Registrar log
+  await supabaseAdmin.from('logs_sincronizacao').insert({
+    tipo: eventType.includes('criado') || eventType.includes('created') ? 'webhook_produto_criado' : 'webhook_estoque_atualizado',
     produto_id: produto.id,
-    action: 'updated',
-    fields_updated: Object.keys(updateData)
-  };
+    facilzap_id: facilzapId,
+    descricao: `Webhook: ${eventType} - Estoque: ${novoEstoque}`,
+    payload: { event: eventType, data },
+    sucesso: true,
+    erro: null,
+  });
+
+  return {produto_id: produto.id, estoque: novoEstoque};
 }
 
 /**
- * Handler para evento de estoque atualizado (mais frequente)
+ * Desativa produto em todas franqueadas e revendedoras
  */
-async function handleEstoqueAtualizado(payload: WebhookPayload) {
-  const { produto_id, data } = payload;
-
-  console.log('📦 Atualizando estoque:', produto_id, '→', data.estoque);
-
-  if (data.estoque === undefined) {
-    throw new Error('Estoque não informado no payload');
-  }
-
-  // Buscar produto pelo facilzap_id
-  const { data: produto } = await supabaseAdmin
-    .from('produtos')
-    .select('id')
-    .eq('facilzap_id', produto_id)
-    .maybeSingle();
-
-  if (!produto) {
-    console.error('❌ Produto não encontrado:', produto_id);
-    throw new Error(`Produto não encontrado: ${produto_id}`);
-  }
-
-  // Atualizar apenas o estoque
-  const { error } = await supabaseAdmin
-    .from('produtos')
-    .update({
-      estoque: data.estoque,
-      ultima_sincronizacao: new Date().toISOString()
-    })
-    .eq('id', produto.id);
-
-  if (error) {
-    console.error('❌ Erro ao atualizar estoque:', error);
-    throw error;
-  }
-
-  console.log('✅ Estoque atualizado com sucesso:', produto.id);
-
-  // REGRA CRÍTICA: Se estoque zerou, desativar produto em franqueadas/revendedoras
-  if (data.estoque === 0) {
-    await desativarProdutoEstoqueZero(produto.id);
-  }
-
-  return {
-    produto_id: produto.id,
-    action: 'stock_updated',
-    novo_estoque: data.estoque
-  };
-}
-
-/**
- * Desativa produto em todas as franqueadas e revendedoras quando estoque zera
- * REGRA DE NEGÓCIO CRÍTICA
- */
-async function desativarProdutoEstoqueZero(produtoId: string) {
-  console.log('🚫 Estoque zerado! Desativando produto em franqueadas/revendedoras:', produtoId);
-
+async function desativarProdutoNasFranquias(produtoId: string, facilzapId: string) {
   try {
-    // 1. Desativar em produtos_franqueadas_precos
-    // Primeiro buscar os IDs de produtos_franqueadas vinculados a este produto
-    const { data: vinculacoesFranqueadas } = await supabaseAdmin
+    // Buscar vinculações com franqueadas
+    const { data: franqueadas } = await supabaseAdmin
       .from('produtos_franqueadas')
       .select('id')
       .eq('produto_id', produtoId);
 
-    if (vinculacoesFranqueadas && vinculacoesFranqueadas.length > 0) {
-      const produtoFranqueadaIds = vinculacoesFranqueadas.map(v => v.id);
-      
-      const { error: errorFranqueadas } = await supabaseAdmin
+    if (franqueadas && franqueadas.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const franqueadaIds = franqueadas.map((f: any) => f.id);
+
+      // Desativar em produtos_franqueadas_precos
+      const { error: errPrecos } = await supabaseAdmin
         .from('produtos_franqueadas_precos')
         .update({ ativo_no_site: false })
-        .in('produto_franqueada_id', produtoFranqueadaIds);
+        .in('produto_franqueada_id', franqueadaIds);
 
-      if (errorFranqueadas) {
-        console.error('❌ Erro ao desativar em franqueadas:', errorFranqueadas);
+      if (errPrecos) {
+        console.error('[Webhook] ❌ Erro ao desativar em franqueadas:', errPrecos);
       } else {
-        console.log(`✅ Produto desativado em ${vinculacoesFranqueadas.length} franqueadas`);
+        console.log(`[Webhook] ✅ Desativados ${franqueadaIds.length} produtos em franqueadas`);
       }
     }
 
-    // 2. Desativar em reseller_products
-    const { error: errorRevendedoras } = await supabaseAdmin
+    // Desativar em reseller_products
+    const { error: errRevendedoras } = await supabaseAdmin
       .from('reseller_products')
       .update({ is_active: false })
       .eq('product_id', produtoId);
 
-    if (errorRevendedoras) {
-      console.error('❌ Erro ao desativar em revendedoras:', errorRevendedoras);
+    if (errRevendedoras) {
+      console.error('[Webhook] ❌ Erro ao desativar em revendedoras:', errRevendedoras);
     } else {
-      console.log('✅ Produto desativado em revendedoras');
+      console.log(`[Webhook] ✅ Produto desativado em revendedoras`);
     }
 
-    // 3. Registrar log da desativação automática
-    await supabaseAdmin
-      .from('logs_sincronizacao')
-      .insert({
-        tipo: 'estoque_zerado',
-        produto_id: produtoId,
-        descricao: 'Produto desativado automaticamente por estoque zero',
-        timestamp: new Date().toISOString()
-      });
-
-    console.log('✅ Produto desativado em todos os painéis');
+    // Registrar log específico
+    await supabaseAdmin.from('logs_sincronizacao').insert({
+      tipo: 'estoque_zerado',
+      produto_id: produtoId,
+      facilzap_id: facilzapId,
+      descricao: `Webhook: Produto desativado automaticamente (estoque = 0)`,
+      payload: { produto_id: produtoId, facilzap_id: facilzapId },
+      sucesso: true,
+      erro: null,
+    });
 
   } catch (error) {
-    console.error('❌ Erro ao desativar produto:', error);
-    // Não lançar erro aqui para não falhar o webhook
+    console.error('[Webhook] ❌ Erro ao desativar produto nas franquias:', error);
   }
 }
 
 /**
- * GET /api/webhook/facilzap
- * Endpoint de verificação/teste
+ * Reativa produto em todas franqueadas e revendedoras
  */
+async function reativarProdutoNasFranquias(produtoId: string) {
+  try {
+    // Buscar vinculações com franqueadas
+    const { data: franqueadas } = await supabaseAdmin
+      .from('produtos_franqueadas')
+      .select('id')
+      .eq('produto_id', produtoId);
+
+    if (franqueadas && franqueadas.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const franqueadaIds = franqueadas.map((f: any) => f.id);
+
+      // Reativar em produtos_franqueadas_precos
+      const { error: errPrecos } = await supabaseAdmin
+        .from('produtos_franqueadas_precos')
+        .update({ ativo_no_site: true })
+        .in('produto_franqueada_id', franqueadaIds);
+
+      if (errPrecos) {
+        console.error('[Webhook] ❌ Erro ao reativar em franqueadas:', errPrecos);
+      } else {
+        console.log(`[Webhook] ✅ Reativados ${franqueadaIds.length} produtos em franqueadas`);
+      }
+    }
+
+    // Reativar em reseller_products
+    const { error: errRevendedoras } = await supabaseAdmin
+      .from('reseller_products')
+      .update({ is_active: true })
+      .eq('product_id', produtoId);
+
+    if (errRevendedoras) {
+      console.error('[Webhook] ❌ Erro ao reativar em revendedoras:', errRevendedoras);
+    } else {
+      console.log(`[Webhook] ✅ Produto reativado em revendedoras`);
+    }
+
+  } catch (error) {
+    console.error('[Webhook] ❌ Erro ao reativar produto nas franquias:', error);
+  }
+}
+
+/**
+ * 🆕 Processa eventos de pedido (futuro ERP)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleNovoPedido(data: any) {
+  console.log('[Webhook] 💰 Novo pedido recebido:', data.id || data.pedido_id);
+  
+  // TODO: Implementar lógica de pedidos
+  // 1. Criar registro na tabela 'vendas'
+  // 2. Baixar estoque local (se FácilZap não baixou automaticamente)
+  // 3. Vincular com franqueada/revendedora
+  // 4. Enviar notificação
+  
+  console.warn('[Webhook] ⚠️ Handler de pedidos ainda não implementado');
+  
+  // Registrar log
+  await supabaseAdmin.from('logs_sincronizacao').insert({
+    tipo: 'webhook_pedido_recebido',
+    descricao: `Webhook: Pedido ${data.id || data.pedido_id} (handler não implementado)`,
+    payload: { data },
+    sucesso: false,
+    erro: 'Handler não implementado',
+  });
+}
+
+// ============ ENDPOINT PRINCIPAL ============
+
+export async function POST(request: NextRequest) {
+  try {
+    // 1️⃣ Segurança: Validar assinatura
+    const signature = request.headers.get('x-facilzap-signature') || 
+                     request.headers.get('x-webhook-secret');
+    
+    if (FACILZAP_WEBHOOK_SECRET && signature !== FACILZAP_WEBHOOK_SECRET) {
+      console.error('[Webhook] ❌ Assinatura inválida');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2️⃣ Parse do payload
+    const payload: WebhookPayload = await request.json();
+    
+    console.log('\n[Webhook] 📥 Evento recebido:', {
+      event: payload.event,
+      id: extractFacilZapId(payload.data || payload),
+      timestamp: payload.timestamp || new Date().toISOString()
+    });
+
+    // 3️⃣ Validação básica
+    if (!payload.event) {
+      console.error('[Webhook] ❌ Evento não especificado');
+      return NextResponse.json({ error: 'Event type required' }, { status: 400 });
+    }
+
+    // 4️⃣ Roteamento de eventos (suporta múltiplos formatos)
+    const event = payload.event.toLowerCase();
+    const data = payload.data || payload;
+    let result;
+
+    // Eventos de Produto/Estoque
+    if (event.includes('produto') || event.includes('product') || event.includes('estoque') || event.includes('stock')) {
+      result = await handleProdutoEstoque(data, event);
+    }
+    // Eventos de Pedido (futuro ERP)
+    else if (event.includes('pedido') || event.includes('order')) {
+      result = await handleNovoPedido(data);
+    }
+    // Sincronização completa
+    else if (event.includes('sync')) {
+      console.log('[Webhook] 🔄 Triggering full sync...');
+      const syncResponse = await fetch(new URL('/api/sync-produtos', request.url).toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      result = await syncResponse.json();
+    }
+    else {
+      console.warn('[Webhook] ⚠️ Evento não suportado:', event);
+      return NextResponse.json({ error: 'Unsupported event type', event }, { status: 400 });
+    }
+
+    // 5️⃣ Retornar sucesso
+    return NextResponse.json({
+      success: true,
+      message: `Evento ${event} processado com sucesso`,
+      result
+    });
+
+  } catch (error) {
+    const err = error as Error;
+    console.error('[Webhook] ❌ Erro fatal:', err);
+    
+    // Registrar erro
+    try {
+      await supabaseAdmin.from('logs_sincronizacao').insert({
+        tipo: 'webhook_erro',
+        descricao: `Webhook error: ${err.message}`,
+        payload: { error: err.toString() },
+        sucesso: false,
+        erro: err.message,
+      });
+    } catch (logError) {
+      console.error('[Webhook] ❌ Erro ao registrar log:', logError);
+    }
+
+    // Retornar 500 faz FácilZap tentar novamente (bom para erros temporários)
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      message: err.message 
+    }, { status: 500 });
+  }
+}
+
+// ============ ENDPOINT GET (STATUS) ============
+
 export async function GET() {
   return NextResponse.json({
     status: 'active',
-    message: 'FácilZap Webhook Endpoint',
+    endpoint: '/api/webhook/facilzap',
+    description: 'Webhook unificado do FácilZap',
     supported_events: [
-      'produto_criado',
-      'produto_atualizado',
-      'estoque_atualizado'
+      'produto_criado / product.created',
+      'produto_atualizado / product.updated',
+      'estoque_atualizado / product.stock.updated',
+      'pedido_criado / order.created (em desenvolvimento)',
+      'sync.full (trigger sincronização completa)'
     ],
-    docs: 'https://docs.c4franquias.com.br/webhook/facilzap'
+    security: FACILZAP_WEBHOOK_SECRET ? 'Enabled (x-facilzap-signature required)' : 'Disabled (WARNING)',
+    timestamp: new Date().toISOString()
   });
 }

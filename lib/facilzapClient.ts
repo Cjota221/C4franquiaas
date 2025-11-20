@@ -930,3 +930,109 @@ export async function fetchProdutoFacilZapById(id: string): Promise<ExternalProd
     return null;
   }
 }
+
+// ============ FUNÇÕES DE SINCRONIZAÇÃO REVERSA (PUSH) ============
+
+/**
+ * 🆕 Atualiza estoque na FácilZap (Sincronização Bidirecional - Sistema → FácilZap)
+ * Use quando houver venda no sistema local para atualizar estoque no FácilZap
+ * 
+ * @param facilzapId ID do produto no FácilZap
+ * @param novoEstoque Novo valor de estoque
+ * @returns true se atualizado com sucesso, false caso contrário
+ * 
+ * @example
+ * // Após venda no balcão da franquia:
+ * await updateEstoqueFacilZap('12345', 8);  // Reduz estoque de 10 para 8
+ */
+export async function updateEstoqueFacilZap(facilzapId: string, novoEstoque: number): Promise<boolean> {
+  const token = process.env.FACILZAP_TOKEN;
+  
+  if (!token) {
+    console.error('[facilzap] ❌ FACILZAP_TOKEN não configurado, não é possível atualizar estoque');
+    return false;
+  }
+
+  if (novoEstoque < 0) {
+    console.error('[facilzap] ❌ Estoque não pode ser negativo:', novoEstoque);
+    return false;
+  }
+
+  console.log(`[facilzap] 🔄 Atualizando estoque no FácilZap: ID=${facilzapId}, Estoque=${novoEstoque}`);
+
+  try {
+    const response = await axios.put(
+      `${FACILZAP_API}/produtos/${encodeURIComponent(facilzapId)}`,
+      { estoque: novoEstoque },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: TIMEOUT,
+      }
+    );
+
+    if (response.status === 200 || response.status === 204) {
+      console.log(`[facilzap] ✅ Estoque atualizado com sucesso no FácilZap:`, response.data);
+      return true;
+    } else {
+      console.warn(`[facilzap] ⚠️ Resposta inesperada ao atualizar estoque: ${response.status}`);
+      return false;
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        console.error(`[facilzap] ❌ Erro HTTP ${error.response.status} ao atualizar estoque:`, error.response.data);
+        
+        if (error.response.status === 401) {
+          console.error('[facilzap] 🔑 Token inválido ou expirado');
+        } else if (error.response.status === 404) {
+          console.error('[facilzap] 📭 Produto não encontrado no FácilZap');
+        } else if (error.response.status === 422) {
+          console.error('[facilzap] ⚠️ Dados inválidos (estoque fora do range permitido?)');
+        }
+      } else if (error.request) {
+        console.error('[facilzap] 🌐 Sem resposta do servidor FácilZap');
+      } else {
+        console.error('[facilzap] ⚙️ Erro ao configurar requisição:', error.message);
+      }
+    } else {
+      console.error('[facilzap] ❌ Erro desconhecido ao atualizar estoque:', error);
+    }
+    
+    return false;
+  }
+}
+
+/**
+ * 🆕 Atualiza múltiplos estoques de uma vez (batch)
+ * Útil quando há várias vendas simultâneas
+ * 
+ * @param updates Array de atualizações {facilzapId, novoEstoque}
+ * @returns Array de resultados {facilzapId, success, error?}
+ */
+export async function updateEstoquesFacilZapBatch(
+  updates: Array<{ facilzapId: string; novoEstoque: number }>
+): Promise<Array<{ facilzapId: string; success: boolean; error?: string }>> {
+  console.log(`[facilzap] 📦 Atualizando ${updates.length} estoques em lote...`);
+  
+  const results = [];
+  
+  for (const update of updates) {
+    const success = await updateEstoqueFacilZap(update.facilzapId, update.novoEstoque);
+    results.push({
+      facilzapId: update.facilzapId,
+      success,
+      error: success ? undefined : 'Falha na atualização',
+    });
+    
+    // Aguardar 100ms entre requisições para evitar rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  const successCount = results.filter(r => r.success).length;
+  console.log(`[facilzap] ✅ ${successCount}/${updates.length} estoques atualizados com sucesso`);
+  
+  return results;
+}
