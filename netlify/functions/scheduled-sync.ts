@@ -20,11 +20,17 @@ const handler = async () => {
 
     if (response.ok) {
       console.log(`✅ [Cron] Sincronização concluída!`);
-      console.log(`📦 [Cron] Produtos: ${data.imported || 0}`);
+      console.log(`� [Cron] Processados: ${data.processed || 0} produtos`);
+      console.log(`🆕 [Cron] Novos: ${data.new || 0}`);
+      console.log(`🔄 [Cron] Atualizados: ${data.updated || 0}`);
+      console.log(`⚪ [Cron] Inalterados: ${data.unchanged || 0}`);
       
       return new Response(JSON.stringify({
         success: true,
-        imported: data.imported || 0,
+        processed: data.processed || 0,
+        new: data.new || 0,
+        updated: data.updated || 0,
+        unchanged: data.unchanged || 0,
         timestamp: new Date().toISOString(),
       }), {
         status: 200,

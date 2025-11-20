@@ -51,7 +51,11 @@ export async function POST(request: NextRequest) {
     }
 
     const BATCH_SIZE = 50;
-    let importedCount = 0;
+    let totalProcessed = 0;
+    let totalUpdated = 0;
+    let totalNew = 0;
+    let totalUnchanged = 0;
+    
     for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
       const slice = produtos.slice(i, i + BATCH_SIZE);
 
@@ -86,15 +90,69 @@ export async function POST(request: NextRequest) {
         };
       });
 
-      // 🔍 Log detalhado dos produtos sendo atualizados
-      console.log(`📦 Atualizando batch de ${batch.length} produtos:`);
-      batch.forEach((p, idx) => {
-        if (idx < 3) { // Mostrar apenas os 3 primeiros para não poluir
-          console.log(`  - ${p.nome}: estoque=${p.estoque}, ativo=${p.ativo}`);
+      // 🔍 COMPARAR com dados existentes para detectar mudanças
+      const idsExternos = batch.map(p => p.id_externo).filter(id => id !== null);
+      const { data: existingProducts } = await supabase
+        .from('produtos')
+        .select('id, id_externo, estoque, preco_base, ativo, ultima_sincronizacao')
+        .in('id_externo', idsExternos);
+
+      // Identificar produtos novos, alterados e inalterados
+      const productsToUpsert: typeof batch = [];
+      const changedProducts: Array<{ id_externo: string; changes: string[] }> = [];
+      
+      batch.forEach(newProduct => {
+        const existing = existingProducts?.find((p: { id_externo: string }) => p.id_externo === newProduct.id_externo);
+        
+        if (!existing) {
+          // Produto NOVO
+          productsToUpsert.push(newProduct);
+          totalNew++;
+        } else {
+          // Verificar se houve mudanças
+          const changes: string[] = [];
+          
+          if (existing.estoque !== newProduct.estoque) {
+            changes.push(`estoque: ${existing.estoque} → ${newProduct.estoque}`);
+          }
+          if (existing.preco_base !== newProduct.preco_base) {
+            changes.push(`preço: ${existing.preco_base} → ${newProduct.preco_base}`);
+          }
+          if (existing.ativo !== newProduct.ativo) {
+            changes.push(`ativo: ${existing.ativo} → ${newProduct.ativo}`);
+          }
+          
+          if (changes.length > 0) {
+            // Produto ALTERADO
+            productsToUpsert.push(newProduct);
+            changedProducts.push({ id_externo: newProduct.id_externo as string, changes });
+            totalUpdated++;
+          } else {
+            // Produto INALTERADO - ainda atualiza timestamp
+            productsToUpsert.push(newProduct);
+            totalUnchanged++;
+          }
         }
       });
 
-      const { error } = await supabase.from('produtos').upsert(batch, { onConflict: 'id_externo' });
+      // 🔍 Log detalhado das mudanças
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      console.log(`📦 Batch ${batchNum}: ${batch.length} produtos`);
+      console.log(`   🆕 Novos neste batch: ${productsToUpsert.length - (existingProducts?.length || 0)}`);
+      console.log(`   🔄 Alterados neste batch: ${changedProducts.length}`);
+      
+      if (changedProducts.length > 0) {
+        console.log(`   📊 Mudanças detectadas:`);
+        changedProducts.slice(0, 3).forEach(p => {
+          console.log(`      - ${p.id_externo}: ${p.changes.join(', ')}`);
+        });
+        if (changedProducts.length > 3) {
+          console.log(`      ... e mais ${changedProducts.length - 3} produtos alterados`);
+        }
+      }
+
+      // Fazer upsert (todos produtos, para atualizar timestamp)
+      const { error } = await supabase.from('produtos').upsert(productsToUpsert, { onConflict: 'id_externo' });
       if (error) {
         const msg = error?.message ?? 'Erro ao salvar produtos.';
         const body: Record<string, unknown> = { error: 'supabase_upsert_failed', message: String(msg) };
@@ -102,33 +160,52 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(body, { status: 500 });
       }
 
-      console.log(`✅ Batch de ${batch.length} produtos atualizado com sucesso`);
+      console.log(`✅ Batch processado com sucesso`);
 
-      // 🆕 Registrar log de sincronização bem-sucedida
-      const logResult = await supabase.from('logs_sincronizacao').insert({
-        tipo: 'produto_atualizado',
-        facilzap_id: null, // Batch sync, sem ID específico
-        descricao: `Sincronização em lote: ${batch.length} produtos`,
-        payload: { count: batch.length, page: page ?? 'all' },
-        sucesso: true,
-        erro: null,
-      });
-      if (logResult.error) {
-        console.warn('⚠️ Erro ao registrar log (não crítico):', logResult.error);
+      // 🆕 Registrar log de sincronização (apenas se houve mudanças)
+      if (changedProducts.length > 0 || totalNew > 0) {
+        const logResult = await supabase.from('logs_sincronizacao').insert({
+          tipo: 'produto_atualizado',
+          facilzap_id: null,
+          descricao: `Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${totalNew} novos, ${changedProducts.length} alterados`,
+          payload: { 
+            batch: Math.floor(i / BATCH_SIZE) + 1,
+            novos: totalNew,
+            alterados: changedProducts.length,
+            inalterados: totalUnchanged - changedProducts.length,
+            mudancas: changedProducts.slice(0, 5) // Primeiras 5 mudanças
+          },
+          sucesso: true,
+          erro: null,
+        });
+        if (logResult.error) {
+          console.warn('⚠️ Erro ao registrar log (não crítico):', logResult.error);
+        }
       }
 
-      // Note: removed automatic categories extraction/upsert to avoid external coupling.
-      // Categories should be managed manually in the admin panel and linked to products via the categorias API.
-
-      importedCount += batch.length;
+      totalProcessed += batch.length;
     }
 
     // 🆕 Desativar produtos com estoque zero em todas franqueadas/revendedoras
     console.log('🔄 Verificando produtos com estoque zero...');
     await desativarProdutosEstoqueZero(supabase);
 
-    console.log(`✅ SINCRONIZAÇÃO CONCLUÍDA: ${importedCount} produtos atualizados`);
-    return NextResponse.json({ ok: true, imported: importedCount }, { status: 200 });
+    console.log(`✅ SINCRONIZAÇÃO CONCLUÍDA:`);
+    console.log(`   📊 Total processado: ${totalProcessed} produtos`);
+    console.log(`   🆕 Novos: ${totalNew}`);
+    console.log(`   🔄 Atualizados: ${totalUpdated}`);
+    console.log(`   ⚪ Inalterados: ${totalUnchanged}`);
+    
+    return NextResponse.json({ 
+      ok: true, 
+      processed: totalProcessed,
+      new: totalNew,
+      updated: totalUpdated,
+      unchanged: totalUnchanged,
+      // Mantém 'imported' para compatibilidade com código existente
+      imported: totalNew + totalUpdated,
+      timestamp: new Date().toISOString(),
+    }, { status: 200 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const body: Record<string, unknown> = { error: msg };
