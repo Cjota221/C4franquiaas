@@ -1,4 +1,5 @@
 import axios from 'axios';
+import pRetry, { AbortError } from 'p-retry';
 
 // ============ TIPOS E INTERFACES ============
 
@@ -54,8 +55,70 @@ export type ProdutoDB = {
 const FACILZAP_API = 'https://api.facilzap.app.br';
 const PAGE_SIZE = 50;
 const TIMEOUT = 10000;
+const MAX_RETRIES = 3;
+const RETRY_MIN_TIMEOUT = 1000; // 1 segundo
+const RETRY_MAX_TIMEOUT = 10000; // 10 segundos
 
 // ============ FUNÇÕES AUXILIARES ============
+
+/**
+ * Faz uma requisição HTTP com retry automático e backoff exponencial
+ */
+async function fetchWithRetry<T>(
+  client: ReturnType<typeof axios.create>,
+  path: string,
+  page: number
+): Promise<T> {
+  return pRetry(
+    async () => {
+      try {
+        const resp = await client.get(path);
+        return resp.data as T;
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          // Erros que NÃO devem fazer retry (aborta imediatamente)
+          if (err.response?.status === 401) {
+            console.error('[facilzap] 🔑 Token inválido - abortando retries');
+            throw new AbortError('Token inválido ou expirado');
+          }
+          if (err.response?.status === 403) {
+            console.error('[facilzap] 🚫 Acesso negado - abortando retries');
+            throw new AbortError('Acesso negado ao recurso');
+          }
+          if (err.response?.status === 404) {
+            console.error('[facilzap] 📭 Recurso não encontrado - abortando retries');
+            throw new AbortError('Recurso não encontrado');
+          }
+          
+          // Rate limit - aguardar mais tempo antes do próximo retry
+          if (err.response?.status === 429) {
+            const retryAfter = err.response.headers['retry-after'];
+            const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 30000;
+            console.warn(`[facilzap] ⏱️ Rate limit atingido, aguardando ${waitTime}ms`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+        
+        // Outros erros: fazer retry
+        throw err;
+      }
+    },
+    {
+      retries: MAX_RETRIES,
+      onFailedAttempt: error => {
+        const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+        console.warn(
+          `[facilzap] 🔄 Tentativa ${error.attemptNumber} de ${MAX_RETRIES + 1} falhou para página ${page}. ` +
+          `${error.retriesLeft} tentativas restantes. ` +
+          `Erro: ${errorMsg}`
+        );
+      },
+      minTimeout: RETRY_MIN_TIMEOUT,
+      maxTimeout: RETRY_MAX_TIMEOUT,
+      factor: 2, // Backoff exponencial: 1s, 2s, 4s, 8s...
+    }
+  );
+}
 
 function normalizeToProxy(u: string): string {
   if (!u) return u;
@@ -654,12 +717,22 @@ function extractImageUrl(x: unknown): string | undefined {
 
 export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[]; pages: number }> {
   const token = process.env.FACILZAP_TOKEN;
-  if (!token) throw new Error('FACILZAP_TOKEN não configurado');
+  if (!token) {
+    console.error('[facilzap] ❌ FACILZAP_TOKEN não configurado');
+    throw new Error('FACILZAP_TOKEN não configurado');
+  }
+
+  console.log('[facilzap] 🔑 Token presente:', token.substring(0, 20) + '...');
+  console.log('[facilzap] 🌐 API Base:', FACILZAP_API);
 
   const client = axios.create({
     baseURL: FACILZAP_API,
     timeout: TIMEOUT,
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
   });
 
   const result: ProdutoDB[] = [];
@@ -668,13 +741,45 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
 
   while (true) {
     const path = `/produtos?page=${page}&length=${PAGE_SIZE}`;
-    let data: unknown;
 
+    console.log(`[facilzap] 📡 Buscando: ${path}`);
+
+    let data: unknown;
+    
     try {
-      const resp = await client.get(path);
-      data = resp.data;
+      // Usar fetchWithRetry para ter retry automático
+      data = await fetchWithRetry(client, path, page);
+      
+      console.log(`[facilzap] ✅ Página ${page} obtida com sucesso`);
+      console.log(`[facilzap] 📦 Tipo de resposta:`, typeof data);
+      
+      // Log da estrutura da resposta
+      if (typeof data === 'object' && data !== null) {
+        console.log(`[facilzap] 🔍 Chaves disponíveis:`, Object.keys(data as Record<string, unknown>));
+      }
+      
     } catch (err: unknown) {
-      console.error('[facilzap] erro ao buscar página', page, err instanceof Error ? err.message : String(err));
+      console.error('[facilzap] ❌ Erro APÓS todas as tentativas de retry para página', page);
+      
+      if (err instanceof AbortError) {
+        console.error('[facilzap] � Erro não recuperável:', err.message);
+        throw err; // Propagar erro fatal para cima
+      }
+      
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          console.error(`[facilzap] � Status: ${err.response.status} ${err.response.statusText}`);
+          console.error(`[facilzap] 📛 Data:`, JSON.stringify(err.response.data).substring(0, 500));
+        } else if (err.request) {
+          console.error('[facilzap] 🌐 Sem resposta do servidor após retries');
+        } else {
+          console.error('[facilzap] ⚙️ Erro na configuração:', err.message);
+        }
+      } else {
+        console.error('[facilzap] 📛 Erro desconhecido:', err);
+      }
+      
+      // Se falhou após todas as tentativas, parar busca
       break;
     }
 
@@ -685,7 +790,12 @@ export async function fetchAllProdutosFacilZap(): Promise<{ produtos: ProdutoDB[
         ? (data as ExternalProduct[])
         : [];
 
-    if (!items || items.length === 0) break;
+    console.log(`[facilzap] 📊 Itens encontrados na página ${page}:`, items.length);
+
+    if (!items || items.length === 0) {
+      console.log(`[facilzap] ⚠️ Página ${page} sem itens, finalizando busca`);
+      break;
+    }
 
     for (const p of items) {
       const id = asString(p.id ?? p.codigo);
