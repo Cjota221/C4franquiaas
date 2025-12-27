@@ -1,10 +1,17 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 import { useCatalogo } from './layout';
+
+type Variacao = {
+  id: string;
+  tamanho?: string;
+  cor?: string;
+  estoque: number;
+};
 
 type ProductWithPrice = {
   id: string;
@@ -14,6 +21,7 @@ type ProductWithPrice = {
   imagem?: string;
   finalPrice: number;
   estoque: number;
+  variacoes?: Variacao[];
 };
 
 export default function CatalogoPrincipal() {
@@ -21,6 +29,9 @@ export default function CatalogoPrincipal() {
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc'>('default');
 
   const supabase = createClientComponentClient();
 
@@ -37,21 +48,38 @@ export default function CatalogoPrincipal() {
             nome,
             preco_base,
             imagem,
-            estoque
+            estoque,
+            variacoes_meta
           )
         `)
         .eq('reseller_id', reseller.id)
         .eq('is_active', true);
 
       const productsWithPrice: ProductWithPrice[] =
-        data?.map((p) => ({
-          id: p.produtos.id,
-          nome: p.produtos.nome,
-          preco_base: p.produtos.preco_base,
-          imagem: p.produtos.imagem,
-          estoque: p.produtos.estoque || 0,
-          finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
-        })) || [];
+        data?.map((p) => {
+          // Parse variações do JSONB
+          let variacoes: Variacao[] = [];
+          if (p.produtos.variacoes_meta) {
+            try {
+              const meta = typeof p.produtos.variacoes_meta === 'string' 
+                ? JSON.parse(p.produtos.variacoes_meta) 
+                : p.produtos.variacoes_meta;
+              variacoes = Array.isArray(meta) ? meta : [];
+            } catch {
+              variacoes = [];
+            }
+          }
+          
+          return {
+            id: p.produtos.id,
+            nome: p.produtos.nome,
+            preco_base: p.produtos.preco_base,
+            imagem: p.produtos.imagem,
+            estoque: p.produtos.estoque || 0,
+            finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
+            variacoes,
+          };
+        }) || [];
 
       setProducts(productsWithPrice);
       setLoading(false);
@@ -60,10 +88,47 @@ export default function CatalogoPrincipal() {
     loadProducts();
   }, [reseller?.id, supabase]);
 
-  // Filtrar produtos pela busca
-  const filteredProducts = products.filter((p) =>
-    p.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Extrair todos os tamanhos únicos disponíveis
+  const availableSizes = useMemo(() => {
+    const sizes = new Set<string>();
+    products.forEach(p => {
+      p.variacoes?.forEach(v => {
+        if (v.tamanho && v.estoque > 0) {
+          sizes.add(v.tamanho);
+        }
+      });
+    });
+    // Ordenar tamanhos numericamente se possível, senão alfabeticamente
+    return Array.from(sizes).sort((a, b) => {
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.localeCompare(b);
+    });
+  }, [products]);
+
+  // Filtrar e ordenar produtos
+  const filteredProducts = useMemo(() => {
+    let filtered = products.filter((p) =>
+      p.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Filtrar por tamanho se selecionado
+    if (selectedSize) {
+      filtered = filtered.filter(p => 
+        p.variacoes?.some(v => v.tamanho === selectedSize && v.estoque > 0)
+      );
+    }
+
+    // Ordenar
+    if (sortOrder === 'price_asc') {
+      filtered = [...filtered].sort((a, b) => a.finalPrice - b.finalPrice);
+    } else if (sortOrder === 'price_desc') {
+      filtered = [...filtered].sort((a, b) => b.finalPrice - a.finalPrice);
+    }
+
+    return filtered;
+  }, [products, searchTerm, selectedSize, sortOrder]);
 
   if (loading) {
     return (
@@ -126,7 +191,7 @@ export default function CatalogoPrincipal() {
         )}
 
         {/* Barra de Busca */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -139,11 +204,77 @@ export default function CatalogoPrincipal() {
           </div>
         </div>
 
-        {/* Info */}
-        <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
+        {/* Filtros */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          {/* Botão Mostrar/Esconder Filtros (Mobile) */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700"
+          >
+            <SlidersHorizontal size={18} />
+            Filtros
+            {(selectedSize || sortOrder !== 'default') && (
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }}></span>
+            )}
+          </button>
 
-      {/* Grid de Produtos - Formato 3:4 (960x1280) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          {/* Filtros - Desktop sempre visível, Mobile toggle */}
+          <div className={`${showFilters ? 'flex' : 'hidden'} md:flex flex-wrap items-center gap-3 w-full md:w-auto`}>
+            {/* Filtro por Tamanho */}
+            {availableSizes.length > 0 && (
+              <div className="relative">
+                <select
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:outline-none cursor-pointer"
+                >
+                  <option value="">Todos os tamanhos</option>
+                  {availableSizes.map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            )}
+
+            {/* Ordenação */}
+            <div className="relative">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'default' | 'price_asc' | 'price_desc')}
+                className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:outline-none cursor-pointer"
+              >
+                <option value="default">Ordenar por</option>
+                <option value="price_asc">Menor preço</option>
+                <option value="price_desc">Maior preço</option>
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Limpar filtros */}
+            {(selectedSize || sortOrder !== 'default') && (
+              <button
+                onClick={() => {
+                  setSelectedSize('');
+                  setSortOrder('default');
+                }}
+                className="flex items-center gap-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                <X size={16} />
+                Limpar
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Info */}
+        <p className="text-gray-600 mb-4">
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
+          {selectedSize && ` no tamanho ${selectedSize}`}
+        </p>
+
+      {/* Grid de Produtos - 2 cols mobile, 3 tablet, 5 desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
         {filteredProducts.map((product) => {
           // Estilo do Card baseado em theme_settings
           const cardStyle = themeSettings?.card_style || 'shadow';

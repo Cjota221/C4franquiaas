@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { ShoppingBag, Instagram, Facebook, MessageCircle, Menu, X } from 'lucide-react';
+import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -260,43 +260,13 @@ export default function CatalogoLayout({
       }}
     >
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
         <header
           className="sticky top-0 z-40 text-white shadow-lg"
           style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
         >
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
-              {/* Esquerda: Carrinho */}
-              <Link
-                href={`/catalogo/${slug}/carrinho`}
-                className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-              >
-                <ShoppingBag size={22} />
-                {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
-              </Link>
-
-              {/* Centro: Logo + Nome */}
-              <Link href={`/catalogo/${slug}`} className="flex items-center gap-2">
-                {reseller.logo_url && (
-                  <Image
-                    src={reseller.logo_url}
-                    alt={reseller.store_name}
-                    width={themeSettings.logo_shape === 'rectangle' ? 100 : 40}
-                    height={40}
-                    className={`h-10 w-auto object-contain ${
-                      themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
-                    }`}
-                  />
-                )}
-                <span className="text-lg font-bold hidden sm:inline">{reseller.store_name}</span>
-              </Link>
-
-              {/* Direita: Menu Social */}
+              {/* Esquerda: Menu Social */}
               {hasSocialLinks ? (
                 <div className="relative">
                   <button
@@ -308,7 +278,7 @@ export default function CatalogoLayout({
 
                   {/* Dropdown Menu */}
                   {socialMenuOpen && (
-                    <div className="absolute right-0 top-12 bg-white rounded-xl shadow-xl py-2 min-w-[180px] z-50">
+                    <div className="absolute left-0 top-12 bg-white rounded-xl shadow-xl py-2 min-w-[180px] z-50">
                       {reseller.phone && (
                         <a
                           href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}`}
@@ -351,6 +321,36 @@ export default function CatalogoLayout({
               ) : (
                 <div className="w-10" /> /* Espaçador quando não tem redes sociais */
               )}
+
+              {/* Centro: Logo (sem nome da loja no catálogo) */}
+              <Link href={`/catalogo/${slug}`} className="flex items-center justify-center">
+                {reseller.logo_url ? (
+                  <Image
+                    src={reseller.logo_url}
+                    alt={reseller.store_name}
+                    width={themeSettings.logo_shape === 'rectangle' ? 120 : 48}
+                    height={48}
+                    className={`h-12 w-auto object-contain ${
+                      themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
+                    }`}
+                  />
+                ) : (
+                  <span className="text-lg font-bold">{reseller.store_name}</span>
+                )}
+              </Link>
+
+              {/* Direita: Carrinho */}
+              <Link
+                href={`/catalogo/${slug}/carrinho`}
+                className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+              >
+                <ShoppingCart size={22} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </Link>
             </div>
           </div>
         </header>
