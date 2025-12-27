@@ -200,9 +200,33 @@ export default function CarrinhosAbandonadosPage() {
     })
   }
 
-  const formatWhatsApp = (phone: string) => {
+  const formatWhatsApp = (phone: string, cart?: AbandonedCart) => {
     const cleaned = phone.replace(/\D/g, '')
-    return `https://wa.me/55${cleaned}`
+    
+    // Se não tiver carrinho, retorna link sem mensagem
+    if (!cart) {
+      return `https://wa.me/55${cleaned}`
+    }
+    
+    // Monta mensagem personalizada
+    const firstName = cart.customer_name?.split(' ')[0] || 'Cliente'
+    
+    let message = `Olá ${firstName}! 👋\n\n`
+    message += `Vi que você deixou algumas peças no carrinho. Ficou alguma dúvida? 💬\n\n`
+    
+    // Lista os produtos
+    if (cart.items && cart.items.length > 0) {
+      message += `🛒 *Seu carrinho:*\n`
+      cart.items.forEach((item) => {
+        const variation = item.variation_name ? ` (${item.variation_name})` : ''
+        message += `• ${item.product_name}${variation} - R$ ${item.product_price.toFixed(2)}\n`
+      })
+      message += `\n💰 *Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
+    }
+    
+    message += `Estou aqui para te ajudar! 😊`
+    
+    return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
   }
 
   const stats = {
@@ -366,7 +390,7 @@ export default function CarrinhosAbandonadosPage() {
                   {/* Actions */}
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t">
                     <a
-                      href={formatWhatsApp(cart.customer_phone)}
+                      href={formatWhatsApp(cart.customer_phone, cart)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => {
@@ -496,7 +520,7 @@ export default function CarrinhosAbandonadosPage() {
                 {/* Status Actions */}
                 <div className="flex flex-wrap gap-2">
                   <a
-                    href={formatWhatsApp(selectedCart.customer_phone)}
+                    href={formatWhatsApp(selectedCart.customer_phone, selectedCart)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => markAsContacted(selectedCart.id)}
