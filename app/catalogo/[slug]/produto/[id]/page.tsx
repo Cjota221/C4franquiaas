@@ -187,34 +187,39 @@ export default function ProdutoPage() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Galeria de Imagens */}
+        {/* Galeria de Imagens - Estilo Instagram */}
         <div>
-          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 mb-4 shadow-lg">
             <Image
               src={imagens[selectedImage]}
               alt={produto.nome}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              quality={90}
+              priority
               className="object-cover"
             />
           </div>
           
-          {/* Miniaturas */}
+          {/* Miniaturas - Alta qualidade */}
           {imagens.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2">
               {imagens.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                  className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all shadow-sm ${
                     selectedImage === index 
-                      ? 'border-pink-500' 
-                      : 'border-transparent'
+                      ? 'border-pink-500 scale-105' 
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <Image
                     src={img}
                     alt={`${produto.nome} - ${index + 1}`}
                     fill
+                    sizes="80px"
+                    quality={80}
                     className="object-cover"
                   />
                 </button>

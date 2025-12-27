@@ -142,12 +142,12 @@ export default function CatalogoPrincipal() {
         {/* Info */}
         <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
 
-      {/* Grid de Produtos */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Grid de Produtos - Estilo Instagram */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         {filteredProducts.map((product) => {
           // Classes baseadas no theme_settings
           const cardClasses = {
-            shadow: 'shadow-md hover:shadow-lg',
+            shadow: 'shadow-md hover:shadow-xl',
             flat: 'hover:bg-gray-50',
             bordered: 'border-2 hover:border-gray-300',
           };
@@ -160,22 +160,26 @@ export default function CatalogoPrincipal() {
             <Link
               key={product.id}
               href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
-              className={`bg-white rounded-lg border border-gray-200 overflow-hidden transition-all group ${cardClasses[themeSettings?.card_style || 'shadow']}`}
+              className={`bg-white rounded-xl border border-gray-100 overflow-hidden transition-all group ${cardClasses[themeSettings?.card_style || 'shadow']}`}
             >
-              <div className="relative aspect-square bg-gray-100">
+              {/* Imagem formato Instagram (1:1) com alta qualidade */}
+              <div className="relative aspect-square bg-gray-50 overflow-hidden">
                 <Image
                   src={product.imagem || '/placeholder.png'}
                   alt={product.nome}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                  quality={85}
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                  priority={false}
                 />
               </div>
-              <div className="p-4">
+              <div className="p-3 md:p-4">
                 <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
                   {product.nome}
                 </h3>
                 {themeSettings?.show_prices !== false && (
-                  <p className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
+                  <p className="text-lg md:text-xl font-bold mb-3" style={{ color: primaryColor }}>
                     R$ {product.finalPrice.toFixed(2).replace('.', ',')}
                   </p>
                 )}
