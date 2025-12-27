@@ -187,15 +187,15 @@ export default function ProdutoPage() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Galeria de Imagens - Estilo Instagram */}
+        {/* Galeria de Imagens - Formato 3:4 (960x1280) */}
         <div>
-          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 mb-4 shadow-lg">
+          <div className="relative rounded-xl overflow-hidden bg-gray-50 mb-4 shadow-lg" style={{ aspectRatio: '3/4' }}>
             <Image
               src={imagens[selectedImage]}
               alt={produto.nome}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              quality={90}
+              quality={95}
               priority
               className="object-cover"
             />

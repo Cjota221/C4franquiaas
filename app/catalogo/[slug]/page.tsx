@@ -142,35 +142,36 @@ export default function CatalogoPrincipal() {
         {/* Info */}
         <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
 
-      {/* Grid de Produtos - Estilo Instagram */}
+      {/* Grid de Produtos - Formato 3:4 (960x1280) */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         {filteredProducts.map((product) => {
-          // Classes baseadas no theme_settings
-          const cardClasses = {
-            shadow: 'shadow-md hover:shadow-xl',
-            flat: 'hover:bg-gray-50',
-            bordered: 'border-2 hover:border-gray-300',
-          };
-          const buttonClasses = {
-            rounded: 'rounded-lg',
-            square: 'rounded-none',
-          };
+          // Estilo do Card baseado em theme_settings
+          const cardStyle = themeSettings?.card_style || 'shadow';
+          const cardClass = cardStyle === 'shadow' 
+            ? 'shadow-md hover:shadow-xl' 
+            : cardStyle === 'bordered' 
+              ? 'border-2 border-gray-200 hover:border-gray-400' 
+              : 'hover:bg-gray-50';
+          
+          // Estilo do Botão baseado em theme_settings
+          const buttonStyle = themeSettings?.button_style || 'rounded';
+          const buttonClass = buttonStyle === 'rounded' ? 'rounded-full' : 'rounded-none';
           
           return (
             <Link
               key={product.id}
               href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
-              className={`bg-white rounded-xl border border-gray-100 overflow-hidden transition-all group ${cardClasses[themeSettings?.card_style || 'shadow']}`}
+              className={`bg-white rounded-xl overflow-hidden transition-all duration-300 group ${cardClass}`}
             >
-              {/* Imagem formato Instagram (1:1) com alta qualidade */}
-              <div className="relative aspect-square bg-gray-50 overflow-hidden">
+              {/* Imagem formato 3:4 (960x1280) com alta qualidade */}
+              <div className="relative bg-gray-50 overflow-hidden" style={{ aspectRatio: '3/4' }}>
                 <Image
                   src={product.imagem || '/placeholder.png'}
                   alt={product.nome}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                  quality={85}
-                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                  quality={90}
+                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   priority={false}
                 />
               </div>
@@ -184,7 +185,7 @@ export default function CatalogoPrincipal() {
                   </p>
                 )}
                 <div
-                  className={`w-full py-2.5 text-white font-medium text-center text-sm ${buttonClasses[themeSettings?.button_style || 'rounded']}`}
+                  className={`w-full py-2.5 text-white font-medium text-center text-sm transition-all ${buttonClass}`}
                   style={{ backgroundColor: primaryColor }}
                 >
                   Ver Produto
