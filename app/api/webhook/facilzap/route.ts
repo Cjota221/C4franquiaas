@@ -267,13 +267,31 @@ async function handleNovoPedido(data: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1️⃣ Segurança: Validar assinatura
-    const signature = request.headers.get('x-facilzap-signature') || 
-                     request.headers.get('x-webhook-secret');
+    // 1️⃣ Segurança: Validar assinatura (Header OU Query Parameter)
+    // Opção 1: Header (padrão)
+    const headerSignature = request.headers.get('x-facilzap-signature') || 
+                           request.headers.get('x-webhook-secret');
     
-    if (FACILZAP_WEBHOOK_SECRET && signature !== FACILZAP_WEBHOOK_SECRET) {
-      console.error('[Webhook] ❌ Assinatura inválida');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Opção 2: Query Parameter (para ERPs que não suportam headers customizados)
+    const url = new URL(request.url);
+    const querySecret = url.searchParams.get('secret');
+    
+    // Aceita qualquer uma das duas formas
+    const providedSecret = headerSignature || querySecret;
+    
+    // Log para debug (não expõe o secret real)
+    console.log('[Webhook] 🔐 Autenticação:', {
+      viaHeader: !!headerSignature,
+      viaQuery: !!querySecret,
+      secretConfigured: !!FACILZAP_WEBHOOK_SECRET
+    });
+    
+    if (FACILZAP_WEBHOOK_SECRET && providedSecret !== FACILZAP_WEBHOOK_SECRET) {
+      console.error('[Webhook] ❌ Assinatura inválida ou ausente');
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        hint: 'Envie o secret via header X-FacilZap-Signature ou query param ?secret=VALOR'
+      }, { status: 401 });
     }
 
     // 2️⃣ Parse do payload
@@ -365,7 +383,15 @@ export async function GET() {
       'pedido_criado / order.created (em desenvolvimento)',
       'sync.full (trigger sincronização completa)'
     ],
-    security: FACILZAP_WEBHOOK_SECRET ? 'Enabled (x-facilzap-signature required)' : 'Disabled (WARNING)',
+    authentication: {
+      enabled: !!FACILZAP_WEBHOOK_SECRET,
+      methods: [
+        'Header: X-FacilZap-Signature',
+        'Header: X-Webhook-Secret', 
+        'Query Parameter: ?secret=VALOR'
+      ],
+      example_url: '/api/webhook/facilzap?secret=SEU_SECRET_AQUI'
+    },
     timestamp: new Date().toISOString()
   });
 }
