@@ -8,11 +8,12 @@ import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 
 type Variacao = {
-  id: string;
+  sku: string;
+  nome?: string;
   tamanho: string;
   cor?: string;
   estoque: number;
-  preco?: number;
+  disponivel: boolean;
 };
 
 type Produto = {
@@ -23,7 +24,7 @@ type Produto = {
   imagem?: string;
   imagens?: string[];
   estoque: number;
-  variacoes?: Variacao[];
+  variacoes: Variacao[];
 };
 
 export default function ProdutoPage() {
@@ -56,7 +57,7 @@ export default function ProdutoPage() {
         setMarginPercent(resellerProduct.margin_percent || 0);
       }
 
-      // Buscar produto com variações
+      // Buscar produto
       const { data: prod } = await supabase
         .from('produtos')
         .select('*')
@@ -64,16 +65,34 @@ export default function ProdutoPage() {
         .single();
 
       if (prod) {
-        // Buscar variações
-        const { data: variacoes } = await supabase
-          .from('variacoes')
-          .select('*')
-          .eq('produto_id', params.id)
-          .order('tamanho');
+        // Processar variações do variacoes_meta
+        let variacoes: Variacao[] = [];
+        let estoqueTotal = 0;
+
+        if (prod.variacoes_meta && Array.isArray(prod.variacoes_meta) && prod.variacoes_meta.length > 0) {
+          variacoes = prod.variacoes_meta.map((v: { sku?: string; nome?: string; estoque?: number }) => {
+            const estoqueVariacao = typeof v.estoque === 'number' ? v.estoque : 0;
+            estoqueTotal += estoqueVariacao;
+            
+            // Extrair tamanho do SKU ou nome
+            const tamanho = v.nome || v.sku?.split('-').pop() || 'Único';
+            
+            return {
+              sku: v.sku || `SKU-${prod.id}`,
+              nome: v.nome,
+              tamanho,
+              estoque: estoqueVariacao,
+              disponivel: estoqueVariacao > 0,
+            };
+          });
+        } else {
+          estoqueTotal = prod.estoque || 0;
+        }
 
         setProduto({
           ...prod,
-          variacoes: variacoes || [],
+          estoque: estoqueTotal,
+          variacoes,
         });
       }
 
@@ -96,9 +115,7 @@ export default function ProdutoPage() {
       return;
     }
 
-    const precoFinal = selectedVariacao?.preco 
-      ? calcularPreco(selectedVariacao.preco) 
-      : calcularPreco(produto.preco_base);
+    const precoFinal = calcularPreco(produto.preco_base);
 
     addToCart({
       productId: produto.id,
@@ -107,7 +124,7 @@ export default function ProdutoPage() {
       preco: precoFinal,
       quantidade,
       variacao: selectedVariacao ? {
-        id: selectedVariacao.id,
+        id: selectedVariacao.sku,
         tamanho: selectedVariacao.tamanho,
         cor: selectedVariacao.cor,
       } : undefined,
@@ -213,7 +230,7 @@ export default function ProdutoPage() {
           )}
 
           <p className="text-3xl font-bold mb-6" style={{ color: primaryColor }}>
-            R$ {calcularPreco(selectedVariacao?.preco || produto.preco_base).toFixed(2).replace('.', ',')}
+            R$ {calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}
           </p>
 
           {/* Seletor de Variações */}
@@ -224,12 +241,12 @@ export default function ProdutoPage() {
               </label>
               <div className="flex flex-wrap gap-2">
                 {produto.variacoes.map((variacao) => {
-                  const semEstoque = variacao.estoque <= 0;
-                  const selecionada = selectedVariacao?.id === variacao.id;
+                  const semEstoque = !variacao.disponivel;
+                  const selecionada = selectedVariacao?.sku === variacao.sku;
                   
                   return (
                     <button
-                      key={variacao.id}
+                      key={variacao.sku}
                       onClick={() => !semEstoque && setSelectedVariacao(variacao)}
                       disabled={semEstoque}
                       className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
@@ -246,11 +263,6 @@ export default function ProdutoPage() {
                   );
                 })}
               </div>
-              {selectedVariacao && (
-                <p className="text-sm text-gray-500 mt-2">
-                  {selectedVariacao.estoque} unidades disponíveis
-                </p>
-              )}
             </div>
           )}
 
