@@ -1,29 +1,79 @@
-﻿import { createClient } from '@/lib/supabase/server';
-import { Share2, ExternalLink, Package, Eye, TrendingUp } from 'lucide-react';
+﻿"use client";
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
-export default async function DashboardRevendedora() {
-  const supabase = await createClient();
-  
-  // Verificar usuário logado
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    redirect('/login/revendedora');
+interface Reseller {
+  id: string;
+  name: string;
+  store_name: string;
+  slug: string;
+  total_products: number;
+  catalog_views: number;
+}
+
+export default function DashboardRevendedora() {
+  const [reseller, setReseller] = useState<Reseller | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        // Verificar usuário logado
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          router.push('/login/revendedora');
+          return;
+        }
+
+        // Buscar revendedora
+        const { data, error: resellerError } = await supabase
+          .from('resellers')
+          .select('id, name, store_name, slug, total_products, catalog_views')
+          .eq('user_id', user.id)
+          .single();
+
+        if (resellerError) {
+          console.error('Erro ao buscar revendedora:', resellerError);
+          throw new Error('Erro ao carregar dados da revendedora');
+        }
+
+        if (!data) {
+          setError('Revendedora não encontrada. Seu cadastro pode estar pendente de aprovação.');
+          return;
+        }
+
+        setReseller(data);
+      } catch (err) {
+        console.error('Erro:', err);
+        setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarDados();
+  }, [supabase, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
   }
-  
-  // Buscar revendedora pelo user_id do usuário logado
-  const { data: reseller } = await supabase
-    .from('resellers')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
 
-  if (!reseller) {
+  if (error || !reseller) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-600 font-medium">Revendedora não encontrada</p>
+        <p className="text-red-600 font-medium">{error || 'Revendedora não encontrada'}</p>
         <p className="text-gray-500 mt-2">Seu cadastro pode ainda estar pendente de aprovação.</p>
         <Link href="/login/revendedora" className="mt-4 inline-block text-purple-600 hover:underline">
           Voltar ao login
@@ -32,7 +82,8 @@ export default async function DashboardRevendedora() {
     );
   }
 
-  const catalogUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/catalogo/${reseller.slug}`;
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const catalogUrl = `${siteUrl}/catalogo/${reseller.slug}`;
   const whatsappShareText = `Confira meu catálogo de produtos: ${catalogUrl}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappShareText)}`;
 
