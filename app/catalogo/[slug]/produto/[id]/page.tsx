@@ -1,0 +1,322 @@
+"use client";
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import Image from 'next/image';
+import { ArrowLeft, Plus, Minus, ShoppingBag, Check } from 'lucide-react';
+import Link from 'next/link';
+import { useCatalogo } from '../../layout';
+
+type Variacao = {
+  id: string;
+  tamanho: string;
+  cor?: string;
+  estoque: number;
+  preco?: number;
+};
+
+type Produto = {
+  id: string;
+  nome: string;
+  descricao?: string;
+  preco_base: number;
+  imagem?: string;
+  imagens?: string[];
+  estoque: number;
+  variacoes?: Variacao[];
+};
+
+export default function ProdutoPage() {
+  const params = useParams();
+  const { reseller, primaryColor, addToCart } = useCatalogo();
+  
+  const [produto, setProduto] = useState<Produto | null>(null);
+  const [marginPercent, setMarginPercent] = useState(0);
+  const [selectedVariacao, setSelectedVariacao] = useState<Variacao | null>(null);
+  const [quantidade, setQuantidade] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    if (!reseller?.id || !params.id) return;
+
+    async function loadProduct() {
+      // Buscar dados do reseller_product (margem)
+      const { data: resellerProduct } = await supabase
+        .from('reseller_products')
+        .select('margin_percent')
+        .eq('reseller_id', reseller.id)
+        .eq('product_id', params.id)
+        .single();
+
+      if (resellerProduct) {
+        setMarginPercent(resellerProduct.margin_percent || 0);
+      }
+
+      // Buscar produto com variações
+      const { data: prod } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (prod) {
+        // Buscar variações
+        const { data: variacoes } = await supabase
+          .from('variacoes')
+          .select('*')
+          .eq('produto_id', params.id)
+          .order('tamanho');
+
+        setProduto({
+          ...prod,
+          variacoes: variacoes || [],
+        });
+      }
+
+      setLoading(false);
+    }
+
+    loadProduct();
+  }, [reseller?.id, params.id, supabase]);
+
+  const calcularPreco = (precoBase: number) => {
+    return precoBase * (1 + marginPercent / 100);
+  };
+
+  const handleAddToCart = () => {
+    if (!produto) return;
+
+    // Se tem variações, precisa selecionar uma
+    if (produto.variacoes && produto.variacoes.length > 0 && !selectedVariacao) {
+      alert('Por favor, selecione um tamanho');
+      return;
+    }
+
+    const precoFinal = selectedVariacao?.preco 
+      ? calcularPreco(selectedVariacao.preco) 
+      : calcularPreco(produto.preco_base);
+
+    addToCart({
+      productId: produto.id,
+      nome: produto.nome,
+      imagem: produto.imagem,
+      preco: precoFinal,
+      quantidade,
+      variacao: selectedVariacao ? {
+        id: selectedVariacao.id,
+        tamanho: selectedVariacao.tamanho,
+        cor: selectedVariacao.cor,
+      } : undefined,
+    });
+
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  // Verificar estoque disponível
+  const estoqueDisponivel = selectedVariacao 
+    ? selectedVariacao.estoque 
+    : produto?.estoque || 0;
+
+  // Lista de imagens
+  const imagens = produto?.imagens && produto.imagens.length > 0 
+    ? produto.imagens 
+    : produto?.imagem 
+      ? [produto.imagem] 
+      : ['/placeholder.png'];
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Carregando produto...</p>
+      </div>
+    );
+  }
+
+  if (!produto) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        <p className="text-gray-600">Produto não encontrado</p>
+        <Link 
+          href={`/catalogo/${reseller?.slug}`}
+          className="mt-4 inline-block text-pink-500 hover:underline"
+        >
+          Voltar ao catálogo
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Botão Voltar */}
+      <Link 
+        href={`/catalogo/${reseller?.slug}`}
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+      >
+        <ArrowLeft size={20} />
+        Voltar ao catálogo
+      </Link>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Galeria de Imagens */}
+        <div>
+          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
+            <Image
+              src={imagens[selectedImage]}
+              alt={produto.nome}
+              fill
+              className="object-cover"
+            />
+          </div>
+          
+          {/* Miniaturas */}
+          {imagens.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {imagens.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                    selectedImage === index 
+                      ? 'border-pink-500' 
+                      : 'border-transparent'
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt={`${produto.nome} - ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Informações do Produto */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            {produto.nome}
+          </h1>
+
+          {produto.descricao && (
+            <p className="text-gray-600 mb-6">
+              {produto.descricao}
+            </p>
+          )}
+
+          <p className="text-3xl font-bold mb-6" style={{ color: primaryColor }}>
+            R$ {calcularPreco(selectedVariacao?.preco || produto.preco_base).toFixed(2).replace('.', ',')}
+          </p>
+
+          {/* Seletor de Variações */}
+          {produto.variacoes && produto.variacoes.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tamanho
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {produto.variacoes.map((variacao) => {
+                  const semEstoque = variacao.estoque <= 0;
+                  const selecionada = selectedVariacao?.id === variacao.id;
+                  
+                  return (
+                    <button
+                      key={variacao.id}
+                      onClick={() => !semEstoque && setSelectedVariacao(variacao)}
+                      disabled={semEstoque}
+                      className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
+                        selecionada
+                          ? 'border-pink-500 bg-pink-50 text-pink-600'
+                          : semEstoque
+                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through'
+                            : 'border-gray-300 hover:border-pink-300'
+                      }`}
+                    >
+                      {variacao.tamanho}
+                      {variacao.cor && ` - ${variacao.cor}`}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedVariacao && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {selectedVariacao.estoque} unidades disponíveis
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Quantidade */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quantidade
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <Minus size={18} />
+              </button>
+              <span className="w-12 text-center font-medium text-lg">
+                {quantidade}
+              </span>
+              <button
+                onClick={() => setQuantidade(Math.min(estoqueDisponivel || 99, quantidade + 1))}
+                className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Botão Adicionar ao Carrinho */}
+          <button
+            onClick={handleAddToCart}
+            disabled={estoqueDisponivel <= 0 || (produto.variacoes && produto.variacoes.length > 0 && !selectedVariacao)}
+            className={`w-full py-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all ${
+              addedToCart 
+                ? 'bg-green-500' 
+                : estoqueDisponivel <= 0
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'hover:opacity-90'
+            }`}
+            style={{ 
+              backgroundColor: addedToCart ? undefined : (estoqueDisponivel > 0 ? primaryColor : undefined) 
+            }}
+          >
+            {addedToCart ? (
+              <>
+                <Check size={20} />
+                Adicionado!
+              </>
+            ) : estoqueDisponivel <= 0 ? (
+              'Produto Esgotado'
+            ) : (
+              <>
+                <ShoppingBag size={20} />
+                Adicionar ao Carrinho
+              </>
+            )}
+          </button>
+
+          {/* Link para o Carrinho */}
+          <Link
+            href={`/catalogo/${reseller?.slug}/carrinho`}
+            className="block mt-4 text-center text-gray-600 hover:text-gray-900"
+          >
+            Ver meu carrinho
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

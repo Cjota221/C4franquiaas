@@ -1,7 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
+"use client";
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
-import { Search, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Search } from 'lucide-react';
+import { useCatalogo } from './layout';
 
 type ProductWithPrice = {
   id: string;
@@ -10,133 +13,127 @@ type ProductWithPrice = {
   preco_base: number;
   imagem?: string;
   finalPrice: number;
+  estoque: number;
 };
 
-export default async function CatalogoPublico({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const supabase = await createClient();
+export default function CatalogoPrincipal() {
+  const { reseller, primaryColor } = useCatalogo();
+  const [products, setProducts] = useState<ProductWithPrice[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const { data: reseller } = await supabase
-    .from('resellers')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  const supabase = createClientComponentClient();
 
-  if (!reseller) {
-    return notFound();
+  useEffect(() => {
+    if (!reseller?.id) return;
+
+    async function loadProducts() {
+      const { data } = await supabase
+        .from('reseller_products')
+        .select(`
+          *,
+          produtos:product_id (
+            id,
+            nome,
+            preco_base,
+            imagem,
+            estoque
+          )
+        `)
+        .eq('reseller_id', reseller.id)
+        .eq('is_active', true);
+
+      const productsWithPrice: ProductWithPrice[] =
+        data?.map((p) => ({
+          id: p.produtos.id,
+          nome: p.produtos.nome,
+          preco_base: p.produtos.preco_base,
+          imagem: p.produtos.imagem,
+          estoque: p.produtos.estoque || 0,
+          finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
+        })) || [];
+
+      setProducts(productsWithPrice);
+      setLoading(false);
+    }
+
+    loadProducts();
+  }, [reseller?.id, supabase]);
+
+  // Filtrar produtos pela busca
+  const filteredProducts = products.filter((p) =>
+    p.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Carregando produtos...</p>
+      </div>
+    );
   }
 
-  await supabase.rpc('increment_catalog_views', { reseller_id_param: reseller.id });
-
-  const { data: products } = await supabase
-    .from('reseller_products')
-    .select(`
-      *,
-      produtos:product_id (
-        id,
-        nome,
-        preco_base,
-        imagem,
-        estoque
-      )
-    `)
-    .eq('reseller_id', reseller.id)
-    .eq('is_active', true);
-
-  const primaryColor = reseller.colors?.primary || '#ec4899';
-  const secondaryColor = reseller.colors?.secondary || '#8b5cf6';
-
-  const productsWithPrice: ProductWithPrice[] = products?.map(p => ({
-    id: p.produtos.id,
-    nome: p.produtos.nome,
-    preco_base: p.produtos.preco_base,
-    imagem: p.produtos.imagem,
-    finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
-  })) || [];
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header
-        className="sticky top-0 z-40 text-white shadow-lg"
-        style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-      >
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            {reseller.logo_url && (
-              <div className="w-16 h-16 bg-white rounded-lg p-2 flex-shrink-0">
-                <Image src={reseller.logo_url} alt={reseller.store_name} width={64} height={64} className="w-full h-full object-contain" />
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold">{reseller.store_name}</h1>
-              <p className="text-sm opacity-90">{products?.length || 0} produtos disponíveis</p>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Barra de Busca */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Buscar produtos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Info */}
+      <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
+
+      {/* Grid de Produtos */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filteredProducts.map((product) => (
+          <Link
+            key={product.id}
+            href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
+            className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group"
+          >
+            <div className="relative aspect-square bg-gray-100">
+              <Image
+                src={product.imagem || '/placeholder.png'}
+                alt={product.nome}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
             </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar produtos..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {productsWithPrice.map((product) => {
-            const whatsappMsg = `Olá! Tenho interesse no produto: ${product.nome} - R$ ${product.finalPrice.toFixed(2)}`;
-            const whatsappUrl = `https://wa.me/${reseller.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMsg)}`;
-
-            return (
-              <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative aspect-square">
-                  <Image
-                    src={product.imagem || '/placeholder.png'}
-                    alt={product.nome}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
-                    {product.nome}
-                  </h3>
-                  <p className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
-                    R$ {product.finalPrice.toFixed(2)}
-                  </p>
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    <MessageCircle size={16} />
-                    Comprar
-                  </a>
-                </div>
+            <div className="p-4">
+              <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
+                {product.nome}
+              </h3>
+              <p className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
+                R$ {product.finalPrice.toFixed(2).replace('.', ',')}
+              </p>
+              <div
+                className="w-full py-2.5 text-white font-medium rounded-lg text-center text-sm"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Ver Produto
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </Link>
+        ))}
+      </div>
 
-        {productsWithPrice.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Nenhum produto disponível no momento.</p>
-          </div>
-        )}
-      </main>
-
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
-          <p> {new Date().getFullYear()} {reseller.store_name}. Todos os direitos reservados.</p>
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            {searchTerm ? 'Nenhum produto encontrado para sua busca.' : 'Nenhum produto disponível no momento.'}
+          </p>
         </div>
-      </footer>
+      )}
     </div>
   );
 }
