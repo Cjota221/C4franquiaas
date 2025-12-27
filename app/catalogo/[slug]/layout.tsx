@@ -1,9 +1,10 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
 
 // Tipos
 type Reseller = {
@@ -50,6 +51,13 @@ type CartItem = {
   };
 };
 
+// Tipo para dados do lead (visitante)
+type LeadData = {
+  name: string;
+  phone: string;
+  cartId?: string;
+};
+
 type CatalogoContextType = {
   reseller: Reseller | null;
   cart: CartItem[];
@@ -62,6 +70,11 @@ type CatalogoContextType = {
   primaryColor: string;
   secondaryColor: string;
   themeSettings: Reseller['theme_settings'];
+  // Lead capture
+  leadData: LeadData | null;
+  requireLeadCapture: () => boolean;
+  showLeadModal: boolean;
+  setShowLeadModal: (show: boolean) => void;
 };
 
 const CatalogoContext = createContext<CatalogoContextType | null>(null);
@@ -86,6 +99,9 @@ export default function CatalogoLayout({
   const [slug, setSlug] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [socialMenuOpen, setSocialMenuOpen] = useState(false);
+  const [leadData, setLeadData] = useState<LeadData | null>(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [pendingCartItem, setPendingCartItem] = useState<CartItem | null>(null);
   
   const supabase = createClientComponentClient();
 
@@ -125,6 +141,16 @@ export default function CatalogoLayout({
         setCart([]);
       }
     }
+    
+    // Carregar dados do lead do localStorage
+    const savedLead = localStorage.getItem(`lead_${slug}`);
+    if (savedLead) {
+      try {
+        setLeadData(JSON.parse(savedLead));
+      } catch {
+        setLeadData(null);
+      }
+    }
   }, [slug]);
 
   // Salvar carrinho no localStorage
@@ -133,6 +159,96 @@ export default function CatalogoLayout({
       localStorage.setItem(`cart_${slug}`, JSON.stringify(cart));
     }
   }, [cart, slug]);
+
+  // Salvar/atualizar carrinho abandonado no banco quando carrinho muda
+  const saveAbandonedCart = useCallback(async (lead: LeadData, cartItems: CartItem[]) => {
+    if (!reseller?.id || cartItems.length === 0) return;
+    
+    try {
+      const total = cartItems.reduce((sum, item) => sum + item.preco * item.quantidade, 0);
+      
+      // Verificar se já existe um carrinho para esse lead
+      const { data: existingCart } = await supabase
+        .from('abandoned_carts')
+        .select('id')
+        .eq('reseller_id', reseller.id)
+        .eq('customer_phone', lead.phone)
+        .eq('status', 'abandoned')
+        .single();
+
+      let cartId = existingCart?.id;
+
+      if (cartId) {
+        // Atualizar carrinho existente
+        await supabase
+          .from('abandoned_carts')
+          .update({
+            customer_name: lead.name,
+            total_value: total,
+            items_count: cartItems.length,
+            last_activity_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', cartId);
+
+        // Deletar itens antigos
+        await supabase
+          .from('abandoned_cart_items')
+          .delete()
+          .eq('cart_id', cartId);
+      } else {
+        // Criar novo carrinho
+        const { data: newCart } = await supabase
+          .from('abandoned_carts')
+          .insert({
+            reseller_id: reseller.id,
+            customer_name: lead.name,
+            customer_phone: lead.phone,
+            total_value: total,
+            items_count: cartItems.length,
+            status: 'abandoned',
+          })
+          .select('id')
+          .single();
+
+        cartId = newCart?.id;
+      }
+
+      if (cartId) {
+        // Inserir itens do carrinho
+        const items = cartItems.map(item => ({
+          cart_id: cartId,
+          product_id: item.productId,
+          product_name: item.nome,
+          product_image: item.imagem,
+          product_price: item.preco,
+          quantity: item.quantidade,
+          variation_id: item.variacao?.id,
+          variation_name: item.variacao?.tamanho,
+        }));
+
+        await supabase.from('abandoned_cart_items').insert(items);
+        
+        // Salvar cartId no lead local
+        const updatedLead = { ...lead, cartId };
+        setLeadData(updatedLead);
+        localStorage.setItem(`lead_${slug}`, JSON.stringify(updatedLead));
+      }
+    } catch (error) {
+      console.error('Erro ao salvar carrinho abandonado:', error);
+    }
+  }, [reseller?.id, slug, supabase]);
+
+  // Salvar carrinho abandonado quando carrinho ou lead mudam
+  useEffect(() => {
+    if (leadData && cart.length > 0) {
+      const timer = setTimeout(() => {
+        saveAbandonedCart(leadData, cart);
+      }, 2000); // Debounce de 2 segundos
+      
+      return () => clearTimeout(timer);
+    }
+  }, [cart, leadData, saveAbandonedCart]);
 
   const primaryColor = reseller?.colors?.primary || '#ec4899';
   const secondaryColor = reseller?.colors?.secondary || '#8b5cf6';
@@ -147,7 +263,27 @@ export default function CatalogoLayout({
     show_whatsapp_float: true,
   };
 
-  const addToCart = (item: CartItem) => {
+  // Verificar se precisa capturar lead (primeira vez adicionando ao carrinho)
+  const requireLeadCapture = useCallback(() => {
+    return !leadData;
+  }, [leadData]);
+
+  // Handler para quando o lead é capturado
+  const handleLeadSubmit = useCallback((name: string, phone: string) => {
+    const newLead: LeadData = { name, phone };
+    setLeadData(newLead);
+    localStorage.setItem(`lead_${slug}`, JSON.stringify(newLead));
+    setShowLeadModal(false);
+    
+    // Se tinha um item pendente, adicionar ao carrinho
+    if (pendingCartItem) {
+      actualAddToCart(pendingCartItem);
+      setPendingCartItem(null);
+    }
+  }, [slug, pendingCartItem]);
+
+  // Função real de adicionar ao carrinho
+  const actualAddToCart = (item: CartItem) => {
     setCart(prev => {
       // Usar variacao.id se existir, senão sku, senão productId
       const key = item.variacao?.id 
@@ -180,6 +316,19 @@ export default function CatalogoLayout({
 
       return [...prev, { ...item, id: key }];
     });
+  };
+
+  // Função pública de adicionar ao carrinho (verifica lead primeiro)
+  const addToCart = (item: CartItem) => {
+    // Se não tem lead cadastrado, mostrar modal e guardar item pendente
+    if (!leadData) {
+      setPendingCartItem(item);
+      setShowLeadModal(true);
+      return;
+    }
+    
+    // Se já tem lead, adicionar normalmente
+    actualAddToCart(item);
   };
 
   const removeFromCart = (productId: string, variacaoId?: string) => {
@@ -257,9 +406,24 @@ export default function CatalogoLayout({
         primaryColor,
         secondaryColor,
         themeSettings,
+        leadData,
+        requireLeadCapture,
+        showLeadModal,
+        setShowLeadModal,
       }}
     >
       <div className="min-h-screen bg-gray-50">
+        {/* Modal de Captura de Lead */}
+        <LeadCaptureModal
+          isOpen={showLeadModal}
+          onClose={() => {
+            setShowLeadModal(false);
+            setPendingCartItem(null);
+          }}
+          onSubmit={handleLeadSubmit}
+          primaryColor={primaryColor}
+        />
+
         <header
           className="sticky top-0 z-40 text-white shadow-lg"
           style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
