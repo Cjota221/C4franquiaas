@@ -49,13 +49,31 @@ export async function POST(request: NextRequest) {
 
     console.log(`${produtos.length} produtos encontrados`);
 
+    // Buscar vinculações existentes para preservar margem
+    const { data: existingLinks } = await supabase
+      .from('reseller_products')
+      .select('reseller_id, product_id, margin_percent')
+      .in('product_id', produtos.map(p => p.id));
+
+    // Criar mapa de margens existentes
+    const existingMargins = new Map<string, number>();
+    existingLinks?.forEach(link => {
+      const key = `${link.reseller_id}-${link.product_id}`;
+      if (link.margin_percent !== null && link.margin_percent !== undefined) {
+        existingMargins.set(key, link.margin_percent);
+      }
+    });
+
     const vinculacoes = [];
     for (const produto of produtos) {
       for (const revendedora of revendedoras) {
+        const key = `${revendedora.id}-${produto.id}`;
+        const existingMargin = existingMargins.get(key);
+        
         vinculacoes.push({
           reseller_id: revendedora.id,
           product_id: produto.id,
-          margin_percent: 20,
+          margin_percent: existingMargin ?? 20, // Preserva margem existente ou usa 20% padrão
           is_active: true,
         });
       }
