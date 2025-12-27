@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2 } from 'lucide-react';
+import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface Reseller {
@@ -56,7 +56,7 @@ export default function DashboardRevendedora() {
         return;
       }
 
-      console.log('✅ Revendedora encontrada:', data.name);
+      console.log('✅ Revendedora encontrada:', data.name, '| Slug:', data.slug || 'NÃO CONFIGURADO');
       setReseller(data);
     } catch (err) {
       console.error('❌ Erro geral:', err);
@@ -90,8 +90,11 @@ export default function DashboardRevendedora() {
     );
   }
 
+  // Verificar se a revendedora já configurou sua loja (tem slug)
+  const hasConfiguredStore = Boolean(reseller.slug && reseller.slug.trim() !== '');
+
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const catalogUrl = `${siteUrl}/catalogo/${reseller.slug}`;
+  const catalogUrl = hasConfiguredStore ? `${siteUrl}/catalogo/${reseller.slug}` : '';
   const whatsappShareText = `Confira meu catálogo de produtos: ${catalogUrl}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappShareText)}`;
 
@@ -127,47 +130,86 @@ export default function DashboardRevendedora() {
         })}
       </div>
 
-      <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg p-6 text-white">
-        <h2 className="text-xl font-bold mb-2">Seu Catálogo Está Pronto!</h2>
-        <p className="text-pink-100 mb-4">Compartilhe com suas clientes e comece a vender</p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link href={`/catalogo/${reseller.slug}`} target="_blank" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-pink-600 font-medium rounded-lg hover:bg-pink-50 transition-all">
-            <ExternalLink size={18} />
-            Ver Catálogo
-          </Link>
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-6 py-3 bg-white/20 backdrop-blur text-white font-medium rounded-lg hover:bg-white/30 transition-all">
-            <Share2 size={18} />
-            Compartilhar no WhatsApp
-          </a>
+      {/* Se JÁ configurou a loja - Mostra o catálogo pronto */}
+      {hasConfiguredStore ? (
+        <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg p-6 text-white">
+          <h2 className="text-xl font-bold mb-2">🎉 Seu Catálogo Está Pronto!</h2>
+          <p className="text-pink-100 mb-4">Compartilhe com suas clientes e comece a vender</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href={catalogUrl} target="_blank" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-pink-600 font-medium rounded-lg hover:bg-pink-50 transition-all">
+              <ExternalLink size={18} />
+              Ver Catálogo
+            </Link>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-6 py-3 bg-white/20 backdrop-blur text-white font-medium rounded-lg hover:bg-white/30 transition-all">
+              <Share2 size={18} />
+              Compartilhar no WhatsApp
+            </a>
+          </div>
+          <div className="mt-4 p-3 bg-white/10 rounded-lg">
+            <p className="text-sm text-pink-100 mb-1">Link do seu catálogo:</p>
+            <code className="text-sm font-mono bg-black/20 px-3 py-1 rounded block overflow-x-auto">{catalogUrl}</code>
+          </div>
         </div>
-        <div className="mt-4 p-3 bg-white/10 rounded-lg">
-          <p className="text-sm text-pink-100 mb-1">Link do seu catálogo:</p>
-          <code className="text-sm font-mono bg-black/20 px-3 py-1 rounded block overflow-x-auto">{catalogUrl}</code>
+      ) : (
+        /* Se AINDA NÃO configurou - Mostra orientação para personalizar */
+        <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg p-6 text-white">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold mb-2">Configure seu Catálogo!</h2>
+              <p className="text-amber-100 mb-4">
+                Para começar a vender, você precisa personalizar sua loja. 
+                Defina o nome da sua loja, escolha suas cores e adicione seu logo.
+              </p>
+              <Link 
+                href="/revendedora/personalizacao" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-orange-600 font-medium rounded-lg hover:bg-orange-50 transition-all"
+              >
+                <Palette size={18} />
+                Personalizar Minha Loja
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Próximos Passos</h3>
         <ul className="space-y-3">
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">1</span>
+            <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${hasConfiguredStore ? 'bg-green-100 text-green-600' : 'bg-pink-100 text-pink-600'}`}>
+              {hasConfiguredStore ? '✓' : '1'}
+            </span>
+            <div>
+              <p className={`font-medium ${hasConfiguredStore ? 'text-green-700' : 'text-gray-900'}`}>
+                {hasConfiguredStore ? 'Loja personalizada!' : 'Personalize sua loja'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {hasConfiguredStore 
+                  ? `Sua loja "${reseller.store_name}" está configurada` 
+                  : 'Defina o nome da loja, logo e cores da sua marca'}
+              </p>
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">2</span>
             <div>
               <p className="font-medium text-gray-900">Adicione produtos ao seu catálogo</p>
               <p className="text-sm text-gray-500">Vá em &quot;Produtos&quot; e ative os produtos que deseja vender</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">2</span>
+            <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${hasConfiguredStore ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-400'}`}>3</span>
             <div>
-              <p className="font-medium text-gray-900">Personalize sua loja</p>
-              <p className="text-sm text-gray-500">Adicione seu logo e escolha as cores da sua marca</p>
-            </div>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">3</span>
-            <div>
-              <p className="font-medium text-gray-900">Compartilhe seu catálogo</p>
-              <p className="text-sm text-gray-500">Envie o link para suas clientes via WhatsApp ou redes sociais</p>
+              <p className={`font-medium ${hasConfiguredStore ? 'text-gray-900' : 'text-gray-400'}`}>Compartilhe seu catálogo</p>
+              <p className={`text-sm ${hasConfiguredStore ? 'text-gray-500' : 'text-gray-400'}`}>
+                {hasConfiguredStore 
+                  ? 'Envie o link para suas clientes via WhatsApp ou redes sociais'
+                  : 'Disponível após personalizar sua loja'}
+              </p>
             </div>
           </li>
         </ul>
