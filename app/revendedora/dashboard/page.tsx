@@ -1,17 +1,35 @@
 ﻿import { createClient } from '@/lib/supabase/server';
 import { Share2, ExternalLink, Package, Eye, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function DashboardRevendedora() {
   const supabase = await createClient();
   
+  // Verificar usuário logado
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect('/login/revendedora');
+  }
+  
+  // Buscar revendedora pelo user_id do usuário logado
   const { data: reseller } = await supabase
     .from('resellers')
     .select('*')
+    .eq('user_id', user.id)
     .single();
 
   if (!reseller) {
-    return <div className="p-8"><p>Revendedora não encontrada</p></div>;
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-600 font-medium">Revendedora não encontrada</p>
+        <p className="text-gray-500 mt-2">Seu cadastro pode ainda estar pendente de aprovação.</p>
+        <Link href="/login/revendedora" className="mt-4 inline-block text-purple-600 hover:underline">
+          Voltar ao login
+        </Link>
+      </div>
+    );
   }
 
   const catalogUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/catalogo/${reseller.slug}`;

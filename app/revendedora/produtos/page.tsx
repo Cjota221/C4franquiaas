@@ -107,14 +107,17 @@ export default function ProdutosRevendedoraPage() {
       // 4. Combinar dados
       const produtosComMargem: ProdutoComMargem[] = (produtosData || []).map(produto => {
         const vinculacao = vinculacoes?.find(v => v.product_id === produto.id);
-        const marginPercent = vinculacao?.margin_percent || 0;
-        const precoFinal = produto.preco_base * (1 + marginPercent / 100);
+        const marginPercent = vinculacao?.margin_percent ?? 0;
+        const precoBase = produto.preco_base ?? 0;
+        const precoFinal = precoBase * (1 + marginPercent / 100);
 
         return {
           ...produto,
+          preco_base: precoBase,
           margin_percent: marginPercent,
-          is_active: vinculacao?.is_active || false,
-          preco_final: precoFinal
+          is_active: vinculacao?.is_active ?? false,
+          preco_final: precoFinal,
+          estoque: produto.estoque ?? 0
         };
       });
 
@@ -539,23 +542,23 @@ export default function ProdutosRevendedoraPage() {
                     {produto.categorias}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-900">
-                    R$ {produto.preco_base.toFixed(2)}
+                    R$ {(produto.preco_base ?? 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {produto.margin_percent.toFixed(1)}%
+                      {(produto.margin_percent ?? 0).toFixed(1)}%
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
-                    R$ {produto.preco_final.toFixed(2)}
+                    R$ {(produto.preco_final ?? 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      produto.estoque > 0 
+                      (produto.estoque ?? 0) > 0 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {produto.estoque}
+                      {produto.estoque ?? 0}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
