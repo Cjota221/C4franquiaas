@@ -29,15 +29,7 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
     return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen, closeModal]);
 
-  console.log('🔍 [DEBUG] ProductDetailsModal render:', {
-    modalOpen,
-    modalProduto,
-    modalVariacoes,
-    modalLoading
-  });
-
   if (!modalOpen || !modalProduto) {
-    console.log('⏭️ Modal não renderizado (closed ou sem produto)');
     return null;
   }
 
@@ -236,7 +228,7 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
 
               {/* Variações */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">🔢 Variações</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">🔢 Variações ({modalVariacoes?.length ?? 0})</h3>
                 {modalLoading && (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-indigo-600"></div>

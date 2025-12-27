@@ -351,7 +351,8 @@ export default function ProdutosPage(): React.JSX.Element {
       }
       
       openModal(json.produto as ProdutoType);
-      setModalVariacoes((json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null);
+      const variacoes = (json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null;
+      setModalVariacoes(variacoes);
     } catch (err) {
       console.error(err);
       alert('Erro ao carregar detalhes');
