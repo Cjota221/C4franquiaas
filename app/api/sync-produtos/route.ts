@@ -190,6 +190,10 @@ export async function POST(request: NextRequest) {
     console.log('🔄 Verificando produtos com estoque zero...');
     await desativarProdutosEstoqueZero(supabase);
 
+    // 🆕 Reativar produtos que voltaram a ter estoque
+    console.log('🔄 Verificando produtos que voltaram a ter estoque...');
+    await reativarProdutosComEstoque(supabase);
+
     console.log(`✅ SINCRONIZAÇÃO CONCLUÍDA:`);
     console.log(`   📊 Total processado: ${totalProcessed} produtos`);
     console.log(`   🆕 Novos: ${totalNew}`);
@@ -302,6 +306,106 @@ async function desativarProdutosEstoqueZero(supabase: any) {
     console.log('✅ Produtos com estoque zero desativados automaticamente');
   } catch (error) {
     console.error('❌ Erro em desativarProdutosEstoqueZero:', error);
+  }
+}
+
+/**
+ * 🆕 Reativa automaticamente produtos que voltaram a ter estoque
+ * Isso garante que franqueadas e revendedoras vejam produtos disponíveis
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function reativarProdutosComEstoque(supabase: any) {
+  try {
+    // 1. Buscar produtos com estoque > 0 e que estão ATIVOS no admin
+    const { data: produtosComEstoque, error: errProdutos } = await supabase
+      .from('produtos')
+      .select('id, nome, facilzap_id, estoque')
+      .gt('estoque', 0)
+      .eq('ativo', true);
+
+    if (errProdutos) {
+      console.error('❌ Erro ao buscar produtos com estoque:', errProdutos);
+      return;
+    }
+
+    if (!produtosComEstoque || produtosComEstoque.length === 0) {
+      console.log('⚪ Nenhum produto com estoque para reativar');
+      return;
+    }
+
+    console.log(`📦 Verificando ${produtosComEstoque.length} produtos com estoque para reativação...`);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const produtoIds = produtosComEstoque.map((p: any) => p.id);
+
+    // 2. Buscar produtos_franqueadas que estão DESATIVADOS mas deveriam estar ativos
+    const { data: franqueadas, error: errFranqueadas } = await supabase
+      .from('produtos_franqueadas')
+      .select('id, produto_id, franqueada_id')
+      .in('produto_id', produtoIds);
+
+    if (errFranqueadas) {
+      console.error('❌ Erro ao buscar produtos_franqueadas:', errFranqueadas);
+      return;
+    }
+
+    if (franqueadas && franqueadas.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const franqueadaIds = franqueadas.map((f: any) => f.id);
+
+      // 3. Reativar em produtos_franqueadas_precos (apenas os que estão desativados)
+      const { data: reativados, error: errPrecos } = await supabase
+        .from('produtos_franqueadas_precos')
+        .update({ ativo_no_site: true })
+        .in('produto_franqueada_id', franqueadaIds)
+        .eq('ativo_no_site', false) // Só atualiza os que estão FALSE
+        .select('id');
+
+      if (errPrecos) {
+        console.error('❌ Erro ao reativar em franqueadas:', errPrecos);
+      } else {
+        const qtdReativados = reativados?.length || 0;
+        if (qtdReativados > 0) {
+          console.log(`✅ Reativados ${qtdReativados} produtos em franqueadas`);
+        }
+      }
+    }
+
+    // 4. Reativar em reseller_products (apenas os que estão desativados)
+    const { data: reativadosRevend, error: errRevendedoras } = await supabase
+      .from('reseller_products')
+      .update({ is_active: true })
+      .in('product_id', produtoIds)
+      .eq('is_active', false) // Só atualiza os que estão FALSE
+      .select('id');
+
+    if (errRevendedoras) {
+      console.error('❌ Erro ao reativar em revendedoras:', errRevendedoras);
+    } else {
+      const qtdReativados = reativadosRevend?.length || 0;
+      if (qtdReativados > 0) {
+        console.log(`✅ Reativados ${qtdReativados} produtos em revendedoras`);
+      }
+    }
+
+    // 5. Registrar log apenas se houve reativações
+    const totalReativados = (reativadosRevend?.length || 0);
+    if (totalReativados > 0) {
+      await supabase.from('logs_sincronizacao').insert({
+        tipo: 'estoque_reativado',
+        descricao: `${totalReativados} produtos reativados automaticamente (estoque > 0)`,
+        payload: { 
+          total_reativados: totalReativados,
+          produtos_verificados: produtosComEstoque.length
+        },
+        sucesso: true,
+        erro: null,
+      });
+    }
+
+    console.log('✅ Verificação de reativação concluída');
+  } catch (error) {
+    console.error('❌ Erro em reativarProdutosComEstoque:', error);
   }
 }
 

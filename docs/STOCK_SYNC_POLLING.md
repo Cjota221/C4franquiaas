@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Serviço de sincronização de estoque via **polling** da API FácilZap. 
+Serviço de sincronização de estoque via **polling** da API FácilZap.
 Usado quando o webhook não está disponível para alterações de estoque.
 
 ---
@@ -41,11 +41,11 @@ Usado quando o webhook não está disponível para alterações de estoque.
 
 ## 📁 Arquivos
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `lib/services/stockSyncService.ts` | Serviço principal com toda a lógica |
-| `app/api/sync-estoque-polling/route.ts` | API endpoint (GET status, POST trigger) |
-| `netlify/functions/scheduled-stock-polling.ts` | Cron job (a cada 2 minutos) |
+| Arquivo                                        | Descrição                               |
+| ---------------------------------------------- | --------------------------------------- |
+| `lib/services/stockSyncService.ts`             | Serviço principal com toda a lógica     |
+| `app/api/sync-estoque-polling/route.ts`        | API endpoint (GET status, POST trigger) |
+| `netlify/functions/scheduled-stock-polling.ts` | Cron job (a cada 2 minutos)             |
 
 ---
 
@@ -53,21 +53,21 @@ Usado quando o webhook não está disponível para alterações de estoque.
 
 ### Limites da API FácilZap
 
-| Limite | Valor |
-|--------|-------|
-| Por segundo | 2 requisições |
-| Por dia | 172.800 requisições |
+| Limite          | Valor                      |
+| --------------- | -------------------------- |
+| Por segundo     | 2 requisições              |
+| Por dia         | 172.800 requisições        |
 | Erro se exceder | HTTP 429 Too Many Requests |
 
 ### Nossa Implementação (Conservadora)
 
-| Configuração | Valor | Razão |
-|--------------|-------|-------|
-| Delay entre páginas | 1.2 segundos | Garante < 1 req/s |
-| Delay entre requisições | 1.0 segundo | Margem de segurança |
-| Max retries em 429 | 3 tentativas | Evita loop infinito |
-| Backoff inicial | 5 segundos | Tempo de espera após 429 |
-| Backoff multiplicador | 2x | Exponencial: 5s, 10s, 20s |
+| Configuração            | Valor        | Razão                     |
+| ----------------------- | ------------ | ------------------------- |
+| Delay entre páginas     | 1.2 segundos | Garante < 1 req/s         |
+| Delay entre requisições | 1.0 segundo  | Margem de segurança       |
+| Max retries em 429      | 3 tentativas | Evita loop infinito       |
+| Backoff inicial         | 5 segundos   | Tempo de espera após 429  |
+| Backoff multiplicador   | 2x           | Exponencial: 5s, 10s, 20s |
 
 ---
 
@@ -100,7 +100,7 @@ Usado quando o webhook não está disponível para alterações de estoque.
         │
         ├── Se IGUAL: pula (unchanged)
         │
-        └── Se DIFERENTE: 
+        └── Se DIFERENTE:
                 ├── UPDATE no banco
                 └── Se estoque = 0:
                         └── Desativa nas franquias
@@ -121,10 +121,11 @@ Usado quando o webhook não está disponível para alterações de estoque.
 Retorna status do serviço.
 
 **Resposta:**
+
 ```json
 {
   "service": "Stock Sync Service (Polling)",
-  "status": "idle",  // ou "running"
+  "status": "idle", // ou "running"
   "description": "Sincronização de estoque via polling",
   "schedule": "A cada 2 minutos (Cron)",
   "rate_limits": {
@@ -140,6 +141,7 @@ Retorna status do serviço.
 Executa sincronização manualmente.
 
 **Resposta (sucesso):**
+
 ```json
 {
   "success": true,
@@ -157,6 +159,7 @@ Executa sincronização manualmente.
 ```
 
 **Resposta (já em execução):**
+
 ```json
 {
   "success": false,
@@ -231,7 +234,7 @@ Executa sincronização manualmente.
 ### Query para Verificar Logs
 
 ```sql
-SELECT 
+SELECT
   created_at,
   tipo,
   descricao,
@@ -267,9 +270,9 @@ Edite `lib/services/stockSyncService.ts`:
 
 ```typescript
 const CONFIG = {
-  DELAY_BETWEEN_PAGES_MS: 1200,    // Aumentar se receber muitos 429
-  MAX_RETRIES_ON_429: 3,           // Aumentar se API instável
-  PAGE_SIZE: 50,                   // Diminuir se páginas muito grandes
+  DELAY_BETWEEN_PAGES_MS: 1200, // Aumentar se receber muitos 429
+  MAX_RETRIES_ON_429: 3, // Aumentar se API instável
+  PAGE_SIZE: 50, // Diminuir se páginas muito grandes
 };
 ```
 
@@ -277,13 +280,13 @@ const CONFIG = {
 
 ## 🆚 Polling vs Webhook
 
-| Aspecto | Polling (este serviço) | Webhook |
-|---------|------------------------|---------|
-| Frequência | A cada 2 minutos | Tempo real |
-| Uso de API | ~30 req por sync | 0 (passivo) |
-| Complexidade | Maior | Menor |
-| Confiabilidade | Alta (não depende de terceiro) | Depende do ERP |
-| Quando usar | ERP sem webhook de estoque | ERP com webhook |
+| Aspecto        | Polling (este serviço)         | Webhook         |
+| -------------- | ------------------------------ | --------------- |
+| Frequência     | A cada 2 minutos               | Tempo real      |
+| Uso de API     | ~30 req por sync               | 0 (passivo)     |
+| Complexidade   | Maior                          | Menor           |
+| Confiabilidade | Alta (não depende de terceiro) | Depende do ERP  |
+| Quando usar    | ERP sem webhook de estoque     | ERP com webhook |
 
 **Recomendação:** Use ambos! Webhook para atualizações imediatas, Polling como fallback/verificação.
 

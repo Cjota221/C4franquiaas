@@ -29,6 +29,7 @@ Valor: MinhaSenhaSecreta2025!
 ### Acesse as Configurações de Webhook
 
 Procure por:
+
 - **Integrações** → **Webhooks**
 - **Configurações** → **API/Webhooks**
 - **Automações** → **Webhooks**
@@ -37,26 +38,27 @@ Procure por:
 
 #### ✅ OPÇÃO A: URL com Secret (RECOMENDADO - Para ERPs sem headers customizados)
 
-| Campo | Valor |
-|-------|-------|
-| **URL** | `https://c4franquiaas.netlify.app/api/webhook/facilzap?secret=MinhaSenhaSecreta2025!` |
-| **Método** | `POST` |
-| **Content-Type** | `application/json` |
+| Campo            | Valor                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| **URL**          | `https://c4franquiaas.netlify.app/api/webhook/facilzap?secret=MinhaSenhaSecreta2025!` |
+| **Método**       | `POST`                                                                                |
+| **Content-Type** | `application/json`                                                                    |
 
 > ⚠️ Substitua `MinhaSenhaSecreta2025!` pelo valor real da sua variável no Netlify!
 
 #### Opção B: URL simples + Header (se o FácilZap suportar headers)
 
-| Campo | Valor |
-|-------|-------|
-| **URL** | `https://c4franquiaas.netlify.app/api/webhook/facilzap` |
-| **Método** | `POST` |
-| **Content-Type** | `application/json` |
-| **Header** | `X-FacilZap-Signature: MinhaSenhaSecreta2025!` |
+| Campo            | Valor                                                   |
+| ---------------- | ------------------------------------------------------- |
+| **URL**          | `https://c4franquiaas.netlify.app/api/webhook/facilzap` |
+| **Método**       | `POST`                                                  |
+| **Content-Type** | `application/json`                                      |
+| **Header**       | `X-FacilZap-Signature: MinhaSenhaSecreta2025!`          |
 
 ### Selecione os Eventos
 
 Marque os seguintes eventos:
+
 - [x] **Produto criado** (produto_criado / product.created)
 - [x] **Produto atualizado** (produto_atualizado / product.updated)
 - [x] **Estoque atualizado** (estoque_atualizado / stock.updated)
@@ -121,7 +123,7 @@ Invoke-RestMethod -Uri "https://c4franquiaas.netlify.app/api/webhook/facilzap" -
 Execute essa query para ver eventos recebidos:
 
 ```sql
-SELECT 
+SELECT
   created_at,
   tipo,
   descricao,
@@ -182,6 +184,7 @@ Se aparecer `"security": "Disabled (WARNING)"`, a variável `FACILZAP_WEBHOOK_SE
 **Causa**: A assinatura não confere
 
 **Solução**:
+
 1. Verifique se o valor em `FACILZAP_WEBHOOK_SECRET` no Netlify é EXATAMENTE igual ao header enviado
 2. Verifique o nome do header: pode ser `X-FacilZap-Signature` ou `X-Webhook-Secret`
 
@@ -190,6 +193,7 @@ Se aparecer `"security": "Disabled (WARNING)"`, a variável `FACILZAP_WEBHOOK_SE
 **Causa**: Payload inválido
 
 **Solução**:
+
 1. O campo `event` é obrigatório
 2. O campo `data.id` ou `produto_id` é obrigatório
 
@@ -198,6 +202,7 @@ Se aparecer `"security": "Disabled (WARNING)"`, a variável `FACILZAP_WEBHOOK_SE
 **Causa**: Erro no processamento
 
 **Solução**:
+
 1. Veja logs do Netlify Functions
 2. Veja tabela `logs_sincronizacao` para detalhes
 
@@ -206,6 +211,7 @@ Se aparecer `"security": "Disabled (WARNING)"`, a variável `FACILZAP_WEBHOOK_SE
 **Causa**: FácilZap não está enviando
 
 **Solução**:
+
 1. Verifique se os eventos estão ativados no painel
 2. Faça uma alteração real de estoque para disparar
 3. Teste com cURL para confirmar que a URL está acessível
@@ -215,6 +221,7 @@ Se aparecer `"security": "Disabled (WARNING)"`, a variável `FACILZAP_WEBHOOK_SE
 ## 📞 Contato FácilZap
 
 Se o painel do FácilZap não tiver opção de webhook visível, entre em contato com o suporte deles para:
+
 1. Solicitar ativação do recurso de webhooks
 2. Pedir a documentação de eventos disponíveis
 3. Confirmar formato exato do payload

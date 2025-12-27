@@ -26,19 +26,19 @@ Write-Host " TESTE 2: Evento estoque_atualizado" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 $headers = @{
-    "Content-Type" = "application/json"
+    "Content-Type"         = "application/json"
     "X-FacilZap-Signature" = $webhookSecret
 }
 
 $payload = @{
-    event = "estoque_atualizado"
+    event      = "estoque_atualizado"
     produto_id = "TESTE-001"
-    timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
-    data = @{
-        id = "TESTE-001"
-        nome = "Produto de Teste"
+    timestamp  = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+    data       = @{
+        id      = "TESTE-001"
+        nome    = "Produto de Teste"
         estoque = 99
-        preco = 149.90
+        preco   = 149.90
     }
 } | ConvertTo-Json -Depth 3
 
@@ -67,11 +67,11 @@ Write-Host " TESTE 3: Via Query Parameter" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 $payloadQuery = @{
-    event = "estoque_atualizado"
+    event      = "estoque_atualizado"
     produto_id = "TESTE-002"
-    data = @{
-        id = "TESTE-002"
-        nome = "Produto via Query"
+    data       = @{
+        id      = "TESTE-002"
+        nome    = "Produto via Query"
         estoque = 50
     }
 } | ConvertTo-Json -Depth 3
