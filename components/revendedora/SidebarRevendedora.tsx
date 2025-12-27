@@ -1,20 +1,30 @@
 "use client";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag } from 'lucide-react';
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SidebarRevendedora() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuItems = [
     { label: 'Dashboard', href: '/revendedora/dashboard', icon: Home },
     { label: 'Produtos', href: '/revendedora/produtos', icon: Package },
+    { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
+    { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
   ];
 
   const isActive = (href: string) => pathname === href;
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login/revendedora');
+  };
 
   return (
     <>
@@ -38,7 +48,7 @@ export default function SidebarRevendedora() {
           })}
         </nav>
         <div className="p-4 border-t border-gray-200">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-gray-50 rounded-lg transition-all" onClick={() => console.log('Logout')}>
+          <button className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-gray-50 rounded-lg transition-all" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Sair</span>
           </button>

@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 import ProductErrorBoundary from '@/components/loja/ProductErrorBoundary';
 import ModalProdutoAdicionado from '@/components/loja/ModalProdutoAdicionado';
 import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
+import CustomerCaptureModal from '@/components/loja/CustomerCaptureModal';
+import { useAbandonedCart } from '@/hooks/useAbandonedCart';
 
 // Novos componentes modernos
 import { ModernProductPage } from '@/components/loja/ModernProductPage';
@@ -60,6 +62,15 @@ function ProdutoDetalheContent() {
   const dominio = params.dominio as string;
   const produtoId = params.id as string;
 
+  // 🛒 Hook para carrinho abandonado
+  const { 
+    isModalOpen: customerModalOpen, 
+    closeModal: closeCustomerModal, 
+    setCustomerData, 
+    trackCartItem,
+    needsCustomerData
+  } = useAbandonedCart(loja?.id);
+
   const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);
   const [favorito, setFavorito] = useState(false);
@@ -68,6 +79,13 @@ function ProdutoDetalheContent() {
   const [skuSelecionado, setSkuSelecionado] = useState<string | null>(null);
   const [quantidade, setQuantidade] = useState<number>(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  
+  // ⭐ Dados para adicionar após captura do cliente
+  const [pendingCartItem, setPendingCartItem] = useState<{
+    itemCarrinho: Parameters<typeof addItem>[0];
+    modalData: { nome: string; preco: number; imagem: string; tamanho?: string; quantidade: number };
+    trackData: Parameters<typeof trackCartItem>[0];
+  } | null>(null);
   
   // ⭐ Estado do Modal
   const [modalAberto, setModalAberto] = useState(false);
@@ -230,16 +248,40 @@ function ProdutoDetalheContent() {
         estoque: estoqueDisponivel
       };
 
-      addItem(itemCarrinho);
-
-      // ✅ Preparar dados para o modal
-      setProdutoAdicionado({
+      // ✅ Preparar dados do modal e rastreamento
+      const modalData = {
         nome: produto.nome,
         preco: produto.preco_final,
         imagem: itemCarrinho.imagem,
         tamanho: variacaoSelecionada.tamanho,
         quantidade: quantidade
-      });
+      };
+
+      const trackData = {
+        resellerId: loja?.id || '',
+        productId: produto.id,
+        productName: produto.nome,
+        productImage: itemCarrinho.imagem,
+        productPrice: produto.preco_final,
+        quantity: quantidade,
+        variationId: skuSelecionado,
+        variationName: variacaoSelecionada.tamanho
+      };
+
+      // 🛒 Se precisa capturar dados do cliente, salvar para depois
+      if (needsCustomerData) {
+        setPendingCartItem({ itemCarrinho, modalData, trackData });
+        // O hook vai abrir o modal automaticamente ao chamar trackCartItem
+        await trackCartItem(trackData);
+        return;
+      }
+
+      // ✅ Adicionar ao carrinho
+      addItem(itemCarrinho);
+      setProdutoAdicionado(modalData);
+
+      // 🛒 Rastrear no carrinho abandonado
+      await trackCartItem(trackData);
 
       // ✅ Abrir modal de confirmação
       setModalAberto(true);
@@ -255,6 +297,26 @@ function ProdutoDetalheContent() {
       console.error('[Carrinho] ❌ Erro ao adicionar produto:', error);
       alert('❌ Erro ao adicionar produto ao carrinho. Tente novamente.');
     } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  // 🛒 Handler para quando cliente preencher dados
+  const handleCustomerDataSubmit = async (customerData: { name: string; phone: string }) => {
+    setCustomerData(customerData);
+    
+    if (pendingCartItem) {
+      // Adicionar ao carrinho
+      addItem(pendingCartItem.itemCarrinho);
+      setProdutoAdicionado(pendingCartItem.modalData);
+      
+      // Abrir modal de confirmação
+      setModalAberto(true);
+      setQuantidade(1);
+      window.dispatchEvent(new Event('carrinhoAtualizado'));
+      
+      // Limpar item pendente
+      setPendingCartItem(null);
       setAddingToCart(false);
     }
   };
@@ -334,6 +396,18 @@ function ProdutoDetalheContent() {
           corPrimaria={loja?.cor_primaria || '#000000'}
         />
       )}
+
+      {/* Modal de Captura de Dados do Cliente */}
+      <CustomerCaptureModal
+        isOpen={customerModalOpen}
+        onClose={() => {
+          closeCustomerModal();
+          setPendingCartItem(null);
+          setAddingToCart(false);
+        }}
+        onSubmit={handleCustomerDataSubmit}
+        productName={pendingCartItem?.modalData.nome}
+      />
     </>
   );
 }
