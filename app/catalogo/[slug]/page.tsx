@@ -7,7 +7,9 @@ import { Search, ChevronDown } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type Variacao = {
-  id: string;
+  id?: string;
+  sku?: string;
+  nome?: string;
   tamanho?: string;
   cor?: string;
   estoque: number;
@@ -63,7 +65,19 @@ export default function CatalogoPrincipal() {
               const meta = typeof p.produtos.variacoes_meta === 'string' 
                 ? JSON.parse(p.produtos.variacoes_meta) 
                 : p.produtos.variacoes_meta;
-              variacoes = Array.isArray(meta) ? meta : [];
+              
+              if (Array.isArray(meta)) {
+                variacoes = meta.map((v: { sku?: string; nome?: string; tamanho?: string; estoque?: number }) => {
+                  // Extrair tamanho: usa tamanho direto, ou nome, ou última parte do SKU
+                  const tamanho = v.tamanho || v.nome || v.sku?.split('-').pop() || '';
+                  const estoque = typeof v.estoque === 'number' ? v.estoque : 0;
+                  return {
+                    ...v,
+                    tamanho,
+                    estoque,
+                  };
+                });
+              }
             } catch {
               variacoes = [];
             }
@@ -92,8 +106,10 @@ export default function CatalogoPrincipal() {
     const sizes = new Set<string>();
     products.forEach(p => {
       p.variacoes?.forEach(v => {
-        if (v.tamanho && v.estoque > 0) {
-          sizes.add(v.tamanho);
+        // Pegar tamanho de: tamanho, nome, ou última parte do SKU
+        const tamanho = v.tamanho || v.nome || v.sku?.split('-').pop() || '';
+        if (tamanho && v.estoque > 0) {
+          sizes.add(tamanho);
         }
       });
     });
@@ -115,7 +131,10 @@ export default function CatalogoPrincipal() {
     // Filtrar por tamanho se selecionado
     if (selectedSize) {
       filtered = filtered.filter(p => 
-        p.variacoes?.some(v => v.tamanho === selectedSize && v.estoque > 0)
+        p.variacoes?.some(v => {
+          const tamanho = v.tamanho || v.nome || v.sku?.split('-').pop() || '';
+          return tamanho === selectedSize && v.estoque > 0;
+        })
       );
     }
 
