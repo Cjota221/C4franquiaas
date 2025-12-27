@@ -173,7 +173,7 @@ export default function CarrinhoPage() {
                 {/* Quantidade e Remover */}
                 <div className="flex flex-col items-end justify-between">
                   <button
-                    onClick={() => removeFromCart(item.productId, item.variacao?.id || item.sku)}
+                    onClick={() => removeFromCart(item.productId, item.variacao?.id)}
                     className="text-gray-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={18} />
@@ -184,7 +184,7 @@ export default function CarrinhoPage() {
                       onClick={() => updateQuantity(
                         item.productId, 
                         item.quantidade - 1, 
-                        item.variacao?.id || item.sku
+                        item.variacao?.id
                       )}
                       disabled={item.quantidade <= 1}
                       className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -198,9 +198,10 @@ export default function CarrinhoPage() {
                       onClick={() => updateQuantity(
                         item.productId, 
                         item.quantidade + 1, 
-                        item.variacao?.id || item.sku
+                        item.variacao?.id
                       )}
-                      className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                      disabled={item.estoque ? item.quantidade >= item.estoque : false}
+                      className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus size={14} />
                     </button>

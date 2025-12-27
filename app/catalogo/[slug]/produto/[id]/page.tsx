@@ -116,6 +116,11 @@ export default function ProdutoPage() {
     }
 
     const precoFinal = calcularPreco(produto.preco_base);
+    
+    // Estoque da variação selecionada ou do produto
+    const estoqueItem = selectedVariacao 
+      ? selectedVariacao.estoque 
+      : produto.estoque;
 
     addToCart({
       productId: produto.id,
@@ -123,6 +128,7 @@ export default function ProdutoPage() {
       imagem: produto.imagem,
       preco: precoFinal,
       quantidade,
+      estoque: estoqueItem, // Salvar estoque para limitar no carrinho
       variacao: selectedVariacao ? {
         id: selectedVariacao.sku,
         tamanho: selectedVariacao.tamanho,

@@ -39,8 +39,8 @@ type CatalogoContextType = {
   reseller: Reseller | null;
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string, sku?: string) => void;
-  updateQuantity: (id: string, quantidade: number, sku?: string) => void;
+  removeFromCart: (productId: string, variacaoId?: string) => void;
+  updateQuantity: (productId: string, quantidade: number, variacaoId?: string) => void;
   clearCart: () => void;
   getTotal: () => number;
   getTotalItems: () => number;
@@ -155,20 +155,36 @@ export default function CatalogoLayout({
     });
   };
 
-  const removeFromCart = (id: string, sku?: string) => {
+  const removeFromCart = (productId: string, variacaoId?: string) => {
     setCart(prev => {
-      if (sku) {
-        return prev.filter(i => !(i.productId === id && i.sku === sku));
-      }
-      return prev.filter(i => i.productId !== id);
+      return prev.filter(item => {
+        // Se tem variacaoId, comparar com variacao.id
+        if (variacaoId) {
+          return !(item.productId === productId && item.variacao?.id === variacaoId);
+        }
+        // Se não tem variacaoId, remover por productId (produto sem variações)
+        return item.productId !== productId;
+      });
     });
   };
 
-  const updateQuantity = (id: string, quantidade: number, sku?: string) => {
+  const updateQuantity = (productId: string, quantidade: number, variacaoId?: string) => {
+    if (quantidade < 1) return; // Não permitir quantidade menor que 1
+    
     setCart(prev =>
-      prev.map(i => {
-        const isMatch = sku ? (i.productId === id && i.sku === sku) : i.productId === id;
-        return isMatch ? { ...i, quantidade: Math.max(1, Math.min(quantidade, i.estoque)) } : i;
+      prev.map(item => {
+        // Verificar se é o item correto
+        const isMatch = variacaoId 
+          ? (item.productId === productId && item.variacao?.id === variacaoId)
+          : item.productId === productId;
+        
+        if (!isMatch) return item;
+        
+        // Limitar pela estoque disponível (se tiver)
+        const maxQtd = item.estoque || 99;
+        const novaQuantidade = Math.max(1, Math.min(quantidade, maxQtd));
+        
+        return { ...item, quantidade: novaQuantidade };
       })
     );
   };
