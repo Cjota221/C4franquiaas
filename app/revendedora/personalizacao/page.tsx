@@ -71,6 +71,7 @@ export default function PersonalizacaoRevendedoraPage() {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('mobile');
   const [uploading, setUploading] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [currentSlug, setCurrentSlug] = useState(''); // Slug atual para o link do catálogo
   
   // Estados editáveis
   const [storeName, setStoreName] = useState('');
@@ -94,9 +95,9 @@ export default function PersonalizacaoRevendedoraPage() {
 
   const supabase = createClientComponentClient();
   
-  // URL do catálogo
-  const catalogUrl = typeof window !== 'undefined' && reseller?.slug 
-    ? `${window.location.origin}/catalogo/${reseller.slug}` 
+  // URL do catálogo - usa currentSlug que é atualizado ao salvar
+  const catalogUrl = typeof window !== 'undefined' && currentSlug 
+    ? `${window.location.origin}/catalogo/${currentSlug}` 
     : '';
 
   // Copiar link
@@ -127,6 +128,7 @@ export default function PersonalizacaoRevendedoraPage() {
         if (data) {
           console.log('[Personalização] Reseller carregado:', data.slug);
           setReseller(data);
+          setCurrentSlug(data.slug || ''); // Setar slug atual
           setStoreName(data.store_name || '');
           setBio(data.bio || '');
           setPhone(data.phone || '');
@@ -200,8 +202,9 @@ export default function PersonalizacaoRevendedoraPage() {
 
       if (error) throw error;
 
-      // Atualizar o reseller local com o novo slug
+      // Atualizar o reseller local e o slug atual
       setReseller({ ...reseller, slug: newSlug, store_name: storeName });
+      setCurrentSlug(newSlug); // Atualiza o slug para o link do catálogo
       
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -322,7 +325,7 @@ export default function PersonalizacaoRevendedoraPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Link do Catálogo */}
-        {reseller?.slug ? (
+        {currentSlug ? (
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
@@ -359,10 +362,18 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-            <p className="text-yellow-800 text-sm">
-              ⚠️ Seu catálogo ainda não tem um slug definido. Entre em contato com o suporte para configurar.
-            </p>
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Type className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-medium text-amber-800">Configure o nome da sua loja!</p>
+                <p className="text-amber-700 text-sm">
+                  Preencha o campo &quot;Nome da Loja&quot; na aba Identidade e clique em Salvar para criar seu link personalizado.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
