@@ -1,130 +1,842 @@
 "use client";
 
-import React from 'react';
-import { Palette, Upload, Save, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { 
+  Palette, 
+  Upload, 
+  Save, 
+  Eye,
+  Smartphone,
+  Image as ImageIcon,
+  Type,
+  Square,
+  MessageCircle,
+  Instagram,
+  Facebook,
+  Check,
+  Loader2,
+  X
+} from 'lucide-react';
+import Image from 'next/image';
+
+type ThemeSettings = {
+  button_style: 'rounded' | 'square';
+  card_style: 'shadow' | 'flat' | 'bordered';
+  header_style: 'gradient' | 'solid' | 'transparent';
+  show_prices: boolean;
+  show_stock: boolean;
+  show_whatsapp_float: boolean;
+};
+
+type ResellerData = {
+  id: string;
+  store_name: string;
+  slug: string;
+  phone: string;
+  logo_url?: string;
+  banner_url?: string;
+  bio?: string;
+  instagram?: string;
+  facebook?: string;
+  colors: {
+    primary: string;
+    secondary: string;
+  };
+  theme_settings: ThemeSettings;
+};
+
+// Paleta de cores sugeridas
+const COLOR_PRESETS = [
+  { name: 'Rosa', primary: '#ec4899', secondary: '#f472b6' },
+  { name: 'Roxo', primary: '#8b5cf6', secondary: '#a78bfa' },
+  { name: 'Azul', primary: '#3b82f6', secondary: '#60a5fa' },
+  { name: 'Verde', primary: '#10b981', secondary: '#34d399' },
+  { name: 'Laranja', primary: '#f97316', secondary: '#fb923c' },
+  { name: 'Vermelho', primary: '#ef4444', secondary: '#f87171' },
+  { name: 'Teal', primary: '#14b8a6', secondary: '#2dd4bf' },
+  { name: 'Índigo', primary: '#6366f1', secondary: '#818cf8' },
+];
 
 export default function PersonalizacaoRevendedoraPage() {
+  const [reseller, setReseller] = useState<ResellerData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<'identidade' | 'cores' | 'layout' | 'social'>('identidade');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('mobile');
+  
+  // Estados editáveis
+  const [storeName, setStoreName] = useState('');
+  const [bio, setBio] = useState('');
+  const [phone, setPhone] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [bannerUrl, setBannerUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#ec4899');
+  const [secondaryColor, setSecondaryColor] = useState('#8b5cf6');
+  const [themeSettings, setThemeSettings] = useState<ThemeSettings>({
+    button_style: 'rounded',
+    card_style: 'shadow',
+    header_style: 'gradient',
+    show_prices: true,
+    show_stock: false,
+    show_whatsapp_float: true,
+  });
+
+  const supabase = createClientComponentClient();
+
+  // Carregar dados do reseller
+  useEffect(() => {
+    async function loadReseller() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data } = await supabase
+          .from('resellers')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (data) {
+          setReseller(data);
+          setStoreName(data.store_name || '');
+          setBio(data.bio || '');
+          setPhone(data.phone || '');
+          setInstagram(data.instagram || '');
+          setFacebook(data.facebook || '');
+          setLogoUrl(data.logo_url || '');
+          setBannerUrl(data.banner_url || '');
+          setPrimaryColor(data.colors?.primary || '#ec4899');
+          setSecondaryColor(data.colors?.secondary || '#8b5cf6');
+          setThemeSettings(data.theme_settings || {
+            button_style: 'rounded',
+            card_style: 'shadow',
+            header_style: 'gradient',
+            show_prices: true,
+            show_stock: false,
+            show_whatsapp_float: true,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadReseller();
+  }, [supabase]);
+
+  // Salvar alterações
+  const handleSave = async () => {
+    if (!reseller) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('resellers')
+        .update({
+          store_name: storeName,
+          bio,
+          phone,
+          instagram,
+          facebook,
+          logo_url: logoUrl,
+          banner_url: bannerUrl,
+          colors: {
+            primary: primaryColor,
+            secondary: secondaryColor,
+          },
+          theme_settings: themeSettings,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', reseller.id);
+
+      if (error) throw error;
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      alert('Erro ao salvar alterações. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Upload de imagem
+  const handleImageUpload = async (file: File, type: 'logo' | 'banner') => {
+    if (!reseller) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${reseller.id}/${type}_${Date.now()}.${fileExt}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('reseller-assets')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('reseller-assets')
+        .getPublicUrl(fileName);
+
+      if (type === 'logo') {
+        setLogoUrl(publicUrl);
+      } else {
+        setBannerUrl(publicUrl);
+      }
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro ao fazer upload da imagem. Tente novamente.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Palette className="w-6 h-6 text-purple-600" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Fixo */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Palette className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Personalização da Loja</h1>
-              <p className="text-gray-600">Configure a aparência da sua loja virtual</p>
+              <h1 className="text-xl font-bold text-gray-900">Personalizar Catálogo</h1>
+              <p className="text-sm text-gray-500">Configure a aparência da sua loja</p>
             </div>
           </div>
-        </div>
-
-        {/* Aviso de Funcionalidade em Desenvolvimento */}
-        <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg mb-8">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="text-lg font-semibold text-amber-900 mb-2">
-                Funcionalidade em Desenvolvimento
-              </h3>
-              <p className="text-amber-800 mb-3">
-                A página de personalização está sendo construída e estará disponível em breve.
-              </p>
-              <p className="text-amber-700 text-sm">
-                Em breve você poderá personalizar:
-              </p>
-              <ul className="list-disc list-inside text-amber-700 text-sm mt-2 space-y-1">
-                <li>Logo da sua loja</li>
-                <li>Cores e tema</li>
-                <li>Banner principal</li>
-                <li>Informações de contato</li>
-                <li>Redes sociais</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Preview das Funcionalidades Futuras */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card Logo */}
-          <div className="bg-white rounded-lg shadow p-6 opacity-50">
-            <div className="flex items-center gap-2 mb-4">
-              <Upload className="w-5 h-5 text-gray-400" />
-              <h3 className="font-semibold text-gray-900">Logo da Loja</h3>
-            </div>
-            <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-              <Palette className="w-12 h-12 text-gray-300" />
-            </div>
-            <button 
-              disabled 
-              className="w-full py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
+          
+          <div className="flex items-center gap-3">
+            {/* Botão Ver Catálogo */}
+            <a
+              href={`/catalogo/${reseller?.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Fazer Upload (Em breve)
+              <Eye size={18} />
+              Ver Catálogo
+            </a>
+            
+            {/* Botão Salvar */}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${
+                saved
+                  ? 'bg-green-500 text-white'
+                  : 'bg-pink-500 text-white hover:bg-pink-600'
+              }`}
+            >
+              {saving ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : saved ? (
+                <Check size={18} />
+              ) : (
+                <Save size={18} />
+              )}
+              {saved ? 'Salvo!' : 'Salvar'}
             </button>
           </div>
-
-          {/* Card Cores */}
-          <div className="bg-white rounded-lg shadow p-6 opacity-50">
-            <h3 className="font-semibold text-gray-900 mb-4">Cores do Tema</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">Cor Principal</label>
-                <div className="h-10 bg-gray-100 rounded-lg"></div>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">Cor Secundária</label>
-                <div className="h-10 bg-gray-100 rounded-lg"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card Banner */}
-          <div className="bg-white rounded-lg shadow p-6 opacity-50">
-            <div className="flex items-center gap-2 mb-4">
-              <Upload className="w-5 h-5 text-gray-400" />
-              <h3 className="font-semibold text-gray-900">Banner Principal</h3>
-            </div>
-            <div className="aspect-[16/6] bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-              <Palette className="w-12 h-12 text-gray-300" />
-            </div>
-            <button 
-              disabled 
-              className="w-full py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
-            >
-              Fazer Upload (Em breve)
-            </button>
-          </div>
-
-          {/* Card Informações */}
-          <div className="bg-white rounded-lg shadow p-6 opacity-50">
-            <h3 className="font-semibold text-gray-900 mb-4">Informações de Contato</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">WhatsApp</label>
-                <div className="h-10 bg-gray-100 rounded-lg"></div>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">Instagram</label>
-                <div className="h-10 bg-gray-100 rounded-lg"></div>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">Facebook</label>
-                <div className="h-10 bg-gray-100 rounded-lg"></div>
-              </div>
-            </div>
-          </div>
         </div>
+      </div>
 
-        {/* Botão Salvar (Desabilitado) */}
-        <div className="mt-8 flex justify-end">
-          <button 
-            disabled 
-            className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
-          >
-            <Save className="w-5 h-5" />
-            Salvar Alterações (Em breve)
-          </button>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Painel de Edição */}
+          <div className="space-y-6">
+            {/* Tabs */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="flex border-b border-gray-200">
+                {[
+                  { id: 'identidade', label: 'Identidade', icon: Type },
+                  { id: 'cores', label: 'Cores', icon: Palette },
+                  { id: 'layout', label: 'Layout', icon: Square },
+                  { id: 'social', label: 'Redes', icon: MessageCircle },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? 'text-pink-600 border-b-2 border-pink-500 bg-pink-50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <tab.icon size={16} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-6">
+                {/* Tab: Identidade */}
+                {activeTab === 'identidade' && (
+                  <div className="space-y-6">
+                    {/* Nome da Loja */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nome da Loja
+                      </label>
+                      <input
+                        type="text"
+                        value={storeName}
+                        onChange={(e) => setStoreName(e.target.value)}
+                        placeholder="Ex: Loja da Maria"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      />
+                    </div>
+
+                    {/* Bio */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição da Loja
+                      </label>
+                      <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="Uma breve descrição sobre sua loja..."
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 resize-none"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">{bio.length}/200 caracteres</p>
+                    </div>
+
+                    {/* Logo */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Logo da Loja
+                      </label>
+                      <div className="flex items-start gap-4">
+                        <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300">
+                          {logoUrl ? (
+                            <Image src={logoUrl} alt="Logo" width={96} height={96} className="object-cover w-full h-full" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label className="cursor-pointer">
+                            <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center gap-2">
+                              <Upload size={16} />
+                              Fazer Upload
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, 'logo');
+                              }}
+                            />
+                          </label>
+                          <p className="text-xs text-gray-500 mt-2">PNG ou JPG. Recomendado: 200x200px</p>
+                          {logoUrl && (
+                            <button
+                              onClick={() => setLogoUrl('')}
+                              className="text-xs text-red-500 hover:underline mt-1"
+                            >
+                              Remover logo
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Banner */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Banner Principal
+                      </label>
+                      <div className="aspect-[3/1] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300 relative">
+                        {bannerUrl ? (
+                          <>
+                            <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
+                            <button
+                              onClick={() => setBannerUrl('')}
+                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                            >
+                              <X size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center gap-2 text-gray-500">
+                            <Upload size={24} />
+                            <span className="text-sm">Clique para fazer upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, 'banner');
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">Recomendado: 1200x400px</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Cores */}
+                {activeTab === 'cores' && (
+                  <div className="space-y-6">
+                    {/* Paletas Prontas */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Paletas Prontas
+                      </label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {COLOR_PRESETS.map((preset) => (
+                          <button
+                            key={preset.name}
+                            onClick={() => {
+                              setPrimaryColor(preset.primary);
+                              setSecondaryColor(preset.secondary);
+                            }}
+                            className={`p-3 rounded-lg border-2 transition-all ${
+                              primaryColor === preset.primary
+                                ? 'border-gray-900 scale-105'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex gap-1 mb-2">
+                              <div
+                                className="w-6 h-6 rounded-full"
+                                style={{ backgroundColor: preset.primary }}
+                              />
+                              <div
+                                className="w-6 h-6 rounded-full"
+                                style={{ backgroundColor: preset.secondary }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-gray-700">{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cores Customizadas */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cor Principal
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={primaryColor}
+                            onChange={(e) => setPrimaryColor(e.target.value)}
+                            className="w-12 h-12 rounded-lg cursor-pointer border-0"
+                          />
+                          <input
+                            type="text"
+                            value={primaryColor}
+                            onChange={(e) => setPrimaryColor(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cor Secundária
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={secondaryColor}
+                            onChange={(e) => setSecondaryColor(e.target.value)}
+                            className="w-12 h-12 rounded-lg cursor-pointer border-0"
+                          />
+                          <input
+                            type="text"
+                            value={secondaryColor}
+                            onChange={(e) => setSecondaryColor(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview de cores */}
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-3">Preview das cores:</p>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          className="px-4 py-2 text-white font-medium rounded-lg"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          Botão Principal
+                        </button>
+                        <button
+                          className="px-4 py-2 text-white font-medium rounded-lg"
+                          style={{ backgroundColor: secondaryColor }}
+                        >
+                          Botão Secundário
+                        </button>
+                        <span
+                          className="px-4 py-2 font-medium"
+                          style={{ color: primaryColor }}
+                        >
+                          Texto colorido
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Layout */}
+                {activeTab === 'layout' && (
+                  <div className="space-y-6">
+                    {/* Estilo dos Botões */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Estilo dos Botões
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setThemeSettings({ ...themeSettings, button_style: 'rounded' })}
+                          className={`p-4 border-2 rounded-lg transition-all ${
+                            themeSettings.button_style === 'rounded'
+                              ? 'border-pink-500 bg-pink-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div
+                            className="w-full py-2 text-white text-sm font-medium rounded-full mb-2"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            Arredondado
+                          </div>
+                          <span className="text-xs text-gray-600">Cantos arredondados</span>
+                        </button>
+                        <button
+                          onClick={() => setThemeSettings({ ...themeSettings, button_style: 'square' })}
+                          className={`p-4 border-2 rounded-lg transition-all ${
+                            themeSettings.button_style === 'square'
+                              ? 'border-pink-500 bg-pink-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div
+                            className="w-full py-2 text-white text-sm font-medium rounded-md mb-2"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            Quadrado
+                          </div>
+                          <span className="text-xs text-gray-600">Cantos retos</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Estilo dos Cards */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Estilo dos Cards de Produto
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { id: 'shadow', label: 'Com Sombra', className: 'shadow-lg' },
+                          { id: 'bordered', label: 'Com Borda', className: 'border-2 border-gray-200' },
+                          { id: 'flat', label: 'Minimalista', className: 'bg-gray-50' },
+                        ].map((style) => (
+                          <button
+                            key={style.id}
+                            onClick={() => setThemeSettings({ ...themeSettings, card_style: style.id as ThemeSettings['card_style'] })}
+                            className={`p-3 border-2 rounded-lg transition-all ${
+                              themeSettings.card_style === style.id
+                                ? 'border-pink-500 bg-pink-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className={`w-full aspect-square bg-white rounded-lg mb-2 ${style.className}`} />
+                            <span className="text-xs text-gray-600">{style.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estilo do Header */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Estilo do Cabeçalho
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => setThemeSettings({ ...themeSettings, header_style: 'gradient' })}
+                          className={`p-3 border-2 rounded-lg transition-all ${
+                            themeSettings.header_style === 'gradient'
+                              ? 'border-pink-500 bg-pink-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div
+                            className="w-full h-8 rounded mb-2"
+                            style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+                          />
+                          <span className="text-xs text-gray-600">Gradiente</span>
+                        </button>
+                        <button
+                          onClick={() => setThemeSettings({ ...themeSettings, header_style: 'solid' })}
+                          className={`p-3 border-2 rounded-lg transition-all ${
+                            themeSettings.header_style === 'solid'
+                              ? 'border-pink-500 bg-pink-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div
+                            className="w-full h-8 rounded mb-2"
+                            style={{ backgroundColor: primaryColor }}
+                          />
+                          <span className="text-xs text-gray-600">Cor Sólida</span>
+                        </button>
+                        <button
+                          onClick={() => setThemeSettings({ ...themeSettings, header_style: 'transparent' })}
+                          className={`p-3 border-2 rounded-lg transition-all ${
+                            themeSettings.header_style === 'transparent'
+                              ? 'border-pink-500 bg-pink-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="w-full h-8 rounded mb-2 bg-white border border-gray-200" />
+                          <span className="text-xs text-gray-600">Transparente</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Opções Toggle */}
+                    <div className="space-y-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Opções de Exibição
+                      </label>
+                      
+                      {[
+                        { key: 'show_prices', label: 'Mostrar preços', desc: 'Exibir preços nos cards de produto' },
+                        { key: 'show_whatsapp_float', label: 'Botão WhatsApp flutuante', desc: 'Mostra um botão de WhatsApp no canto da tela' },
+                      ].map((option) => (
+                        <div key={option.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{option.label}</p>
+                            <p className="text-xs text-gray-500">{option.desc}</p>
+                          </div>
+                          <button
+                            onClick={() => setThemeSettings({
+                              ...themeSettings,
+                              [option.key]: !themeSettings[option.key as keyof ThemeSettings]
+                            })}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${
+                              themeSettings[option.key as keyof ThemeSettings]
+                                ? 'bg-pink-500'
+                                : 'bg-gray-300'
+                            }`}
+                          >
+                            <div
+                              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                themeSettings[option.key as keyof ThemeSettings]
+                                  ? 'translate-x-7'
+                                  : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Redes Sociais */}
+                {activeTab === 'social' && (
+                  <div className="space-y-6">
+                    {/* WhatsApp */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <MessageCircle size={16} className="inline mr-2 text-green-500" />
+                        WhatsApp
+                      </label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="(11) 99999-9999"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Este número será usado para receber pedidos
+                      </p>
+                    </div>
+
+                    {/* Instagram */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Instagram size={16} className="inline mr-2 text-pink-500" />
+                        Instagram
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                        <input
+                          type="text"
+                          value={instagram}
+                          onChange={(e) => setInstagram(e.target.value.replace('@', ''))}
+                          placeholder="seu.usuario"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Facebook */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Facebook size={16} className="inline mr-2 text-blue-600" />
+                        Facebook
+                      </label>
+                      <input
+                        type="text"
+                        value={facebook}
+                        onChange={(e) => setFacebook(e.target.value)}
+                        placeholder="URL ou nome da página"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="lg:sticky lg:top-24 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Pré-visualização</h2>
+              <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setPreviewMode('mobile')}
+                  className={`p-2 rounded-md transition-colors ${
+                    previewMode === 'mobile' ? 'bg-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  <Smartphone size={16} />
+                </button>
+                <button
+                  onClick={() => setPreviewMode('desktop')}
+                  className={`p-2 rounded-md transition-colors ${
+                    previewMode === 'desktop' ? 'bg-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  <Square size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Preview Container */}
+            <div className={`bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 relative ${
+              previewMode === 'mobile' ? 'max-w-[375px] mx-auto' : 'w-full'
+            }`}>
+              {/* Header Preview */}
+              <div
+                className="p-4 text-white"
+                style={{
+                  background: themeSettings.header_style === 'gradient'
+                    ? `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
+                    : themeSettings.header_style === 'solid'
+                      ? primaryColor
+                      : 'white',
+                  color: themeSettings.header_style === 'transparent' ? '#1f2937' : 'white',
+                  borderBottom: themeSettings.header_style === 'transparent' ? '1px solid #e5e7eb' : 'none'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {logoUrl ? (
+                    <div className="w-12 h-12 bg-white rounded-lg p-1 overflow-hidden">
+                      <Image src={logoUrl} alt="Logo" width={44} height={44} className="object-contain w-full h-full" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                      <ImageIcon size={20} className={themeSettings.header_style === 'transparent' ? 'text-gray-400' : 'text-white/60'} />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-bold">{storeName || 'Nome da Loja'}</h3>
+                    <p className={`text-sm ${themeSettings.header_style === 'transparent' ? 'text-gray-500' : 'opacity-80'}`}>
+                      {bio ? (bio.length > 40 ? bio.substring(0, 40) + '...' : bio) : 'Descrição da sua loja'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner Preview */}
+              {bannerUrl && (
+                <div className="aspect-[3/1] relative bg-gray-100">
+                  <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
+                </div>
+              )}
+
+              {/* Products Grid Preview */}
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`rounded-lg overflow-hidden ${
+                        themeSettings.card_style === 'shadow'
+                          ? 'shadow-lg'
+                          : themeSettings.card_style === 'bordered'
+                            ? 'border-2 border-gray-200'
+                            : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className="aspect-square bg-gray-200" />
+                      <div className="p-3">
+                        <div className="h-3 bg-gray-300 rounded w-3/4 mb-2" />
+                        {themeSettings.show_prices && (
+                          <div
+                            className="h-4 rounded w-1/2"
+                            style={{ backgroundColor: primaryColor + '30' }}
+                          />
+                        )}
+                        <button
+                          className={`w-full mt-3 py-2 text-white text-xs font-medium ${
+                            themeSettings.button_style === 'rounded' ? 'rounded-full' : 'rounded-md'
+                          }`}
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          Ver Produto
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* WhatsApp Float Preview */}
+              {themeSettings.show_whatsapp_float && (
+                <div className="absolute bottom-4 right-4">
+                  <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                    <MessageCircle size={24} className="text-white" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-center text-gray-500">
+              As alterações serão aplicadas após salvar
+            </p>
+          </div>
         </div>
       </div>
     </div>
