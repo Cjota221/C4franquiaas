@@ -257,6 +257,21 @@ export default function PersonalizacaoRevendedoraPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Toast de Sucesso */}
+      {saved && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <Check className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold">Salvo com sucesso!</p>
+              <p className="text-sm text-green-100">Suas alterações foram aplicadas</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Fixo */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
