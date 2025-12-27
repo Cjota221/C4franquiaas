@@ -50,14 +50,18 @@ export default function CatalogoPrincipal() {
             preco_base,
             imagem,
             estoque,
+            ativo,
             variacoes_meta
           )
         `)
         .eq('reseller_id', reseller.id)
         .eq('is_active', true);
 
+      // Filtrar apenas produtos ativos no admin e com estoque
       const productsWithPrice: ProductWithPrice[] =
-        data?.map((p) => {
+        data
+          ?.filter((p) => p.produtos?.ativo === true && (p.produtos?.estoque || 0) > 0)
+          .map((p) => {
           // Parse variações do JSONB
           let variacoes: Variacao[] = [];
           if (p.produtos.variacoes_meta) {

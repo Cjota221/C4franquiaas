@@ -45,23 +45,29 @@ export default function ProdutoPage() {
     if (!reseller?.id || !params.id) return;
 
     async function loadProduct() {
-      // Buscar dados do reseller_product (margem)
+      // Buscar dados do reseller_product (margem e status)
       const { data: resellerProduct } = await supabase
         .from('reseller_products')
-        .select('margin_percent')
+        .select('margin_percent, is_active')
         .eq('reseller_id', reseller.id)
         .eq('product_id', params.id)
         .single();
 
-      if (resellerProduct) {
-        setMarginPercent(resellerProduct.margin_percent || 0);
+      // Se não está ativo para a revendedora, não mostrar
+      if (!resellerProduct?.is_active) {
+        setLoading(false);
+        return;
       }
 
-      // Buscar produto
+      setMarginPercent(resellerProduct.margin_percent || 0);
+
+      // Buscar produto - só se estiver ativo no admin
       const { data: prod } = await supabase
         .from('produtos')
         .select('*')
         .eq('id', params.id)
+        .eq('ativo', true)  // Só mostrar se ativo no admin
+        .gt('estoque', 0)   // Só mostrar se tem estoque
         .single();
 
       if (prod) {
