@@ -373,8 +373,8 @@ export default function ProdutosRevendedoraPage() {
               onChange={(e) => setCategoriaFiltro(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
             >
-              {categorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categorias.map((cat, index) => (
+                <option key={cat || `cat-${index}`} value={cat}>{cat || 'Sem categoria'}</option>
               ))}
             </select>
           </div>

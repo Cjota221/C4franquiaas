@@ -25,12 +25,13 @@ export default function DashboardRevendedora() {
       const supabase = createClient();
       
       // Verificar usuário logado
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('👤 Usuário:', user?.id || 'NÃO LOGADO');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('👤 Usuário:', user?.id || 'NÃO LOGADO', 'Erro:', userError?.message);
       
       if (!user) {
-        console.log('❌ Sem usuário, redirecionando para login...');
-        window.location.href = '/login/revendedora';
+        console.log('❌ Sem usuário logado');
+        setError('Você precisa estar logado para acessar esta página.');
+        setLoading(false);
         return;
       }
 

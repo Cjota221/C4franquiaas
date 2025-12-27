@@ -12,21 +12,30 @@ export default function LoginRevendedoraPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 handleLogin chamado!');
+    console.log('📧 Email:', email);
     setLoading(true);
     setError(null);
 
     try {
+      console.log('🔌 Criando cliente Supabase...');
       const supabase = createClient();
       
+      console.log('🔐 Tentando fazer login...');
       const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('📦 Resultado do login:', { user: user?.id, error: signInError?.message });
+
       if (signInError) throw new Error(signInError.message);
       if (!user) throw new Error('Usuário não encontrado após o login.');
 
+      console.log('👤 Usuário logado:', user.id);
+
       // Verificar se é revendedora
+      console.log('🔍 Buscando dados da revendedora...');
       const { data: revendedora } = await supabase
         .from('resellers')
         .select('id, status, name')
