@@ -3,13 +3,15 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
-import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Package } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Package, MessageCircle } from 'lucide-react';
 import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
 
 type LojaInfo = {
   nome: string;
   cor_primaria: string;
   cor_secundaria: string;
+  whatsapp?: string;
+  telefone?: string;
 };
 
 export default function CarrinhoPage({ params }: { params: Promise<{ dominio: string }> }) {
@@ -83,6 +85,53 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
       delete newErros[itemKey];
       return newErros;
     });
+  };
+
+  // 🟢 Função para finalizar pedido via WhatsApp
+  const finalizarPedidoWhatsApp = () => {
+    if (!lojaInfo?.whatsapp && !lojaInfo?.telefone) {
+      alert('Não foi possível encontrar o WhatsApp da loja. Tente novamente mais tarde.');
+      return;
+    }
+
+    // Formatar número do WhatsApp (remover caracteres especiais)
+    const numeroWhatsApp = (lojaInfo.whatsapp || lojaInfo.telefone || '')
+      .replace(/\D/g, '')
+      .replace(/^0/, '55'); // Adicionar código do Brasil se começar com 0
+    
+    // Se não começar com 55, adicionar
+    const numeroFormatado = numeroWhatsApp.startsWith('55') ? numeroWhatsApp : `55${numeroWhatsApp}`;
+
+    // Montar mensagem do pedido
+    let mensagem = `🛒 *NOVO PEDIDO*\n`;
+    mensagem += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    mensagem += `📦 *ITENS DO PEDIDO:*\n\n`;
+
+    itens.forEach((item, index) => {
+      mensagem += `*${index + 1}. ${item.nome}*\n`;
+      if (item.tamanho) {
+        mensagem += `   📏 Tamanho: ${item.tamanho}\n`;
+      }
+      mensagem += `   🔢 Quantidade: ${item.quantidade}\n`;
+      mensagem += `   💰 Preço: R$ ${item.preco.toFixed(2).replace('.', ',')}\n`;
+      mensagem += `   📊 Subtotal: R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}\n\n`;
+    });
+
+    mensagem += `━━━━━━━━━━━━━━━━━━━━\n`;
+    mensagem += `💵 *TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
+    mensagem += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    mensagem += `📍 Aguardo informações de entrega!\n`;
+    mensagem += `\n_Pedido feito pelo catálogo ${lojaInfo.nome}_`;
+
+    // Codificar mensagem para URL
+    const mensagemCodificada = encodeURIComponent(mensagem);
+    
+    // Abrir WhatsApp
+    const urlWhatsApp = `https://wa.me/${numeroFormatado}?text=${mensagemCodificada}`;
+    window.open(urlWhatsApp, '_blank');
+
+    // Opcional: Limpar carrinho após enviar
+    // clearCarrinho();
   };
 
   return (
@@ -255,13 +304,15 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
 
               {/* Botões */}
               <div className="space-y-3">
-                <Link
-                  href={`/loja/${dominio}/checkout`}
-                  className="w-full py-4 rounded-lg font-bold text-white text-lg transition hover:opacity-90 flex items-center justify-center"
-                  style={{ backgroundColor: lojaInfo?.cor_primaria || '#DB1472' }}
+                {/* 🟢 Botão Finalizar via WhatsApp */}
+                <button
+                  onClick={finalizarPedidoWhatsApp}
+                  className="w-full py-4 rounded-lg font-bold text-white text-lg transition hover:opacity-90 flex items-center justify-center gap-2"
+                  style={{ backgroundColor: '#25D366' }}
                 >
-                  Finalizar Compra
-                </Link>
+                  <MessageCircle size={24} />
+                  Finalizar via WhatsApp
+                </button>
 
                 <Link
                   href={`/loja/${dominio}/produtos`}
