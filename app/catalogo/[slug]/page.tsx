@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type Variacao = {
@@ -29,7 +29,6 @@ export default function CatalogoPrincipal() {
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc'>('default');
 
@@ -191,7 +190,7 @@ export default function CatalogoPrincipal() {
         )}
 
         {/* Barra de Busca */}
-        <div className="mb-4">
+        <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -204,74 +203,64 @@ export default function CatalogoPrincipal() {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          {/* Botão Mostrar/Esconder Filtros (Mobile) */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700"
-          >
-            <SlidersHorizontal size={18} />
-            Filtros
-            {(selectedSize || sortOrder !== 'default') && (
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }}></span>
-            )}
-          </button>
-
-          {/* Filtros - Desktop sempre visível, Mobile toggle */}
-          <div className={`${showFilters ? 'flex' : 'hidden'} md:flex flex-wrap items-center gap-3 w-full md:w-auto`}>
-            {/* Filtro por Tamanho */}
-            {availableSizes.length > 0 && (
-              <div className="relative">
-                <select
-                  value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:outline-none cursor-pointer"
-                >
-                  <option value="">Todos os tamanhos</option>
-                  {availableSizes.map(size => (
-                    <option key={size} value={size}>{size}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
-            )}
-
-            {/* Ordenação */}
-            <div className="relative">
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'default' | 'price_asc' | 'price_desc')}
-                className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:outline-none cursor-pointer"
-              >
-                <option value="default">Ordenar por</option>
-                <option value="price_asc">Menor preço</option>
-                <option value="price_desc">Maior preço</option>
-              </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-
-            {/* Limpar filtros */}
-            {(selectedSize || sortOrder !== 'default') && (
+        {/* Encontre sua Numeração - Círculos de Tamanhos */}
+        {availableSizes.length > 0 && (
+          <div className="mb-6 bg-white rounded-2xl p-4 shadow-sm">
+            <h3 className="text-center text-gray-700 font-medium mb-4">
+              ✨ Encontre seu tamanho
+            </h3>
+            <div className="flex flex-wrap justify-center gap-2">
+              {/* Botão "Todos" */}
               <button
-                onClick={() => {
-                  setSelectedSize('');
-                  setSortOrder('default');
-                }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+                onClick={() => setSelectedSize('')}
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+                  selectedSize === ''
+                    ? 'text-white shadow-lg scale-110'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                style={selectedSize === '' ? { backgroundColor: primaryColor } : {}}
               >
-                <X size={16} />
-                Limpar
+                Todos
               </button>
-            )}
+              {/* Círculos de tamanhos */}
+              {availableSizes.map(size => (
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(selectedSize === size ? '' : size)}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+                    selectedSize === size
+                      ? 'text-white shadow-lg scale-110'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  style={selectedSize === size ? { backgroundColor: primaryColor } : {}}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Ordenação */}
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-gray-600 text-sm">
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
+            {selectedSize && <span className="font-medium" style={{ color: primaryColor }}> no tamanho {selectedSize}</span>}
+          </p>
+          
+          <div className="relative">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'default' | 'price_asc' | 'price_desc')}
+              className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:outline-none cursor-pointer"
+            >
+              <option value="default">Mais relevantes</option>
+              <option value="price_asc">Menor preço</option>
+              <option value="price_desc">Maior preço</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
         </div>
-
-        {/* Info */}
-        <p className="text-gray-600 mb-4">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
-          {selectedSize && ` no tamanho ${selectedSize}`}
-        </p>
 
       {/* Grid de Produtos - 2 cols mobile, 3 tablet, 5 desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
