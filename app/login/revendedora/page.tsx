@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
@@ -10,7 +9,6 @@ export default function LoginRevendedoraPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,9 +49,11 @@ export default function LoginRevendedoraPage() {
         }
       }
 
-      router.push('/revendedora/dashboard');
+      console.log('✅ Login OK! Redirecionando para dashboard...');
+      window.location.href = '/revendedora/dashboard';
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
+      console.error('❌ Erro no login:', errorMessage);
       setError(errorMessage);
       setLoading(false);
     }

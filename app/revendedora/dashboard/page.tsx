@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface Reseller {
   id: string;
@@ -19,30 +18,35 @@ export default function DashboardRevendedora() {
   const [reseller, setReseller] = useState<Reseller | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const carregarDados = useCallback(async () => {
+    console.log('🔄 Dashboard: Carregando dados...');
     try {
       const supabase = createClient();
       
       // Verificar usuário logado
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 Usuário:', user?.id || 'NÃO LOGADO');
       
       if (!user) {
-        router.push('/login/revendedora');
+        console.log('❌ Sem usuário, redirecionando para login...');
+        window.location.href = '/login/revendedora';
         return;
       }
 
       // Buscar revendedora
+      console.log('🔍 Buscando revendedora com user_id:', user.id);
       const { data, error: resellerError } = await supabase
         .from('resellers')
         .select('id, name, store_name, slug, total_products, catalog_views')
         .eq('user_id', user.id)
         .single();
 
+      console.log('📦 Resultado:', { data, error: resellerError });
+
       if (resellerError) {
-        console.error('Erro ao buscar revendedora:', resellerError);
-        setError('Erro ao carregar dados da revendedora');
+        console.error('❌ Erro ao buscar revendedora:', resellerError);
+        setError('Erro ao carregar dados da revendedora: ' + resellerError.message);
         return;
       }
 
@@ -51,14 +55,15 @@ export default function DashboardRevendedora() {
         return;
       }
 
+      console.log('✅ Revendedora encontrada:', data.name);
       setReseller(data);
     } catch (err) {
-      console.error('Erro:', err);
+      console.error('❌ Erro geral:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     carregarDados();
