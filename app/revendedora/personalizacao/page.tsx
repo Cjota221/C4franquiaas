@@ -156,16 +156,32 @@ export default function PersonalizacaoRevendedoraPage() {
     loadReseller();
   }, [supabase]);
 
+  // Gerar slug a partir do nome da loja
+  const generateSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+      .replace(/\s+/g, '-') // Espaços viram hífens
+      .replace(/-+/g, '-') // Remove hífens duplicados
+      .replace(/^-|-$/g, ''); // Remove hífens no início/fim
+  };
+
   // Salvar alterações
   const handleSave = async () => {
     if (!reseller) return;
 
     setSaving(true);
     try {
+      // Gerar slug se não existir ou se o nome da loja mudou
+      const newSlug = reseller.slug || generateSlug(storeName);
+      
       const { error } = await supabase
         .from('resellers')
         .update({
           store_name: storeName,
+          slug: newSlug,
           bio,
           phone,
           instagram,
@@ -184,6 +200,9 @@ export default function PersonalizacaoRevendedoraPage() {
 
       if (error) throw error;
 
+      // Atualizar o reseller local com o novo slug
+      setReseller({ ...reseller, slug: newSlug, store_name: storeName });
+      
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
