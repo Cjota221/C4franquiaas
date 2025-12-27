@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Instagram, Facebook, MessageCircle, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -85,6 +85,7 @@ export default function CatalogoLayout({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [slug, setSlug] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [socialMenuOpen, setSocialMenuOpen] = useState(false);
   
   const supabase = createClientComponentClient();
 
@@ -240,6 +241,8 @@ export default function CatalogoLayout({
     );
   }
 
+  const hasSocialLinks = reseller.instagram || reseller.facebook || reseller.phone;
+
   return (
     <CatalogoContext.Provider
       value={{
@@ -262,82 +265,91 @@ export default function CatalogoLayout({
           className="sticky top-0 z-40 text-white shadow-lg"
           style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
         >
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className={`flex items-center ${
-              themeSettings.logo_position === 'center' 
-                ? 'justify-center' 
-                : themeSettings.logo_position === 'right'
-                  ? 'justify-end'
-                  : 'justify-between'
-            }`}>
-              {/* Carrinho à esquerda quando logo está no centro ou direita */}
-              {(themeSettings.logo_position === 'center' || themeSettings.logo_position === 'right') && (
-                <Link
-                  href={`/catalogo/${slug}/carrinho`}
-                  className="absolute left-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                >
-                  <ShoppingBag size={24} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              <Link href={`/catalogo/${slug}`} className="flex items-center gap-3">
-                {reseller.logo_url && (
-                  <div className={`bg-white flex-shrink-0 overflow-hidden flex items-center justify-center ${
-                    themeSettings.logo_shape === 'circle' 
-                      ? 'w-12 h-12 rounded-full p-1' 
-                      : themeSettings.logo_shape === 'rectangle'
-                        ? 'w-20 h-10 rounded-lg p-1'
-                        : 'w-12 h-12 rounded-lg p-1'
-                  }`}>
-                    <Image
-                      src={reseller.logo_url}
-                      alt={reseller.store_name}
-                      width={themeSettings.logo_shape === 'rectangle' ? 80 : 48}
-                      height={themeSettings.logo_shape === 'rectangle' ? 40 : 48}
-                      className={`w-full h-full object-contain ${
-                        themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
-                      }`}
-                    />
-                  </div>
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* Esquerda: Carrinho */}
+              <Link
+                href={`/catalogo/${slug}/carrinho`}
+                className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+              >
+                <ShoppingBag size={22} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
                 )}
-                <div>
-                  <h1 className="text-xl font-bold">{reseller.store_name}</h1>
-                </div>
               </Link>
 
-              {/* Carrinho à direita quando logo está à esquerda */}
-              {themeSettings.logo_position === 'left' && (
-                <Link
-                  href={`/catalogo/${slug}/carrinho`}
-                  className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                >
-                  <ShoppingBag size={24} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </Link>
-              )}
+              {/* Centro: Logo + Nome */}
+              <Link href={`/catalogo/${slug}`} className="flex items-center gap-2">
+                {reseller.logo_url && (
+                  <Image
+                    src={reseller.logo_url}
+                    alt={reseller.store_name}
+                    width={themeSettings.logo_shape === 'rectangle' ? 100 : 40}
+                    height={40}
+                    className={`h-10 w-auto object-contain ${
+                      themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
+                    }`}
+                  />
+                )}
+                <span className="text-lg font-bold hidden sm:inline">{reseller.store_name}</span>
+              </Link>
 
-              {/* Carrinho à direita quando logo está no centro */}
-              {themeSettings.logo_position === 'center' && (
-                <Link
-                  href={`/catalogo/${slug}/carrinho`}
-                  className="absolute right-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                >
-                  <ShoppingBag size={24} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
-                      {getTotalItems()}
-                    </span>
+              {/* Direita: Menu Social */}
+              {hasSocialLinks ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setSocialMenuOpen(!socialMenuOpen)}
+                    className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+                  >
+                    {socialMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {socialMenuOpen && (
+                    <div className="absolute right-0 top-12 bg-white rounded-xl shadow-xl py-2 min-w-[180px] z-50">
+                      {reseller.phone && (
+                        <a
+                          href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          onClick={() => setSocialMenuOpen(false)}
+                        >
+                          <MessageCircle size={20} className="text-green-500" />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
+                      {reseller.instagram && (
+                        <a
+                          href={`https://instagram.com/${reseller.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          onClick={() => setSocialMenuOpen(false)}
+                        >
+                          <Instagram size={20} className="text-pink-500" />
+                          <span>@{reseller.instagram}</span>
+                        </a>
+                      )}
+                      {reseller.facebook && (
+                        <a
+                          href={reseller.facebook.startsWith('http') ? reseller.facebook : `https://facebook.com/${reseller.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          onClick={() => setSocialMenuOpen(false)}
+                        >
+                          <Facebook size={20} className="text-blue-600" />
+                          <span>Facebook</span>
+                        </a>
+                      )}
+                    </div>
                   )}
-                </Link>
+                </div>
+              ) : (
+                <div className="w-10" /> /* Espaçador quando não tem redes sociais */
               )}
             </div>
           </div>
@@ -352,6 +364,18 @@ export default function CatalogoLayout({
             <p>© {new Date().getFullYear()} {reseller.store_name}. Todos os direitos reservados.</p>
           </div>
         </footer>
+
+        {/* Botão WhatsApp Flutuante */}
+        {themeSettings.show_whatsapp_float && reseller.phone && (
+          <a
+            href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors z-50"
+          >
+            <MessageCircle size={28} className="text-white" />
+          </a>
+        )}
       </div>
     </CatalogoContext.Provider>
   );

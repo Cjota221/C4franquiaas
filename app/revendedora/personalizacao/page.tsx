@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart } from "lucide-react";
+import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, SquareIcon, CircleIcon } from "lucide-react";
 import Image from "next/image";
 
 type ThemeSettings = {
@@ -17,12 +17,14 @@ type ThemeSettings = {
 };
 
 const COLOR_PRESETS = [
-  { name: "Rosa", primary: "#ec4899", secondary: "#f472b6", emoji: "" },
-  { name: "Roxo", primary: "#8b5cf6", secondary: "#a78bfa", emoji: "" },
-  { name: "Azul", primary: "#3b82f6", secondary: "#60a5fa", emoji: "" },
-  { name: "Verde", primary: "#10b981", secondary: "#34d399", emoji: "" },
-  { name: "Laranja", primary: "#f97316", secondary: "#fb923c", emoji: "" },
-  { name: "Vermelho", primary: "#ef4444", secondary: "#f87171", emoji: "" },
+  { name: "Rosa", primary: "#ec4899", secondary: "#f472b6" },
+  { name: "Roxo", primary: "#8b5cf6", secondary: "#a78bfa" },
+  { name: "Azul", primary: "#3b82f6", secondary: "#60a5fa" },
+  { name: "Verde", primary: "#10b981", secondary: "#34d399" },
+  { name: "Laranja", primary: "#f97316", secondary: "#fb923c" },
+  { name: "Vermelho", primary: "#ef4444", secondary: "#f87171" },
+  { name: "Dourado", primary: "#d97706", secondary: "#fbbf24" },
+  { name: "Turquesa", primary: "#14b8a6", secondary: "#2dd4bf" },
 ];
 
 const DEFAULT_THEME: ThemeSettings = {
@@ -53,9 +55,10 @@ export default function PersonalizacaoRevendedoraPage() {
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
   const [currentSlug, setCurrentSlug] = useState("");
-  const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social">("main");
+  const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social" | "styles">("main");
   const [uploading, setUploading] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showCustomColor, setShowCustomColor] = useState(false);
 
   const supabase = createClient();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
@@ -94,7 +97,12 @@ export default function PersonalizacaoRevendedoraPage() {
     setSaving(true);
     try {
       const newSlug = storeName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      const { error } = await supabase.from("resellers").update({ store_name: storeName, slug: newSlug, bio, phone, instagram, facebook, logo_url: logoUrl, banner_url: bannerUrl, banner_mobile_url: bannerMobileUrl, colors: { primary: primaryColor, secondary: secondaryColor }, theme_settings: themeSettings }).eq("id", reseller.id);
+      const { error } = await supabase.from("resellers").update({ 
+        store_name: storeName, slug: newSlug, bio, phone, instagram, facebook, 
+        logo_url: logoUrl, banner_url: bannerUrl, banner_mobile_url: bannerMobileUrl, 
+        colors: { primary: primaryColor, secondary: secondaryColor }, 
+        theme_settings: themeSettings 
+      }).eq("id", reseller.id);
       if (error) throw error;
       setCurrentSlug(newSlug);
       setSaved(true);
@@ -136,27 +144,282 @@ export default function PersonalizacaoRevendedoraPage() {
   };
 
   if (loading) {
-    return (<div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex flex-col items-center justify-center p-6"><div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 animate-pulse"><Sparkles className="w-8 h-8 text-white" /></div><p className="text-gray-600 text-lg">Carregando sua loja...</p></div>);
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex flex-col items-center justify-center p-6">
+        <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 animate-pulse">
+          <Sparkles className="w-8 h-8 text-white" />
+        </div>
+        <p className="text-gray-600 text-lg">Carregando sua loja...</p>
+      </div>
+    );
   }
 
+  // SEÇÃO PRINCIPAL
   if (activeSection === "main") {
-    return (<div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">{saved && (<div className="fixed top-4 left-4 right-4 z-50"><div className="bg-green-500 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3"><div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"><Check className="w-6 h-6" /></div><div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas alteracoes foram aplicadas</p></div></div></div>)}<div className="p-6 pb-8" style={{ background: "linear-gradient(135deg, " + primaryColor + ", " + secondaryColor + ")" }}><div className="text-white text-center"><div className="flex justify-center mb-4">{logoUrl ? (<div className={"bg-white p-2 " + (themeSettings.logo_shape === "circle" ? "rounded-full w-20 h-20" : themeSettings.logo_shape === "rectangle" ? "rounded-xl w-28 h-16" : "rounded-xl w-20 h-20")}><Image src={logoUrl} alt="Logo" width={80} height={80} className={"w-full h-full object-contain " + (themeSettings.logo_shape === "circle" ? "rounded-full" : "")} /></div>) : (<div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center"><Store className="w-10 h-10 text-white/60" /></div>)}</div><h1 className="text-2xl font-bold mb-1">{storeName || "Sua Loja"}</h1><p className="text-white/80 text-sm">{bio || "Configure sua loja abaixo"}</p></div></div>{currentSlug ? (<div className="mx-4 -mt-4 mb-6"><div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100"><p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CATALOGO</p><div className="flex items-center gap-2"><div className="flex-1 bg-gray-50 rounded-xl px-3 py-2 overflow-hidden"><p className="text-pink-600 font-mono text-sm truncate">{catalogUrl}</p></div><button onClick={copyLink} className={"p-3 rounded-xl transition-all " + (copied ? "bg-green-500 text-white" : "bg-pink-500 text-white")}>{copied ? <Check size={20} /> : <Copy size={20} />}</button><a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 rounded-xl text-gray-600"><ExternalLink size={20} /></a></div></div></div>) : (<div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>)}<div className="px-4 space-y-3"><h2 className="text-lg font-bold text-gray-800 mb-4 px-2">Personalize sua loja</h2><div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><label className="block text-sm font-medium text-gray-500 mb-2">NOME DA SUA LOJA</label><input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Loja da Maria" className="w-full text-xl font-bold text-gray-800 border-0 focus:ring-0 p-0 placeholder:text-gray-300" /></div><div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><label className="block text-sm font-medium text-gray-500 mb-2">DESCRICAO (OPCIONAL)</label><textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para voce!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" /><p className="text-xs text-gray-400 text-right">{bio.length}/100</p></div><button onClick={() => setActiveSection("logo")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center"><Camera className="w-6 h-6 text-pink-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Logo da Loja</p><p className="text-sm text-gray-500">{logoUrl ? "Logo configurada" : "Adicionar sua logo"}</p></div></div><ChevronRight className="text-gray-400" /></button><button onClick={() => setActiveSection("banner")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><ImageIcon className="w-6 h-6 text-purple-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Banner</p><p className="text-sm text-gray-500">{bannerUrl ? "Banner configurado" : "Adicionar imagem de capa"}</p></div></div><ChevronRight className="text-gray-400" /></button><button onClick={() => setActiveSection("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div><div className="flex gap-1"><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: primaryColor }} /><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: secondaryColor }} /></div></button><button onClick={() => setActiveSection("social")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><Share2 className="w-6 h-6 text-blue-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Redes Sociais</p><p className="text-sm text-gray-500">{instagram || facebook ? "Configurado" : "Instagram, Facebook, WhatsApp"}</p></div></div><ChevronRight className="text-gray-400" /></button></div><div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:left-64"><button onClick={handleSave} disabled={saving || !storeName} className={"w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all " + (saved ? "bg-green-500 text-white" : saving ? "bg-pink-300 text-white" : !storeName ? "bg-gray-200 text-gray-400" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white")}>{saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alteracoes</>)}</button></div></div>);
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">
+        {saved && (
+          <div className="fixed top-4 left-4 right-4 z-50">
+            <div className="bg-green-500 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"><Check className="w-6 h-6" /></div>
+              <div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas alterações foram aplicadas</p></div>
+            </div>
+          </div>
+        )}
+
+        <div className="p-6 pb-8" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
+          <div className="text-white text-center">
+            <div className="flex justify-center mb-4">
+              {logoUrl ? (
+                <Image src={logoUrl} alt="Logo" width={80} height={80} className={`h-20 w-auto object-contain ${themeSettings.logo_shape === "circle" ? "rounded-full" : ""}`} />
+              ) : (
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center"><Store className="w-10 h-10 text-white/60" /></div>
+              )}
+            </div>
+            <h1 className="text-2xl font-bold mb-1">{storeName || "Sua Loja"}</h1>
+            <p className="text-white/80 text-sm">{bio || "Configure sua loja abaixo"}</p>
+          </div>
+        </div>
+
+        {currentSlug ? (
+          <div className="mx-4 -mt-4 mb-6">
+            <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+              <p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CATÁLOGO</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2 overflow-hidden"><p className="text-pink-600 font-mono text-sm truncate">{catalogUrl}</p></div>
+                <button onClick={copyLink} className={`p-3 rounded-xl transition-all ${copied ? "bg-green-500 text-white" : "bg-pink-500 text-white"}`}>{copied ? <Check size={20} /> : <Copy size={20} />}</button>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 rounded-xl text-gray-600"><ExternalLink size={20} /></a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>
+        )}
+
+        <div className="px-4 space-y-3">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 px-2">Personalize sua loja</h2>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <label className="block text-sm font-medium text-gray-500 mb-2">NOME DA SUA LOJA</label>
+            <input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Loja da Maria" className="w-full text-xl font-bold text-gray-800 border-0 focus:ring-0 p-0 placeholder:text-gray-300" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <label className="block text-sm font-medium text-gray-500 mb-2">DESCRIÇÃO (OPCIONAL)</label>
+            <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para você!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" />
+            <p className="text-xs text-gray-400 text-right">{bio.length}/100</p>
+          </div>
+
+          <button onClick={() => setActiveSection("logo")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center"><Camera className="w-6 h-6 text-pink-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Logo da Loja</p><p className="text-sm text-gray-500">{logoUrl ? "Logo configurada" : "Adicionar sua logo"}</p></div></div>
+            <ChevronRight className="text-gray-400" />
+          </button>
+
+          <button onClick={() => setActiveSection("banner")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><ImageIcon className="w-6 h-6 text-purple-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Banner</p><p className="text-sm text-gray-500">{bannerUrl ? "Banner configurado" : "Adicionar imagem de capa"}</p></div></div>
+            <ChevronRight className="text-gray-400" />
+          </button>
+
+          <button onClick={() => setActiveSection("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
+            <div className="flex gap-1"><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: primaryColor }} /><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: secondaryColor }} /></div>
+          </button>
+
+          <button onClick={() => setActiveSection("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Botões, cards e visual</p></div></div>
+            <ChevronRight className="text-gray-400" />
+          </button>
+
+          <button onClick={() => setActiveSection("social")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><Share2 className="w-6 h-6 text-blue-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Redes Sociais</p><p className="text-sm text-gray-500">{instagram || facebook || phone ? "Configurado" : "Instagram, Facebook, WhatsApp"}</p></div></div>
+            <ChevronRight className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:left-64">
+          <button onClick={handleSave} disabled={saving || !storeName} className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${saved ? "bg-green-500 text-white" : saving ? "bg-pink-300 text-white" : !storeName ? "bg-gray-200 text-gray-400" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white"}`}>
+            {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alterações</>)}
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  // SEÇÃO CORES
   if (activeSection === "colors") {
-    return (<div className="min-h-screen bg-gray-50 pb-24"><div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10"><button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button><h1 className="text-xl font-bold">Cores da Loja</h1></div><div className="p-6 text-white text-center" style={{ background: "linear-gradient(135deg, " + primaryColor + ", " + secondaryColor + ")" }}><p className="text-white/80 text-sm mb-2">PREVIEW</p><h2 className="text-2xl font-bold">{storeName || "Sua Loja"}</h2></div><div className="p-4"><h3 className="text-sm font-medium text-gray-500 mb-4 px-2">ESCOLHA UMA COR</h3><div className="grid grid-cols-2 gap-3">{COLOR_PRESETS.map((preset) => (<button key={preset.name} onClick={() => { setPrimaryColor(preset.primary); setSecondaryColor(preset.secondary); }} className={"p-4 rounded-2xl border-2 transition-all " + (primaryColor === preset.primary ? "border-gray-900 scale-105 shadow-lg" : "border-gray-200 bg-white")}><div className="h-12 rounded-xl mb-3" style={{ background: "linear-gradient(135deg, " + preset.primary + ", " + preset.secondary + ")" }} /><p className="font-medium text-gray-800">{preset.emoji} {preset.name}</p></button>))}</div></div><div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar Cor</button></div></div>);
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <h1 className="text-xl font-bold">Cores da Loja</h1>
+        </div>
+        <div className="p-6 text-white text-center" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
+          <p className="text-white/80 text-sm mb-2">PREVIEW</p>
+          <h2 className="text-2xl font-bold">{storeName || "Sua Loja"}</h2>
+        </div>
+        <div className="p-4 space-y-6">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-4 px-2">ESCOLHA UMA COR</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {COLOR_PRESETS.map((preset) => (
+                <button key={preset.name} onClick={() => { setPrimaryColor(preset.primary); setSecondaryColor(preset.secondary); setShowCustomColor(false); }} className={`p-4 rounded-2xl border-2 transition-all ${primaryColor === preset.primary && !showCustomColor ? "border-gray-900 scale-105 shadow-lg" : "border-gray-200 bg-white"}`}>
+                  <div className="h-12 rounded-xl mb-3" style={{ background: `linear-gradient(135deg, ${preset.primary}, ${preset.secondary})` }} />
+                  <p className="font-medium text-gray-800">{preset.name}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <button onClick={() => setShowCustomColor(!showCustomColor)} className="w-full flex items-center justify-between">
+              <div className="flex items-center gap-3"><div className="w-10 h-10 bg-gradient-to-br from-red-500 via-green-500 to-blue-500 rounded-xl" /><div className="text-left"><p className="font-semibold text-gray-800">Cor Personalizada</p><p className="text-sm text-gray-500">Escolha qualquer cor</p></div></div>
+              <ChevronRight className={`text-gray-400 transition-transform ${showCustomColor ? "rotate-90" : ""}`} />
+            </button>
+            {showCustomColor && (
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                <div><label className="block text-sm text-gray-500 mb-2">Cor Principal</label><div className="flex items-center gap-3"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
+                <div><label className="block text-sm text-gray-500 mb-2">Cor Secundária</label><div className="flex items-center gap-3"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar Cor</button></div>
+      </div>
+    );
   }
 
+  // SEÇÃO ESTILOS
+  if (activeSection === "styles") {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <h1 className="text-xl font-bold">Estilos</h1>
+        </div>
+        <div className="p-4 space-y-6">
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Botão de Compra</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
+                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: primaryColor }}>Comprar</div></div>
+                <p className="text-sm font-medium text-gray-700">Arredondado</p>
+              </button>
+              <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "square" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "square" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
+                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-md text-white text-sm font-medium" style={{ backgroundColor: primaryColor }}>Comprar</div></div>
+                <p className="text-sm font-medium text-gray-700">Quadrado</p>
+              </button>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Card de Produto</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "shadow" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "shadow" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg shadow-lg h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Sombra</p></button>
+              <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "bordered" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "bordered" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg border-2 border-gray-300 h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Borda</p></button>
+              <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "flat" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "flat" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-gray-100 rounded-lg h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Simples</p></button>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 space-y-4">
+            <h3 className="font-semibold text-gray-800">Opções do Catálogo</h3>
+            <div className="flex items-center justify-between py-2"><div><p className="font-medium text-gray-800">Mostrar Preços</p><p className="text-sm text-gray-500">Exibe o preço nos produtos</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_prices: !themeSettings.show_prices })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_prices ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+            <div className="flex items-center justify-between py-2 border-t border-gray-100"><div><p className="font-medium text-gray-800">Mostrar Estoque</p><p className="text-sm text-gray-500">Exibe quantidade disponível</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_stock: !themeSettings.show_stock })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_stock ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_stock ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+      </div>
+    );
+  }
+
+  // SEÇÃO LOGO
   if (activeSection === "logo") {
-    return (<div className="min-h-screen bg-gray-50 pb-24"><div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10"><button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button><h1 className="text-xl font-bold">Logo da Loja</h1></div><div className="p-4 space-y-6"><div className="bg-white rounded-2xl p-6 text-center border border-gray-200"><div className="flex justify-center mb-4">{logoUrl ? (<div className={"bg-gray-100 p-2 " + (themeSettings.logo_shape === "circle" ? "rounded-full w-32 h-32" : themeSettings.logo_shape === "rectangle" ? "rounded-xl w-40 h-24" : "rounded-xl w-32 h-32")}><Image src={logoUrl} alt="Logo" width={128} height={128} className={"w-full h-full object-contain " + (themeSettings.logo_shape === "circle" ? "rounded-full" : "")} /></div>) : (<div className="w-32 h-32 bg-gray-100 rounded-2xl flex items-center justify-center"><Camera className="w-12 h-12 text-gray-300" /></div>)}</div><label className="cursor-pointer"><div className="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 text-white rounded-xl font-medium">{uploading === "logo" ? (<Loader2 className="w-5 h-5 animate-spin" />) : (<Upload className="w-5 h-5" />)}{logoUrl ? "Trocar Logo" : "Enviar Logo"}</div><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "logo"); }} /></label>{logoUrl && (<button onClick={() => setLogoUrl("")} className="block mx-auto mt-3 text-red-500 text-sm font-medium">Remover Logo</button>)}</div><div className="bg-white rounded-2xl p-4 border border-gray-200"><h3 className="font-semibold text-gray-800 mb-4">Formato da Logo</h3><div className="grid grid-cols-3 gap-3">{[{ id: "circle", label: "Redonda" }, { id: "square", label: "Quadrada" }, { id: "rectangle", label: "Horizontal" }].map((shape) => (<button key={shape.id} onClick={() => setThemeSettings({ ...themeSettings, logo_shape: shape.id as "circle" | "square" | "rectangle" })} className={"p-4 rounded-xl border-2 transition-all " + (themeSettings.logo_shape === shape.id ? "border-pink-500 bg-pink-50" : "border-gray-200")}><span className="text-sm font-medium">{shape.label}</span></button>))}</div></div><div className="bg-white rounded-2xl p-4 border border-gray-200"><h3 className="font-semibold text-gray-800 mb-4">Posicao no Cabecalho</h3><div className="grid grid-cols-3 gap-3">{[{ id: "left", label: "Esquerda" }, { id: "center", label: "Centro" }, { id: "right", label: "Direita" }].map((pos) => (<button key={pos.id} onClick={() => setThemeSettings({ ...themeSettings, logo_position: pos.id as "left" | "center" | "right" })} className={"p-4 rounded-xl border-2 transition-all " + (themeSettings.logo_position === pos.id ? "border-pink-500 bg-pink-50" : "border-gray-200")}><div className={"h-6 flex items-center px-1 mb-1 " + (pos.id === "left" ? "justify-start" : pos.id === "center" ? "justify-center" : "justify-end")}><div className="w-4 h-4 bg-pink-500 rounded-full" /></div><span className="text-sm font-medium">{pos.label}</span></button>))}</div></div></div><div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div></div>);
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <h1 className="text-xl font-bold">Logo da Loja</h1>
+        </div>
+        <div className="p-4 space-y-6">
+          <div className="bg-white rounded-2xl p-6 text-center border border-gray-200">
+            <div className="flex justify-center mb-4">
+              {logoUrl ? (<Image src={logoUrl} alt="Logo" width={128} height={128} className={`h-32 w-auto object-contain ${themeSettings.logo_shape === "circle" ? "rounded-full" : ""}`} />) : (<div className="w-32 h-32 bg-gray-100 rounded-2xl flex items-center justify-center"><Camera className="w-12 h-12 text-gray-300" /></div>)}
+            </div>
+            <label className="cursor-pointer"><div className="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 text-white rounded-xl font-medium">{uploading === "logo" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}{logoUrl ? "Trocar Logo" : "Enviar Logo"}</div><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "logo"); }} /></label>
+            {logoUrl && (<button onClick={() => setLogoUrl("")} className="block mx-auto mt-3 text-red-500 text-sm font-medium">Remover Logo</button>)}
+            <p className="text-xs text-gray-500 mt-4">Dica: Use logo com fundo transparente (PNG)</p>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Formato da Logo</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[{ id: "circle", label: "Redonda", Icon: CircleIcon }, { id: "square", label: "Quadrada", Icon: SquareIcon }, { id: "rectangle", label: "Horizontal", Icon: ImageIcon }].map((shape) => (
+                <button key={shape.id} onClick={() => setThemeSettings({ ...themeSettings, logo_shape: shape.id as "circle" | "square" | "rectangle" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.logo_shape === shape.id ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
+                  <shape.Icon className="w-8 h-8 mx-auto mb-2 text-gray-600" /><span className="text-sm font-medium">{shape.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+      </div>
+    );
   }
 
+  // SEÇÃO BANNER
   if (activeSection === "banner") {
-    return (<div className="min-h-screen bg-gray-50 pb-24"><div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10"><button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button><h1 className="text-xl font-bold">Banner da Loja</h1></div><div className="p-4 space-y-6"><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center gap-2 mb-4"><Smartphone className="w-5 h-5 text-pink-500" /><h3 className="font-semibold text-gray-800">Banner para Celular</h3><span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">Recomendado</span></div><div className="aspect-square max-w-[200px] mx-auto bg-gray-100 rounded-xl overflow-hidden relative mb-4">{uploading === "banner_mobile" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}{bannerMobileUrl ? (<><Image src={bannerMobileUrl} alt="Banner Mobile" fill className="object-cover" /><button onClick={() => setBannerMobileUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} /></label>)}</div><p className="text-xs text-gray-500 text-center">Tamanho ideal: 800x800 (quadrado)</p></div><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center gap-2 mb-4"><Monitor className="w-5 h-5 text-purple-500" /><h3 className="font-semibold text-gray-800">Banner para Computador</h3></div><div className="aspect-[3/1] bg-gray-100 rounded-xl overflow-hidden relative mb-4">{uploading === "banner" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}{bannerUrl ? (<><Image src={bannerUrl} alt="Banner Desktop" fill className="object-cover" /><button onClick={() => setBannerUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} /></label>)}</div><p className="text-xs text-gray-500 text-center">Tamanho ideal: 1200x400 (horizontal)</p></div></div><div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div></div>);
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <h1 className="text-xl font-bold">Banner da Loja</h1>
+        </div>
+        <div className="p-4 space-y-6">
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4"><Smartphone className="w-5 h-5 text-pink-500" /><h3 className="font-semibold text-gray-800">Banner para Celular</h3><span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">Recomendado</span></div>
+            <div className="aspect-square max-w-[200px] mx-auto bg-gray-100 rounded-xl overflow-hidden relative mb-4">
+              {uploading === "banner_mobile" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}
+              {bannerMobileUrl ? (<><Image src={bannerMobileUrl} alt="Banner Mobile" fill className="object-cover" /><button onClick={() => setBannerMobileUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} /></label>)}
+            </div>
+            <p className="text-xs text-gray-500 text-center">Tamanho ideal: 800x800 (quadrado)</p>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4"><Monitor className="w-5 h-5 text-purple-500" /><h3 className="font-semibold text-gray-800">Banner para Computador</h3></div>
+            <div className="w-full bg-gray-100 rounded-xl overflow-hidden relative mb-4" style={{ aspectRatio: "1920/600" }}>
+              {uploading === "banner" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}
+              {bannerUrl ? (<><Image src={bannerUrl} alt="Banner Desktop" fill className="object-cover" /><button onClick={() => setBannerUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} /></label>)}
+            </div>
+            <p className="text-xs text-gray-500 text-center">Tamanho ideal: 1920x600 (horizontal)</p>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+      </div>
+    );
   }
 
+  // SEÇÃO REDES SOCIAIS
   if (activeSection === "social") {
-    return (<div className="min-h-screen bg-gray-50 pb-24"><div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10"><button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button><h1 className="text-xl font-bold">Redes Sociais</h1></div><div className="p-4 space-y-4"><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center"><Heart className="w-5 h-5 text-white" /></div><div><p className="font-semibold text-gray-800">WhatsApp</p><p className="text-xs text-gray-500">Para receber pedidos</p></div></div><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" /></div><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"><span className="text-white font-bold">@</span></div><div><p className="font-semibold text-gray-800">Instagram</p><p className="text-xs text-gray-500">Opcional</p></div></div><div className="flex items-center border border-gray-200 rounded-xl overflow-hidden"><span className="px-3 py-3 bg-gray-50 text-gray-500">@</span><input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value.replace("@", ""))} placeholder="seuinstagram" className="flex-1 px-3 py-3 border-0 text-lg" /></div></div><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><span className="text-white font-bold">f</span></div><div><p className="font-semibold text-gray-800">Facebook</p><p className="text-xs text-gray-500">Opcional</p></div></div><input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da pagina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" /></div><div className="bg-white rounded-2xl p-4 border border-gray-200"><div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Botao WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={"w-14 h-8 rounded-full transition-colors " + (themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300")}><div className={"w-6 h-6 bg-white rounded-full shadow transform transition-transform " + (themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1")} /></button></div></div></div><div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div></div>);
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <h1 className="text-xl font-bold">Redes Sociais</h1>
+        </div>
+        <div className="p-4 space-y-4">
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center"><Heart className="w-5 h-5 text-white" /></div><div><p className="font-semibold text-gray-800">WhatsApp</p><p className="text-xs text-gray-500">Para receber pedidos</p></div></div>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"><span className="text-white font-bold">@</span></div><div><p className="font-semibold text-gray-800">Instagram</p><p className="text-xs text-gray-500">Opcional</p></div></div>
+            <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden"><span className="px-3 py-3 bg-gray-50 text-gray-500">@</span><input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value.replace("@", ""))} placeholder="seuinstagram" className="flex-1 px-3 py-3 border-0 text-lg" /></div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><span className="text-white font-bold">f</span></div><div><p className="font-semibold text-gray-800">Facebook</p><p className="text-xs text-gray-500">Opcional</p></div></div>
+            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da página" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+          </div>
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Botão WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+      </div>
+    );
   }
 
   return null;

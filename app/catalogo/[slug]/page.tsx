@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type ProductWithPrice = {
@@ -75,13 +75,13 @@ export default function CatalogoPrincipal() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Banner - Desktop e Mobile responsivo */}
+    <div>
+      {/* Banner FULL WIDTH - Desktop e Mobile responsivo */}
       {(reseller?.banner_url || reseller?.banner_mobile_url) && (
-        <div className="mb-6 rounded-xl overflow-hidden shadow-md">
+        <div className="w-full">
           {/* Banner Desktop - visível em telas grandes */}
           {reseller?.banner_url && (
-            <div className="hidden md:block relative aspect-[3/1] w-full">
+            <div className="hidden md:block relative w-full" style={{ aspectRatio: '1920/600' }}>
               <Image
                 src={reseller.banner_url}
                 alt="Banner"
@@ -103,7 +103,7 @@ export default function CatalogoPrincipal() {
               />
             </div>
           ) : reseller?.banner_url && (
-            <div className="md:hidden relative aspect-[3/1] w-full">
+            <div className="md:hidden relative w-full" style={{ aspectRatio: '1920/600' }}>
               <Image
                 src={reseller.banner_url}
                 alt="Banner"
@@ -116,57 +116,31 @@ export default function CatalogoPrincipal() {
         </div>
       )}
 
-      {/* Bio da Loja */}
-      {reseller?.bio && (
-        <div className="mb-6 text-center">
-          <p className="text-gray-600">{reseller.bio}</p>
-        </div>
-      )}
+      {/* Conteúdo com padding */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Bio da Loja */}
+        {reseller?.bio && (
+          <div className="mb-6 text-center">
+            <p className="text-gray-600">{reseller.bio}</p>
+          </div>
+        )}
 
-      {/* Redes Sociais */}
-      {(reseller?.instagram || reseller?.facebook) && (
-        <div className="flex justify-center gap-4 mb-6">
-          {reseller?.instagram && (
-            <a
-              href={`https://instagram.com/${reseller.instagram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity"
-            >
-              <Instagram size={18} />
-              @{reseller.instagram}
-            </a>
-          )}
-          {reseller?.facebook && (
-            <a
-              href={reseller.facebook.startsWith('http') ? reseller.facebook : `https://facebook.com/${reseller.facebook}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
-            >
-              <Facebook size={18} />
-              Facebook
-            </a>
-          )}
+        {/* Barra de Busca */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar produtos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
+            />
+          </div>
         </div>
-      )}
 
-      {/* Barra de Busca */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar produtos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Info */}
-      <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
+        {/* Info */}
+        <p className="text-gray-600 mb-4">{filteredProducts.length} produtos encontrados</p>
 
       {/* Grid de Produtos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -224,18 +198,7 @@ export default function CatalogoPrincipal() {
           </p>
         </div>
       )}
-
-      {/* Botão Flutuante WhatsApp */}
-      {themeSettings?.show_whatsapp_float && reseller?.phone && (
-        <a
-          href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}?text=Olá! Vi seu catálogo e gostaria de mais informações.`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 p-4 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors"
-        >
-          <MessageCircle size={28} />
-        </a>
-      )}
+      </div>
     </div>
   );
 }
