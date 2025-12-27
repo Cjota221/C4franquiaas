@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora'
 import { 
   Tag, 
   Plus,
@@ -325,45 +324,36 @@ export default function PromocoesPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen">
-        <SidebarRevendedora />
-        <main className="flex-1 p-8 bg-gray-50">
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="w-8 h-8 animate-spin text-pink-500" />
-          </div>
-        </main>
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-pink-500" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen">
-        <SidebarRevendedora />
-        <main className="flex-1 p-8 bg-gray-50">
-          <div className="text-center text-red-500 py-8">{error}</div>
-        </main>
+      <div className="p-8">
+        <div className="text-center text-red-500 py-8">{error}</div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen">
-      <SidebarRevendedora />
-      
-      <main className="flex-1 p-8 bg-gray-50">
-        {/* Header */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Tag className="w-6 h-6 text-pink-500" />
-              Promoções
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Crie cupons, frete grátis e promoções para sua loja
-            </p>
-          </div>
-          
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Tag className="w-6 h-6 text-pink-500" />
+            Promoções
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Crie cupons, frete grátis e promoções para sua loja
+          </p>
+        </div>
+        
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
@@ -750,7 +740,6 @@ export default function PromocoesPage() {
             </div>
           </div>
         )}
-      </main>
     </div>
   )
 }

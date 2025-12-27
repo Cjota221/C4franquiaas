@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora'
 import { 
   ShoppingCart, 
   Phone, 
@@ -216,39 +215,30 @@ export default function CarrinhosAbandonadosPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen">
-        <SidebarRevendedora />
-        <main className="flex-1 p-8 bg-gray-50">
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="w-8 h-8 animate-spin text-pink-500" />
-          </div>
-        </main>
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-pink-500" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen">
-        <SidebarRevendedora />
-        <main className="flex-1 p-8 bg-gray-50">
-          <div className="text-center text-red-500 py-8">{error}</div>
-        </main>
+      <div className="p-8">
+        <div className="text-center text-red-500 py-8">{error}</div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen">
-      <SidebarRevendedora />
-      
-      <main className="flex-1 p-8 bg-gray-50">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-pink-500" />
-            Carrinhos Abandonados
-          </h1>
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <ShoppingCart className="w-6 h-6 text-pink-500" />
+          Carrinhos Abandonados
+        </h1>
           <p className="text-gray-600 mt-1">
             Gerencie e recupere vendas de clientes que não finalizaram a compra
           </p>
@@ -557,7 +547,6 @@ export default function CarrinhosAbandonadosPage() {
             </div>
           </div>
         )}
-      </main>
     </div>
   )
 }
