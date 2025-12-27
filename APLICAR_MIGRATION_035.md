@@ -1,10 +1,6 @@
 # 🛒 Aplicar Migration 035 - Carrinhos Abandonados e Promoções# Migration 035 - Sincronização Automática de Produtos
 
-
-
 ## 📋 O que foi criado## 📋 Descrição
-
-
 
 ### Tabelas no Banco de Dados:Esta migration implementa a **regra de negócio crítica** de sincronização automática entre o catálogo master (Admin) e os sites das franqueadas/revendedoras.
 
@@ -14,17 +10,17 @@
 
 3. **promotions** - Promoções (cupons, frete grátis, leve+pague)
 
-4. **promotion_uses** - Registro de usos das promoções| Ação no Admin                          | Efeito Automático no Site da Franqueada                        |
+4. **promotion_uses** - Registro de usos das promoções| Ação no Admin | Efeito Automático no Site da Franqueada |
 
 | -------------------------------------- | -------------------------------------------------------------- |
 
-### Novas Páginas:| Produto **desativado** (ativo = false) | ✅ Desativa automaticamente (ativo_no_site = false)            |
+### Novas Páginas:| Produto **desativado** (ativo = false) | ✅ Desativa automaticamente (ativo_no_site = false) |
 
-- `/revendedora/carrinhos-abandonados` - Gerenciar carrinhos abandonados| **Estoque zerado** (estoque = 0)       | ✅ Desativa automaticamente (ativo_no_site = false)            |
+- `/revendedora/carrinhos-abandonados` - Gerenciar carrinhos abandonados| **Estoque zerado** (estoque = 0) | ✅ Desativa automaticamente (ativo_no_site = false) |
 
-- `/revendedora/promocoes` - Criar e gerenciar promoções| Produto **reativado** (ativo = true)   | ⏸️ Marca como "pronto para ativar" (NÃO ativa automaticamente) |
+- `/revendedora/promocoes` - Criar e gerenciar promoções| Produto **reativado** (ativo = true) | ⏸️ Marca como "pronto para ativar" (NÃO ativa automaticamente) |
 
-| **Estoque reposto** (estoque > 0)      | ⏸️ Marca como "pronto para ativar" (NÃO ativa automaticamente) |
+| **Estoque reposto** (estoque > 0) | ⏸️ Marca como "pronto para ativar" (NÃO ativa automaticamente) |
 
 ### APIs Criadas:
 
@@ -60,7 +56,7 @@ Acesse: https://supabase.com/dashboard/project/seu-projeto/sql- **Tipo:** AFTER 
 
 Copie e cole o conteúdo do arquivo:### 3. Coluna Adicional
 
-```
+````
 
 migrations/035_abandoned_carts_and_promotions.sql- **Nome:** `ultima_sincronizacao`
 
@@ -96,13 +92,13 @@ ALTER TABLE promotion_uses DISABLE ROW LEVEL SECURITY;
 
 ## ✅ Validação-- no SQL Editor do Supabase e execute
 
-```
+````
 
 Após aplicar, verifique se as tabelas foram criadas:
 
 ### 2. Via Linha de Comando (se configurado)
 
-```sql
+````sql
 
 SELECT table_name FROM information_schema.tables ```bash
 
@@ -110,7 +106,7 @@ WHERE table_schema = 'public' psql $DATABASE_URL -f migrations/035_add_sync_trig
 
 AND table_name IN ('abandoned_carts', 'abandoned_cart_items', 'promotions', 'promotion_uses');```
 
-```
+````
 
 ## ✅ Verificação
 
@@ -120,7 +116,7 @@ AND table_name IN ('abandoned_carts', 'abandoned_cart_items', 'promotions', 'pro
 
 ## 📱 Funcionalidades
 
-```sql
+````sql
 
 ### Carrinhos AbandonadosSELECT * FROM pg_trigger WHERE tgname = 'trg_sync_product_availability';
 
@@ -138,7 +134,7 @@ AND table_name IN ('abandoned_carts', 'abandoned_cart_items', 'promotions', 'pro
 
 - Estatísticas de recuperaçãoWHERE proname = 'sync_product_availability_to_franchisees';
 
-```
+````
 
 ### Promoções
 
@@ -158,8 +154,6 @@ AND table_name IN ('abandoned_carts', 'abandoned_cart_items', 'promotions', 'pro
 
 - Ativar/desativar promoçõesUPDATE produtos SET ativo = false WHERE id = 1;
 
-
-
 ----- 3. Verifique se foi desativado automaticamente nas franqueadas
 
 SELECT pf.id, pf.produto_id, pfp.ativo_no_site, pfp.ultima_sincronizacao
@@ -169,8 +163,6 @@ SELECT pf.id, pf.produto_id, pfp.ativo_no_site, pfp.ultima_sincronizacao
 JOIN produtos_franqueadas_precos pfp ON pfp.produto_franqueada_id = pf.id
 
 Para integrar ao catálogo (quando cliente adicionar ao carrinho):WHERE pf.produto_id = 1;
-
-
 
 1. Chamar API `/api/carrinho-abandonado` com:-- Resultado esperado: ativo_no_site = false
 
@@ -182,7 +174,7 @@ Para integrar ao catálogo (quando cliente adicionar ao carrinho):WHERE pf.produ
 
    - product_id, product_name, product_price, quantity
 
-```sql
+`````sql
 
 2. Para aplicar promoções no checkout:SELECT * FROM get_product_availability_status(1);
 
@@ -194,31 +186,37 @@ Para integrar ao catálogo (quando cliente adicionar ao carrinho):WHERE pf.produ
 
 ### Cenário 1: Admin desativa produto
 
-```
+`````
+
 Admin: ativo = true → false
 Trigger: Detecta mudança
 Ação: UPDATE produtos_franqueadas_precos SET ativo_no_site = false
 Resultado: Produto some de TODOS os sites das franqueadas
+
 ```
 
 ### Cenário 2: Estoque acaba
 
 ```
+
 Admin: estoque = 10 → 0
 Trigger: Detecta mudança
 Ação: UPDATE produtos_franqueadas_precos SET ativo_no_site = false
 Resultado: Produto some de TODOS os sites das franqueadas
+
 ```
 
 ### Cenário 3: Admin reativa produto
 
 ```
+
 Admin: ativo = false → true
 Trigger: Detecta mudança
 Ação: UPDATE produtos_franqueadas_precos SET atualizado_em = NOW()
 Resultado: Produto fica disponível para reativação, mas NÃO aparece automaticamente
 Franqueada: Deve acessar painel e clicar no toggle para reativar
-```
+
+````
 
 ## 🚨 Importante
 
@@ -236,7 +234,7 @@ Franqueada: Deve acessar painel e clicar no toggle para reativar
 -- Verificar se o trigger está habilitado
 SELECT tgenabled FROM pg_trigger WHERE tgname = 'trg_sync_product_availability';
 -- Resultado esperado: 'O' (Origem/Always enabled)
-```
+````
 
 ### Ver logs do trigger:
 

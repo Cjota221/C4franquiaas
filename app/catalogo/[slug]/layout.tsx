@@ -25,6 +25,8 @@ type Reseller = {
     button_style?: 'rounded' | 'square';
     card_style?: 'shadow' | 'flat' | 'bordered';
     header_style?: 'gradient' | 'solid' | 'transparent';
+    logo_shape?: 'circle' | 'square' | 'rectangle';
+    logo_position?: 'left' | 'center' | 'right';
     show_prices?: boolean;
     show_stock?: boolean;
     show_whatsapp_float?: boolean;
@@ -137,6 +139,8 @@ export default function CatalogoLayout({
     button_style: 'rounded',
     card_style: 'shadow',
     header_style: 'gradient',
+    logo_shape: 'circle',
+    logo_position: 'center',
     show_prices: true,
     show_stock: false,
     show_whatsapp_float: true,
@@ -259,16 +263,45 @@ export default function CatalogoLayout({
           style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
         >
           <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className={`flex items-center ${
+              themeSettings.logo_position === 'center' 
+                ? 'justify-center' 
+                : themeSettings.logo_position === 'right'
+                  ? 'justify-end'
+                  : 'justify-between'
+            }`}>
+              {/* Carrinho à esquerda quando logo está no centro ou direita */}
+              {(themeSettings.logo_position === 'center' || themeSettings.logo_position === 'right') && (
+                <Link
+                  href={`/catalogo/${slug}/carrinho`}
+                  className="absolute left-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+                >
+                  <ShoppingBag size={24} />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Link>
+              )}
+
               <Link href={`/catalogo/${slug}`} className="flex items-center gap-3">
                 {reseller.logo_url && (
-                  <div className="w-12 h-12 bg-white rounded-lg p-1.5 flex-shrink-0">
+                  <div className={`bg-white flex-shrink-0 overflow-hidden flex items-center justify-center ${
+                    themeSettings.logo_shape === 'circle' 
+                      ? 'w-12 h-12 rounded-full p-1' 
+                      : themeSettings.logo_shape === 'rectangle'
+                        ? 'w-20 h-10 rounded-lg p-1'
+                        : 'w-12 h-12 rounded-lg p-1'
+                  }`}>
                     <Image
                       src={reseller.logo_url}
                       alt={reseller.store_name}
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-contain"
+                      width={themeSettings.logo_shape === 'rectangle' ? 80 : 48}
+                      height={themeSettings.logo_shape === 'rectangle' ? 40 : 48}
+                      className={`w-full h-full object-contain ${
+                        themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
+                      }`}
                     />
                   </div>
                 )}
@@ -277,18 +310,35 @@ export default function CatalogoLayout({
                 </div>
               </Link>
 
-              {/* Carrinho */}
-              <Link
-                href={`/catalogo/${slug}/carrinho`}
-                className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-              >
-                <ShoppingBag size={24} />
-                {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
-              </Link>
+              {/* Carrinho à direita quando logo está à esquerda */}
+              {themeSettings.logo_position === 'left' && (
+                <Link
+                  href={`/catalogo/${slug}/carrinho`}
+                  className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+                >
+                  <ShoppingBag size={24} />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {/* Carrinho à direita quando logo está no centro */}
+              {themeSettings.logo_position === 'center' && (
+                <Link
+                  href={`/catalogo/${slug}/carrinho`}
+                  className="absolute right-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+                >
+                  <ShoppingBag size={24} />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Link>
+              )}
             </div>
           </div>
         </header>

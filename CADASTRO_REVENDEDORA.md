@@ -3,9 +3,11 @@
 ## ✅ O que foi criado:
 
 ### 1. Página de Cadastro
+
 **URL:** `/cadastro/revendedora`
 
 A revendedora preenche:
+
 - Nome Completo
 - Email
 - Telefone (com máscara)
@@ -17,9 +19,11 @@ A revendedora preenche:
 - Confirmação de Senha
 
 ### 2. API de Cadastro
+
 **Endpoint:** `POST /api/cadastro/revendedora`
 
 O que a API faz:
+
 1. Valida todos os campos
 2. Verifica se email já existe
 3. Gera um slug único para a loja (ex: "beleza-da-maria")
@@ -28,9 +32,11 @@ O que a API faz:
 6. Se falhar, desfaz a criação do usuário Auth
 
 ### 3. Migration 034
+
 **Arquivo:** `migrations/034_add_reseller_fields.sql`
 
 Adiciona campos que faltavam na tabela:
+
 - `cpf` - CPF da revendedora
 - `city` - Cidade
 - `state` - Estado (UF)
@@ -45,7 +51,7 @@ Vá em **Supabase → SQL Editor** e execute:
 
 ```sql
 -- Migration 034: Campos extras para cadastro de Revendedoras
-ALTER TABLE resellers 
+ALTER TABLE resellers
   ADD COLUMN IF NOT EXISTS cpf VARCHAR(14),
   ADD COLUMN IF NOT EXISTS city VARCHAR(100),
   ADD COLUMN IF NOT EXISTS state VARCHAR(2);
@@ -54,8 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_resellers_city_state ON resellers(city, state);
 
 -- Permite cadastro público
 DROP POLICY IF EXISTS "Cadastro publico de revendedoras" ON resellers;
-CREATE POLICY "Cadastro publico de revendedoras" 
-  ON resellers FOR INSERT 
+CREATE POLICY "Cadastro publico de revendedoras"
+  ON resellers FOR INSERT
   WITH CHECK (true);
 
 -- ✅ Pronto!
@@ -73,6 +79,7 @@ SELECT 'Migration 034 aplicada!' as status;
 Acesse: http://localhost:3000/admin/revendedoras
 
 Lá você verá as revendedoras pendentes e pode:
+
 - ✅ **Aprovar** - Libera acesso ao painel
 - ❌ **Rejeitar** - Com motivo opcional
 
@@ -115,7 +122,7 @@ Se ainda não aplicou, execute primeiro:
 
 ```sql
 -- Migration 033 (se ainda não aplicou)
-ALTER TABLE resellers 
+ALTER TABLE resellers
   ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pendente',
   ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id),
   ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
