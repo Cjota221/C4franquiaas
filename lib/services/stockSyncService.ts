@@ -17,8 +17,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // ============ CONFIGURAÇÃO ============
 
 const CONFIG = {
-  // API FácilZap
-  API_BASE_URL: process.env.FACILZAP_API_URL || 'https://api.facilzap.app.br',
+  // API FácilZap (URL fixa - mesmo padrão do sync manual)
+  API_BASE_URL: 'https://api.facilzap.app.br',
   API_TOKEN: process.env.FACILZAP_TOKEN || '',
   
   // Rate Limiting (conservador para segurança)
@@ -162,6 +162,8 @@ class StockSyncService {
     const url = `${CONFIG.API_BASE_URL}/produtos?page=${page}&per_page=${CONFIG.PAGE_SIZE}`;
     
     console.log(`📡 [StockSync] Buscando página ${page}...`);
+    console.log(`📡 [StockSync] URL: ${url}`);
+    console.log(`📡 [StockSync] Token configurado: ${CONFIG.API_TOKEN ? 'SIM (' + CONFIG.API_TOKEN.substring(0, 10) + '...)' : 'NÃO'}`);
 
     try {
       const response = await fetch(url, {
