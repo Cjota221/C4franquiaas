@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Palette, 
   Upload, 
@@ -93,7 +93,7 @@ export default function PersonalizacaoRevendedoraPage() {
     show_whatsapp_float: true,
   });
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   // URL do catálogo - usa currentSlug que é atualizado ao salvar
   const catalogUrl = typeof window !== 'undefined' && currentSlug 
