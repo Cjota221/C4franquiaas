@@ -119,14 +119,26 @@ export default function PersonalizacaoRevendedoraPage() {
           return;
         }
 
-        const { data } = await supabase
+        console.log('[Personalização] Buscando reseller para user_id:', user.id);
+
+        const { data, error } = await supabase
           .from('resellers')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
+        if (error) {
+          console.error('[Personalização] Erro ao buscar reseller:', error);
+          return;
+        }
+
         if (data) {
-          console.log('[Personalização] Reseller carregado:', data.slug);
+          console.log('[Personalização] Reseller carregado:', {
+            id: data.id,
+            name: data.name,
+            store_name: data.store_name,
+            slug: data.slug
+          });
           setReseller(data);
           setCurrentSlug(data.slug || ''); // Setar slug atual
           setStoreName(data.store_name || '');
@@ -147,6 +159,8 @@ export default function PersonalizacaoRevendedoraPage() {
             show_stock: false,
             show_whatsapp_float: true,
           });
+        } else {
+          console.log('[Personalização] Nenhum reseller encontrado para este usuário');
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -172,12 +186,29 @@ export default function PersonalizacaoRevendedoraPage() {
 
   // Salvar alterações
   const handleSave = async () => {
-    if (!reseller) return;
+    if (!reseller) {
+      alert('Erro: dados da revendedora não carregados.');
+      return;
+    }
+
+    // Validar nome da loja
+    if (!storeName || storeName.trim() === '') {
+      alert('Por favor, preencha o nome da sua loja.');
+      return;
+    }
 
     setSaving(true);
     try {
-      // Gerar slug se não existir ou se o nome da loja mudou
-      const newSlug = reseller.slug || generateSlug(storeName);
+      // SEMPRE gerar slug baseado no nome da loja atual
+      const newSlug = generateSlug(storeName);
+      
+      if (!newSlug) {
+        alert('Não foi possível gerar o link. Verifique o nome da loja.');
+        setSaving(false);
+        return;
+      }
+
+      console.log('[Personalização] Salvando...', { storeName, newSlug });
       
       const { error } = await supabase
         .from('resellers')
@@ -200,7 +231,12 @@ export default function PersonalizacaoRevendedoraPage() {
         })
         .eq('id', reseller.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Personalização] Erro Supabase:', error);
+        throw error;
+      }
+
+      console.log('[Personalização] Salvo com sucesso! Novo slug:', newSlug);
 
       // Atualizar o reseller local e o slug atual
       setReseller({ ...reseller, slug: newSlug, store_name: storeName });
