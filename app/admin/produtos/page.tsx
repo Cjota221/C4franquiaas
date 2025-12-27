@@ -351,7 +351,11 @@ export default function ProdutosPage(): React.JSX.Element {
       }
       
       openModal(json.produto as ProdutoType);
-      const variacoes = (json.facilzap && json.facilzap.variacoes) ? json.facilzap.variacoes : null;
+      
+      // Prioridade: 1) FácilZap API, 2) variacoes_meta do banco
+      const variacoes = (json.facilzap?.variacoes) 
+        || (json.produto?.variacoes_meta) 
+        || null;
       setModalVariacoes(variacoes);
     } catch (err) {
       console.error(err);
