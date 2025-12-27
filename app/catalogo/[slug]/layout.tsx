@@ -12,9 +12,22 @@ type Reseller = {
   slug: string;
   phone: string;
   logo_url?: string;
+  banner_url?: string;
+  banner_mobile_url?: string;
+  bio?: string;
+  instagram?: string;
+  facebook?: string;
   colors?: {
     primary: string;
     secondary: string;
+  };
+  theme_settings?: {
+    button_style?: 'rounded' | 'square';
+    card_style?: 'shadow' | 'flat' | 'bordered';
+    header_style?: 'gradient' | 'solid' | 'transparent';
+    show_prices?: boolean;
+    show_stock?: boolean;
+    show_whatsapp_float?: boolean;
   };
 };
 
@@ -46,6 +59,7 @@ type CatalogoContextType = {
   getTotalItems: () => number;
   primaryColor: string;
   secondaryColor: string;
+  themeSettings: Reseller['theme_settings'];
 };
 
 const CatalogoContext = createContext<CatalogoContextType | null>(null);
@@ -119,6 +133,14 @@ export default function CatalogoLayout({
 
   const primaryColor = reseller?.colors?.primary || '#ec4899';
   const secondaryColor = reseller?.colors?.secondary || '#8b5cf6';
+  const themeSettings = reseller?.theme_settings || {
+    button_style: 'rounded',
+    card_style: 'shadow',
+    header_style: 'gradient',
+    show_prices: true,
+    show_stock: false,
+    show_whatsapp_float: true,
+  };
 
   const addToCart = (item: CartItem) => {
     setCart(prev => {
@@ -227,6 +249,7 @@ export default function CatalogoLayout({
         getTotalItems,
         primaryColor,
         secondaryColor,
+        themeSettings,
       }}
     >
       <div className="min-h-screen bg-gray-50">

@@ -7,6 +7,7 @@
 -- Adicionar campos de personalização
 ALTER TABLE resellers 
 ADD COLUMN IF NOT EXISTS banner_url TEXT,
+ADD COLUMN IF NOT EXISTS banner_mobile_url TEXT,
 ADD COLUMN IF NOT EXISTS instagram TEXT,
 ADD COLUMN IF NOT EXISTS facebook TEXT,
 ADD COLUMN IF NOT EXISTS bio TEXT,
@@ -20,7 +21,8 @@ ADD COLUMN IF NOT EXISTS theme_settings JSONB DEFAULT '{
 }'::jsonb;
 
 -- Comentários explicativos
-COMMENT ON COLUMN resellers.banner_url IS 'URL da imagem do banner principal';
+COMMENT ON COLUMN resellers.banner_url IS 'URL da imagem do banner principal (desktop - 1200x400)';
+COMMENT ON COLUMN resellers.banner_mobile_url IS 'URL da imagem do banner mobile (800x800 quadrado)';
 COMMENT ON COLUMN resellers.instagram IS 'Username do Instagram (sem @)';
 COMMENT ON COLUMN resellers.facebook IS 'URL ou username do Facebook';
 COMMENT ON COLUMN resellers.bio IS 'Descrição curta da loja';

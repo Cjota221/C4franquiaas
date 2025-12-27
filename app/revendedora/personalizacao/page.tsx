@@ -8,6 +8,7 @@ import {
   Save, 
   Eye,
   Smartphone,
+  Monitor,
   Image as ImageIcon,
   Type,
   Square,
@@ -16,7 +17,9 @@ import {
   Facebook,
   Check,
   Loader2,
-  X
+  X,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -36,6 +39,7 @@ type ResellerData = {
   phone: string;
   logo_url?: string;
   banner_url?: string;
+  banner_mobile_url?: string;
   bio?: string;
   instagram?: string;
   facebook?: string;
@@ -65,6 +69,8 @@ export default function PersonalizacaoRevendedoraPage() {
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'identidade' | 'cores' | 'layout' | 'social'>('identidade');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('mobile');
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   
   // Estados editáveis
   const [storeName, setStoreName] = useState('');
@@ -73,7 +79,8 @@ export default function PersonalizacaoRevendedoraPage() {
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  const [bannerUrl, setBannerUrl] = useState('');
+  const [bannerUrl, setBannerUrl] = useState(''); // Desktop
+  const [bannerMobileUrl, setBannerMobileUrl] = useState(''); // Mobile
   const [primaryColor, setPrimaryColor] = useState('#ec4899');
   const [secondaryColor, setSecondaryColor] = useState('#8b5cf6');
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>({
@@ -86,13 +93,30 @@ export default function PersonalizacaoRevendedoraPage() {
   });
 
   const supabase = createClientComponentClient();
+  
+  // URL do catálogo
+  const catalogUrl = typeof window !== 'undefined' && reseller?.slug 
+    ? `${window.location.origin}/catalogo/${reseller.slug}` 
+    : '';
+
+  // Copiar link
+  const copyLink = () => {
+    if (catalogUrl) {
+      navigator.clipboard.writeText(catalogUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Carregar dados do reseller
   useEffect(() => {
     async function loadReseller() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          console.log('[Personalização] Usuário não autenticado');
+          return;
+        }
 
         const { data } = await supabase
           .from('resellers')
@@ -101,6 +125,7 @@ export default function PersonalizacaoRevendedoraPage() {
           .single();
 
         if (data) {
+          console.log('[Personalização] Reseller carregado:', data.slug);
           setReseller(data);
           setStoreName(data.store_name || '');
           setBio(data.bio || '');
@@ -109,6 +134,7 @@ export default function PersonalizacaoRevendedoraPage() {
           setFacebook(data.facebook || '');
           setLogoUrl(data.logo_url || '');
           setBannerUrl(data.banner_url || '');
+          setBannerMobileUrl(data.banner_mobile_url || '');
           setPrimaryColor(data.colors?.primary || '#ec4899');
           setSecondaryColor(data.colors?.secondary || '#8b5cf6');
           setThemeSettings(data.theme_settings || {
@@ -146,6 +172,7 @@ export default function PersonalizacaoRevendedoraPage() {
           facebook,
           logo_url: logoUrl,
           banner_url: bannerUrl,
+          banner_mobile_url: bannerMobileUrl,
           colors: {
             primary: primaryColor,
             secondary: secondaryColor,
@@ -168,9 +195,10 @@ export default function PersonalizacaoRevendedoraPage() {
   };
 
   // Upload de imagem
-  const handleImageUpload = async (file: File, type: 'logo' | 'banner') => {
+  const handleImageUpload = async (file: File, type: 'logo' | 'banner' | 'banner_mobile') => {
     if (!reseller) return;
 
+    setUploading(type);
     const fileExt = file.name.split('.').pop();
     const fileName = `${reseller.id}/${type}_${Date.now()}.${fileExt}`;
 
@@ -187,12 +215,16 @@ export default function PersonalizacaoRevendedoraPage() {
 
       if (type === 'logo') {
         setLogoUrl(publicUrl);
-      } else {
+      } else if (type === 'banner') {
         setBannerUrl(publicUrl);
+      } else {
+        setBannerMobileUrl(publicUrl);
       }
     } catch (error) {
       console.error('Erro no upload:', error);
-      alert('Erro ao fazer upload da imagem. Tente novamente.');
+      alert('Erro ao fazer upload. Verifique se o bucket "reseller-assets" existe no Supabase.');
+    } finally {
+      setUploading(null);
     }
   };
 
@@ -222,10 +254,10 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="flex items-center gap-3">
             {/* Botão Ver Catálogo */}
             <a
-              href={`/catalogo/${reseller?.slug}`}
+              href={catalogUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className={`flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors ${!catalogUrl ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <Eye size={18} />
               Ver Catálogo
@@ -255,6 +287,51 @@ export default function PersonalizacaoRevendedoraPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Link do Catálogo */}
+        {reseller?.slug ? (
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-pink-100 rounded-lg">
+                  <ExternalLink className="w-5 h-5 text-pink-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Link do seu catálogo:</p>
+                  <p className="text-pink-600 font-mono text-sm">{catalogUrl}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={copyLink}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    copied
+                      ? 'bg-green-500 text-white'
+                      : 'bg-pink-500 text-white hover:bg-pink-600'
+                  }`}
+                >
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? 'Copiado!' : 'Copiar Link'}
+                </button>
+                <a
+                  href={catalogUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <ExternalLink size={16} />
+                  Abrir
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <p className="text-yellow-800 text-sm">
+              ⚠️ Seu catálogo ainda não tem um slug definido. Entre em contato com o suporte para configurar.
+            </p>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Painel de Edição */}
           <div className="space-y-6">
@@ -357,15 +434,21 @@ export default function PersonalizacaoRevendedoraPage() {
                       </div>
                     </div>
 
-                    {/* Banner */}
+                    {/* Banner Desktop */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Banner Principal
+                        <Monitor className="inline w-4 h-4 mr-1" />
+                        Banner Desktop
                       </label>
                       <div className="aspect-[3/1] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300 relative">
+                        {uploading === 'banner' && (
+                          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                            <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
+                          </div>
+                        )}
                         {bannerUrl ? (
                           <>
-                            <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
+                            <Image src={bannerUrl} alt="Banner Desktop" fill className="object-cover" />
                             <button
                               onClick={() => setBannerUrl('')}
                               className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
@@ -389,7 +472,48 @@ export default function PersonalizacaoRevendedoraPage() {
                           </label>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">Recomendado: 1200x400px</p>
+                      <p className="text-xs text-gray-500 mt-2">Recomendado: 1200x400px (formato horizontal)</p>
+                    </div>
+
+                    {/* Banner Mobile */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Smartphone className="inline w-4 h-4 mr-1" />
+                        Banner Mobile
+                      </label>
+                      <div className="aspect-square max-w-[200px] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300 relative">
+                        {uploading === 'banner_mobile' && (
+                          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                            <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
+                          </div>
+                        )}
+                        {bannerMobileUrl ? (
+                          <>
+                            <Image src={bannerMobileUrl} alt="Banner Mobile" fill className="object-cover" />
+                            <button
+                              onClick={() => setBannerMobileUrl('')}
+                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                            >
+                              <X size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center gap-2 text-gray-500">
+                            <Upload size={20} />
+                            <span className="text-xs text-center">Clique para<br/>fazer upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, 'banner_mobile');
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">Recomendado: 800x800px (formato quadrado)</p>
                     </div>
                   </div>
                 )}

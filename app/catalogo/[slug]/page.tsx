@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, Instagram, Facebook, MessageCircle } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type ProductWithPrice = {
@@ -17,7 +17,7 @@ type ProductWithPrice = {
 };
 
 export default function CatalogoPrincipal() {
-  const { reseller, primaryColor } = useCatalogo();
+  const { reseller, primaryColor, themeSettings } = useCatalogo();
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -76,6 +76,81 @@ export default function CatalogoPrincipal() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Banner - Desktop e Mobile responsivo */}
+      {(reseller?.banner_url || reseller?.banner_mobile_url) && (
+        <div className="mb-6 rounded-xl overflow-hidden shadow-md">
+          {/* Banner Desktop - visível em telas grandes */}
+          {reseller?.banner_url && (
+            <div className="hidden md:block relative aspect-[3/1] w-full">
+              <Image
+                src={reseller.banner_url}
+                alt="Banner"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+          {/* Banner Mobile - visível em telas pequenas */}
+          {reseller?.banner_mobile_url ? (
+            <div className="md:hidden relative aspect-square w-full">
+              <Image
+                src={reseller.banner_mobile_url}
+                alt="Banner"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          ) : reseller?.banner_url && (
+            <div className="md:hidden relative aspect-[3/1] w-full">
+              <Image
+                src={reseller.banner_url}
+                alt="Banner"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bio da Loja */}
+      {reseller?.bio && (
+        <div className="mb-6 text-center">
+          <p className="text-gray-600">{reseller.bio}</p>
+        </div>
+      )}
+
+      {/* Redes Sociais */}
+      {(reseller?.instagram || reseller?.facebook) && (
+        <div className="flex justify-center gap-4 mb-6">
+          {reseller?.instagram && (
+            <a
+              href={`https://instagram.com/${reseller.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Instagram size={18} />
+              @{reseller.instagram}
+            </a>
+          )}
+          {reseller?.facebook && (
+            <a
+              href={reseller.facebook.startsWith('http') ? reseller.facebook : `https://facebook.com/${reseller.facebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <Facebook size={18} />
+              Facebook
+            </a>
+          )}
+        </div>
+      )}
+
       {/* Barra de Busca */}
       <div className="mb-6">
         <div className="relative">
@@ -95,36 +170,51 @@ export default function CatalogoPrincipal() {
 
       {/* Grid de Produtos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredProducts.map((product) => (
-          <Link
-            key={product.id}
-            href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
-            className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group"
-          >
-            <div className="relative aspect-square bg-gray-100">
-              <Image
-                src={product.imagem || '/placeholder.png'}
-                alt={product.nome}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
-                {product.nome}
-              </h3>
-              <p className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
-                R$ {product.finalPrice.toFixed(2).replace('.', ',')}
-              </p>
-              <div
-                className="w-full py-2.5 text-white font-medium rounded-lg text-center text-sm"
-                style={{ backgroundColor: primaryColor }}
-              >
-                Ver Produto
+        {filteredProducts.map((product) => {
+          // Classes baseadas no theme_settings
+          const cardClasses = {
+            shadow: 'shadow-md hover:shadow-lg',
+            flat: 'hover:bg-gray-50',
+            bordered: 'border-2 hover:border-gray-300',
+          };
+          const buttonClasses = {
+            rounded: 'rounded-lg',
+            square: 'rounded-none',
+          };
+          
+          return (
+            <Link
+              key={product.id}
+              href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
+              className={`bg-white rounded-lg border border-gray-200 overflow-hidden transition-all group ${cardClasses[themeSettings?.card_style || 'shadow']}`}
+            >
+              <div className="relative aspect-square bg-gray-100">
+                <Image
+                  src={product.imagem || '/placeholder.png'}
+                  alt={product.nome}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
-            </div>
-          </Link>
-        ))}
+              <div className="p-4">
+                <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
+                  {product.nome}
+                </h3>
+                {themeSettings?.show_prices !== false && (
+                  <p className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
+                    R$ {product.finalPrice.toFixed(2).replace('.', ',')}
+                  </p>
+                )}
+                <div
+                  className={`w-full py-2.5 text-white font-medium text-center text-sm ${buttonClasses[themeSettings?.button_style || 'rounded']}`}
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  Ver Produto
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       {filteredProducts.length === 0 && (
@@ -133,6 +223,18 @@ export default function CatalogoPrincipal() {
             {searchTerm ? 'Nenhum produto encontrado para sua busca.' : 'Nenhum produto disponível no momento.'}
           </p>
         </div>
+      )}
+
+      {/* Botão Flutuante WhatsApp */}
+      {themeSettings?.show_whatsapp_float && reseller?.phone && (
+        <a
+          href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}?text=Olá! Vi seu catálogo e gostaria de mais informações.`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 p-4 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors"
+        >
+          <MessageCircle size={28} />
+        </a>
       )}
     </div>
   );
