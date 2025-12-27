@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -20,47 +20,49 @@ export default function DashboardRevendedora() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
+
+  const carregarDados = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      
+      // Verificar usuário logado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push('/login/revendedora');
+        return;
+      }
+
+      // Buscar revendedora
+      const { data, error: resellerError } = await supabase
+        .from('resellers')
+        .select('id, name, store_name, slug, total_products, catalog_views')
+        .eq('user_id', user.id)
+        .single();
+
+      if (resellerError) {
+        console.error('Erro ao buscar revendedora:', resellerError);
+        setError('Erro ao carregar dados da revendedora');
+        return;
+      }
+
+      if (!data) {
+        setError('Revendedora não encontrada. Seu cadastro pode estar pendente de aprovação.');
+        return;
+      }
+
+      setReseller(data);
+    } catch (err) {
+      console.error('Erro:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        // Verificar usuário logado
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          router.push('/login/revendedora');
-          return;
-        }
-
-        // Buscar revendedora
-        const { data, error: resellerError } = await supabase
-          .from('resellers')
-          .select('id, name, store_name, slug, total_products, catalog_views')
-          .eq('user_id', user.id)
-          .single();
-
-        if (resellerError) {
-          console.error('Erro ao buscar revendedora:', resellerError);
-          throw new Error('Erro ao carregar dados da revendedora');
-        }
-
-        if (!data) {
-          setError('Revendedora não encontrada. Seu cadastro pode estar pendente de aprovação.');
-          return;
-        }
-
-        setReseller(data);
-      } catch (err) {
-        console.error('Erro:', err);
-        setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     carregarDados();
-  }, [supabase, router]);
+  }, [carregarDados]);
 
   if (loading) {
     return (
