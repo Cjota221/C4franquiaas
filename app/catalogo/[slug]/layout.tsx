@@ -350,6 +350,12 @@ export default function CatalogoLayout({
     show_prices: true,
     show_stock: false,
     show_whatsapp_float: true,
+    announcement_bar: {
+      enabled: false,
+      text: '',
+      bg_color: '#000000',
+      text_color: '#ffffff',
+    },
   };
 
   // Verificar se precisa capturar lead (primeira vez adicionando ao carrinho)
@@ -868,6 +874,26 @@ export default function CatalogoLayout({
           onSubmit={handleLeadSubmit}
           primaryColor={primaryColor}
         />
+
+        {/* Barra de Anúncio Deslizante - ANTES do Header */}
+        {themeSettings?.announcement_bar?.enabled && themeSettings?.announcement_bar?.text && (
+          <div 
+            className="overflow-hidden whitespace-nowrap py-2"
+            style={{ 
+              backgroundColor: themeSettings.announcement_bar.bg_color || '#000000',
+              color: themeSettings.announcement_bar.text_color || '#ffffff'
+            }}
+          >
+            <div className="animate-marquee inline-block">
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+              <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            </div>
+          </div>
+        )}
 
         <header
           className="sticky top-0 z-40 text-white shadow-lg"

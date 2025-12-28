@@ -163,26 +163,6 @@ export default function CatalogoPrincipal() {
 
   return (
     <div>
-      {/* Barra de Anúncio Deslizante - No topo absoluto */}
-      {themeSettings?.announcement_bar?.enabled && themeSettings?.announcement_bar?.text && (
-        <div 
-          className="overflow-hidden whitespace-nowrap py-2"
-          style={{ 
-            backgroundColor: themeSettings.announcement_bar.bg_color || '#000000',
-            color: themeSettings.announcement_bar.text_color || '#ffffff'
-          }}
-        >
-          <div className="animate-marquee inline-block">
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
-          </div>
-        </div>
-      )}
-
       {/* Banner FULL WIDTH - Desktop e Mobile responsivo */}
       {(reseller?.banner_url || reseller?.banner_mobile_url) && (
         <div className="w-full">
