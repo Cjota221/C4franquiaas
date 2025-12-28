@@ -831,7 +831,11 @@ export default function CatalogoLayout({
 
         <header
           className="sticky top-0 z-40 text-white shadow-lg"
-          style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+          style={{ 
+            background: themeSettings.header_style === 'solid' 
+              ? primaryColor 
+              : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` 
+          }}
         >
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">

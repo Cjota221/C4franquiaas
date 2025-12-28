@@ -5,14 +5,16 @@
 ### Sistema "Leve Mais Pague Menos" (Desconto Progressivo)
 
 Agora você pode criar promoções com faixas de desconto por quantidade:
+
 - **2 peças** = 10% de desconto
-- **3 peças** = 20% de desconto  
+- **3 peças** = 20% de desconto
 - **5 peças** = 30% de desconto
 - etc.
 
 ### Melhorias Visuais
 
-1. **Tag de promoção redesenhada**: 
+1. **Tag de promoção redesenhada**:
+
    - Agora é um badge pequeno e arredondado no canto superior direito da foto
    - Cores mais sutis com transparência
    - Não "polui" mais a imagem
@@ -24,6 +26,7 @@ Agora você pode criar promoções com faixas de desconto por quantidade:
 ### Cálculo Automático no Carrinho
 
 O sistema calcula automaticamente o desconto baseado na quantidade de itens:
+
 - Se o cliente adicionar 3 peças de produtos em promoção, ganha o desconto da faixa de 3 peças
 - O desconto maior se aplica quando a quantidade atinge a próxima faixa
 
@@ -39,7 +42,7 @@ Cole e execute:
 
 ```sql
 -- Migration 042: Sistema de Desconto Progressivo
-ALTER TABLE promotions 
+ALTER TABLE promotions
 ADD COLUMN IF NOT EXISTS progressive_discounts JSONB DEFAULT NULL;
 
 COMMENT ON COLUMN promotions.progressive_discounts IS 'Faixas de desconto progressivo. Formato: [{"min_items": 2, "discount_percent": 10}, {"min_items": 3, "discount_percent": 20}]';

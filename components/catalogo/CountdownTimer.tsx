@@ -54,62 +54,45 @@ export default function CountdownTimer({ endDate, primaryColor = '#ec4899' }: Co
   
   return (
     <div 
-      className="flex items-center justify-center gap-1 py-1.5 text-white overflow-hidden"
-      style={{ 
-        background: isUrgent 
-          ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)' 
-          : `linear-gradient(90deg, ${primaryColor} 0%, #8b5cf6 100%)` 
-      }}
+      className="flex items-center justify-center gap-2 py-1.5 text-white overflow-hidden"
+      style={{ backgroundColor: primaryColor }}
     >
-      {/* Ícone animado de fogo quando urgente */}
-      {isUrgent && (
-        <span className="text-xs animate-pulse">🔥</span>
-      )}
+      {/* Ícone de relógio ou fogo quando urgente */}
+      <span className={`text-xs ${isUrgent ? 'animate-pulse' : ''}`}>
+        {isUrgent ? '🔥' : '⏰'}
+      </span>
       
-      <div className="flex items-center gap-0.5 text-[10px] md:text-xs font-bold">
+      {/* Tempo formatado de forma limpa e "solta" */}
+      <div className="flex items-center gap-1 text-[11px] md:text-xs font-bold tracking-wide">
         {/* Dias - só mostra se tiver */}
         {timeLeft.days > 0 && (
           <>
-            <div className="flex flex-col items-center bg-white/20 rounded px-1.5 py-0.5 min-w-[28px]">
-              <span className="text-sm md:text-base font-black tabular-nums leading-none">
-                {String(timeLeft.days).padStart(2, '0')}
-              </span>
-              <span className="text-[8px] uppercase opacity-80">dias</span>
-            </div>
-            <span className="text-white/60 font-light">:</span>
+            <span className="tabular-nums">{timeLeft.days}</span>
+            <span className="opacity-80 font-normal">d</span>
+            <span className="opacity-50 mx-0.5">:</span>
           </>
         )}
         
         {/* Horas */}
-        <div className="flex flex-col items-center bg-white/20 rounded px-1.5 py-0.5 min-w-[28px]">
-          <span className="text-sm md:text-base font-black tabular-nums leading-none">
-            {String(timeLeft.hours).padStart(2, '0')}
-          </span>
-          <span className="text-[8px] uppercase opacity-80">hrs</span>
-        </div>
-        <span className="text-white/60 font-light">:</span>
+        <span className="tabular-nums">{String(timeLeft.hours).padStart(2, '0')}</span>
+        <span className="opacity-80 font-normal">h</span>
+        <span className="opacity-50 mx-0.5">:</span>
         
         {/* Minutos */}
-        <div className="flex flex-col items-center bg-white/20 rounded px-1.5 py-0.5 min-w-[28px]">
-          <span className="text-sm md:text-base font-black tabular-nums leading-none">
-            {String(timeLeft.minutes).padStart(2, '0')}
-          </span>
-          <span className="text-[8px] uppercase opacity-80">min</span>
-        </div>
-        <span className="text-white/60 font-light">:</span>
+        <span className="tabular-nums">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        <span className="opacity-80 font-normal">m</span>
+        <span className="opacity-50 mx-0.5">:</span>
         
-        {/* Segundos - piscando quando urgente */}
-        <div className={`flex flex-col items-center bg-white/20 rounded px-1.5 py-0.5 min-w-[28px] ${isUrgent ? 'animate-pulse' : ''}`}>
-          <span className="text-sm md:text-base font-black tabular-nums leading-none">
-            {String(timeLeft.seconds).padStart(2, '0')}
-          </span>
-          <span className="text-[8px] uppercase opacity-80">seg</span>
-        </div>
+        {/* Segundos */}
+        <span className={`tabular-nums ${isUrgent ? 'animate-pulse' : ''}`}>
+          {String(timeLeft.seconds).padStart(2, '0')}
+        </span>
+        <span className="opacity-80 font-normal">s</span>
       </div>
       
       {/* Texto de urgência */}
       {isUrgent && (
-        <span className="text-[10px] font-semibold ml-1 animate-pulse">CORRE!</span>
+        <span className="text-[10px] font-semibold animate-pulse">CORRE!</span>
       )}
     </div>
   );

@@ -349,6 +349,21 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Estilos</h1>
         </div>
         <div className="p-4 space-y-6">
+          {/* Estilo do Cabeçalho */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabeçalho</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
+                <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }} />
+                <p className="text-sm font-medium text-gray-700">Degradê</p>
+              </button>
+              <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "solid" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "solid" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
+                <div className="h-12 rounded-lg mb-3" style={{ backgroundColor: primaryColor }} />
+                <p className="text-sm font-medium text-gray-700">Cor Sólida</p>
+              </button>
+            </div>
+          </div>
+          
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-4">Estilo do Botão de Compra</h3>
             <div className="grid grid-cols-2 gap-3">

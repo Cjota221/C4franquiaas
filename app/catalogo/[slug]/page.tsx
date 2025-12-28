@@ -204,9 +204,12 @@ export default function CatalogoPrincipal() {
         </div>
       )}
 
-      {/* Banner de Promoções Ativas */}
+      {/* Banner de Promoções Ativas - usando cor da loja */}
       {promotions.length > 0 && (
-        <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3">
+        <div 
+          className="text-white py-2.5"
+          style={{ backgroundColor: primaryColor }}
+        >
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium">
               {promotions.map((promo) => (
