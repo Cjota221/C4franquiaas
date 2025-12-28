@@ -56,7 +56,7 @@ async function handleSyncEstoque() {
       },
     });
     
-    const response = await client.get('/v1/produtos', {
+    const response = await client.get('/produtos', {
       params: { page: 1, length: 100 }
     });
     
