@@ -110,25 +110,40 @@ export default function PromocoesPage() {
     try {
       const supabase = createClient()
       // Buscar produtos vinculados a esta revendedora
-      const { data: resellerProducts } = await supabase
+      const { data: resellerProducts, error } = await supabase
         .from('reseller_products')
         .select(`
           product_id,
           produtos:product_id (
             id,
             nome,
-            preco,
-            imagem_url
+            preco_base,
+            imagem
           )
         `)
         .eq('reseller_id', rId)
         .eq('is_active', true)
       
+      if (error) {
+        console.error('Erro na query:', error)
+        return
+      }
+      
       if (resellerProducts) {
         const prods = resellerProducts
-          .map((rp) => rp.produtos as unknown as Product)
+          .map((rp) => {
+            const prod = rp.produtos as unknown as { id: string; nome: string; preco_base: number; imagem: string | null }
+            if (!prod) return null
+            return {
+              id: prod.id,
+              nome: prod.nome,
+              preco: prod.preco_base,
+              imagem_url: prod.imagem
+            }
+          })
           .filter((p): p is Product => p !== null)
         setProducts(prods)
+        console.log('Produtos carregados:', prods.length)
       }
     } catch (err) {
       console.error('Erro ao carregar produtos:', err)
@@ -786,6 +801,14 @@ export default function PromocoesPage() {
                       <div className="border rounded-lg max-h-48 overflow-y-auto">
                         {loadingProducts ? (
                           <div className="p-4 text-center text-gray-500">Carregando produtos...</div>
+                        ) : products.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500">
+                            Nenhum produto encontrado. Vincule produtos ao seu catálogo primeiro.
+                          </div>
+                        ) : products.filter(p => p.nome.toLowerCase().includes(productSearch.toLowerCase())).length === 0 ? (
+                          <div className="p-4 text-center text-gray-500">
+                            Nenhum produto encontrado com &quot;{productSearch}&quot;
+                          </div>
                         ) : (
                           products
                             .filter(p => p.nome.toLowerCase().includes(productSearch.toLowerCase()))
