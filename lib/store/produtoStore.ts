@@ -7,6 +7,7 @@ export type Produto = {
   estoque: number;
   preco_base: number | null;
   ativo: boolean;
+  desativado_manual?: boolean; // 🆕 Se TRUE, foi desativado manualmente pelo admin
   imagem?: string | null;
   imagens?: string[];
   variacoes_meta?: unknown[];

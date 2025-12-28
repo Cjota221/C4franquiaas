@@ -35,7 +35,13 @@ export async function PATCH(req: NextRequest) {
     }
     const supabase = createClient(url, serviceKey);
     try {
-      const { data, error } = await supabase.from('produtos').update({ ativo }).in('id', ids).select('id,ativo');
+      // 🆕 Quando desativar manualmente, marca desativado_manual = true
+      // Quando ativar, remove a marca de desativado_manual
+      const updateData = ativo 
+        ? { ativo: true, desativado_manual: false }  // Ativar: remove flag manual
+        : { ativo: false, desativado_manual: true }; // Desativar: marca como manual
+      
+      const { data, error } = await supabase.from('produtos').update(updateData).in('id', ids).select('id,ativo');
       if (error) {
         console.error('[produtos/batch] supabase update error', error);
         return NextResponse.json({ error: error.message ?? String(error) }, { status: 500 });

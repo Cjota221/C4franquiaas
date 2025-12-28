@@ -421,9 +421,15 @@ export default function ProdutosPage(): React.JSX.Element {
 
       const novoStatus = action === 'activate';
       
+      // 🆕 Quando desativar manualmente, marca desativado_manual = true
+      // Quando ativar, remove a marca de desativado_manual
+      const updateData = novoStatus 
+        ? { ativo: true, desativado_manual: false }  // Ativar: remove flag manual
+        : { ativo: false, desativado_manual: true }; // Desativar: marca como manual
+      
       const { error } = await createClient()
         .from('produtos')
-        .update({ ativo: novoStatus })
+        .update(updateData)
         .in('id', selected);
 
       if (error) throw error;

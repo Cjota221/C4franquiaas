@@ -103,7 +103,7 @@ async function handleSync(page?: number, length?: number) {
       const idsExternos = batch.map(p => p.id_externo).filter(id => id !== null);
       const { data: existingProducts } = await supabase
         .from('produtos')
-        .select('id, id_externo, estoque, preco_base, ativo, ultima_sincronizacao')
+        .select('id, id_externo, estoque, preco_base, ativo, desativado_manual, ultima_sincronizacao')
         .in('id_externo', idsExternos);
 
       // Identificar produtos novos, alterados e inalterados
@@ -127,18 +127,31 @@ async function handleSync(page?: number, length?: number) {
           if (existing.preco_base !== newProduct.preco_base) {
             changes.push(`preço: ${existing.preco_base} → ${newProduct.preco_base}`);
           }
-          if (existing.ativo !== newProduct.ativo) {
+          
+          // 🆕 RESPEITAR desativação manual
+          // Se o produto foi desativado manualmente, NÃO reativar automaticamente
+          let novoAtivo = newProduct.ativo;
+          if (existing.desativado_manual === true) {
+            // Produto foi desativado pelo admin, manter desativado
+            novoAtivo = false;
+            if (newProduct.ativo !== existing.ativo) {
+              changes.push(`ativo: mantido FALSE (desativado_manual)`);
+            }
+          } else if (existing.ativo !== newProduct.ativo) {
             changes.push(`ativo: ${existing.ativo} → ${newProduct.ativo}`);
           }
           
+          // Atualizar o valor de ativo no produto
+          const productToUpsert = { ...newProduct, ativo: novoAtivo };
+          
           if (changes.length > 0) {
             // Produto ALTERADO
-            productsToUpsert.push(newProduct);
+            productsToUpsert.push(productToUpsert);
             changedProducts.push({ id_externo: newProduct.id_externo as string, changes });
             totalUpdated++;
           } else {
             // Produto INALTERADO - ainda atualiza timestamp
-            productsToUpsert.push(newProduct);
+            productsToUpsert.push(productToUpsert);
             totalUnchanged++;
           }
         }
