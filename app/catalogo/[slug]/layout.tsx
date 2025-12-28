@@ -34,6 +34,33 @@ type Reseller = {
   };
 };
 
+// Tipo para promoções
+type Promotion = {
+  id: string;
+  name: string;
+  description: string | null;
+  type: 'frete_gratis' | 'cupom_desconto' | 'leve_pague' | 'desconto_percentual' | 'desconto_valor';
+  discount_type: 'percentage' | 'fixed_value' | null;
+  discount_value: number | null;
+  buy_quantity: number | null;
+  pay_quantity: number | null;
+  free_shipping: boolean;
+  min_value_free_shipping: number | null;
+  coupon_code: string | null;
+  min_purchase_value: number | null;
+  max_discount_value: number | null;
+  applies_to: 'all' | 'categories' | 'products';
+  product_ids: string[] | null;
+  category_ids: string[] | null;
+};
+
+// Tipo para cupom aplicado
+type AppliedCoupon = {
+  code: string;
+  promotion: Promotion;
+  discountValue: number;
+};
+
 type CartItem = {
   id?: string;
   productId: string;
@@ -75,6 +102,14 @@ type CatalogoContextType = {
   requireLeadCapture: () => boolean;
   showLeadModal: boolean;
   setShowLeadModal: (show: boolean) => void;
+  // Promoções
+  promotions: Promotion[];
+  appliedCoupon: AppliedCoupon | null;
+  applyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
+  removeCoupon: () => void;
+  getDiscount: () => number;
+  getTotalWithDiscount: () => number;
+  hasFreeShipping: () => boolean;
 };
 
 const CatalogoContext = createContext<CatalogoContextType | null>(null);
@@ -103,6 +138,10 @@ export default function CatalogoLayout({
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [pendingCartItem, setPendingCartItem] = useState<CartItem | null>(null);
   
+  // Estados para promoções
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  
   const supabase = createClientComponentClient();
 
   // Carregar slug
@@ -123,12 +162,28 @@ export default function CatalogoLayout({
 
       if (data) {
         setReseller(data);
+        
+        // Carregar promoções ativas da revendedora
+        loadPromotions(data.id);
       }
       setLoading(false);
     }
 
     loadReseller();
   }, [slug, supabase]);
+
+  // Função para carregar promoções ativas
+  const loadPromotions = async (resellerId: string) => {
+    try {
+      const response = await fetch(`/api/promocoes?reseller_id=${resellerId}&active=true`);
+      const data = await response.json();
+      if (data.promotions) {
+        setPromotions(data.promotions);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar promoções:', error);
+    }
+  };
 
   // Carregar carrinho do localStorage
   useEffect(() => {
@@ -367,9 +422,154 @@ export default function CatalogoLayout({
 
   const clearCart = () => setCart([]);
 
-  const getTotal = () => cart.reduce((sum, item) => sum + item.preco * item.quantidade, 0);
+  const getTotal = useCallback(() => cart.reduce((sum, item) => sum + item.preco * item.quantidade, 0), [cart]);
 
   const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantidade, 0);
+
+  // ==================== FUNÇÕES DE PROMOÇÕES E CUPONS ====================
+  
+  // Aplicar cupom de desconto
+  const applyCoupon = useCallback(async (code: string): Promise<{ success: boolean; message: string }> => {
+    if (!reseller?.id || !code.trim()) {
+      return { success: false, message: 'Digite um código de cupom válido' };
+    }
+
+    try {
+      // Verificar se o cupom pertence a essa revendedora
+      const response = await fetch(`/api/promocoes?coupon=${code.trim().toUpperCase()}`);
+      const data = await response.json();
+
+      if (data.error) {
+        return { success: false, message: data.error };
+      }
+
+      const promotion = data.promotion;
+
+      // Verificar se o cupom é dessa revendedora
+      if (promotion.reseller_id !== reseller.id) {
+        return { success: false, message: 'Cupom inválido para esta loja' };
+      }
+
+      // Verificar valor mínimo de compra
+      const total = getTotal();
+      if (promotion.min_purchase_value && total < promotion.min_purchase_value) {
+        return { 
+          success: false, 
+          message: `Compra mínima de R$ ${promotion.min_purchase_value.toFixed(2)} para usar este cupom` 
+        };
+      }
+
+      // Calcular desconto
+      let discountValue = 0;
+      
+      if (promotion.type === 'cupom_desconto' || promotion.type === 'desconto_percentual') {
+        if (promotion.discount_type === 'percentage') {
+          discountValue = total * (promotion.discount_value / 100);
+          // Aplicar limite máximo de desconto se existir
+          if (promotion.max_discount_value && discountValue > promotion.max_discount_value) {
+            discountValue = promotion.max_discount_value;
+          }
+        } else {
+          discountValue = promotion.discount_value || 0;
+        }
+      } else if (promotion.type === 'desconto_valor') {
+        discountValue = promotion.discount_value || 0;
+      }
+
+      // Salvar cupom aplicado
+      const couponData: AppliedCoupon = {
+        code: code.toUpperCase(),
+        promotion,
+        discountValue,
+      };
+      
+      setAppliedCoupon(couponData);
+      localStorage.setItem(`coupon_${slug}`, JSON.stringify(couponData));
+
+      return { success: true, message: `Cupom aplicado! Desconto de R$ ${discountValue.toFixed(2)}` };
+    } catch (error) {
+      console.error('Erro ao aplicar cupom:', error);
+      return { success: false, message: 'Erro ao validar cupom' };
+    }
+  }, [reseller?.id, slug, getTotal]);
+
+  // Remover cupom
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    localStorage.removeItem(`coupon_${slug}`);
+  }, [slug]);
+
+  // Calcular desconto atual
+  const getDiscount = useCallback(() => {
+    if (!appliedCoupon) return 0;
+    
+    // Recalcular desconto baseado no total atual
+    const total = getTotal();
+    const promotion = appliedCoupon.promotion;
+    
+    let discountValue = 0;
+    
+    if (promotion.type === 'cupom_desconto' || promotion.type === 'desconto_percentual') {
+      if (promotion.discount_type === 'percentage') {
+        discountValue = total * ((promotion.discount_value || 0) / 100);
+        if (promotion.max_discount_value && discountValue > promotion.max_discount_value) {
+          discountValue = promotion.max_discount_value;
+        }
+      } else {
+        discountValue = promotion.discount_value || 0;
+      }
+    } else if (promotion.type === 'desconto_valor') {
+      discountValue = promotion.discount_value || 0;
+    }
+    
+    return Math.min(discountValue, total); // Não permitir desconto maior que o total
+  }, [appliedCoupon, getTotal]);
+
+  // Total com desconto
+  const getTotalWithDiscount = useCallback(() => {
+    return Math.max(0, getTotal() - getDiscount());
+  }, [getTotal, getDiscount]);
+
+  // Verificar se tem frete grátis
+  const hasFreeShipping = useCallback(() => {
+    // Verificar se tem promoção de frete grátis ativa
+    const freeShippingPromo = promotions.find(p => 
+      p.type === 'frete_gratis' && 
+      p.free_shipping === true
+    );
+
+    if (freeShippingPromo) {
+      // Verificar valor mínimo se existir
+      if (freeShippingPromo.min_value_free_shipping) {
+        return getTotal() >= freeShippingPromo.min_value_free_shipping;
+      }
+      return true;
+    }
+
+    // Verificar se cupom aplicado tem frete grátis
+    if (appliedCoupon?.promotion.free_shipping) {
+      const minValue = appliedCoupon.promotion.min_value_free_shipping;
+      if (minValue) {
+        return getTotal() >= minValue;
+      }
+      return true;
+    }
+
+    return false;
+  }, [promotions, appliedCoupon, getTotal]);
+
+  // Carregar cupom salvo do localStorage
+  useEffect(() => {
+    if (!slug) return;
+    const savedCoupon = localStorage.getItem(`coupon_${slug}`);
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon));
+      } catch {
+        setAppliedCoupon(null);
+      }
+    }
+  }, [slug]);
 
   if (loading) {
     return (
@@ -410,6 +610,14 @@ export default function CatalogoLayout({
         requireLeadCapture,
         showLeadModal,
         setShowLeadModal,
+        // Promoções
+        promotions,
+        appliedCoupon,
+        applyCoupon,
+        removeCoupon,
+        getDiscount,
+        getTotalWithDiscount,
+        hasFreeShipping,
       }}
     >
       <div className="min-h-screen bg-gray-50">

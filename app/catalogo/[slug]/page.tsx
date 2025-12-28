@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, Truck, Tag } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type Variacao = {
@@ -27,7 +27,7 @@ type ProductWithPrice = {
 };
 
 export default function CatalogoPrincipal() {
-  const { reseller, primaryColor, themeSettings } = useCatalogo();
+  const { reseller, primaryColor, themeSettings, promotions } = useCatalogo();
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -200,6 +200,46 @@ export default function CatalogoPrincipal() {
               />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Banner de Promoções Ativas */}
+      {promotions.length > 0 && (
+        <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium">
+              {promotions.map((promo) => (
+                <div key={promo.id} className="flex items-center gap-2">
+                  {promo.type === 'frete_gratis' && (
+                    <>
+                      <Truck size={16} />
+                      <span>
+                        Frete Grátis
+                        {promo.min_value_free_shipping && ` acima de R$ ${promo.min_value_free_shipping.toFixed(0)}`}
+                      </span>
+                    </>
+                  )}
+                  {(promo.type === 'cupom_desconto' || promo.type === 'desconto_percentual') && promo.coupon_code && (
+                    <>
+                      <Tag size={16} />
+                      <span>
+                        Cupom {promo.coupon_code}: {promo.discount_type === 'percentage' 
+                          ? `${promo.discount_value}% OFF` 
+                          : `R$ ${promo.discount_value} OFF`
+                        }
+                      </span>
+                    </>
+                  )}
+                  {promo.type === 'leve_pague' && promo.buy_quantity && promo.pay_quantity && (
+                    <>
+                      <Tag size={16} />
+                      <span>Leve {promo.buy_quantity} Pague {promo.pay_quantity}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

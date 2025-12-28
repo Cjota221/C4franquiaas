@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle, Tag, X, Check, Truck } from 'lucide-react';
 import { useCatalogo } from '../layout';
 
 export default function CarrinhoPage() {
@@ -13,10 +13,43 @@ export default function CarrinhoPage() {
     updateQuantity, 
     clearCart, 
     getTotal, 
-    primaryColor 
+    primaryColor,
+    // Promoções
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    getDiscount,
+    getTotalWithDiscount,
+    hasFreeShipping,
   } = useCatalogo();
   
   const [enviando, setEnviando] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setCouponLoading(true);
+    setCouponMessage(null);
+    
+    const result = await applyCoupon(couponCode.trim());
+    
+    setCouponMessage({
+      type: result.success ? 'success' : 'error',
+      text: result.message
+    });
+    
+    if (result.success) {
+      setCouponCode('');
+    }
+    
+    setCouponLoading(false);
+    
+    // Limpar mensagem após 5 segundos
+    setTimeout(() => setCouponMessage(null), 5000);
+  };
 
   const formatarPedidoWhatsApp = () => {
     if (cart.length === 0) return '';
@@ -38,8 +71,23 @@ export default function CarrinhoPage() {
     });
 
     mensagem += `─────────────────\n`;
-    mensagem += `*TOTAL: R$ ${getTotal().toFixed(2).replace('.', ',')}*\n\n`;
-    mensagem += `Aguardo confirmação! 😊`;
+    
+    // Se tem cupom aplicado, mostrar desconto
+    if (appliedCoupon) {
+      mensagem += `Subtotal: R$ ${getTotal().toFixed(2).replace('.', ',')}\n`;
+      mensagem += `🎟️ Cupom: ${appliedCoupon.code}\n`;
+      mensagem += `💰 Desconto: -R$ ${getDiscount().toFixed(2).replace('.', ',')}\n`;
+      mensagem += `*TOTAL: R$ ${getTotalWithDiscount().toFixed(2).replace('.', ',')}*\n`;
+    } else {
+      mensagem += `*TOTAL: R$ ${getTotal().toFixed(2).replace('.', ',')}*\n`;
+    }
+    
+    // Frete grátis
+    if (hasFreeShipping()) {
+      mensagem += `🚚 *FRETE GRÁTIS!*\n`;
+    }
+    
+    mensagem += `\nAguardo confirmação! 😊`;
 
     return mensagem;
   };
@@ -219,7 +267,7 @@ export default function CarrinhoPage() {
               Resumo do Pedido
             </h2>
 
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               {cart.map((item) => {
                 const itemKey = item.variacao?.id 
                   ? `${item.productId}-${item.variacao.id}` 
@@ -239,11 +287,79 @@ export default function CarrinhoPage() {
               })}
             </div>
 
-            <div className="border-t border-gray-200 pt-4 mb-6">
-              <div className="flex justify-between text-lg font-bold">
+            {/* Campo de Cupom */}
+            <div className="border-t border-gray-200 pt-4 mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Tag size={14} className="inline mr-1" />
+                Cupom de Desconto
+              </label>
+              
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <Check size={16} className="text-green-600" />
+                    <span className="font-medium text-green-800">{appliedCoupon.code}</span>
+                  </div>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Digite o código"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    {couponLoading ? '...' : 'Aplicar'}
+                  </button>
+                </div>
+              )}
+              
+              {couponMessage && (
+                <p className={`text-sm mt-2 ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                  {couponMessage.text}
+                </p>
+              )}
+            </div>
+
+            {/* Frete Grátis */}
+            {hasFreeShipping() && (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <Truck size={18} className="text-green-600" />
+                <span className="text-sm font-medium text-green-800">Frete Grátis!</span>
+              </div>
+            )}
+
+            {/* Totais */}
+            <div className="border-t border-gray-200 pt-4 mb-6 space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Subtotal</span>
+                <span>R$ {getTotal().toFixed(2).replace('.', ',')}</span>
+              </div>
+              
+              {appliedCoupon && getDiscount() > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Desconto ({appliedCoupon.code})</span>
+                  <span>-R$ {getDiscount().toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between text-lg font-bold pt-2 border-t">
                 <span>Total</span>
                 <span style={{ color: primaryColor }}>
-                  R$ {getTotal().toFixed(2).replace('.', ',')}
+                  R$ {getTotalWithDiscount().toFixed(2).replace('.', ',')}
                 </span>
               </div>
             </div>
