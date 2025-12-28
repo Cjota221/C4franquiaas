@@ -11,6 +11,7 @@ import ModalCategorias from '@/components/ModalCategorias';
 import ModalVincularCategoria from '@/components/ModalVincularCategoria';
 import ModalAtualizarPrecos from '@/components/ModalAtualizarPrecos';
 import ModalDescricaoGuia from '@/components/admin/ModalDescricaoGuia';
+import ModalDescricaoGuiaMassa from '@/components/admin/ModalDescricaoGuiaMassa';
 import TabelaProdutos from '@/components/admin/TabelaProdutos';
 import FiltrosProdutos from '@/components/admin/FiltrosProdutos';
 import { createClient } from '@/lib/supabase/client';
@@ -66,6 +67,9 @@ export default function ProdutosPage(): React.JSX.Element {
   // State para Modal de Descrição e Guia de Tamanhos
   const [modalDescricaoGuiaOpen, setModalDescricaoGuiaOpen] = useState(false);
   const [produtoParaEditar, setProdutoParaEditar] = useState<ProdutoType | null>(null);
+  
+  // State para Modal de Edição em Massa
+  const [modalMassaOpen, setModalMassaOpen] = useState(false);
 
   // Outros states
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
@@ -708,6 +712,12 @@ export default function ProdutosPage(): React.JSX.Element {
               >
                 Atualizar Preços
               </button>
+              <button 
+                onClick={() => setModalMassaOpen(true)} 
+                className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-purple-50 hover:text-purple-700 font-medium transition-colors"
+              >
+                📝 Descrição/Guia em Massa
+              </button>
             </div>
           )}
         </div>
@@ -860,6 +870,22 @@ export default function ProdutosPage(): React.JSX.Element {
           }}
         />
       )}
+
+      {/* Modal de Edição em Massa - Descrição e Guia de Tamanhos */}
+      <ModalDescricaoGuiaMassa
+        isOpen={modalMassaOpen}
+        onClose={() => setModalMassaOpen(false)}
+        produtos={produtosFiltrados.map(p => ({
+          id: String(p.id),
+          nome: p.nome,
+          imagem: p.imagem || undefined,
+          description: p.description || undefined,
+          size_guide: p.size_guide as { image_url?: string; instrucoes?: string; measurements?: { tamanho: string; centimetros: string }[] } | null | undefined,
+        }))}
+        onSave={() => {
+          carregarProdutos(pagina, debouncedSearchTerm);
+        }}
+      />
     </PageWrapper>
   );
 }

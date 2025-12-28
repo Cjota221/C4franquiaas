@@ -4,7 +4,14 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { X, Ruler } from 'lucide-react';
 
-type Medida = {
+// Estrutura para calçados
+type MedidaCalcado = {
+  tamanho: string;
+  centimetros: string;
+};
+
+// Estrutura antiga (roupas) - manter compatibilidade
+type MedidaRoupa = {
   size: string;
   busto?: string;
   cintura?: string;
@@ -15,7 +22,8 @@ type Medida = {
 
 type SizeGuide = {
   image_url?: string;
-  measurements?: Medida[];
+  instrucoes?: string;
+  measurements?: (MedidaCalcado | MedidaRoupa)[];
 };
 
 type Props = {
@@ -27,13 +35,17 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
   const [isOpen, setIsOpen] = useState(false);
 
   // Se não há guia de tamanhos, não mostra nada
-  if (!sizeGuide || (!sizeGuide.image_url && (!sizeGuide.measurements || sizeGuide.measurements.length === 0))) {
+  if (!sizeGuide || (!sizeGuide.image_url && !sizeGuide.instrucoes && (!sizeGuide.measurements || sizeGuide.measurements.length === 0))) {
     return null;
   }
 
-  // Descobrir quais colunas de medidas existem
-  const colunas = sizeGuide.measurements && sizeGuide.measurements.length > 0
-    ? Object.keys(sizeGuide.measurements[0]).filter(k => k !== 'size' && sizeGuide.measurements?.some(m => m[k]))
+  // Detectar se é estrutura de calçados ou roupas
+  const isCalcado = sizeGuide.measurements && sizeGuide.measurements.length > 0 && 
+    'tamanho' in sizeGuide.measurements[0];
+
+  // Descobrir quais colunas de medidas existem (para roupas)
+  const colunasRoupa = !isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0
+    ? Object.keys(sizeGuide.measurements[0]).filter(k => k !== 'size' && (sizeGuide.measurements as MedidaRoupa[])?.some(m => m[k]))
     : [];
 
   const traduzirColuna = (coluna: string) => {
@@ -89,13 +101,16 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
 
             {/* Conteúdo */}
             <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-              {/* Imagem do guia */}
+              {/* Imagem/Ilustração do guia */}
               {sizeGuide.image_url && (
                 <div className="mb-6">
-                  <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-xl overflow-hidden">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    📐 Como Medir
+                  </h3>
+                  <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-xl overflow-hidden border">
                     <Image
                       src={sizeGuide.image_url}
-                      alt="Guia de tamanhos"
+                      alt="Guia de tamanhos - como medir"
                       fill
                       className="object-contain"
                     />
@@ -103,11 +118,67 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                 </div>
               )}
 
-              {/* Tabela de medidas */}
-              {sizeGuide.measurements && sizeGuide.measurements.length > 0 && (
+              {/* Instruções de como medir */}
+              {sizeGuide.instrucoes && (
+                <div className="mb-6 p-4 bg-pink-50 rounded-xl border border-pink-100">
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    📝 Instruções
+                  </h4>
+                  <div className="text-sm text-gray-700 whitespace-pre-line">
+                    {sizeGuide.instrucoes}
+                  </div>
+                </div>
+              )}
+
+              {/* Tabela de medidas - CALÇADOS */}
+              {isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Tabela de Medidas (em cm)
+                    👟 Tabela de Medidas - Calçados
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr style={{ backgroundColor: `${primaryColor}15` }}>
+                          <th 
+                            className="px-6 py-3 text-center text-sm font-semibold border border-gray-200"
+                            style={{ color: primaryColor }}
+                          >
+                            Tamanho (BR)
+                          </th>
+                          <th 
+                            className="px-6 py-3 text-center text-sm font-semibold border border-gray-200"
+                            style={{ color: primaryColor }}
+                          >
+                            Comprimento do Solado (cm)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(sizeGuide.measurements as MedidaCalcado[]).map((medida, index) => (
+                          <tr 
+                            key={medida.tamanho || index} 
+                            className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                          >
+                            <td className="px-6 py-3 text-center font-bold text-gray-900 border border-gray-200 text-lg">
+                              {medida.tamanho}
+                            </td>
+                            <td className="px-6 py-3 text-center text-gray-600 border border-gray-200">
+                              {medida.centimetros} cm
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabela de medidas - ROUPAS (compatibilidade com estrutura antiga) */}
+              {!isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    👗 Tabela de Medidas (em cm)
                   </h3>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
@@ -119,7 +190,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                           >
                             Tamanho
                           </th>
-                          {colunas.map((col) => (
+                          {colunasRoupa.map((col) => (
                             <th 
                               key={col} 
                               className="px-4 py-3 text-center text-sm font-semibold border border-gray-200"
@@ -131,7 +202,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                         </tr>
                       </thead>
                       <tbody>
-                        {sizeGuide.measurements.map((medida, index) => (
+                        {(sizeGuide.measurements as MedidaRoupa[]).map((medida, index) => (
                           <tr 
                             key={medida.size || index} 
                             className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
@@ -139,7 +210,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                             <td className="px-4 py-3 text-left font-bold text-gray-900 border border-gray-200">
                               {medida.size}
                             </td>
-                            {colunas.map((col) => (
+                            {colunasRoupa.map((col) => (
                               <td 
                                 key={col} 
                                 className="px-4 py-3 text-center text-gray-600 border border-gray-200"
@@ -152,16 +223,19 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
 
-                  {/* Dica de como medir */}
-                  <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-                    <h4 className="font-semibold text-gray-900 mb-2">📏 Como Medir</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li><strong>Busto:</strong> Meça ao redor da parte mais larga do busto.</li>
-                      <li><strong>Cintura:</strong> Meça ao redor da parte mais fina da cintura.</li>
-                      <li><strong>Quadril:</strong> Meça ao redor da parte mais larga do quadril.</li>
-                    </ul>
-                  </div>
+              {/* Dica extra quando não tem instruções */}
+              {!sizeGuide.instrucoes && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                  <h4 className="font-semibold text-gray-900 mb-2">� Dica</h4>
+                  <p className="text-sm text-gray-600">
+                    {isCalcado 
+                      ? 'Meça o comprimento do seu pé (do calcanhar até o dedo mais longo) e compare com a tabela acima. Se estiver entre dois tamanhos, escolha o maior.'
+                      : 'Use uma fita métrica para medir seu corpo e compare com a tabela acima. Se estiver entre dois tamanhos, recomendamos escolher o maior.'
+                    }
+                  </p>
                 </div>
               )}
             </div>
@@ -171,3 +245,4 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
     </>
   );
 }
+

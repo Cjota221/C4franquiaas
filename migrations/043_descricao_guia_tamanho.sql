@@ -6,21 +6,26 @@ ALTER TABLE produtos
 ADD COLUMN IF NOT EXISTS description TEXT;
 
 -- Adicionar campo para guia de tamanhos (JSON para flexibilidade)
--- Pode conter: imagem URL ou tabela de medidas
+-- Estrutura otimizada para calçados (rasteirinhas, sandálias, etc)
 ALTER TABLE produtos 
 ADD COLUMN IF NOT EXISTS size_guide JSONB;
 
 -- Comentários para documentação
 COMMENT ON COLUMN produtos.description IS 'Descrição detalhada do produto para exibição na página';
-COMMENT ON COLUMN produtos.size_guide IS 'Guia de tamanhos - JSON com image_url e/ou measurements[]';
+COMMENT ON COLUMN produtos.size_guide IS 'Guia de tamanhos - JSON com image_url, instrucoes e measurements[]';
 
--- Exemplo de estrutura do size_guide:
+-- Exemplo de estrutura do size_guide para CALÇADOS:
 -- {
---   "image_url": "https://...",
+--   "image_url": "https://...",  -- Ilustração de como medir o pé/solado
+--   "instrucoes": "Como medir seu pé corretamente:\n1. Coloque...",  -- Texto explicativo
 --   "measurements": [
---     { "size": "P", "busto": "88-92", "cintura": "68-72", "quadril": "94-98" },
---     { "size": "M", "busto": "92-96", "cintura": "72-76", "quadril": "98-102" },
---     { "size": "G", "busto": "96-100", "cintura": "76-80", "quadril": "102-106" },
---     { "size": "GG", "busto": "100-104", "cintura": "80-84", "quadril": "106-110" }
+--     { "tamanho": "33", "centimetros": "21.5" },
+--     { "tamanho": "34", "centimetros": "22" },
+--     { "tamanho": "35", "centimetros": "22.5" },
+--     { "tamanho": "36", "centimetros": "23" },
+--     { "tamanho": "37", "centimetros": "23.5" },
+--     { "tamanho": "38", "centimetros": "24" },
+--     { "tamanho": "39", "centimetros": "24.5" },
+--     { "tamanho": "40", "centimetros": "25" }
 --   ]
 -- }
