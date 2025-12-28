@@ -12,8 +12,18 @@ type ThemeSettings = {
   logo_shape: "circle" | "square" | "rectangle";
   logo_position: "left" | "center" | "right";
   show_prices: boolean;
-  show_stock: boolean;
   show_whatsapp_float: boolean;
+  // Novas opções
+  border_radius: "none" | "small" | "medium" | "large";
+  card_image_style: "square" | "rounded" | "circle";
+  announcement_bar: {
+    enabled: boolean;
+    text: string;
+    bg_color: string;
+    text_color: string;
+  };
+  font_style: "modern" | "classic" | "elegant";
+  product_name_size: "small" | "medium" | "large";
 };
 
 type BannerSubmission = {
@@ -43,8 +53,18 @@ const DEFAULT_THEME: ThemeSettings = {
   logo_shape: "circle",
   logo_position: "center",
   show_prices: true,
-  show_stock: false,
   show_whatsapp_float: true,
+  // Novas opções
+  border_radius: "medium",
+  card_image_style: "rounded",
+  announcement_bar: {
+    enabled: false,
+    text: "🔥 Frete grátis acima de R$ 150!",
+    bg_color: "#000000",
+    text_color: "#ffffff",
+  },
+  font_style: "modern",
+  product_name_size: "medium",
 };
 
 export default function PersonalizacaoRevendedoraPage() {
@@ -349,6 +369,161 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Estilos</h1>
         </div>
         <div className="p-4 space-y-6">
+          
+          {/* BARRA DE ANÚNCIO */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-800">📢 Barra de Anúncio</h3>
+                <p className="text-sm text-gray-500">Exibe mensagem no topo do catálogo</p>
+              </div>
+              <button 
+                onClick={() => setThemeSettings({ 
+                  ...themeSettings, 
+                  announcement_bar: { 
+                    ...themeSettings.announcement_bar, 
+                    enabled: !themeSettings.announcement_bar?.enabled 
+                  } 
+                })} 
+                className={`w-14 h-8 rounded-full transition-colors ${themeSettings.announcement_bar?.enabled ? "bg-green-500" : "bg-gray-300"}`}
+              >
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.announcement_bar?.enabled ? "translate-x-7" : "translate-x-1"}`} />
+              </button>
+            </div>
+            
+            {themeSettings.announcement_bar?.enabled && (
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                {/* Preview */}
+                <div 
+                  className="p-3 text-center text-sm font-medium rounded-lg"
+                  style={{ 
+                    backgroundColor: themeSettings.announcement_bar?.bg_color || "#000000",
+                    color: themeSettings.announcement_bar?.text_color || "#ffffff"
+                  }}
+                >
+                  {themeSettings.announcement_bar?.text || "Sua mensagem aqui"}
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-500 mb-2">Texto do Anúncio</label>
+                  <input 
+                    type="text" 
+                    value={themeSettings.announcement_bar?.text || ""} 
+                    onChange={(e) => setThemeSettings({ 
+                      ...themeSettings, 
+                      announcement_bar: { ...themeSettings.announcement_bar, text: e.target.value } 
+                    })} 
+                    placeholder="Ex: 🔥 Frete grátis acima de R$ 150!"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                    maxLength={60}
+                  />
+                  <p className="text-xs text-gray-400 text-right mt-1">{(themeSettings.announcement_bar?.text || "").length}/60</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-2">Cor de Fundo</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="color" 
+                        value={themeSettings.announcement_bar?.bg_color || "#000000"} 
+                        onChange={(e) => setThemeSettings({ 
+                          ...themeSettings, 
+                          announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
+                        })} 
+                        className="w-12 h-10 rounded-lg cursor-pointer border border-gray-200" 
+                      />
+                      <input 
+                        type="text" 
+                        value={themeSettings.announcement_bar?.bg_color || "#000000"} 
+                        onChange={(e) => setThemeSettings({ 
+                          ...themeSettings, 
+                          announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
+                        })} 
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-2">Cor do Texto</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="color" 
+                        value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
+                        onChange={(e) => setThemeSettings({ 
+                          ...themeSettings, 
+                          announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
+                        })} 
+                        className="w-12 h-10 rounded-lg cursor-pointer border border-gray-200" 
+                      />
+                      <input 
+                        type="text" 
+                        value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
+                        onChange={(e) => setThemeSettings({ 
+                          ...themeSettings, 
+                          announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
+                        })} 
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* BORDAS ARREDONDADAS */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-2">Bordas Arredondadas</h3>
+            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e botões</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: "none", label: "Sem", radius: "0px" },
+                { id: "small", label: "Pouco", radius: "4px" },
+                { id: "medium", label: "Médio", radius: "12px" },
+                { id: "large", label: "Muito", radius: "24px" },
+              ].map((opt) => (
+                <button 
+                  key={opt.id} 
+                  onClick={() => setThemeSettings({ ...themeSettings, border_radius: opt.id as "none" | "small" | "medium" | "large" })} 
+                  className={`p-3 border-2 transition-all ${themeSettings.border_radius === opt.id ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+                  style={{ borderRadius: opt.radius }}
+                >
+                  <div className="bg-gray-300 h-8 mb-2" style={{ borderRadius: opt.radius }} />
+                  <p className="text-xs font-medium text-gray-700">{opt.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* ESTILO DA IMAGEM DO PRODUTO */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Imagem do Produto</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, card_image_style: "square" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_image_style === "square" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <div className="bg-gray-300 h-16 mb-2 rounded-none" />
+                <p className="text-xs font-medium text-gray-700">Quadrada</p>
+              </button>
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, card_image_style: "rounded" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_image_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <div className="bg-gray-300 h-16 mb-2 rounded-xl" />
+                <p className="text-xs font-medium text-gray-700">Arredondada</p>
+              </button>
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, card_image_style: "circle" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_image_style === "circle" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <div className="bg-gray-300 h-16 w-16 mx-auto mb-2 rounded-full" />
+                <p className="text-xs font-medium text-gray-700">Circular</p>
+              </button>
+            </div>
+          </div>
+
           {/* Estilo do Cabeçalho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabeçalho</h3>
@@ -377,6 +552,7 @@ export default function PersonalizacaoRevendedoraPage() {
               </button>
             </div>
           </div>
+          
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-4">Estilo do Card de Produto</h3>
             <div className="grid grid-cols-3 gap-3">
@@ -385,10 +561,46 @@ export default function PersonalizacaoRevendedoraPage() {
               <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "flat" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "flat" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-gray-100 rounded-lg h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Simples</p></button>
             </div>
           </div>
+          
+          {/* TAMANHO DO NOME DO PRODUTO */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <h3 className="font-semibold text-gray-800 mb-4">Tamanho do Nome do Produto</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, product_name_size: "small" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.product_name_size === "small" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <p className="text-xs font-medium text-gray-800 mb-2">Rasteirinha</p>
+                <p className="text-xs text-gray-500">Pequeno</p>
+              </button>
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, product_name_size: "medium" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.product_name_size === "medium" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <p className="text-sm font-medium text-gray-800 mb-2">Rasteirinha</p>
+                <p className="text-xs text-gray-500">Médio</p>
+              </button>
+              <button 
+                onClick={() => setThemeSettings({ ...themeSettings, product_name_size: "large" })} 
+                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.product_name_size === "large" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
+              >
+                <p className="text-base font-medium text-gray-800 mb-2">Rasteirinha</p>
+                <p className="text-xs text-gray-500">Grande</p>
+              </button>
+            </div>
+          </div>
+          
           <div className="bg-white rounded-2xl p-4 border border-gray-200 space-y-4">
             <h3 className="font-semibold text-gray-800">Opções do Catálogo</h3>
-            <div className="flex items-center justify-between py-2"><div><p className="font-medium text-gray-800">Mostrar Preços</p><p className="text-sm text-gray-500">Exibe o preço nos produtos</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_prices: !themeSettings.show_prices })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_prices ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} /></button></div>
-            <div className="flex items-center justify-between py-2 border-t border-gray-100"><div><p className="font-medium text-gray-800">Mostrar Estoque</p><p className="text-sm text-gray-500">Exibe quantidade disponível</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_stock: !themeSettings.show_stock })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_stock ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_stock ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="font-medium text-gray-800">Mostrar Preços</p>
+                <p className="text-sm text-gray-500">Exibe o preço nos produtos</p>
+              </div>
+              <button onClick={() => setThemeSettings({ ...themeSettings, show_prices: !themeSettings.show_prices })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_prices ? "bg-green-500" : "bg-gray-300"}`}>
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} />
+              </button>
+            </div>
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>

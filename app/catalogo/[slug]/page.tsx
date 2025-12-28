@@ -164,6 +164,19 @@ export default function CatalogoPrincipal() {
 
   return (
     <div>
+      {/* Barra de Anúncio - No topo de tudo */}
+      {themeSettings?.announcement_bar?.enabled && themeSettings?.announcement_bar?.text && (
+        <div 
+          className="text-center py-2 px-4 text-sm font-medium"
+          style={{ 
+            backgroundColor: themeSettings.announcement_bar.bg_color || '#000000',
+            color: themeSettings.announcement_bar.text_color || '#ffffff'
+          }}
+        >
+          {themeSettings.announcement_bar.text}
+        </div>
+      )}
+
       {/* Banner FULL WIDTH - Desktop e Mobile responsivo */}
       {(reseller?.banner_url || reseller?.banner_mobile_url) && (
         <div className="w-full">
@@ -349,7 +362,33 @@ export default function CatalogoPrincipal() {
           
           // Estilo do Botão baseado em theme_settings
           const buttonStyle = themeSettings?.button_style || 'rounded';
-          const buttonClass = buttonStyle === 'rounded' ? 'rounded-full' : 'rounded-none';
+          const buttonClass = buttonStyle === 'rounded' ? 'rounded-full' : 'rounded-md';
+          
+          // Bordas arredondadas globais
+          const borderRadius = themeSettings?.border_radius || 'medium';
+          const getBorderRadius = () => {
+            switch (borderRadius) {
+              case 'none': return '0px';
+              case 'small': return '4px';
+              case 'medium': return '12px';
+              case 'large': return '24px';
+              default: return '12px';
+            }
+          };
+          const cardRadius = getBorderRadius();
+          
+          // Estilo da imagem do produto
+          const imageStyle = themeSettings?.card_image_style || 'rounded';
+          const imageClass = imageStyle === 'circle' 
+            ? 'rounded-full mx-auto w-[85%]' 
+            : imageStyle === 'rounded' 
+              ? '' 
+              : '';
+          const imageRadius = imageStyle === 'square' ? '0px' : imageStyle === 'circle' ? '50%' : cardRadius;
+          
+          // Tamanho do nome do produto
+          const nameSize = themeSettings?.product_name_size || 'medium';
+          const nameSizeClass = nameSize === 'small' ? 'text-xs' : nameSize === 'large' ? 'text-base' : 'text-sm';
           
           // Verificar se o produto tem promoção
           const productPromo = getProductPromotion(product.id);
@@ -396,10 +435,17 @@ export default function CatalogoPrincipal() {
             <Link
               key={product.id}
               href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
-              className={`bg-white rounded-xl overflow-hidden transition-all duration-300 group ${cardClass}`}
+              className={`bg-white overflow-hidden transition-all duration-300 group ${cardClass}`}
+              style={{ borderRadius: cardRadius }}
             >
               {/* Imagem formato 3:4 (960x1280) com alta qualidade */}
-              <div className="relative bg-gray-50 overflow-hidden" style={{ aspectRatio: '3/4' }}>
+              <div 
+                className={`relative bg-gray-50 overflow-hidden ${imageClass}`} 
+                style={{ 
+                  aspectRatio: imageStyle === 'circle' ? '1/1' : '3/4',
+                  borderRadius: imageRadius
+                }}
+              >
                 <Image
                   src={product.imagem || '/placeholder.png'}
                   alt={product.nome}
@@ -407,6 +453,7 @@ export default function CatalogoPrincipal() {
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                   quality={90}
                   className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  style={{ borderRadius: imageRadius }}
                   priority={false}
                 />
                 
@@ -414,8 +461,11 @@ export default function CatalogoPrincipal() {
                 {promoLabel && (
                   <div className="absolute top-2 right-2">
                     <div 
-                      className="text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm"
-                      style={{ backgroundColor: `${primaryColor}ee` }}
+                      className="text-white text-[10px] md:text-xs font-semibold px-2 py-1 shadow-sm backdrop-blur-sm"
+                      style={{ 
+                        backgroundColor: `${primaryColor}ee`,
+                        borderRadius: cardRadius
+                      }}
                     >
                       {promoLabel}
                     </div>
@@ -429,7 +479,7 @@ export default function CatalogoPrincipal() {
               )}
               
               <div className="p-3 md:p-4">
-                <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
+                <h3 className={`font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] ${nameSizeClass}`}>
                   {product.nome}
                 </h3>
                 {themeSettings?.show_prices !== false && (
@@ -439,7 +489,10 @@ export default function CatalogoPrincipal() {
                 )}
                 <div
                   className={`w-full py-2.5 text-white font-medium text-center text-sm transition-all ${buttonClass}`}
-                  style={{ backgroundColor: primaryColor }}
+                  style={{ 
+                    backgroundColor: primaryColor,
+                    borderRadius: buttonStyle === 'rounded' ? '9999px' : cardRadius
+                  }}
                 >
                   Ver Produto
                 </div>

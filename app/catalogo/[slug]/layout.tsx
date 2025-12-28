@@ -29,8 +29,18 @@ type Reseller = {
     logo_shape?: 'circle' | 'square' | 'rectangle';
     logo_position?: 'left' | 'center' | 'right';
     show_prices?: boolean;
-    show_stock?: boolean;
     show_whatsapp_float?: boolean;
+    // Novas opções
+    border_radius?: 'none' | 'small' | 'medium' | 'large';
+    card_image_style?: 'square' | 'rounded' | 'circle';
+    announcement_bar?: {
+      enabled: boolean;
+      text: string;
+      bg_color: string;
+      text_color: string;
+    };
+    font_style?: 'modern' | 'classic' | 'elegant';
+    product_name_size?: 'small' | 'medium' | 'large';
   };
 };
 

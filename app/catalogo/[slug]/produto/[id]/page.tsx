@@ -37,7 +37,7 @@ type Produto = {
 
 export default function ProdutoPage() {
   const params = useParams();
-  const { reseller, primaryColor, addToCart } = useCatalogo();
+  const { reseller, primaryColor, addToCart, themeSettings } = useCatalogo();
   
   const [produto, setProduto] = useState<Produto | null>(null);
   const [marginPercent, setMarginPercent] = useState(0);
@@ -205,7 +205,15 @@ export default function ProdutoPage() {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Galeria de Imagens - Formato 3:4 (960x1280) */}
         <div>
-          <div className="relative rounded-xl overflow-hidden bg-gray-50 mb-4 shadow-lg" style={{ aspectRatio: '3/4' }}>
+          <div 
+            className="relative overflow-hidden bg-gray-50 mb-4 shadow-lg" 
+            style={{ 
+              aspectRatio: '3/4',
+              borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
+                : themeSettings?.border_radius === 'small' ? '4px'
+                : themeSettings?.border_radius === 'large' ? '24px' : '12px'
+            }}
+          >
             <Image
               src={imagens[selectedImage]}
               alt={produto.nome}
@@ -224,11 +232,16 @@ export default function ProdutoPage() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all shadow-sm ${
+                  className={`relative w-20 h-20 overflow-hidden flex-shrink-0 border-2 transition-all shadow-sm ${
                     selectedImage === index 
                       ? 'border-pink-500 scale-105' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
+                  style={{ 
+                    borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
+                      : themeSettings?.border_radius === 'small' ? '4px'
+                      : themeSettings?.border_radius === 'large' ? '16px' : '8px'
+                  }}
                 >
                   <Image
                     src={img}
@@ -334,7 +347,7 @@ export default function ProdutoPage() {
           <button
             onClick={handleAddToCart}
             disabled={estoqueDisponivel <= 0 || (produto.variacoes && produto.variacoes.length > 0 && !selectedVariacao)}
-            className={`w-full py-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-4 font-bold text-white flex items-center justify-center gap-2 transition-all ${
               addedToCart 
                 ? 'bg-green-500' 
                 : estoqueDisponivel <= 0
@@ -342,7 +355,11 @@ export default function ProdutoPage() {
                   : 'hover:opacity-90'
             }`}
             style={{ 
-              backgroundColor: addedToCart ? undefined : (estoqueDisponivel > 0 ? primaryColor : undefined) 
+              backgroundColor: addedToCart ? undefined : (estoqueDisponivel > 0 ? primaryColor : undefined),
+              borderRadius: themeSettings?.button_style === 'rounded' ? '9999px' 
+                : themeSettings?.border_radius === 'none' ? '0px'
+                : themeSettings?.border_radius === 'small' ? '4px'
+                : themeSettings?.border_radius === 'large' ? '24px' : '12px'
             }}
           >
             {addedToCart ? (
