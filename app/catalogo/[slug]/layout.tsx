@@ -35,6 +35,11 @@ type Reseller = {
 };
 
 // Tipo para promoções
+type ProgressiveDiscount = {
+  min_items: number;
+  discount_percent: number;
+};
+
 type Promotion = {
   id: string;
   name: string;
@@ -44,6 +49,7 @@ type Promotion = {
   discount_value: number | null;
   buy_quantity: number | null;
   pay_quantity: number | null;
+  progressive_discounts: ProgressiveDiscount[] | null;
   free_shipping: boolean;
   min_value_free_shipping: number | null;
   coupon_code: string | null;
@@ -575,7 +581,7 @@ export default function CatalogoLayout({
     return false;
   }, [promotions, appliedCoupon, getTotal]);
 
-  // ==================== PROMOÇÕES AUTOMÁTICAS (Leve X Pague Y, Descontos em Produtos) ====================
+  // ==================== PROMOÇÕES AUTOMÁTICAS (Leve Mais Pague Menos, Descontos em Produtos) ====================
 
   // Calcular promoções automáticas baseadas no carrinho
   const calculateAutoPromotions = useCallback((): AppliedPromotion[] => {
@@ -587,11 +593,8 @@ export default function CatalogoLayout({
     );
 
     for (const promo of autoPromotions) {
-      // LEVE X PAGUE Y
-      if (promo.type === 'leve_pague' && promo.buy_quantity && promo.pay_quantity) {
-        const buyQty = promo.buy_quantity;
-        const payQty = promo.pay_quantity;
-        
+      // LEVE MAIS PAGUE MENOS (Desconto Progressivo)
+      if (promo.type === 'leve_pague') {
         // Verificar se a promoção se aplica a produtos específicos ou todos
         let eligibleItems = cart;
         
@@ -605,23 +608,51 @@ export default function CatalogoLayout({
         // Calcular total de itens elegíveis
         const totalEligibleQty = eligibleItems.reduce((sum, item) => sum + item.quantidade, 0);
         
-        if (totalEligibleQty >= buyQty) {
-          // Quantas vezes a promoção se aplica
-          const timesApplied = Math.floor(totalEligibleQty / buyQty);
-          const freeItems = timesApplied * (buyQty - payQty);
+        // Verificar se tem descontos progressivos configurados
+        if (promo.progressive_discounts && promo.progressive_discounts.length > 0) {
+          // Ordenar faixas do maior para o menor min_items
+          const sortedDiscounts = [...promo.progressive_discounts].sort((a, b) => b.min_items - a.min_items);
           
-          // Calcular o desconto (preço médio dos itens elegíveis * itens grátis)
-          const totalEligibleValue = eligibleItems.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
-          const avgPrice = totalEligibleValue / totalEligibleQty;
-          const discountValue = avgPrice * freeItems;
+          // Encontrar a faixa aplicável (maior faixa que a quantidade atende)
+          const applicableDiscount = sortedDiscounts.find(d => totalEligibleQty >= d.min_items);
           
-          if (discountValue > 0) {
-            applied.push({
-              promotion: promo,
-              discountValue,
-              description: `Leve ${buyQty} Pague ${payQty}: ${timesApplied}x aplicado`,
-              affectedItems: eligibleItems.map(i => i.productId)
-            });
+          if (applicableDiscount) {
+            const totalEligibleValue = eligibleItems.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+            const discountValue = totalEligibleValue * (applicableDiscount.discount_percent / 100);
+            
+            if (discountValue > 0) {
+              applied.push({
+                promotion: promo,
+                discountValue,
+                description: `${totalEligibleQty} peças = ${applicableDiscount.discount_percent}% OFF`,
+                affectedItems: eligibleItems.map(i => i.productId)
+              });
+            }
+          }
+        }
+        // Fallback para o formato antigo (buy_quantity/pay_quantity)
+        else if (promo.buy_quantity && promo.pay_quantity) {
+          const buyQty = promo.buy_quantity;
+          const payQty = promo.pay_quantity;
+          
+          if (totalEligibleQty >= buyQty) {
+            // Quantas vezes a promoção se aplica
+            const timesApplied = Math.floor(totalEligibleQty / buyQty);
+            const freeItems = timesApplied * (buyQty - payQty);
+            
+            // Calcular o desconto (preço médio dos itens elegíveis * itens grátis)
+            const totalEligibleValue = eligibleItems.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+            const avgPrice = totalEligibleValue / totalEligibleQty;
+            const discountValue = avgPrice * freeItems;
+            
+            if (discountValue > 0) {
+              applied.push({
+                promotion: promo,
+                discountValue,
+                description: `Leve ${buyQty} Pague ${payQty}: ${timesApplied}x aplicado`,
+                affectedItems: eligibleItems.map(i => i.productId)
+              });
+            }
           }
         }
       }

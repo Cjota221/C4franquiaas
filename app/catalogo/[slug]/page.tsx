@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, ChevronDown, Truck, Tag, Clock, Gift, Percent } from 'lucide-react';
+import { Search, ChevronDown, Truck, Tag, Clock } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type Variacao = {
@@ -230,10 +230,17 @@ export default function CatalogoPrincipal() {
                       </span>
                     </>
                   )}
-                  {promo.type === 'leve_pague' && promo.buy_quantity && promo.pay_quantity && (
+                  {promo.type === 'leve_pague' && (
                     <>
                       <Tag size={16} />
-                      <span>Leve {promo.buy_quantity} Pague {promo.pay_quantity}</span>
+                      <span>
+                        {promo.progressive_discounts && promo.progressive_discounts.length > 0 
+                          ? `Leve Mais Pague Menos: até ${Math.max(...promo.progressive_discounts.map(d => d.discount_percent))}% OFF`
+                          : promo.buy_quantity && promo.pay_quantity 
+                            ? `Leve ${promo.buy_quantity} Pague ${promo.pay_quantity}`
+                            : promo.name
+                        }
+                      </span>
                     </>
                   )}
                 </div>
@@ -353,11 +360,40 @@ export default function CatalogoPrincipal() {
             
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             
             if (days > 0) return `${days}d ${hours}h`;
-            if (hours > 0) return `${hours}h`;
-            return 'Últimas horas!';
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            if (minutes > 0) return `${minutes}m`;
+            return 'Últimos minutos!';
           };
+          
+          // Pegar o texto da promoção de forma simplificada
+          const getPromoLabel = () => {
+            if (!productPromo) return null;
+            if (productPromo.type === 'leve_pague') {
+              // Verificar se tem descontos progressivos
+              const progressiveDiscounts = productPromo.progressive_discounts;
+              if (progressiveDiscounts && progressiveDiscounts.length > 0) {
+                // Pegar o primeiro desconto (menor quantidade) para mostrar
+                const sorted = [...progressiveDiscounts].sort((a, b) => a.min_items - b.min_items);
+                return `${sorted[0].min_items}+ peças = ${sorted[0].discount_percent}% OFF`;
+              }
+              if (productPromo.buy_quantity && productPromo.pay_quantity) {
+                return `Leve ${productPromo.buy_quantity} Pague ${productPromo.pay_quantity}`;
+              }
+            }
+            if (productPromo.type === 'desconto_percentual') {
+              return `${productPromo.discount_value}% OFF`;
+            }
+            if (productPromo.type === 'desconto_valor') {
+              return `-R$ ${productPromo.discount_value}`;
+            }
+            return null;
+          };
+          
+          const promoLabel = getPromoLabel();
+          const timeRemaining = productPromo?.ends_at ? getTimeRemaining(productPromo.ends_at) : null;
           
           return (
             <Link
@@ -377,44 +413,30 @@ export default function CatalogoPrincipal() {
                   priority={false}
                 />
                 
-                {/* Tag de Promoção */}
-                {productPromo && (
-                  <div className="absolute top-0 left-0 right-0">
-                    {/* Badge da promoção */}
+                {/* Tag de Promoção - Discreta no canto superior direito */}
+                {promoLabel && (
+                  <div className="absolute top-2 right-2">
                     <div 
-                      className="text-white text-xs font-bold px-2 py-1 flex items-center gap-1"
-                      style={{ backgroundColor: primaryColor }}
+                      className="text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm"
+                      style={{ backgroundColor: `${primaryColor}ee` }}
                     >
-                      {productPromo.type === 'leve_pague' && (
-                        <>
-                          <Gift size={12} />
-                          <span>Leve {productPromo.buy_quantity} Pague {productPromo.pay_quantity}</span>
-                        </>
-                      )}
-                      {productPromo.type === 'desconto_percentual' && (
-                        <>
-                          <Percent size={12} />
-                          <span>{productPromo.discount_value}% OFF</span>
-                        </>
-                      )}
-                      {productPromo.type === 'desconto_valor' && (
-                        <>
-                          <Tag size={12} />
-                          <span>-R$ {productPromo.discount_value}</span>
-                        </>
-                      )}
+                      {promoLabel}
                     </div>
-                    
-                    {/* Cronômetro (se tiver data de término) */}
-                    {productPromo.ends_at && getTimeRemaining(productPromo.ends_at) && (
-                      <div className="bg-black/70 text-white text-xs px-2 py-1 flex items-center gap-1">
-                        <Clock size={10} />
-                        <span>Termina em {getTimeRemaining(productPromo.ends_at)}</span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
+              
+              {/* Barra do Cronômetro - Linha fina entre foto e info */}
+              {timeRemaining && (
+                <div 
+                  className="flex items-center justify-center gap-1 py-1 text-white text-[10px] font-medium"
+                  style={{ backgroundColor: '#374151' }}
+                >
+                  <Clock size={10} />
+                  <span>⏱ {timeRemaining}</span>
+                </div>
+              )}
+              
               <div className="p-3 md:p-4">
                 <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">
                   {product.nome}

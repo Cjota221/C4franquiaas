@@ -51,6 +51,12 @@ interface Product {
   imagem_url: string | null
 }
 
+// Tipo para faixa de desconto progressivo
+type DiscountTier = {
+  min_qty: number
+  discount: number
+}
+
 type PromotionFormData = {
   name: string
   description: string
@@ -68,6 +74,7 @@ type PromotionFormData = {
   ends_at: string
   applies_to: 'all' | 'products'
   product_ids: string[]
+  progressive_discounts: DiscountTier[]
 }
 
 const initialFormData: PromotionFormData = {
@@ -86,7 +93,12 @@ const initialFormData: PromotionFormData = {
   max_uses: '',
   ends_at: '',
   applies_to: 'all',
-  product_ids: []
+  product_ids: [],
+  progressive_discounts: [
+    { min_qty: 2, discount: 10 },
+    { min_qty: 3, discount: 15 },
+    { min_qty: 5, discount: 20 }
+  ]
 }
 
 export default function PromocoesPage() {
@@ -232,7 +244,12 @@ export default function PromocoesPage() {
       max_uses: promo.max_uses?.toString() || '',
       ends_at: promo.ends_at ? new Date(promo.ends_at).toISOString().slice(0, 16) : '',
       applies_to: promo.applies_to === 'categories' ? 'all' : promo.applies_to,
-      product_ids: promo.product_ids || []
+      product_ids: promo.product_ids || [],
+      progressive_discounts: (promo as unknown as { progressive_discounts?: DiscountTier[] }).progressive_discounts || [
+        { min_qty: 2, discount: 10 },
+        { min_qty: 3, discount: 15 },
+        { min_qty: 5, discount: 20 }
+      ]
     })
     setShowModal(true)
   }
@@ -262,7 +279,8 @@ export default function PromocoesPage() {
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         ends_at: formData.ends_at || null,
         applies_to: formData.applies_to,
-        product_ids: formData.applies_to === 'products' ? formData.product_ids : null
+        product_ids: formData.applies_to === 'products' ? formData.product_ids : null,
+        progressive_discounts: formData.type === 'leve_pague' ? formData.progressive_discounts : null
       }
 
       const response = await fetch('/api/promocoes', {
@@ -621,7 +639,7 @@ export default function PromocoesPage() {
                     >
                       <option value="cupom_desconto">Cupom de Desconto</option>
                       <option value="frete_gratis">Frete Grátis</option>
-                      <option value="leve_pague">Leve X Pague Y</option>
+                      <option value="leve_pague">Leve Mais Pague Menos</option>
                       <option value="desconto_percentual">Desconto Percentual</option>
                       <option value="desconto_valor">Desconto em Valor</option>
                     </select>
@@ -680,35 +698,78 @@ export default function PromocoesPage() {
                     </div>
                   )}
 
-                  {/* Leve X Pague Y */}
+                  {/* Leve Mais Pague Menos - Desconto Progressivo */}
                   {formData.type === 'leve_pague' && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Leve (quantidade) *
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.buy_quantity}
-                          onChange={(e) => setFormData({ ...formData, buy_quantity: e.target.value })}
-                          className="w-full border rounded-lg px-3 py-2"
-                          placeholder="3"
-                          required
-                        />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Faixas de Desconto Progressivo
+                      </label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Configure quantas peças o cliente precisa comprar para ganhar cada desconto
+                      </p>
+                      
+                      <div className="space-y-2">
+                        {formData.progressive_discounts.map((tier, index) => (
+                          <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                            <span className="text-sm text-gray-600 whitespace-nowrap">A partir de</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={tier.min_qty}
+                              onChange={(e) => {
+                                const newTiers = [...formData.progressive_discounts]
+                                newTiers[index] = { ...tier, min_qty: parseInt(e.target.value) || 1 }
+                                setFormData({ ...formData, progressive_discounts: newTiers })
+                              }}
+                              className="w-16 border rounded px-2 py-1 text-center"
+                            />
+                            <span className="text-sm text-gray-600 whitespace-nowrap">peças =</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={tier.discount}
+                              onChange={(e) => {
+                                const newTiers = [...formData.progressive_discounts]
+                                newTiers[index] = { ...tier, discount: parseInt(e.target.value) || 0 }
+                                setFormData({ ...formData, progressive_discounts: newTiers })
+                              }}
+                              className="w-16 border rounded px-2 py-1 text-center"
+                            />
+                            <span className="text-sm text-gray-600">% OFF</span>
+                            {formData.progressive_discounts.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newTiers = formData.progressive_discounts.filter((_, i) => i !== index)
+                                  setFormData({ ...formData, progressive_discounts: newTiers })
+                                }}
+                                className="ml-auto text-red-500 hover:text-red-700 p-1"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Pague (quantidade) *
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.pay_quantity}
-                          onChange={(e) => setFormData({ ...formData, pay_quantity: e.target.value })}
-                          className="w-full border rounded-lg px-3 py-2"
-                          placeholder="2"
-                          required
-                        />
-                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const lastTier = formData.progressive_discounts[formData.progressive_discounts.length - 1]
+                          setFormData({
+                            ...formData,
+                            progressive_discounts: [
+                              ...formData.progressive_discounts,
+                              { min_qty: (lastTier?.min_qty || 1) + 2, discount: (lastTier?.discount || 10) + 5 }
+                            ]
+                          })
+                        }}
+                        className="mt-2 text-sm text-pink-600 hover:text-pink-700 flex items-center gap-1"
+                      >
+                        <Plus size={14} />
+                        Adicionar faixa
+                      </button>
                     </div>
                   )}
 
