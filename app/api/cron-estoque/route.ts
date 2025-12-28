@@ -106,12 +106,16 @@ async function handleSyncEstoque() {
     
     const duration = Date.now() - startTime;
     
-    // 5. Log rápido
-    await supabase.from('logs_sincronizacao').insert({
-      tipo: 'cron_estoque',
-      descricao: `${updated} atualizados em ${duration}ms`,
-      sucesso: true,
-    }).catch(() => {});
+    // 5. Log rápido (ignorar erros)
+    try {
+      await supabase.from('logs_sincronizacao').insert({
+        tipo: 'cron_estoque',
+        descricao: `${updated} atualizados em ${duration}ms`,
+        sucesso: true,
+      });
+    } catch {
+      // Ignorar erro de log
+    }
     
     return NextResponse.json({
       ok: true,
