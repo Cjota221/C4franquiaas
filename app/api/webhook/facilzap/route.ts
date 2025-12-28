@@ -264,7 +264,7 @@ async function handleNovoPedido(data: any, eventType: string) {
   console.log(`[Webhook] 📦 Processando ${itens.length} itens do pedido...`);
   
   let itensProcessados = 0;
-  let erros: string[] = [];
+  const erros: string[] = [];
 
   for (const item of itens) {
     try {
@@ -410,7 +410,7 @@ export async function POST(request: NextRequest) {
     }
     // Eventos de Pedido (futuro ERP)
     else if (event.includes('pedido') || event.includes('order')) {
-      result = await handleNovoPedido(data);
+      result = await handleNovoPedido(data, event);
     }
     // Sincronização completa
     else if (event.includes('sync')) {
