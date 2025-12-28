@@ -682,6 +682,13 @@ export default function ProdutosPage(): React.JSX.Element {
           Gerenciar Categorias
         </button>
 
+        <button 
+          onClick={() => setModalMassaOpen(true)}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-md font-medium flex items-center gap-2"
+        >
+          📏 Guia de Tamanhos
+        </button>
+
         <button
           onClick={() => setModalVincularOpen(true)}
           disabled={selectedCount === 0}
