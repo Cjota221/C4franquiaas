@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { 
   Package, DollarSign, CheckCircle, TrendingUp, Loader2, 
   Search, Filter, X, MoreVertical, Eye, 
-  EyeOff, Percent 
+  EyeOff, Percent, ChevronDown, ChevronUp
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -52,6 +52,9 @@ export default function ProdutosRevendedoraPage() {
   const [margemTipo, setMargemTipo] = useState<'porcentagem' | 'reais'>('porcentagem');
   const [margemValor, setMargemValor] = useState('');
   const [processando, setProcessando] = useState(false);
+  
+  // Estado para filtros colapsáveis no mobile
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   
   // Debounce da busca
   const buscaDebounced = useDebounce(busca, 500);
@@ -290,134 +293,156 @@ export default function ProdutosRevendedoraPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto pb-24 md:pb-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Meus Produtos</h1>
-        <p className="text-gray-600">Gerencie seus produtos, margens e preços</p>
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Meus Produtos</h1>
+        <p className="text-sm md:text-base text-gray-600">Gerencie seus produtos, margens e preços</p>
       </div>
 
-      {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
+      {/* Cards de Estatísticas - 2x2 no mobile, 4 colunas no desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-xs md:text-sm text-gray-600">Total</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
-            <Package className="w-8 h-8 text-blue-500" />
+            <Package className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Ativos</p>
-              <p className="text-2xl font-bold text-green-600">{stats.ativos}</p>
+              <p className="text-xs md:text-sm text-gray-600">Ativos</p>
+              <p className="text-xl md:text-2xl font-bold text-green-600">{stats.ativos}</p>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
+            <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Inativos</p>
-              <p className="text-2xl font-bold text-gray-600">{stats.inativos}</p>
+              <p className="text-xs md:text-sm text-gray-600">Inativos</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-600">{stats.inativos}</p>
             </div>
-            <X className="w-8 h-8 text-gray-400" />
+            <X className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Com Estoque</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.comEstoque}</p>
+              <p className="text-xs md:text-sm text-gray-600">Com Estoque</p>
+              <p className="text-xl md:text-2xl font-bold text-blue-600">{stats.comEstoque}</p>
             </div>
-            <TrendingUp className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Filtros</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Busca */}
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Buscar
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Nome do produto..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-          </div>
-
-          {/* Categoria */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Categoria
-            </label>
-            <select
-              value={categoriaFiltro}
-              onChange={(e) => setCategoriaFiltro(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              {categorias.map((cat, index) => (
-                <option key={cat || `cat-${index}`} value={cat}>{cat || 'Sem categoria'}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={statusFiltro}
-              onChange={(e) => setStatusFiltro(e.target.value as 'todos' | 'ativo' | 'inativo')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="todos">Todos</option>
-              <option value="ativo">Ativos</option>
-              <option value="inativo">Inativos</option>
-            </select>
-          </div>
-
-          {/* Estoque */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estoque
-            </label>
-            <select
-              value={estoqueFiltro}
-              onChange={(e) => setEstoqueFiltro(e.target.value as 'todos' | 'disponivel' | 'esgotado')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="todos">Todos</option>
-              <option value="disponivel">Disponível</option>
-              <option value="esgotado">Esgotado</option>
-            </select>
+            <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
           </div>
         </div>
       </div>
 
-      {/* Ações em Massa */}
+      {/* Filtros - Colapsável no Mobile */}
+      <div className="bg-white rounded-lg shadow mb-4 md:mb-6">
+        {/* Header dos filtros - clicável no mobile */}
+        <button
+          onClick={() => setFiltrosAbertos(!filtrosAbertos)}
+          className="w-full flex items-center justify-between p-4 md:cursor-default"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Filtros</h3>
+            {/* Indicador de filtros ativos */}
+            {(busca || categoriaFiltro !== 'todas' || statusFiltro !== 'todos' || estoqueFiltro !== 'todos') && (
+              <span className="bg-pink-100 text-pink-600 text-xs px-2 py-0.5 rounded-full">
+                Ativos
+              </span>
+            )}
+          </div>
+          <div className="md:hidden">
+            {filtrosAbertos ? (
+              <ChevronUp className="w-5 h-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500" />
+            )}
+          </div>
+        </button>
+
+        {/* Conteúdo dos filtros - sempre visível no desktop, colapsável no mobile */}
+        <div className={`${filtrosAbertos ? 'block' : 'hidden'} md:block px-4 pb-4`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+            {/* Busca */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Buscar
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Nome do produto..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
+              </div>
+            </div>
+
+            {/* Categoria */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categoria
+              </label>
+              <select
+                value={categoriaFiltro}
+                onChange={(e) => setCategoriaFiltro(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              >
+                {categorias.map((cat, index) => (
+                  <option key={cat || `cat-${index}`} value={cat}>{cat || 'Sem categoria'}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={statusFiltro}
+                onChange={(e) => setStatusFiltro(e.target.value as 'todos' | 'ativo' | 'inativo')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              >
+                <option value="todos">Todos</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+              </select>
+            </div>
+
+            {/* Estoque */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estoque
+              </label>
+              <select
+                value={estoqueFiltro}
+                onChange={(e) => setEstoqueFiltro(e.target.value as 'todos' | 'disponivel' | 'esgotado')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              >
+                <option value="todos">Todos</option>
+                <option value="disponivel">Disponível</option>
+                <option value="esgotado">Esgotado</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ações em Massa - Desktop */}
       {selectedIds.size > 0 && (
-        <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 mb-6">
+        <div className="hidden md:block bg-pink-50 border border-pink-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <p className="font-medium text-gray-900">
@@ -463,8 +488,8 @@ export default function ProdutosRevendedoraPage() {
         </div>
       )}
 
-      {/* Tabela de Produtos */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Tabela de Produtos - Desktop */}
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -603,6 +628,172 @@ export default function ProdutosRevendedoraPage() {
           </div>
         )}
       </div>
+
+      {/* Lista de Produtos - Mobile (Cards) */}
+      <div className="md:hidden space-y-3">
+        {/* Header com Selecionar Todos */}
+        <div className="flex items-center justify-between px-1">
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={selectedIds.size === produtosOrdenados.length && produtosOrdenados.length > 0}
+              onChange={toggleSelectAll}
+              className="rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+            />
+            Selecionar todos
+          </label>
+          <p className="text-sm text-gray-500">{produtosOrdenados.length} produtos</p>
+        </div>
+
+        {/* Cards de Produtos */}
+        {produtosOrdenados.map(produto => (
+          <div 
+            key={produto.id} 
+            className={`bg-white rounded-lg shadow p-4 border-2 transition-colors ${
+              selectedIds.has(produto.id) ? 'border-pink-500' : 'border-transparent'
+            }`}
+          >
+            {/* Header do Card: Checkbox + Imagem + Nome + Status */}
+            <div className="flex items-start gap-3 mb-3">
+              <input
+                type="checkbox"
+                checked={selectedIds.has(produto.id)}
+                onChange={() => {
+                  const newSet = new Set(selectedIds);
+                  if (newSet.has(produto.id)) {
+                    newSet.delete(produto.id);
+                  } else {
+                    newSet.add(produto.id);
+                  }
+                  setSelectedIds(newSet);
+                }}
+                className="rounded border-gray-300 text-pink-600 focus:ring-pink-500 mt-1"
+              />
+              {produto.imagem ? (
+                <Image
+                  src={produto.imagem}
+                  alt={produto.nome}
+                  width={60}
+                  height={60}
+                  className="rounded-lg object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-[60px] h-[60px] bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Package className="w-6 h-6 text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
+                  {produto.nome}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 truncate">{produto.categorias}</p>
+              </div>
+            </div>
+
+            {/* Informações de Preço e Estoque */}
+            <div className="grid grid-cols-3 gap-2 text-center mb-3">
+              <div className="bg-gray-50 rounded-lg py-2 px-1">
+                <p className="text-[10px] text-gray-500 uppercase">Base</p>
+                <p className="text-sm font-medium text-gray-700">R$ {(produto.preco_base ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-pink-50 rounded-lg py-2 px-1">
+                <p className="text-[10px] text-gray-500 uppercase">Margem</p>
+                <p className="text-sm font-bold text-pink-600">{(produto.margin_percent ?? 0).toFixed(1)}%</p>
+              </div>
+              <div className="bg-green-50 rounded-lg py-2 px-1">
+                <p className="text-[10px] text-gray-500 uppercase">Final</p>
+                <p className="text-sm font-bold text-green-600">R$ {(produto.preco_final ?? 0).toFixed(2)}</p>
+              </div>
+            </div>
+
+            {/* Footer: Estoque + Status + Ação */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {/* Estoque Badge */}
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  (produto.estoque ?? 0) > 0 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {(produto.estoque ?? 0) > 0 ? `${produto.estoque} un` : 'Esgotado'}
+                </span>
+              </div>
+
+              {/* Botão de Status */}
+              <button
+                onClick={() => toggleAtivacao(produto.id)}
+                className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+                  produto.is_active
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {produto.is_active ? (
+                  <>
+                    <Eye className="w-3.5 h-3.5 mr-1" />
+                    Ativo
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5 mr-1" />
+                    Inativo
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {produtosOrdenados.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">Nenhum produto encontrado</p>
+          </div>
+        )}
+      </div>
+
+      {/* Barra de Ações em Massa - Mobile (Fixa no Bottom) */}
+      {selectedIds.size > 0 && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-50">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-900">
+              {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-sm text-pink-600 font-medium"
+            >
+              Limpar
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => toggleAtivacaoEmMassa(true)}
+              disabled={processando}
+              className="flex flex-col items-center justify-center py-2 bg-green-100 text-green-700 rounded-lg disabled:opacity-50"
+            >
+              <Eye className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Ativar</span>
+            </button>
+            <button
+              onClick={() => toggleAtivacaoEmMassa(false)}
+              disabled={processando}
+              className="flex flex-col items-center justify-center py-2 bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50"
+            >
+              <EyeOff className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Desativar</span>
+            </button>
+            <button
+              onClick={() => setShowModalMargem(true)}
+              disabled={processando}
+              className="flex flex-col items-center justify-center py-2 bg-pink-100 text-pink-700 rounded-lg disabled:opacity-50"
+            >
+              <Percent className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Margem</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Aplicar Margem */}
       {showModalMargem && (
