@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, SquareIcon, CircleIcon } from "lucide-react";
+import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, SquareIcon, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 
 type ThemeSettings = {
@@ -14,6 +14,15 @@ type ThemeSettings = {
   show_prices: boolean;
   show_stock: boolean;
   show_whatsapp_float: boolean;
+};
+
+type BannerSubmission = {
+  id: string;
+  banner_type: "desktop" | "mobile";
+  image_url: string;
+  status: "pending" | "approved" | "rejected";
+  admin_feedback: string | null;
+  created_at: string;
 };
 
 const COLOR_PRESETS = [
@@ -59,9 +68,25 @@ export default function PersonalizacaoRevendedoraPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showCustomColor, setShowCustomColor] = useState(false);
+  
+  // Estados para moderação de banners
+  const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
 
   const supabase = createClient();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
+
+  // Carregar submissões de banner
+  const loadBannerSubmissions = async (resellerId: string) => {
+    try {
+      const response = await fetch(`/api/banners?reseller_id=${resellerId}`);
+      const data = await response.json();
+      if (data.submissions) {
+        setBannerSubmissions(data.submissions);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar submissões:", error);
+    }
+  };
 
   useEffect(() => {
     async function loadReseller() {
@@ -83,6 +108,9 @@ export default function PersonalizacaoRevendedoraPage() {
         setPrimaryColor(data.colors?.primary || "#ec4899");
         setSecondaryColor(data.colors?.secondary || "#8b5cf6");
         setThemeSettings(data.theme_settings || DEFAULT_THEME);
+        
+        // Carregar submissões de banner
+        loadBannerSubmissions(data.id);
       } catch (error) {
         console.error("Erro:", error);
       } finally {
@@ -90,7 +118,8 @@ export default function PersonalizacaoRevendedoraPage() {
       }
     }
     loadReseller();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = async () => {
     if (!reseller) return;
@@ -124,9 +153,33 @@ export default function PersonalizacaoRevendedoraPage() {
       const { error: uploadError } = await supabase.storage.from("reseller-assets").upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("reseller-assets").getPublicUrl(fileName);
-      if (type === "logo") setLogoUrl(publicUrl);
-      else if (type === "banner") setBannerUrl(publicUrl);
-      else setBannerMobileUrl(publicUrl);
+      
+      if (type === "logo") {
+        // Logo vai direto, sem moderação
+        setLogoUrl(publicUrl);
+      } else {
+        // Banners vão para moderação
+        const bannerType = type === "banner" ? "desktop" : "mobile";
+        
+        const response = await fetch("/api/banners", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reseller_id: reseller.id,
+            banner_type: bannerType,
+            image_url: publicUrl
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert("✅ " + data.message);
+          loadBannerSubmissions(reseller.id);
+        } else {
+          alert("⚠️ " + data.error);
+        }
+      }
     } catch (error) {
       console.error("Erro:", error);
       alert("Erro ao enviar imagem.");
@@ -363,31 +416,194 @@ export default function PersonalizacaoRevendedoraPage() {
 
   // SEÇÃO BANNER
   if (activeSection === "banner") {
+    const pendingMobile = bannerSubmissions.find(s => s.banner_type === "mobile" && s.status === "pending");
+    const pendingDesktop = bannerSubmissions.find(s => s.banner_type === "desktop" && s.status === "pending");
+    const rejectedMobile = bannerSubmissions.find(s => s.banner_type === "mobile" && s.status === "rejected");
+    const rejectedDesktop = bannerSubmissions.find(s => s.banner_type === "desktop" && s.status === "rejected");
+    
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
           <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Banner da Loja</h1>
         </div>
-        <div className="p-4 space-y-6">
-          <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex items-center gap-2 mb-4"><Smartphone className="w-5 h-5 text-pink-500" /><h3 className="font-semibold text-gray-800">Banner para Celular</h3><span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">Recomendado</span></div>
-            <div className="aspect-square max-w-[200px] mx-auto bg-gray-100 rounded-xl overflow-hidden relative mb-4">
-              {uploading === "banner_mobile" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}
-              {bannerMobileUrl ? (<><Image src={bannerMobileUrl} alt="Banner Mobile" fill className="object-cover" /><button onClick={() => setBannerMobileUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} /></label>)}
+        
+        {/* Aviso de Moderação */}
+        <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-amber-800">Banners passam por aprovação</p>
+              <p className="text-sm text-amber-700 mt-1">
+                Para garantir a qualidade do catálogo, todos os banners são revisados antes de aparecer na sua loja. 
+                Use apenas imagens de produtos C4.
+              </p>
             </div>
-            <p className="text-xs text-gray-500 text-center">Tamanho ideal: 800x800 (quadrado)</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex items-center gap-2 mb-4"><Monitor className="w-5 h-5 text-purple-500" /><h3 className="font-semibold text-gray-800">Banner para Computador</h3></div>
-            <div className="w-full bg-gray-100 rounded-xl overflow-hidden relative mb-4" style={{ aspectRatio: "1920/600" }}>
-              {uploading === "banner" && (<div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-pink-500" /></div>)}
-              {bannerUrl ? (<><Image src={bannerUrl} alt="Banner Desktop" fill className="object-cover" /><button onClick={() => setBannerUrl("")} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button></>) : (<label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400"><Upload className="w-8 h-8 mb-2" /><span className="text-sm">Toque para enviar</span><input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} /></label>)}
-            </div>
-            <p className="text-xs text-gray-500 text-center">Tamanho ideal: 1920x600 (horizontal)</p>
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        
+        <div className="p-4 space-y-6">
+          {/* Banner Mobile */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Smartphone className="w-5 h-5 text-pink-500" />
+              <h3 className="font-semibold text-gray-800">Banner para Celular</h3>
+              <span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">Recomendado</span>
+            </div>
+            
+            {/* Status pendente */}
+            {pendingMobile && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <div className="flex items-center gap-2 text-yellow-700">
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium text-sm">Banner aguardando aprovação</span>
+                </div>
+                <div className="mt-2 aspect-square max-w-[150px] mx-auto bg-gray-100 rounded-lg overflow-hidden relative">
+                  <Image src={pendingMobile.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Clock className="w-8 h-8 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Status recusado */}
+            {rejectedMobile && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center gap-2 text-red-700 mb-2">
+                  <XCircle className="w-4 h-4" />
+                  <span className="font-medium text-sm">Banner recusado</span>
+                </div>
+                <p className="text-xs text-red-600 mb-2">{rejectedMobile.admin_feedback}</p>
+                <p className="text-xs text-gray-500">Envie um novo banner seguindo as diretrizes.</p>
+              </div>
+            )}
+            
+            {/* Banner atual aprovado */}
+            <div className="aspect-square max-w-[200px] mx-auto bg-gray-100 rounded-xl overflow-hidden relative mb-4">
+              {uploading === "banner_mobile" && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+                </div>
+              )}
+              {bannerMobileUrl ? (
+                <>
+                  <Image src={bannerMobileUrl} alt="Banner Mobile" fill className="object-cover" />
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white rounded-full text-xs flex items-center gap-1">
+                    <CheckCircle size={12} />
+                    Aprovado
+                  </div>
+                </>
+              ) : (
+                <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
+                  <Upload className="w-8 h-8 mb-2" />
+                  <span className="text-sm">Enviar para aprovação</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
+                </label>
+              )}
+            </div>
+            
+            {bannerMobileUrl && !pendingMobile && (
+              <label className="block">
+                <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
+                  Enviar novo banner para aprovação
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
+              </label>
+            )}
+            
+            <p className="text-xs text-gray-500 text-center mt-2">Tamanho ideal: 800x800 (quadrado)</p>
+          </div>
+          
+          {/* Banner Desktop */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Monitor className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold text-gray-800">Banner para Computador</h3>
+            </div>
+            
+            {/* Status pendente */}
+            {pendingDesktop && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <div className="flex items-center gap-2 text-yellow-700">
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium text-sm">Banner aguardando aprovação</span>
+                </div>
+                <div className="mt-2 w-full bg-gray-100 rounded-lg overflow-hidden relative" style={{ aspectRatio: "16/5" }}>
+                  <Image src={pendingDesktop.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Clock className="w-8 h-8 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Status recusado */}
+            {rejectedDesktop && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center gap-2 text-red-700 mb-2">
+                  <XCircle className="w-4 h-4" />
+                  <span className="font-medium text-sm">Banner recusado</span>
+                </div>
+                <p className="text-xs text-red-600 mb-2">{rejectedDesktop.admin_feedback}</p>
+                <p className="text-xs text-gray-500">Envie um novo banner seguindo as diretrizes.</p>
+              </div>
+            )}
+            
+            {/* Banner atual aprovado */}
+            <div className="w-full bg-gray-100 rounded-xl overflow-hidden relative mb-4" style={{ aspectRatio: "1920/600" }}>
+              {uploading === "banner" && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+                </div>
+              )}
+              {bannerUrl ? (
+                <>
+                  <Image src={bannerUrl} alt="Banner Desktop" fill className="object-cover" />
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white rounded-full text-xs flex items-center gap-1">
+                    <CheckCircle size={12} />
+                    Aprovado
+                  </div>
+                </>
+              ) : (
+                <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
+                  <Upload className="w-8 h-8 mb-2" />
+                  <span className="text-sm">Enviar para aprovação</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
+                </label>
+              )}
+            </div>
+            
+            {bannerUrl && !pendingDesktop && (
+              <label className="block">
+                <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
+                  Enviar novo banner para aprovação
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
+              </label>
+            )}
+            
+            <p className="text-xs text-gray-500 text-center mt-2">Tamanho ideal: 1920x600 (horizontal)</p>
+          </div>
+          
+          {/* Diretrizes */}
+          <div className="bg-gray-100 rounded-xl p-4">
+            <h4 className="font-medium text-gray-800 mb-2">📋 Diretrizes para Banners</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>✓ Use apenas produtos do catálogo C4</li>
+              <li>✓ Imagens de alta qualidade</li>
+              <li>✓ Evite texto excessivo na imagem</li>
+              <li>✗ Não use produtos de outras marcas</li>
+              <li>✗ Não use conteúdo impróprio</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64">
+          <button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+            <Check className="inline w-6 h-6 mr-2" />Voltar
+          </button>
+        </div>
       </div>
     );
   }
