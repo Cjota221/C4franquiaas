@@ -24,6 +24,7 @@ type ThemeSettings = {
   };
   font_style: "modern" | "classic" | "elegant";
   product_name_size: "small" | "medium" | "large";
+  button_color?: string; // Cor específica do botão (usa primary se não definido)
 };
 
 type BannerSubmission = {
@@ -65,6 +66,7 @@ const DEFAULT_THEME: ThemeSettings = {
   },
   font_style: "modern",
   product_name_size: "medium",
+  button_color: undefined, // Usa cor primária por padrão
 };
 
 export default function PersonalizacaoRevendedoraPage() {
@@ -543,13 +545,46 @@ export default function PersonalizacaoRevendedoraPage() {
             <h3 className="font-semibold text-gray-800 mb-4">Estilo do Botão de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
-                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: primaryColor }}>Comprar</div></div>
+                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
                 <p className="text-sm font-medium text-gray-700">Arredondado</p>
               </button>
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "square" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "square" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
-                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-md text-white text-sm font-medium" style={{ backgroundColor: primaryColor }}>Comprar</div></div>
+                <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-md text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
                 <p className="text-sm font-medium text-gray-700">Quadrado</p>
               </button>
+            </div>
+            
+            {/* Cor do Botão */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="font-medium text-gray-800">Cor do Botão</p>
+                  <p className="text-xs text-gray-500">Diferente da cor primária</p>
+                </div>
+                <button 
+                  onClick={() => setThemeSettings({ ...themeSettings, button_color: themeSettings.button_color ? undefined : primaryColor })}
+                  className={`w-14 h-8 rounded-full transition-colors ${themeSettings.button_color ? "bg-green-500" : "bg-gray-300"}`}
+                >
+                  <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.button_color ? "translate-x-7" : "translate-x-1"}`} />
+                </button>
+              </div>
+              {themeSettings.button_color && (
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="color" 
+                    value={themeSettings.button_color || primaryColor} 
+                    onChange={(e) => setThemeSettings({ ...themeSettings, button_color: e.target.value })} 
+                    className="w-12 h-10 rounded-lg cursor-pointer border border-gray-200" 
+                  />
+                  <input 
+                    type="text" 
+                    value={themeSettings.button_color || ""} 
+                    onChange={(e) => setThemeSettings({ ...themeSettings, button_color: e.target.value })} 
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                    placeholder="#000000"
+                  />
+                </div>
+              )}
             </div>
           </div>
           

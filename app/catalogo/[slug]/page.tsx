@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, ChevronDown, Truck, Tag } from 'lucide-react';
 import { useCatalogo } from './layout';
-import CountdownTimer from '@/components/catalogo/CountdownTimer';
 
 type Variacao = {
   id?: string;
@@ -164,16 +163,23 @@ export default function CatalogoPrincipal() {
 
   return (
     <div>
-      {/* Barra de Anúncio - No topo de tudo */}
+      {/* Barra de Anúncio Deslizante - No topo absoluto */}
       {themeSettings?.announcement_bar?.enabled && themeSettings?.announcement_bar?.text && (
         <div 
-          className="text-center py-2 px-4 text-sm font-medium"
+          className="overflow-hidden whitespace-nowrap py-2"
           style={{ 
             backgroundColor: themeSettings.announcement_bar.bg_color || '#000000',
             color: themeSettings.announcement_bar.text_color || '#ffffff'
           }}
         >
-          {themeSettings.announcement_bar.text}
+          <div className="animate-marquee inline-block">
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+            <span className="mx-8 text-sm font-medium">{themeSettings.announcement_bar.text}</span>
+          </div>
         </div>
       )}
 
@@ -473,11 +479,6 @@ export default function CatalogoPrincipal() {
                 )}
               </div>
               
-              {/* Cronômetro com contagem regressiva em tempo real */}
-              {productPromo?.ends_at && (
-                <CountdownTimer endDate={productPromo.ends_at} primaryColor={primaryColor} />
-              )}
-              
               <div className="p-3 md:p-4">
                 <h3 className={`font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] ${nameSizeClass}`}>
                   {product.nome}
@@ -490,7 +491,7 @@ export default function CatalogoPrincipal() {
                 <div
                   className={`w-full py-2.5 text-white font-medium text-center text-sm transition-all ${buttonClass}`}
                   style={{ 
-                    backgroundColor: primaryColor,
+                    backgroundColor: themeSettings?.button_color || primaryColor,
                     borderRadius: buttonStyle === 'rounded' ? '9999px' : cardRadius
                   }}
                 >

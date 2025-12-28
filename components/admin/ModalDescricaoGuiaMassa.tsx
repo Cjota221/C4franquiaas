@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { 
   X, 
@@ -15,19 +15,20 @@ import {
   CheckCircle,
   Package,
   Search,
-  Check
+  Check,
+  RefreshCw
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 // Estrutura para calçados
 type MedidaCalcado = {
-  tamanho: string;      // 34, 35, 36...
-  centimetros: string;  // 22, 22.5, 23...
+  tamanho: string;
+  centimetros: string;
 };
 
 type SizeGuideCalcado = {
-  image_url?: string;           // Ilustração de como medir
-  instrucoes?: string;          // Texto explicativo de como medir
+  image_url?: string;
+  instrucoes?: string;
   measurements?: MedidaCalcado[];
 };
 
@@ -42,7 +43,6 @@ type Produto = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  produtos: Produto[];
   onSave?: () => void;
 };
 
@@ -73,10 +73,14 @@ const INSTRUCOES_PADRAO = `📏 Como medir seu pé corretamente:
 export default function ModalDescricaoGuiaMassa({
   isOpen,
   onClose,
-  produtos,
   onSave,
 }: Props) {
   const supabase = createClient();
+  
+  // Produtos carregados do banco
+  const [todosProdutos, setTodosProdutos] = useState<Produto[]>([]);
+  const [carregandoProdutos, setCarregandoProdutos] = useState(false);
+  const [totalProdutos, setTotalProdutos] = useState(0);
   
   // Abas
   const [activeTab, setActiveTab] = useState<'descricao' | 'guia'>('descricao');
@@ -88,7 +92,7 @@ export default function ModalDescricaoGuiaMassa({
   // Descrição
   const [descricao, setDescricao] = useState('');
   
-  // Guia de Tamanhos (estrutura para calçados)
+  // Guia de Tamanhos
   const [guiaImagem, setGuiaImagem] = useState('');
   const [instrucoes, setInstrucoes] = useState(INSTRUCOES_PADRAO);
   const [medidas, setMedidas] = useState<MedidaCalcado[]>(TAMANHOS_PADRAO);
@@ -98,14 +102,39 @@ export default function ModalDescricaoGuiaMassa({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
 
-  // Produtos filtrados pela busca
-  const produtosFiltrados = produtos.filter(p => 
-    p.nome.toLowerCase().includes(busca.toLowerCase())
-  );
+  // Carregar TODOS os produtos do banco
+  const carregarTodosProdutos = useCallback(async () => {
+    setCarregandoProdutos(true);
+    try {
+      // Primeiro, buscar contagem total
+      const { count } = await supabase
+        .from('produtos')
+        .select('*', { count: 'exact', head: true });
+      
+      setTotalProdutos(count || 0);
+      
+      // Buscar todos os produtos (até 1000)
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('id, nome, imagem, description, size_guide')
+        .order('nome', { ascending: true })
+        .limit(1000);
+      
+      if (error) throw error;
+      
+      setTodosProdutos(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar produtos:', err);
+      setMensagem({ tipo: 'erro', texto: 'Erro ao carregar produtos' });
+    } finally {
+      setCarregandoProdutos(false);
+    }
+  }, [supabase]);
 
-  // Reset quando abrir modal
+  // Carregar produtos quando abrir modal
   useEffect(() => {
     if (isOpen) {
+      carregarTodosProdutos();
       setProdutosSelecionados(new Set());
       setBusca('');
       setDescricao('');
@@ -114,7 +143,7 @@ export default function ModalDescricaoGuiaMassa({
       setMedidas(TAMANHOS_PADRAO);
       setMensagem(null);
     }
-  }, [isOpen]);
+  }, [isOpen, carregarTodosProdutos]);
 
   // Fechar com ESC
   useEffect(() => {
@@ -124,6 +153,11 @@ export default function ModalDescricaoGuiaMassa({
     if (isOpen) window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
+
+  // Produtos filtrados pela busca
+  const produtosFiltrados = todosProdutos.filter(p => 
+    p.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   // Toggle seleção de produto
   const toggleProduto = (id: string) => {
@@ -136,9 +170,9 @@ export default function ModalDescricaoGuiaMassa({
     setProdutosSelecionados(novos);
   };
 
-  // Selecionar/deselecionar todos
+  // Selecionar/deselecionar todos os filtrados
   const toggleTodos = () => {
-    if (produtosSelecionados.size === produtosFiltrados.length) {
+    if (produtosSelecionados.size === produtosFiltrados.length && produtosFiltrados.length > 0) {
       setProdutosSelecionados(new Set());
     } else {
       setProdutosSelecionados(new Set(produtosFiltrados.map(p => p.id)));
@@ -202,54 +236,51 @@ export default function ModalDescricaoGuiaMassa({
     setMensagem(null);
 
     try {
-      const updates: Record<string, unknown> = {};
-
-      // Só atualiza campos que foram preenchidos
-      if (activeTab === 'descricao' && descricao.trim()) {
-        updates.description = descricao.trim();
-      }
-
-      if (activeTab === 'guia') {
-        // Filtrar medidas vazias
-        const medidasFiltradas = medidas.filter(m => m.tamanho && m.centimetros);
-        
-        if (medidasFiltradas.length > 0 || guiaImagem || instrucoes.trim()) {
-          updates.size_guide = {
-            image_url: guiaImagem || null,
-            instrucoes: instrucoes.trim() || null,
-            measurements: medidasFiltradas.length > 0 ? medidasFiltradas : null,
-          };
-        }
-      }
-
-      if (Object.keys(updates).length === 0) {
-        setMensagem({ tipo: 'erro', texto: 'Preencha pelo menos um campo' });
-        setSalvando(false);
-        return;
-      }
-
-      // Atualizar todos os produtos selecionados
       const ids = Array.from(produtosSelecionados);
       
-      const { error } = await supabase
-        .from('produtos')
-        .update(updates)
-        .in('id', ids);
-
-      if (error) throw error;
+      // Preparar updates baseado na aba ativa
+      if (activeTab === 'descricao') {
+        if (!descricao.trim()) {
+          setMensagem({ tipo: 'erro', texto: 'Digite uma descrição' });
+          setSalvando(false);
+          return;
+        }
+        
+        const { error } = await supabase
+          .from('produtos')
+          .update({ description: descricao.trim() })
+          .in('id', ids);
+        
+        if (error) throw error;
+      } else {
+        // Guia de tamanhos
+        const medidasFiltradas = medidas.filter(m => m.tamanho && m.centimetros);
+        
+        const sizeGuide: SizeGuideCalcado = {
+          image_url: guiaImagem || undefined,
+          instrucoes: instrucoes.trim() || undefined,
+          measurements: medidasFiltradas.length > 0 ? medidasFiltradas : undefined,
+        };
+        
+        const { error } = await supabase
+          .from('produtos')
+          .update({ size_guide: sizeGuide })
+          .in('id', ids);
+        
+        if (error) throw error;
+      }
 
       setMensagem({ 
         tipo: 'sucesso', 
-        texto: `${ids.length} produto(s) atualizado(s) com sucesso!` 
+        texto: `✅ ${ids.length} produto(s) atualizado(s) com sucesso!` 
       });
 
-      // Callback
-      if (onSave) {
-        setTimeout(() => {
-          onSave();
-          onClose();
-        }, 1500);
-      }
+      // Callback e fechar
+      setTimeout(() => {
+        if (onSave) onSave();
+        onClose();
+      }, 1500);
+      
     } catch (err) {
       console.error('Erro ao salvar:', err);
       setMensagem({ tipo: 'erro', texto: 'Erro ao salvar. Tente novamente.' });
@@ -263,10 +294,7 @@ export default function ModalDescricaoGuiaMassa({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/50" 
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       
       {/* Modal */}
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -277,11 +305,11 @@ export default function ModalDescricaoGuiaMassa({
             <h2 className="text-lg font-semibold">
               Edição em Massa - Descrição e Guia de Tamanhos
             </h2>
+            <span className="text-white/70 text-sm">
+              ({totalProdutos} produtos no total)
+            </span>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded-full transition-colors"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -291,69 +319,119 @@ export default function ModalDescricaoGuiaMassa({
           {/* Lado esquerdo - Seleção de produtos */}
           <div className="w-1/3 border-r flex flex-col">
             <div className="p-3 border-b bg-gray-50">
-              <div className="relative">
+              <div className="relative mb-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Buscar produtos..."
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
+                  className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none"
                 />
               </div>
-              <button
-                onClick={toggleTodos}
-                className="mt-2 text-sm text-pink-600 hover:text-pink-700 font-medium"
-              >
-                {produtosSelecionados.size === produtosFiltrados.length 
-                  ? 'Desmarcar todos' 
-                  : 'Selecionar todos'}
-              </button>
-              <p className="text-xs text-gray-500 mt-1">
-                {produtosSelecionados.size} de {produtosFiltrados.length} selecionados
-              </p>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={toggleTodos}
+                  className="text-xs text-pink-600 hover:text-pink-700 font-medium"
+                >
+                  {produtosSelecionados.size === produtosFiltrados.length && produtosFiltrados.length > 0
+                    ? 'Desmarcar todos' 
+                    : `Selecionar todos (${produtosFiltrados.length})`
+                  }
+                </button>
+                <button
+                  onClick={carregarTodosProdutos}
+                  disabled={carregandoProdutos}
+                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${carregandoProdutos ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </button>
+              </div>
             </div>
             
+            {/* Lista de produtos */}
             <div className="flex-1 overflow-y-auto">
-              {produtosFiltrados.map((produto) => (
-                <div
-                  key={produto.id}
-                  onClick={() => toggleProduto(produto.id)}
-                  className={`flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                    produtosSelecionados.has(produto.id) ? 'bg-pink-50' : ''
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    produtosSelecionados.has(produto.id) 
-                      ? 'bg-pink-500 border-pink-500' 
-                      : 'border-gray-300'
-                  }`}>
-                    {produtosSelecionados.has(produto.id) && (
-                      <Check className="w-3 h-3 text-white" />
-                    )}
-                  </div>
-                  {produto.imagem && (
-                    <Image
-                      src={produto.imagem}
-                      alt={produto.nome}
-                      width={40}
-                      height={40}
-                      className="rounded object-cover"
-                    />
-                  )}
-                  <span className="text-sm truncate flex-1">{produto.nome}</span>
+              {carregandoProdutos ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="w-6 h-6 text-pink-500 animate-spin" />
                 </div>
-              ))}
+              ) : produtosFiltrados.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  {busca ? 'Nenhum produto encontrado' : 'Nenhum produto disponível'}
+                </div>
+              ) : (
+                produtosFiltrados.map(produto => (
+                  <div
+                    key={produto.id}
+                    onClick={() => toggleProduto(produto.id)}
+                    className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b ${
+                      produtosSelecionados.has(produto.id)
+                        ? 'bg-pink-50 border-pink-200'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      produtosSelecionados.has(produto.id)
+                        ? 'bg-pink-500 border-pink-500 text-white'
+                        : 'border-gray-300'
+                    }`}>
+                      {produtosSelecionados.has(produto.id) && <Check className="w-3 h-3" />}
+                    </div>
+                    
+                    <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex-shrink-0">
+                      {produto.imagem ? (
+                        <Image
+                          src={produto.imagem}
+                          alt={produto.nome}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Package className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {produto.nome}
+                      </p>
+                      <div className="flex gap-2 mt-0.5">
+                        {produto.description && (
+                          <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                            Descrição ✓
+                          </span>
+                        )}
+                        {produto.size_guide && (
+                          <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                            Guia ✓
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            {/* Rodapé seleção */}
+            <div className="p-3 border-t bg-gray-50">
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold text-pink-600">{produtosSelecionados.size}</span> produto(s) selecionado(s)
+              </div>
             </div>
           </div>
-
-          {/* Lado direito - Formulário */}
+          
+          {/* Lado direito - Edição */}
           <div className="flex-1 flex flex-col">
             {/* Abas */}
             <div className="flex border-b">
               <button
                 onClick={() => setActiveTab('descricao')}
-                className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                   activeTab === 'descricao'
                     ? 'text-pink-600 border-b-2 border-pink-500 bg-pink-50'
                     : 'text-gray-500 hover:text-gray-700'
@@ -364,7 +442,7 @@ export default function ModalDescricaoGuiaMassa({
               </button>
               <button
                 onClick={() => setActiveTab('guia')}
-                className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                   activeTab === 'guia'
                     ? 'text-pink-600 border-b-2 border-pink-500 bg-pink-50'
                     : 'text-gray-500 hover:text-gray-700'
@@ -374,7 +452,7 @@ export default function ModalDescricaoGuiaMassa({
                 Guia de Tamanhos
               </button>
             </div>
-
+            
             {/* Conteúdo das abas */}
             <div className="flex-1 overflow-y-auto p-4">
               {activeTab === 'descricao' ? (
@@ -386,91 +464,85 @@ export default function ModalDescricaoGuiaMassa({
                     <textarea
                       value={descricao}
                       onChange={(e) => setDescricao(e.target.value)}
-                      placeholder="Digite a descrição que será aplicada aos produtos selecionados..."
-                      className="w-full h-64 p-3 border rounded-lg resize-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      rows={12}
+                      placeholder="Digite a descrição que será aplicada a todos os produtos selecionados..."
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none resize-none"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Esta descrição será aplicada a todos os produtos selecionados.
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    Esta descrição será aplicada a todos os {produtosSelecionados.size} produtos selecionados.
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Ilustração */}
+                  {/* Imagem ilustrativa */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      📐 Ilustração de Como Medir
+                      Imagem Ilustrativa (opcional)
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      {guiaImagem ? (
-                        <div className="relative inline-block">
-                          <Image
-                            src={guiaImagem}
-                            alt="Guia de medidas"
-                            width={300}
-                            height={200}
-                            className="rounded-lg"
-                          />
-                          <button
-                            onClick={() => setGuiaImagem('')}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
+                    <div className="flex items-start gap-4">
+                      <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
+                        {guiaImagem ? (
+                          <Image src={guiaImagem} alt="Guia" width={128} height={128} className="w-full h-full object-contain" />
+                        ) : (
+                          <span className="text-gray-400 text-xs text-center px-2">Sem imagem</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
                         <label className="cursor-pointer">
-                          <div className="flex flex-col items-center gap-2 py-4">
+                          <span className="inline-flex items-center gap-2 px-3 py-2 bg-pink-100 text-pink-700 rounded-lg text-sm font-medium hover:bg-pink-200 transition-colors">
                             {uploadingImage ? (
-                              <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <>
-                                <Upload className="w-8 h-8 text-gray-400" />
-                                <span className="text-sm text-gray-500">
-                                  Clique para fazer upload da ilustração
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  Recomendado: imagem mostrando como medir o pé/solado
-                                </span>
-                              </>
+                              <Upload className="w-4 h-4" />
                             )}
-                          </div>
+                            Upload
+                          </span>
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={handleImageUpload}
                             className="hidden"
+                            onChange={handleImageUpload}
+                            disabled={uploadingImage}
                           />
                         </label>
-                      )}
+                        {guiaImagem && (
+                          <button
+                            onClick={() => setGuiaImagem('')}
+                            className="text-xs text-red-500 hover:text-red-700"
+                          >
+                            Remover imagem
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-
+                  
                   {/* Instruções */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      📝 Instruções de Como Medir
+                      Instruções de Como Medir
                     </label>
                     <textarea
                       value={instrucoes}
                       onChange={(e) => setInstrucoes(e.target.value)}
-                      placeholder="Explique como o cliente deve medir o pé..."
-                      className="w-full h-40 p-3 border rounded-lg resize-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm"
+                      rows={6}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none resize-none text-sm"
                     />
                   </div>
-
-                  {/* Tabela de Medidas */}
+                  
+                  {/* Tabela de medidas */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        👟 Tabela de Medidas (Calçados)
+                      <label className="text-sm font-medium text-gray-700">
+                        Tabela de Medidas (Calçados)
                       </label>
                       <button
                         onClick={adicionarTamanho}
-                        className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700"
+                        className="text-xs text-pink-600 hover:text-pink-700 flex items-center gap-1"
                       >
-                        <Plus className="w-4 h-4" />
-                        Adicionar tamanho
+                        <Plus className="w-3 h-3" />
+                        Adicionar Tamanho
                       </button>
                     </div>
                     
@@ -478,13 +550,9 @@ export default function ModalDescricaoGuiaMassa({
                       <table className="w-full">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                              Tamanho (Numeração)
-                            </th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                              Comprimento (cm)
-                            </th>
-                            <th className="px-4 py-2 w-12"></th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nº</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Centímetros</th>
+                            <th className="px-4 py-2 w-10"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -495,8 +563,8 @@ export default function ModalDescricaoGuiaMassa({
                                   type="text"
                                   value={medida.tamanho}
                                   onChange={(e) => atualizarMedida(index, 'tamanho', e.target.value)}
-                                  placeholder="Ex: 36"
-                                  className="w-full px-2 py-1 border rounded text-center"
+                                  placeholder="34"
+                                  className="w-full px-2 py-1 border rounded text-sm focus:ring-1 focus:ring-pink-500"
                                 />
                               </td>
                               <td className="px-4 py-2">
@@ -504,14 +572,14 @@ export default function ModalDescricaoGuiaMassa({
                                   type="text"
                                   value={medida.centimetros}
                                   onChange={(e) => atualizarMedida(index, 'centimetros', e.target.value)}
-                                  placeholder="Ex: 23"
-                                  className="w-full px-2 py-1 border rounded text-center"
+                                  placeholder="22"
+                                  className="w-full px-2 py-1 border rounded text-sm focus:ring-1 focus:ring-pink-500"
                                 />
                               </td>
-                              <td className="px-4 py-2">
+                              <td className="px-2 py-2">
                                 <button
                                   onClick={() => removerTamanho(index)}
-                                  className="text-red-500 hover:text-red-700 p-1"
+                                  className="p-1 text-red-400 hover:text-red-600 transition-colors"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -525,52 +593,48 @@ export default function ModalDescricaoGuiaMassa({
                 </div>
               )}
             </div>
-
+            
             {/* Mensagem */}
             {mensagem && (
               <div className={`mx-4 mb-2 p-3 rounded-lg flex items-center gap-2 ${
                 mensagem.tipo === 'sucesso' 
-                  ? 'bg-green-50 text-green-700' 
-                  : 'bg-red-50 text-red-700'
+                  ? 'bg-green-50 text-green-700 border border-green-200' 
+                  : 'bg-red-50 text-red-700 border border-red-200'
               }`}>
-                {mensagem.tipo === 'sucesso' 
-                  ? <CheckCircle className="w-5 h-5" />
-                  : <AlertCircle className="w-5 h-5" />
-                }
+                {mensagem.tipo === 'sucesso' ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
                 <span className="text-sm">{mensagem.texto}</span>
               </div>
             )}
-
+            
             {/* Footer */}
-            <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-              <span className="text-sm text-gray-500">
-                {produtosSelecionados.size} produto(s) selecionado(s)
-              </span>
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={salvar}
-                  disabled={salvando || produtosSelecionados.size === 0}
-                  className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {salvando ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Aplicar em {produtosSelecionados.size} Produto(s)
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className="p-4 border-t bg-gray-50 flex items-center justify-end gap-3">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvar}
+                disabled={salvando || produtosSelecionados.size === 0}
+                className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg font-medium flex items-center gap-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {salvando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Aplicar a {produtosSelecionados.size} produto(s)
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

@@ -888,13 +888,6 @@ export default function ProdutosPage(): React.JSX.Element {
       <ModalDescricaoGuiaMassa
         isOpen={modalMassaOpen}
         onClose={() => setModalMassaOpen(false)}
-        produtos={produtosFiltrados.map(p => ({
-          id: String(p.id),
-          nome: p.nome,
-          imagem: p.imagem || undefined,
-          description: p.description || undefined,
-          size_guide: p.size_guide as { image_url?: string; instrucoes?: string; measurements?: { tamanho: string; centimetros: string }[] } | null | undefined,
-        }))}
         onSave={() => {
           carregarProdutos(pagina, debouncedSearchTerm);
         }}

@@ -41,6 +41,7 @@ type Reseller = {
     };
     font_style?: 'modern' | 'classic' | 'elegant';
     product_name_size?: 'small' | 'medium' | 'large';
+    button_color?: string; // Cor específica do botão
   };
 };
 
