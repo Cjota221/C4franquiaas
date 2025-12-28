@@ -359,8 +359,18 @@ export default function CatalogoPrincipal() {
             if (!productPromo) return null;
             if (productPromo.type === 'leve_pague') {
               // Verificar se tem descontos progressivos
-              const progressiveDiscounts = productPromo.progressive_discounts;
-              if (progressiveDiscounts && progressiveDiscounts.length > 0) {
+              let progressiveDiscounts = productPromo.progressive_discounts;
+              
+              // Parse se veio como string
+              if (typeof progressiveDiscounts === 'string') {
+                try {
+                  progressiveDiscounts = JSON.parse(progressiveDiscounts);
+                } catch {
+                  progressiveDiscounts = null;
+                }
+              }
+              
+              if (progressiveDiscounts && Array.isArray(progressiveDiscounts) && progressiveDiscounts.length > 0) {
                 // Pegar o primeiro desconto (menor quantidade) para mostrar
                 const sorted = [...progressiveDiscounts].sort((a, b) => a.min_items - b.min_items);
                 return `${sorted[0].min_items}+ peças = ${sorted[0].discount_percent}% OFF`;
@@ -368,6 +378,8 @@ export default function CatalogoPrincipal() {
               if (productPromo.buy_quantity && productPromo.pay_quantity) {
                 return `Leve ${productPromo.buy_quantity} Pague ${productPromo.pay_quantity}`;
               }
+              // Se tem a promoção mas não tem dados configurados, mostrar nome
+              return productPromo.name || 'Leve Mais Pague Menos';
             }
             if (productPromo.type === 'desconto_percentual') {
               return `${productPromo.discount_value}% OFF`;

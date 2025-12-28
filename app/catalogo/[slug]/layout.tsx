@@ -608,10 +608,20 @@ export default function CatalogoLayout({
         // Calcular total de itens elegíveis
         const totalEligibleQty = eligibleItems.reduce((sum, item) => sum + item.quantidade, 0);
         
+        // Fazer parse do progressive_discounts se necessário
+        let progressiveDiscounts = promo.progressive_discounts;
+        if (typeof progressiveDiscounts === 'string') {
+          try {
+            progressiveDiscounts = JSON.parse(progressiveDiscounts);
+          } catch {
+            progressiveDiscounts = null;
+          }
+        }
+        
         // Verificar se tem descontos progressivos configurados
-        if (promo.progressive_discounts && promo.progressive_discounts.length > 0) {
+        if (progressiveDiscounts && Array.isArray(progressiveDiscounts) && progressiveDiscounts.length > 0) {
           // Ordenar faixas do maior para o menor min_items
-          const sortedDiscounts = [...promo.progressive_discounts].sort((a, b) => b.min_items - a.min_items);
+          const sortedDiscounts = [...progressiveDiscounts].sort((a, b) => b.min_items - a.min_items);
           
           // Encontrar a faixa aplicável (maior faixa que a quantidade atende)
           const applicableDiscount = sortedDiscounts.find(d => totalEligibleQty >= d.min_items);
@@ -736,17 +746,36 @@ export default function CatalogoLayout({
   // Verificar se um produto tem promoção ativa
   const getProductPromotion = useCallback((productId: string): Promotion | null => {
     // Buscar promoção que se aplica a este produto
-    return promotions.find(p => {
-      // Promoções de produto específico
+    const promo = promotions.find(p => {
+      // Promoções para produtos específicos
       if (p.applies_to === 'products' && p.product_ids?.includes(productId)) {
         return true;
       }
-      // Promoções para todos os produtos
-      if (p.applies_to === 'all' && (p.type === 'leve_pague' || p.type === 'desconto_percentual' || p.type === 'desconto_valor')) {
-        return true;
+      // Promoções para todos os produtos (leve mais pague menos, descontos)
+      if (p.applies_to === 'all') {
+        if (p.type === 'leve_pague' || p.type === 'desconto_percentual' || p.type === 'desconto_valor') {
+          return true;
+        }
       }
       return false;
-    }) || null;
+    });
+    
+    // Se encontrou promoção, garantir que progressive_discounts é um array
+    if (promo && promo.type === 'leve_pague' && promo.progressive_discounts) {
+      // Se veio como string, fazer parse
+      if (typeof promo.progressive_discounts === 'string') {
+        try {
+          return {
+            ...promo,
+            progressive_discounts: JSON.parse(promo.progressive_discounts as unknown as string)
+          };
+        } catch {
+          return promo;
+        }
+      }
+    }
+    
+    return promo || null;
   }, [promotions]);
 
   // Carregar cupom salvo do localStorage
