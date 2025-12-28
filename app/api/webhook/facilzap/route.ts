@@ -239,28 +239,118 @@ async function reativarProdutoNasFranquias(produtoId: string) {
 }
 
 /**
- * 🆕 Processa eventos de pedido (futuro ERP)
+ * 🆕 Processa eventos de pedido - BAIXA ESTOQUE AUTOMATICAMENTE
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function handleNovoPedido(data: any) {
-  console.log('[Webhook] 💰 Novo pedido recebido:', data.id || data.pedido_id);
+async function handleNovoPedido(data: any, eventType: string) {
+  const pedidoId = data.id || data.pedido_id || data.numero || data.order_id;
+  console.log(`[Webhook] 💰 Pedido recebido: ${pedidoId} | Evento: ${eventType}`);
   
-  // TODO: Implementar lógica de pedidos
-  // 1. Criar registro na tabela 'vendas'
-  // 2. Baixar estoque local (se FácilZap não baixou automaticamente)
-  // 3. Vincular com franqueada/revendedora
-  // 4. Enviar notificação
+  // Extrair itens do pedido (diferentes formatos possíveis)
+  const itens = data.itens || data.items || data.produtos || data.products || [];
   
-  console.warn('[Webhook] ⚠️ Handler de pedidos ainda não implementado');
+  if (!itens || itens.length === 0) {
+    console.warn('[Webhook] ⚠️ Pedido sem itens para processar');
+    await supabaseAdmin.from('logs_sincronizacao').insert({
+      tipo: 'webhook_pedido_sem_itens',
+      descricao: `Pedido ${pedidoId} recebido mas sem itens`,
+      payload: { pedido_id: pedidoId, data },
+      sucesso: false,
+      erro: 'Pedido sem itens',
+    });
+    return { pedido_id: pedidoId, itens_processados: 0 };
+  }
+
+  console.log(`[Webhook] 📦 Processando ${itens.length} itens do pedido...`);
   
-  // Registrar log
+  let itensProcessados = 0;
+  let erros: string[] = [];
+
+  for (const item of itens) {
+    try {
+      // Extrair ID do produto (diferentes formatos)
+      const produtoId = item.produto_id || item.product_id || item.id_produto || 
+                       item.sku || item.codigo || item.id;
+      const quantidade = item.quantidade || item.qty || item.quantity || 1;
+      const nomeProduto = item.nome || item.name || item.produto || 'Produto';
+
+      if (!produtoId) {
+        console.warn(`[Webhook] ⚠️ Item sem ID de produto:`, item);
+        continue;
+      }
+
+      console.log(`[Webhook] 📉 Baixando estoque: ${nomeProduto} (${produtoId}) x ${quantidade}`);
+
+      // Buscar produto no banco
+      const { data: produto, error: errBusca } = await supabaseAdmin
+        .from('produtos')
+        .select('id, nome, estoque, facilzap_id, id_externo')
+        .or(`facilzap_id.eq.${produtoId},id_externo.eq.${produtoId},id.eq.${produtoId}`)
+        .single();
+
+      if (errBusca || !produto) {
+        console.warn(`[Webhook] ⚠️ Produto não encontrado: ${produtoId}`);
+        erros.push(`Produto ${produtoId} não encontrado`);
+        continue;
+      }
+
+      // Calcular novo estoque
+      const estoqueAtual = produto.estoque || 0;
+      const novoEstoque = Math.max(0, estoqueAtual - quantidade);
+
+      // Atualizar estoque
+      const { error: errUpdate } = await supabaseAdmin
+        .from('produtos')
+        .update({ 
+          estoque: novoEstoque,
+          ultima_sincronizacao: new Date().toISOString()
+        })
+        .eq('id', produto.id);
+
+      if (errUpdate) {
+        console.error(`[Webhook] ❌ Erro ao atualizar estoque:`, errUpdate);
+        erros.push(`Erro ao atualizar ${produto.nome}`);
+        continue;
+      }
+
+      console.log(`[Webhook] ✅ Estoque atualizado: ${produto.nome} ${estoqueAtual} → ${novoEstoque}`);
+      itensProcessados++;
+
+      // Se estoque zerou, desativar nas franquias
+      if (novoEstoque <= 0) {
+        console.log(`[Webhook] 🚫 Estoque zerado! Desativando ${produto.nome}...`);
+        await desativarProdutoNasFranquias(produto.id, produto.facilzap_id || produto.id_externo || '');
+      }
+
+    } catch (itemError) {
+      console.error(`[Webhook] ❌ Erro ao processar item:`, itemError);
+      erros.push(`Erro no item: ${(itemError as Error).message}`);
+    }
+  }
+
+  // Registrar log do pedido
   await supabaseAdmin.from('logs_sincronizacao').insert({
-    tipo: 'webhook_pedido_recebido',
-    descricao: `Webhook: Pedido ${data.id || data.pedido_id} (handler não implementado)`,
-    payload: { data },
-    sucesso: false,
-    erro: 'Handler não implementado',
+    tipo: eventType === 'pedido_cancelado' ? 'webhook_pedido_cancelado' : 'webhook_pedido_processado',
+    descricao: `Pedido ${pedidoId}: ${itensProcessados}/${itens.length} itens processados`,
+    payload: { 
+      pedido_id: pedidoId, 
+      evento: eventType,
+      itens_total: itens.length,
+      itens_processados: itensProcessados,
+      erros: erros.length > 0 ? erros : null
+    },
+    sucesso: erros.length === 0,
+    erro: erros.length > 0 ? erros.join('; ') : null,
   });
+
+  console.log(`[Webhook] ✅ Pedido ${pedidoId} processado: ${itensProcessados}/${itens.length} itens`);
+  
+  return { 
+    pedido_id: pedidoId, 
+    itens_processados: itensProcessados,
+    itens_total: itens.length,
+    erros: erros.length > 0 ? erros : undefined
+  };
 }
 
 // ============ ENDPOINT PRINCIPAL ============

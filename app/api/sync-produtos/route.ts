@@ -4,17 +4,26 @@ import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '
 
 // extractCategoryNames removed: categories should be managed manually in admin panel
 
+// GET também funciona para permitir cron jobs externos (cron-job.org, etc)
+export async function GET() {
+  return handleSync();
+}
+
 export async function POST(request: NextRequest) {
+  const parsed = await request.json().catch(() => ({} as unknown));
+  const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {} as Record<string, unknown>;
+  const page = Number(body?.page) > 0 ? Number(body.page) : undefined;
+  const length = Number(body?.length) > 0 ? Number(body.length) : undefined;
+  return handleSync(page, length);
+}
+
+async function handleSync(page?: number, length?: number) {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SERVICE_KEY) {
     return NextResponse.json({ error: 'supabase_config_missing', message: 'Missing SUPABASE configuration (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).' }, { status: 500 });
   }
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-  const parsed = await request.json().catch(() => ({} as unknown));
-  const body = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {} as Record<string, unknown>;
-  const page = Number(body?.page) > 0 ? Number(body.page) : undefined;
-  const length = Number(body?.length) > 0 ? Number(body.length) : undefined;
 
   try {
     console.log('🔄 Iniciando sincronização com FácilZap...');
