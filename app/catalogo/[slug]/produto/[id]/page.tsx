@@ -259,18 +259,9 @@ export default function ProdutoPage() {
 
         {/* Informações do Produto */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {produto.nome}
           </h1>
-
-          {/* Descrição do Produto */}
-          {produto.descricao && (
-            <div className="mb-6">
-              <p className="text-gray-600 whitespace-pre-line leading-relaxed">
-                {produto.descricao}
-              </p>
-            </div>
-          )}
 
           <p className="text-3xl font-bold mb-4" style={{ color: primaryColor }}>
             R$ {calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}
@@ -278,7 +269,7 @@ export default function ProdutoPage() {
 
           {/* Guia de Tamanhos */}
           {produto.size_guide && (
-            <div className="mb-6">
+            <div className="mb-4">
               <SizeGuideModal 
                 sizeGuide={produto.size_guide} 
                 primaryColor={primaryColor} 
@@ -386,6 +377,20 @@ export default function ProdutoPage() {
           </Link>
         </div>
       </div>
+
+      {/* Descrição do Produto - Seção separada embaixo */}
+      {produto.descricao && (
+        <div className="mt-12 border-t pt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            📝 Descrição do Produto
+          </h2>
+          <div className="bg-gray-50 rounded-xl p-6">
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+              {produto.descricao}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
