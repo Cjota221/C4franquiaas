@@ -2,17 +2,17 @@
 -- Data: 2024-12-28
 
 -- Adicionar campo de descrição detalhada
-ALTER TABLE products 
+ALTER TABLE produtos 
 ADD COLUMN IF NOT EXISTS description TEXT;
 
 -- Adicionar campo para guia de tamanhos (JSON para flexibilidade)
 -- Pode conter: imagem URL ou tabela de medidas
-ALTER TABLE products 
+ALTER TABLE produtos 
 ADD COLUMN IF NOT EXISTS size_guide JSONB;
 
 -- Comentários para documentação
-COMMENT ON COLUMN products.description IS 'Descrição detalhada do produto para exibição na página';
-COMMENT ON COLUMN products.size_guide IS 'Guia de tamanhos - JSON com image_url e/ou measurements[]';
+COMMENT ON COLUMN produtos.description IS 'Descrição detalhada do produto para exibição na página';
+COMMENT ON COLUMN produtos.size_guide IS 'Guia de tamanhos - JSON com image_url e/ou measurements[]';
 
 -- Exemplo de estrutura do size_guide:
 -- {
