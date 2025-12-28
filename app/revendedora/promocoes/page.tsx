@@ -53,8 +53,8 @@ interface Product {
 
 // Tipo para faixa de desconto progressivo
 type DiscountTier = {
-  min_qty: number
-  discount: number
+  min_items: number
+  discount_percent: number
 }
 
 type PromotionFormData = {
@@ -95,9 +95,9 @@ const initialFormData: PromotionFormData = {
   applies_to: 'all',
   product_ids: [],
   progressive_discounts: [
-    { min_qty: 2, discount: 10 },
-    { min_qty: 3, discount: 15 },
-    { min_qty: 5, discount: 20 }
+    { min_items: 2, discount_percent: 10 },
+    { min_items: 3, discount_percent: 15 },
+    { min_items: 5, discount_percent: 20 }
   ]
 }
 
@@ -246,9 +246,9 @@ export default function PromocoesPage() {
       applies_to: promo.applies_to === 'categories' ? 'all' : promo.applies_to,
       product_ids: promo.product_ids || [],
       progressive_discounts: (promo as unknown as { progressive_discounts?: DiscountTier[] }).progressive_discounts || [
-        { min_qty: 2, discount: 10 },
-        { min_qty: 3, discount: 15 },
-        { min_qty: 5, discount: 20 }
+        { min_items: 2, discount_percent: 10 },
+        { min_items: 3, discount_percent: 15 },
+        { min_items: 5, discount_percent: 20 }
       ]
     })
     setShowModal(true)
@@ -700,43 +700,53 @@ export default function PromocoesPage() {
 
                   {/* Leve Mais Pague Menos - Desconto Progressivo */}
                   {formData.type === 'leve_pague' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Faixas de Desconto Progressivo
-                      </label>
-                      <p className="text-xs text-gray-500 mb-3">
-                        Configure quantas peças o cliente precisa comprar para ganhar cada desconto
-                      </p>
+                    <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-4 border border-pink-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🎁</span>
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Leve Mais, Pague Menos!</h4>
+                          <p className="text-xs text-gray-500">
+                            Quanto mais peças o cliente levar, maior o desconto
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg p-3 mb-3">
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>💡 Como funciona:</strong> Configure faixas de desconto progressivo. 
+                          Exemplo: &quot;Leve 2 peças e ganhe 10% OFF, leve 3 e ganhe 15% OFF&quot;
+                        </p>
+                      </div>
                       
                       <div className="space-y-2">
                         {formData.progressive_discounts.map((tier, index) => (
-                          <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                          <div key={index} className="flex items-center gap-2 bg-white p-3 rounded-lg shadow-sm">
                             <span className="text-sm text-gray-600 whitespace-nowrap">A partir de</span>
                             <input
                               type="number"
                               min="1"
-                              value={tier.min_qty}
+                              value={tier.min_items}
                               onChange={(e) => {
                                 const newTiers = [...formData.progressive_discounts]
-                                newTiers[index] = { ...tier, min_qty: parseInt(e.target.value) || 1 }
+                                newTiers[index] = { ...tier, min_items: parseInt(e.target.value) || 1 }
                                 setFormData({ ...formData, progressive_discounts: newTiers })
                               }}
-                              className="w-16 border rounded px-2 py-1 text-center"
+                              className="w-16 border border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold text-pink-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                             />
                             <span className="text-sm text-gray-600 whitespace-nowrap">peças =</span>
                             <input
                               type="number"
                               min="1"
                               max="100"
-                              value={tier.discount}
+                              value={tier.discount_percent}
                               onChange={(e) => {
                                 const newTiers = [...formData.progressive_discounts]
-                                newTiers[index] = { ...tier, discount: parseInt(e.target.value) || 0 }
+                                newTiers[index] = { ...tier, discount_percent: parseInt(e.target.value) || 0 }
                                 setFormData({ ...formData, progressive_discounts: newTiers })
                               }}
-                              className="w-16 border rounded px-2 py-1 text-center"
+                              className="w-16 border border-green-200 rounded-lg px-2 py-1.5 text-center font-bold text-green-600 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
-                            <span className="text-sm text-gray-600">% OFF</span>
+                            <span className="text-sm font-semibold text-green-600">% OFF</span>
                             {formData.progressive_discounts.length > 1 && (
                               <button
                                 type="button"
@@ -744,7 +754,7 @@ export default function PromocoesPage() {
                                   const newTiers = formData.progressive_discounts.filter((_, i) => i !== index)
                                   setFormData({ ...formData, progressive_discounts: newTiers })
                                 }}
-                                className="ml-auto text-red-500 hover:text-red-700 p-1"
+                                className="ml-auto text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -761,15 +771,27 @@ export default function PromocoesPage() {
                             ...formData,
                             progressive_discounts: [
                               ...formData.progressive_discounts,
-                              { min_qty: (lastTier?.min_qty || 1) + 2, discount: (lastTier?.discount || 10) + 5 }
+                              { min_items: (lastTier?.min_items || 1) + 2, discount_percent: (lastTier?.discount_percent || 10) + 5 }
                             ]
                           })
                         }}
-                        className="mt-2 text-sm text-pink-600 hover:text-pink-700 flex items-center gap-1"
+                        className="mt-3 w-full py-2 text-sm text-pink-600 hover:text-pink-700 border border-dashed border-pink-300 rounded-lg hover:bg-pink-50 flex items-center justify-center gap-1 transition-all"
                       >
                         <Plus size={14} />
-                        Adicionar faixa
+                        Adicionar mais uma faixa
                       </button>
+                      
+                      {/* Preview */}
+                      <div className="mt-4 p-3 bg-gray-800 rounded-lg text-white">
+                        <p className="text-xs text-gray-400 mb-2">👁️ Preview no catálogo:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {formData.progressive_discounts.map((tier, i) => (
+                            <span key={i} className="bg-pink-500 text-white text-xs px-2 py-1 rounded-full">
+                              {tier.min_items}+ peças = {tier.discount_percent}% OFF
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 

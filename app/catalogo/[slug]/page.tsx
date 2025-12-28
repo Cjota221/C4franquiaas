@@ -3,8 +3,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, ChevronDown, Truck, Tag, Clock } from 'lucide-react';
+import { Search, ChevronDown, Truck, Tag } from 'lucide-react';
 import { useCatalogo } from './layout';
+import CountdownTimer from '@/components/catalogo/CountdownTimer';
 
 type Variacao = {
   id?: string;
@@ -350,24 +351,6 @@ export default function CatalogoPrincipal() {
           // Verificar se o produto tem promoção
           const productPromo = getProductPromotion(product.id);
           
-          // Calcular tempo restante da promoção
-          const getTimeRemaining = (endDate: string) => {
-            const end = new Date(endDate).getTime();
-            const now = new Date().getTime();
-            const diff = end - now;
-            
-            if (diff <= 0) return null;
-            
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
-            if (days > 0) return `${days}d ${hours}h`;
-            if (hours > 0) return `${hours}h ${minutes}m`;
-            if (minutes > 0) return `${minutes}m`;
-            return 'Últimos minutos!';
-          };
-          
           // Pegar o texto da promoção de forma simplificada
           const getPromoLabel = () => {
             if (!productPromo) return null;
@@ -393,7 +376,6 @@ export default function CatalogoPrincipal() {
           };
           
           const promoLabel = getPromoLabel();
-          const timeRemaining = productPromo?.ends_at ? getTimeRemaining(productPromo.ends_at) : null;
           
           return (
             <Link
@@ -426,15 +408,9 @@ export default function CatalogoPrincipal() {
                 )}
               </div>
               
-              {/* Barra do Cronômetro - Linha fina entre foto e info */}
-              {timeRemaining && (
-                <div 
-                  className="flex items-center justify-center gap-1 py-1 text-white text-[10px] font-medium"
-                  style={{ backgroundColor: '#374151' }}
-                >
-                  <Clock size={10} />
-                  <span>⏱ {timeRemaining}</span>
-                </div>
+              {/* Cronômetro com contagem regressiva em tempo real */}
+              {productPromo?.ends_at && (
+                <CountdownTimer endDate={productPromo.ends_at} primaryColor={primaryColor} />
               )}
               
               <div className="p-3 md:p-4">
