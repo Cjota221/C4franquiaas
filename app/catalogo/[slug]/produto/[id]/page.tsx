@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowLeft, Plus, Minus, ShoppingBag, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
+import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
 
 type Variacao = {
   sku: string;
@@ -16,15 +17,22 @@ type Variacao = {
   disponivel: boolean;
 };
 
+type SizeGuide = {
+  image_url?: string;
+  measurements?: { size: string; [key: string]: string | undefined }[];
+};
+
 type Produto = {
   id: string;
   nome: string;
   descricao?: string;
+  description?: string; // Campo do banco
   preco_base: number;
   imagem?: string;
   imagens?: string[];
   estoque: number;
   variacoes: Variacao[];
+  size_guide?: SizeGuide | null;
 };
 
 export default function ProdutoPage() {
@@ -97,8 +105,10 @@ export default function ProdutoPage() {
 
         setProduto({
           ...prod,
+          descricao: prod.description || prod.descricao, // Prioriza description do banco
           estoque: estoqueTotal,
           variacoes,
+          size_guide: prod.size_guide,
         });
       }
 
@@ -240,15 +250,28 @@ export default function ProdutoPage() {
             {produto.nome}
           </h1>
 
+          {/* Descrição do Produto */}
           {produto.descricao && (
-            <p className="text-gray-600 mb-6">
-              {produto.descricao}
-            </p>
+            <div className="mb-6">
+              <p className="text-gray-600 whitespace-pre-line leading-relaxed">
+                {produto.descricao}
+              </p>
+            </div>
           )}
 
-          <p className="text-3xl font-bold mb-6" style={{ color: primaryColor }}>
+          <p className="text-3xl font-bold mb-4" style={{ color: primaryColor }}>
             R$ {calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}
           </p>
+
+          {/* Guia de Tamanhos */}
+          {produto.size_guide && (
+            <div className="mb-6">
+              <SizeGuideModal 
+                sizeGuide={produto.size_guide} 
+                primaryColor={primaryColor} 
+              />
+            </div>
+          )}
 
           {/* Seletor de Variações */}
           {produto.variacoes && produto.variacoes.length > 0 && (

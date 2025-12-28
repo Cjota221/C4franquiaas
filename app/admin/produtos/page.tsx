@@ -10,6 +10,7 @@ import ProductDetailsModal from '@/components/ProductDetailsModal';
 import ModalCategorias from '@/components/ModalCategorias';
 import ModalVincularCategoria from '@/components/ModalVincularCategoria';
 import ModalAtualizarPrecos from '@/components/ModalAtualizarPrecos';
+import ModalDescricaoGuia from '@/components/admin/ModalDescricaoGuia';
 import TabelaProdutos from '@/components/admin/TabelaProdutos';
 import FiltrosProdutos from '@/components/admin/FiltrosProdutos';
 import { createClient } from '@/lib/supabase/client';
@@ -61,6 +62,10 @@ export default function ProdutosPage(): React.JSX.Element {
   const [sincronizando, setSincronizando] = useState(false);
   const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
   const [vinculandoRevendedoras, setVinculandoRevendedoras] = useState(false);
+  
+  // State para Modal de Descrição e Guia de Tamanhos
+  const [modalDescricaoGuiaOpen, setModalDescricaoGuiaOpen] = useState(false);
+  const [produtoParaEditar, setProdutoParaEditar] = useState<ProdutoType | null>(null);
 
   // Outros states
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
@@ -107,7 +112,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       let query = createClient()
         .from('produtos')
-        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,created_at', { count: 'exact' });
+        .select('id,id_externo,nome,estoque,preco_base,ativo,imagem,imagens,created_at,description,size_guide', { count: 'exact' });
 
       // Aplicar filtro de busca
       if (temBusca) {
@@ -785,6 +790,10 @@ export default function ProdutosPage(): React.JSX.Element {
         onVerDetalhes={handleVerDetalhes}
         onToggleStatus={handleToggleStatus}
         toggling={toggling}
+        onEditDescricaoGuia={(produto) => {
+          setProdutoParaEditar(produto as ProdutoType);
+          setModalDescricaoGuiaOpen(true);
+        }}
       />
 
       {/* Paginação */}
@@ -833,6 +842,24 @@ export default function ProdutosPage(): React.JSX.Element {
           clearSelected();
         }}
       />
+      
+      {/* Modal de Descrição e Guia de Tamanhos */}
+      {produtoParaEditar && (
+        <ModalDescricaoGuia
+          isOpen={modalDescricaoGuiaOpen}
+          onClose={() => {
+            setModalDescricaoGuiaOpen(false);
+            setProdutoParaEditar(null);
+          }}
+          productId={String(produtoParaEditar.id)}
+          productName={produtoParaEditar.nome}
+          initialDescription={produtoParaEditar.description || ''}
+          initialSizeGuide={produtoParaEditar.size_guide as { image_url?: string; measurements?: { size: string }[] } | null}
+          onSave={() => {
+            carregarProdutos(pagina, debouncedSearchTerm);
+          }}
+        />
+      )}
     </PageWrapper>
   );
 }

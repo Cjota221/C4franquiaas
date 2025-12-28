@@ -15,6 +15,8 @@ export type Produto = {
   categorias?: { id?: number; nome: string }[] | null;
   created_at?: string; // ⭐ NOVO: Data de criação do produto (migration 034)
   temMargem?: boolean; // ⭐ NOVO: Identifica se o produto tem preço personalizado (margem configurada)
+  description?: string | null; // ⭐ NOVO: Descrição do produto (migration 043)
+  size_guide?: Record<string, unknown> | null; // ⭐ NOVO: Guia de tamanhos (migration 043)
 };
 
 type ProdutoStore = {

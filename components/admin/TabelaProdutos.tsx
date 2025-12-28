@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FileText } from 'lucide-react';
 
 export type Produto = {
   id: number | string;
@@ -15,6 +15,8 @@ export type Produto = {
   created_at?: string;
   categorias?: { id?: number; nome: string }[] | null;
   temMargem?: boolean;
+  description?: string | null;
+  size_guide?: Record<string, unknown> | null;
 };
 
 interface TabelaProdutosProps {
@@ -30,6 +32,7 @@ interface TabelaProdutosProps {
   onVerDetalhes: (produto: Produto) => void;
   onToggleStatus: (id: number | string, ativo: boolean) => void;
   toggling: Record<number | string, boolean>;
+  onEditDescricaoGuia?: (produto: Produto) => void;
 }
 
 export default function TabelaProdutos({
@@ -45,6 +48,7 @@ export default function TabelaProdutos({
   onVerDetalhes,
   onToggleStatus,
   toggling,
+  onEditDescricaoGuia,
 }: TabelaProdutosProps) {
   
   const formatarData = (dataISO?: string) => {
@@ -304,6 +308,16 @@ export default function TabelaProdutos({
                         >
                           Ver Detalhes
                         </button>
+                        {onEditDescricaoGuia && (
+                          <button
+                            onClick={() => onEditDescricaoGuia(produto)}
+                            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors flex items-center gap-1"
+                            title="Editar Descrição e Guia de Tamanhos"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Descrição
+                          </button>
+                        )}
                         <button
                           disabled={isToggling}
                           onClick={() => onToggleStatus(produto.id, !produtoAtivo)}
