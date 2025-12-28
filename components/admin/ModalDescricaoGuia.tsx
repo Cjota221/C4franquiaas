@@ -108,10 +108,10 @@ export default function ModalDescricaoGuia({
 
     setUploadingImage(true);
     try {
-      const fileName = `guia-tamanho-${productId}-${Date.now()}.${file.name.split('.').pop()}`;
+      const fileName = `guia-tamanhos/guia-${productId}-${Date.now()}.${file.name.split('.').pop()}`;
       
       const { data, error } = await supabase.storage
-        .from('guias-tamanho')
+        .from('reseller-assets')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true,
@@ -130,7 +130,7 @@ export default function ModalDescricaoGuia({
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('guias-tamanho')
+        .from('reseller-assets')
         .getPublicUrl(data.path);
 
       setGuiaImagem(publicUrl);
