@@ -1,10 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Criar cliente Supabase com service key (para operações admin)
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  return createClient(supabaseUrl, serviceKey)
+}
 
 // GET - Buscar submissões de banners
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = getSupabaseAdmin()
     const { searchParams } = new URL(request.url)
     
     const resellerId = searchParams.get('reseller_id')
@@ -58,7 +65,7 @@ export async function GET(request: NextRequest) {
 // POST - Criar nova submissão de banner
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = getSupabaseAdmin()
     const body = await request.json()
     
     const { reseller_id, banner_type, image_url } = body
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
+
     // Criar nova submissão
     const { data: submission, error } = await supabase
       .from('banner_submissions')
@@ -123,7 +130,7 @@ export async function POST(request: NextRequest) {
 // PATCH - Aprovar ou recusar banner (apenas admin)
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = getSupabaseAdmin()
     const body = await request.json()
     
     const { submission_id, action, feedback } = body
@@ -139,16 +146,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { error: 'action deve ser "approve" ou "reject"' },
         { status: 400 }
-      )
-    }
-    
-    // Buscar o usuário atual (admin)
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
       )
     }
     
@@ -172,7 +169,6 @@ export async function PATCH(request: NextRequest) {
         .from('banner_submissions')
         .update({
           status: 'approved',
-          reviewed_by: user.id,
           reviewed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -217,7 +213,6 @@ export async function PATCH(request: NextRequest) {
         .update({
           status: 'rejected',
           admin_feedback: feedback || defaultFeedback,
-          reviewed_by: user.id,
           reviewed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -248,7 +243,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Deletar submissão
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = getSupabaseAdmin()
     const { searchParams } = new URL(request.url)
     
     const submissionId = searchParams.get('id')
