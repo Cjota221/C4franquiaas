@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle, Tag, X, Check, Truck } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle, Tag, X, Check, Truck, Gift, Percent } from 'lucide-react';
 import { useCatalogo } from '../layout';
 
 export default function CarrinhoPage() {
@@ -19,8 +19,12 @@ export default function CarrinhoPage() {
     applyCoupon,
     removeCoupon,
     getDiscount,
-    getTotalWithDiscount,
     hasFreeShipping,
+    // Promoções automáticas
+    appliedPromotions,
+    getPromotionDiscount,
+    getTotalDiscount,
+    getFinalTotal,
   } = useCatalogo();
   
   const [enviando, setEnviando] = useState(false);
@@ -71,16 +75,27 @@ export default function CarrinhoPage() {
     });
 
     mensagem += `─────────────────\n`;
+    mensagem += `Subtotal: R$ ${getTotal().toFixed(2).replace('.', ',')}\n`;
+    
+    // Mostrar promoções automáticas aplicadas
+    if (appliedPromotions.length > 0) {
+      appliedPromotions.forEach(ap => {
+        mensagem += `🎁 ${ap.promotion.name}: -R$ ${ap.discountValue.toFixed(2).replace('.', ',')}\n`;
+      });
+    }
     
     // Se tem cupom aplicado, mostrar desconto
     if (appliedCoupon) {
-      mensagem += `Subtotal: R$ ${getTotal().toFixed(2).replace('.', ',')}\n`;
       mensagem += `🎟️ Cupom: ${appliedCoupon.code}\n`;
-      mensagem += `💰 Desconto: -R$ ${getDiscount().toFixed(2).replace('.', ',')}\n`;
-      mensagem += `*TOTAL: R$ ${getTotalWithDiscount().toFixed(2).replace('.', ',')}*\n`;
-    } else {
-      mensagem += `*TOTAL: R$ ${getTotal().toFixed(2).replace('.', ',')}*\n`;
+      mensagem += `💰 Desconto cupom: -R$ ${getDiscount().toFixed(2).replace('.', ',')}\n`;
     }
+    
+    // Total final
+    const totalDesconto = getTotalDiscount();
+    if (totalDesconto > 0) {
+      mensagem += `\n💸 *Você economizou: R$ ${totalDesconto.toFixed(2).replace('.', ',')}*\n`;
+    }
+    mensagem += `*TOTAL: R$ ${getFinalTotal().toFixed(2).replace('.', ',')}*\n`;
     
     // Frete grátis
     if (hasFreeShipping()) {
@@ -342,6 +357,29 @@ export default function CarrinhoPage() {
               </div>
             )}
 
+            {/* Promoções Automáticas Aplicadas */}
+            {appliedPromotions.length > 0 && (
+              <div className="border border-green-200 rounded-lg p-3 mb-4 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift size={18} className="text-green-600" />
+                  <span className="text-sm font-semibold text-green-800">Promoções aplicadas!</span>
+                </div>
+                <div className="space-y-1">
+                  {appliedPromotions.map((ap, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-green-700 flex items-center gap-1">
+                        <Percent size={12} />
+                        {ap.promotion.name}
+                      </span>
+                      <span className="font-medium text-green-800">
+                        -R$ {ap.discountValue.toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Totais */}
             <div className="border-t border-gray-200 pt-4 mb-6 space-y-2">
               <div className="flex justify-between text-sm text-gray-600">
@@ -349,17 +387,34 @@ export default function CarrinhoPage() {
                 <span>R$ {getTotal().toFixed(2).replace('.', ',')}</span>
               </div>
               
+              {/* Desconto de promoções automáticas */}
+              {getPromotionDiscount() > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Desconto promoções</span>
+                  <span>-R$ {getPromotionDiscount().toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              
+              {/* Desconto de cupom */}
               {appliedCoupon && getDiscount() > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Desconto ({appliedCoupon.code})</span>
+                  <span>Cupom ({appliedCoupon.code})</span>
                   <span>-R$ {getDiscount().toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              
+              {/* Economia total */}
+              {getTotalDiscount() > 0 && (
+                <div className="flex justify-between text-sm font-medium text-green-700 bg-green-50 p-2 rounded">
+                  <span>💰 Você economizou</span>
+                  <span>R$ {getTotalDiscount().toFixed(2).replace('.', ',')}</span>
                 </div>
               )}
               
               <div className="flex justify-between text-lg font-bold pt-2 border-t">
                 <span>Total</span>
                 <span style={{ color: primaryColor }}>
-                  R$ {getTotalWithDiscount().toFixed(2).replace('.', ',')}
+                  R$ {getFinalTotal().toFixed(2).replace('.', ',')}
                 </span>
               </div>
             </div>

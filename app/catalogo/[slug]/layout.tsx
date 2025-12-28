@@ -52,6 +52,8 @@ type Promotion = {
   applies_to: 'all' | 'categories' | 'products';
   product_ids: string[] | null;
   category_ids: string[] | null;
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
 // Tipo para cupom aplicado
@@ -59,6 +61,14 @@ type AppliedCoupon = {
   code: string;
   promotion: Promotion;
   discountValue: number;
+};
+
+// Tipo para promoção aplicada automaticamente
+type AppliedPromotion = {
+  promotion: Promotion;
+  discountValue: number;
+  description: string;
+  affectedItems?: string[]; // IDs dos produtos afetados
 };
 
 type CartItem = {
@@ -110,6 +120,12 @@ type CatalogoContextType = {
   getDiscount: () => number;
   getTotalWithDiscount: () => number;
   hasFreeShipping: () => boolean;
+  // Novas funções de promoções automáticas
+  appliedPromotions: AppliedPromotion[];
+  getPromotionDiscount: () => number;
+  getTotalDiscount: () => number;
+  getFinalTotal: () => number;
+  getProductPromotion: (productId: string) => Promotion | null;
 };
 
 const CatalogoContext = createContext<CatalogoContextType | null>(null);
@@ -141,6 +157,7 @@ export default function CatalogoLayout({
   // Estados para promoções
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [appliedPromotions, setAppliedPromotions] = useState<AppliedPromotion[]>([]);
   
   const supabase = createClientComponentClient();
 
@@ -558,6 +575,149 @@ export default function CatalogoLayout({
     return false;
   }, [promotions, appliedCoupon, getTotal]);
 
+  // ==================== PROMOÇÕES AUTOMÁTICAS (Leve X Pague Y, Descontos em Produtos) ====================
+
+  // Calcular promoções automáticas baseadas no carrinho
+  const calculateAutoPromotions = useCallback((): AppliedPromotion[] => {
+    const applied: AppliedPromotion[] = [];
+    
+    // Filtrar promoções automáticas (não são cupom)
+    const autoPromotions = promotions.filter(p => 
+      p.type !== 'cupom_desconto' && p.type !== 'frete_gratis'
+    );
+
+    for (const promo of autoPromotions) {
+      // LEVE X PAGUE Y
+      if (promo.type === 'leve_pague' && promo.buy_quantity && promo.pay_quantity) {
+        const buyQty = promo.buy_quantity;
+        const payQty = promo.pay_quantity;
+        
+        // Verificar se a promoção se aplica a produtos específicos ou todos
+        let eligibleItems = cart;
+        
+        if (promo.applies_to === 'products' && promo.product_ids?.length) {
+          eligibleItems = cart.filter(item => promo.product_ids?.includes(item.productId));
+        } else if (promo.applies_to === 'categories' && promo.category_ids?.length) {
+          // TODO: Filtrar por categoria (precisa ter categoria no item)
+          eligibleItems = cart;
+        }
+
+        // Calcular total de itens elegíveis
+        const totalEligibleQty = eligibleItems.reduce((sum, item) => sum + item.quantidade, 0);
+        
+        if (totalEligibleQty >= buyQty) {
+          // Quantas vezes a promoção se aplica
+          const timesApplied = Math.floor(totalEligibleQty / buyQty);
+          const freeItems = timesApplied * (buyQty - payQty);
+          
+          // Calcular o desconto (preço médio dos itens elegíveis * itens grátis)
+          const totalEligibleValue = eligibleItems.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+          const avgPrice = totalEligibleValue / totalEligibleQty;
+          const discountValue = avgPrice * freeItems;
+          
+          if (discountValue > 0) {
+            applied.push({
+              promotion: promo,
+              discountValue,
+              description: `Leve ${buyQty} Pague ${payQty}: ${timesApplied}x aplicado`,
+              affectedItems: eligibleItems.map(i => i.productId)
+            });
+          }
+        }
+      }
+      
+      // DESCONTO PERCENTUAL em produtos específicos
+      else if (promo.type === 'desconto_percentual' && promo.discount_value && !promo.coupon_code) {
+        let eligibleItems = cart;
+        
+        if (promo.applies_to === 'products' && promo.product_ids?.length) {
+          eligibleItems = cart.filter(item => promo.product_ids?.includes(item.productId));
+        }
+        
+        if (eligibleItems.length > 0) {
+          const eligibleTotal = eligibleItems.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+          let discountValue = eligibleTotal * (promo.discount_value / 100);
+          
+          // Aplicar limite máximo
+          if (promo.max_discount_value && discountValue > promo.max_discount_value) {
+            discountValue = promo.max_discount_value;
+          }
+          
+          if (discountValue > 0) {
+            applied.push({
+              promotion: promo,
+              discountValue,
+              description: `${promo.discount_value}% OFF: -R$ ${discountValue.toFixed(2)}`,
+              affectedItems: eligibleItems.map(i => i.productId)
+            });
+          }
+        }
+      }
+      
+      // DESCONTO EM VALOR em produtos específicos
+      else if (promo.type === 'desconto_valor' && promo.discount_value && !promo.coupon_code) {
+        let eligibleItems = cart;
+        
+        if (promo.applies_to === 'products' && promo.product_ids?.length) {
+          eligibleItems = cart.filter(item => promo.product_ids?.includes(item.productId));
+        }
+        
+        if (eligibleItems.length > 0) {
+          // Desconto fixo por item ou total
+          const discountValue = promo.discount_value * eligibleItems.length;
+          
+          if (discountValue > 0) {
+            applied.push({
+              promotion: promo,
+              discountValue,
+              description: `Desconto: -R$ ${discountValue.toFixed(2)}`,
+              affectedItems: eligibleItems.map(i => i.productId)
+            });
+          }
+        }
+      }
+    }
+    
+    return applied;
+  }, [cart, promotions]);
+
+  // Atualizar promoções aplicadas quando carrinho ou promoções mudam
+  useEffect(() => {
+    const autoPromos = calculateAutoPromotions();
+    setAppliedPromotions(autoPromos);
+  }, [calculateAutoPromotions]);
+
+  // Calcular desconto total das promoções automáticas
+  const getPromotionDiscount = useCallback(() => {
+    return appliedPromotions.reduce((sum, ap) => sum + ap.discountValue, 0);
+  }, [appliedPromotions]);
+
+  // Desconto total (cupom + promoções automáticas)
+  const getTotalDiscount = useCallback(() => {
+    return getDiscount() + getPromotionDiscount();
+  }, [getDiscount, getPromotionDiscount]);
+
+  // Total final com todos os descontos
+  const getFinalTotal = useCallback(() => {
+    return Math.max(0, getTotal() - getTotalDiscount());
+  }, [getTotal, getTotalDiscount]);
+
+  // Verificar se um produto tem promoção ativa
+  const getProductPromotion = useCallback((productId: string): Promotion | null => {
+    // Buscar promoção que se aplica a este produto
+    return promotions.find(p => {
+      // Promoções de produto específico
+      if (p.applies_to === 'products' && p.product_ids?.includes(productId)) {
+        return true;
+      }
+      // Promoções para todos os produtos
+      if (p.applies_to === 'all' && (p.type === 'leve_pague' || p.type === 'desconto_percentual' || p.type === 'desconto_valor')) {
+        return true;
+      }
+      return false;
+    }) || null;
+  }, [promotions]);
+
   // Carregar cupom salvo do localStorage
   useEffect(() => {
     if (!slug) return;
@@ -618,6 +778,12 @@ export default function CatalogoLayout({
         getDiscount,
         getTotalWithDiscount,
         hasFreeShipping,
+        // Promoções automáticas
+        appliedPromotions,
+        getPromotionDiscount,
+        getTotalDiscount,
+        getFinalTotal,
+        getProductPromotion,
       }}
     >
       <div className="min-h-screen bg-gray-50">

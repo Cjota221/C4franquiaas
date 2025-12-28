@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, ChevronDown, Truck, Tag } from 'lucide-react';
+import { Search, ChevronDown, Truck, Tag, Clock, Gift, Percent } from 'lucide-react';
 import { useCatalogo } from './layout';
 
 type Variacao = {
@@ -27,7 +27,7 @@ type ProductWithPrice = {
 };
 
 export default function CatalogoPrincipal() {
-  const { reseller, primaryColor, themeSettings, promotions } = useCatalogo();
+  const { reseller, primaryColor, themeSettings, promotions, getProductPromotion } = useCatalogo();
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -340,6 +340,25 @@ export default function CatalogoPrincipal() {
           const buttonStyle = themeSettings?.button_style || 'rounded';
           const buttonClass = buttonStyle === 'rounded' ? 'rounded-full' : 'rounded-none';
           
+          // Verificar se o produto tem promoção
+          const productPromo = getProductPromotion(product.id);
+          
+          // Calcular tempo restante da promoção
+          const getTimeRemaining = (endDate: string) => {
+            const end = new Date(endDate).getTime();
+            const now = new Date().getTime();
+            const diff = end - now;
+            
+            if (diff <= 0) return null;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            if (days > 0) return `${days}d ${hours}h`;
+            if (hours > 0) return `${hours}h`;
+            return 'Últimas horas!';
+          };
+          
           return (
             <Link
               key={product.id}
@@ -357,6 +376,44 @@ export default function CatalogoPrincipal() {
                   className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   priority={false}
                 />
+                
+                {/* Tag de Promoção */}
+                {productPromo && (
+                  <div className="absolute top-0 left-0 right-0">
+                    {/* Badge da promoção */}
+                    <div 
+                      className="text-white text-xs font-bold px-2 py-1 flex items-center gap-1"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {productPromo.type === 'leve_pague' && (
+                        <>
+                          <Gift size={12} />
+                          <span>Leve {productPromo.buy_quantity} Pague {productPromo.pay_quantity}</span>
+                        </>
+                      )}
+                      {productPromo.type === 'desconto_percentual' && (
+                        <>
+                          <Percent size={12} />
+                          <span>{productPromo.discount_value}% OFF</span>
+                        </>
+                      )}
+                      {productPromo.type === 'desconto_valor' && (
+                        <>
+                          <Tag size={12} />
+                          <span>-R$ {productPromo.discount_value}</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Cronômetro (se tiver data de término) */}
+                    {productPromo.ends_at && getTimeRemaining(productPromo.ends_at) && (
+                      <div className="bg-black/70 text-white text-xs px-2 py-1 flex items-center gap-1">
+                        <Clock size={10} />
+                        <span>Termina em {getTimeRemaining(productPromo.ends_at)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="p-3 md:p-4">
                 <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] text-sm">

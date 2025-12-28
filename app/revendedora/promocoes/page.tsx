@@ -37,10 +37,18 @@ interface Promotion {
   max_uses: number | null
   uses_count: number
   applies_to: 'all' | 'categories' | 'products'
+  product_ids: string[] | null
   starts_at: string
   ends_at: string | null
   is_active: boolean
   created_at: string
+}
+
+interface Product {
+  id: string
+  nome: string
+  preco: number
+  imagem_url: string | null
 }
 
 type PromotionFormData = {
@@ -58,6 +66,8 @@ type PromotionFormData = {
   max_discount_value: string
   max_uses: string
   ends_at: string
+  applies_to: 'all' | 'products'
+  product_ids: string[]
 }
 
 const initialFormData: PromotionFormData = {
@@ -74,7 +84,9 @@ const initialFormData: PromotionFormData = {
   min_purchase_value: '',
   max_discount_value: '',
   max_uses: '',
-  ends_at: ''
+  ends_at: '',
+  applies_to: 'all',
+  product_ids: []
 }
 
 export default function PromocoesPage() {
@@ -87,6 +99,43 @@ export default function PromocoesPage() {
   const [formData, setFormData] = useState<PromotionFormData>(initialFormData)
   const [saving, setSaving] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  
+  // Estados para seleção de produtos
+  const [products, setProducts] = useState<Product[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [productSearch, setProductSearch] = useState('')
+
+  const loadProducts = async (rId: string) => {
+    setLoadingProducts(true)
+    try {
+      const supabase = createClient()
+      // Buscar produtos vinculados a esta revendedora
+      const { data: resellerProducts } = await supabase
+        .from('reseller_products')
+        .select(`
+          product_id,
+          produtos:product_id (
+            id,
+            nome,
+            preco,
+            imagem_url
+          )
+        `)
+        .eq('reseller_id', rId)
+        .eq('is_active', true)
+      
+      if (resellerProducts) {
+        const prods = resellerProducts
+          .map((rp) => rp.produtos as unknown as Product)
+          .filter((p): p is Product => p !== null)
+        setProducts(prods)
+      }
+    } catch (err) {
+      console.error('Erro ao carregar produtos:', err)
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
 
   const loadPromotions = async (rId: string) => {
     try {
@@ -132,6 +181,7 @@ export default function PromocoesPage() {
 
         setResellerId(reseller.id)
         await loadPromotions(reseller.id)
+        await loadProducts(reseller.id)
       } catch (err) {
         console.error('Erro ao carregar:', err)
         setError('Erro ao carregar dados')
@@ -165,7 +215,9 @@ export default function PromocoesPage() {
       min_purchase_value: promo.min_purchase_value?.toString() || '',
       max_discount_value: promo.max_discount_value?.toString() || '',
       max_uses: promo.max_uses?.toString() || '',
-      ends_at: promo.ends_at ? new Date(promo.ends_at).toISOString().slice(0, 16) : ''
+      ends_at: promo.ends_at ? new Date(promo.ends_at).toISOString().slice(0, 16) : '',
+      applies_to: promo.applies_to === 'categories' ? 'all' : promo.applies_to,
+      product_ids: promo.product_ids || []
     })
     setShowModal(true)
   }
@@ -193,7 +245,9 @@ export default function PromocoesPage() {
         min_purchase_value: formData.min_purchase_value ? parseFloat(formData.min_purchase_value) : null,
         max_discount_value: formData.max_discount_value ? parseFloat(formData.max_discount_value) : null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
-        ends_at: formData.ends_at || null
+        ends_at: formData.ends_at || null,
+        applies_to: formData.applies_to,
+        product_ids: formData.applies_to === 'products' ? formData.product_ids : null
       }
 
       const response = await fetch('/api/promocoes', {
@@ -690,6 +744,121 @@ export default function PromocoesPage() {
                       placeholder="Deixe vazio para ilimitado"
                     />
                   </div>
+
+                  {/* Aplicar a: */}
+                  {formData.type !== 'frete_gratis' && formData.type !== 'cupom_desconto' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Aplicar promoção a:
+                      </label>
+                      <select
+                        value={formData.applies_to}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          applies_to: e.target.value as 'all' | 'products',
+                          product_ids: e.target.value === 'all' ? [] : formData.product_ids
+                        })}
+                        className="w-full border rounded-lg px-3 py-2"
+                      >
+                        <option value="all">Todos os produtos</option>
+                        <option value="products">Produtos específicos</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Seletor de Produtos */}
+                  {formData.applies_to === 'products' && formData.type !== 'frete_gratis' && formData.type !== 'cupom_desconto' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Selecionar Produtos
+                      </label>
+                      
+                      {/* Busca de produtos */}
+                      <input
+                        type="text"
+                        placeholder="Buscar produto..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mb-2"
+                      />
+                      
+                      {/* Lista de produtos */}
+                      <div className="border rounded-lg max-h-48 overflow-y-auto">
+                        {loadingProducts ? (
+                          <div className="p-4 text-center text-gray-500">Carregando produtos...</div>
+                        ) : (
+                          products
+                            .filter(p => p.nome.toLowerCase().includes(productSearch.toLowerCase()))
+                            .map(product => (
+                              <label
+                                key={product.id}
+                                className={`flex items-center gap-3 p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${
+                                  formData.product_ids.includes(product.id) ? 'bg-pink-50' : ''
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={formData.product_ids.includes(product.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData({
+                                        ...formData,
+                                        product_ids: [...formData.product_ids, product.id]
+                                      })
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        product_ids: formData.product_ids.filter(id => id !== product.id)
+                                      })
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-pink-500"
+                                />
+                                {product.imagem_url && (
+                                  <img 
+                                    src={product.imagem_url} 
+                                    alt={product.nome}
+                                    className="w-8 h-8 object-cover rounded"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{product.nome}</p>
+                                  <p className="text-xs text-gray-500">R$ {product.preco.toFixed(2)}</p>
+                                </div>
+                              </label>
+                            ))
+                        )}
+                      </div>
+                      
+                      {/* Produtos selecionados */}
+                      {formData.product_ids.length > 0 && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          {formData.product_ids.length} produto(s) selecionado(s)
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, product_ids: [] })}
+                            className="ml-2 text-red-500 hover:underline"
+                          >
+                            Limpar seleção
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Botão selecionar todos */}
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ 
+                            ...formData, 
+                            product_ids: products.map(p => p.id)
+                          })}
+                          className="text-sm text-pink-600 hover:underline"
+                        >
+                          Selecionar todos
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Data de Expiração */}
                   <div>
