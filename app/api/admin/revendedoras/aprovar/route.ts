@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
+import { sendWhatsAppMessage, WhatsAppTemplates, isEvolutionConfigured } from '@/lib/whatsapp/evolution';
 
 // Template de email de aprovação
 function getApprovalEmailHTML(nome: string, nomeLoja: string, loginUrl: string) {
@@ -152,10 +153,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Buscar dados da revendedora
+    // Buscar dados da revendedora (incluindo telefone para WhatsApp)
     const { data: reseller, error: fetchError } = await supabase
       .from('resellers')
-      .select('id, name, email, store_name, user_id')
+      .select('id, name, email, phone, store_name, user_id')
       .eq('id', resellerId)
       .single();
 
@@ -243,12 +244,44 @@ export async function POST(req: NextRequest) {
       console.error('[aprovar-revendedora] Erro ao enviar email:', emailErr);
     }
 
+    // ========================================
+    // ENVIAR WHATSAPP (Evolution API)
+    // ========================================
+    let whatsappSent = false;
+    
+    if (isEvolutionConfigured() && reseller.phone) {
+      try {
+        if (action === 'aprovar') {
+          const whatsappMessage = WhatsAppTemplates.resellerApproved(
+            reseller.name,
+            reseller.store_name,
+            loginUrl
+          );
+          const result = await sendWhatsAppMessage({ phone: reseller.phone, message: whatsappMessage });
+          whatsappSent = result.success;
+          
+          if (result.success) {
+            console.log('[aprovar-revendedora] ✅ WhatsApp de aprovação enviado');
+          }
+        } else {
+          const whatsappMessage = WhatsAppTemplates.resellerRejected(reseller.name, motivo);
+          const result = await sendWhatsAppMessage({ phone: reseller.phone, message: whatsappMessage });
+          whatsappSent = result.success;
+        }
+      } catch (whatsappErr) {
+        console.error('[aprovar-revendedora] Erro ao enviar WhatsApp:', whatsappErr);
+      }
+    } else {
+      console.log('[aprovar-revendedora] WhatsApp não configurado ou telefone ausente');
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: action === 'aprovar' 
         ? 'Revendedora aprovada com sucesso!' 
         : 'Revendedora rejeitada',
-      emailSent: !!process.env.RESEND_API_KEY
+      emailSent: !!process.env.RESEND_API_KEY,
+      whatsappSent
     });
 
   } catch (err) {
