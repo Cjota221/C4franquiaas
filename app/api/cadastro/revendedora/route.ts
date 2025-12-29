@@ -16,11 +16,37 @@ function gerarSlug(nome: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nome, email, telefone, cpf, nomeLoja, cidade, estado, senha } = body;
+    const { 
+      nome, 
+      email, 
+      telefone, 
+      cpf, 
+      dataNascimento,
+      instagram,
+      facebook,
+      cep,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade, 
+      estado, 
+      nomeLoja,
+      sobreMim,
+      comoConheceu,
+      temExperiencia,
+      canalVendas,
+      expectativaVendas,
+      senha 
+    } = body;
 
-    // Validações
+    // Validações básicas
     if (!nome || !email || !telefone || !cpf || !nomeLoja || !cidade || !estado || !senha) {
-      return NextResponse.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 });
+      return NextResponse.json({ error: 'Campos obrigatórios não preenchidos' }, { status: 400 });
+    }
+
+    if (!cep || !rua || !numero || !bairro) {
+      return NextResponse.json({ error: 'Endereço incompleto' }, { status: 400 });
     }
 
     if (senha.length < 6) {
@@ -111,10 +137,23 @@ export async function POST(req: NextRequest) {
         email,
         phone: telefone,
         cpf,
-        store_name: nomeLoja,
-        slug: slugFinal,
+        birth_date: dataNascimento || null,
+        instagram: instagram || null,
+        facebook: facebook || null,
+        cep: cep || null,
+        street: rua || null,
+        number: numero || null,
+        complement: complemento || null,
+        neighborhood: bairro || null,
         city: cidade,
         state: estado,
+        store_name: nomeLoja,
+        slug: slugFinal,
+        about_me: sobreMim || null,
+        how_did_you_find_us: comoConheceu || null,
+        has_experience_selling: temExperiencia || false,
+        main_sales_channel: canalVendas || null,
+        expected_monthly_sales: expectativaVendas || null,
         status: 'pendente',
         is_active: false,
         user_id: authData.user.id,
