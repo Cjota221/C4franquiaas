@@ -79,22 +79,20 @@ export default function AdminRevendedoras() {
   }
 
   async function aprovar(id: string) {
-    if (!confirm('Deseja aprovar esta revendedora?')) return;
+    if (!confirm('Deseja aprovar esta revendedora? Ela receberá um email de notificação.')) return;
 
     try {
-      const supabase = createClient();
-      
-      const { error } = await supabase
-        .from('resellers')
-        .update({ 
-          status: 'aprovada',
-          is_active: true 
-        })
-        .eq('id', id);
+      const res = await fetch('/api/admin/revendedoras/aprovar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resellerId: id, action: 'aprovar' })
+      });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      alert(' Revendedora aprovada com sucesso!');
+      if (!res.ok) throw new Error(data.error);
+
+      alert(`✅ Revendedora aprovada com sucesso!${data.emailSent ? '\n📧 Email de notificação enviado!' : ''}`);
       carregarRevendedoras();
     } catch (err) {
       console.error('Erro ao aprovar:', err);
@@ -107,20 +105,17 @@ export default function AdminRevendedoras() {
     if (motivo === null) return;
 
     try {
-      const supabase = createClient();
-      
-      const { error } = await supabase
-        .from('resellers')
-        .update({ 
-          status: 'rejeitada',
-          is_active: false,
-          rejection_reason: motivo || null
-        })
-        .eq('id', id);
+      const res = await fetch('/api/admin/revendedoras/aprovar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resellerId: id, action: 'rejeitar', motivo })
+      });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      alert(' Revendedora rejeitada');
+      if (!res.ok) throw new Error(data.error);
+
+      alert(`❌ Revendedora rejeitada${data.emailSent ? '\n📧 Email de notificação enviado!' : ''}`);
       carregarRevendedoras();
     } catch (err) {
       console.error('Erro ao rejeitar:', err);
