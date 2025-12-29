@@ -697,8 +697,8 @@ export default function CadastroRevendedoraPage() {
                   className="mt-1 w-4 h-4 text-purple-600 rounded"
                 />
                 <span className="text-sm text-gray-600">
-                  Li e aceito os <a href="#" className="text-purple-600 hover:underline">termos de uso</a> e a{' '}
-                  <a href="#" className="text-purple-600 hover:underline">política de privacidade</a> *
+                  Li e aceito os <Link href="/termos" target="_blank" className="text-purple-600 hover:underline">termos de uso</Link> e a{' '}
+                  <Link href="/privacidade" target="_blank" className="text-purple-600 hover:underline">política de privacidade</Link> *
                 </span>
               </label>
             </>

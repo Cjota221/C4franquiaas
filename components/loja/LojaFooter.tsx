@@ -1,79 +1,75 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { Mail, Phone, MapPin, Instagram, Facebook } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Facebook, Shield, FileText, BadgeCheck, AlertTriangle } from 'lucide-react';
 
 export default function LojaFooter() {
   const loja = useLojaInfo();
   const anoAtual = new Date().getFullYear();
 
   return (
-    <footer 
-      className="mt-auto py-8"
-      style={{ backgroundColor: loja.cor_primaria, color: 'white' }}
-    >
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Sobre a Loja Franqueada */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">Sobre {loja.nome}</h3>
-            <p className="text-sm opacity-90 mb-2">
-              Loja franqueada com produtos de qualidade e atendimento personalizado.
-            </p>
-            <p className="text-xs opacity-75 italic">
-              Loja independente operada por franqueado(a) autorizado(a)
-            </p>
-          </div>
+    <footer className="mt-auto">
+      {/* Seção Principal */}
+      <div 
+        className="py-8"
+        style={{ backgroundColor: loja.cor_primaria, color: 'white' }}
+      >
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Sobre a Loja */}
+            <div>
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <BadgeCheck size={18} />
+                Revendedor(a) Autorizado(a)
+              </h3>
+              <p className="text-sm opacity-90 mb-2">
+                {loja.nome}
+              </p>
+              <p className="text-xs opacity-75">
+                {loja.descricao || 'Produtos de qualidade com atendimento personalizado.'}
+              </p>
+            </div>
 
-          {/* Centro de Distribuição */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">Centro de Distribuição</h3>
-            <div className="space-y-2 text-sm opacity-90">
-              <div className="flex items-start gap-2">
-                <MapPin size={16} className="flex-shrink-0 mt-0.5" />
-                <span>
-                  Av. Independência Q 140, 3512<br />
-                  St. Central, Goiânia - GO<br />
-                  CEP: 74055-045, Brasil
-                </span>
+            {/* Contato */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">Contato</h3>
+              <div className="space-y-2 text-sm opacity-90">
+                {loja.whatsapp && (
+                  <a 
+                    href={`https://wa.me/55${loja.whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:opacity-80"
+                  >
+                    <Phone size={16} />
+                    <span>{loja.whatsapp}</span>
+                  </a>
+                )}
+                {loja.email_contato && (
+                  <div className="flex items-center gap-2">
+                    <Mail size={16} />
+                    <span>{loja.email_contato}</span>
+                  </div>
+                )}
+                {loja.endereco && (
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="flex-shrink-0 mt-0.5" />
+                    <span>{loja.endereco}</span>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
 
-          {/* Contato da Franqueada */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">Contato</h3>
-            <div className="space-y-2 text-sm opacity-90">
-              {loja.whatsapp && (
-                <div className="flex items-center gap-2">
-                  <Phone size={16} />
-                  <span>{loja.whatsapp}</span>
-                </div>
-              )}
-              {loja.email_contato && (
-                <div className="flex items-center gap-2">
-                  <Mail size={16} />
-                  <span>{loja.email_contato}</span>
-                </div>
-              )}
-              {!loja.email_contato && !loja.whatsapp && (
-                <p className="text-xs opacity-75">
-                  Entre em contato através das nossas redes sociais
-                </p>
-              )}
-            </div>
-
-            {/* Redes Sociais */}
-            {(loja.instagram || loja.facebook) && (
-              <div className="mt-4">
-                <div className="flex gap-3">
+              {/* Redes Sociais */}
+              {(loja.instagram || loja.facebook) && (
+                <div className="mt-4 flex gap-3">
                   {loja.instagram && (
                     <a 
                       href={loja.instagram.startsWith('http') ? loja.instagram : `https://instagram.com/${loja.instagram}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 rounded-full hover:opacity-80 transition"
-                      style={{ backgroundColor: loja.cor_secundaria }}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                       aria-label="Instagram"
                     >
                       <Instagram size={18} />
@@ -85,22 +81,74 @@ export default function LojaFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 rounded-full hover:opacity-80 transition"
-                      style={{ backgroundColor: loja.cor_secundaria }}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                       aria-label="Facebook"
                     >
                       <Facebook size={18} />
                     </a>
                   )}
                 </div>
+              )}
+            </div>
+
+            {/* Links Legais */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">Informações</h3>
+              <ul className="space-y-2 text-sm opacity-90">
+                <li>
+                  <Link href="/termos" className="flex items-center gap-2 hover:opacity-80">
+                    <FileText size={14} />
+                    Termos de Uso
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacidade" className="flex items-center gap-2 hover:opacity-80">
+                    <Shield size={14} />
+                    Política de Privacidade
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Segurança */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">Segurança</h3>
+              <div className="text-sm opacity-90 space-y-2">
+                <p className="flex items-start gap-2">
+                  <Shield size={16} className="flex-shrink-0 mt-0.5" />
+                  <span>Site 100% seguro com certificado SSL</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <BadgeCheck size={16} className="flex-shrink-0 mt-0.5" />
+                  <span>Pagamento processado por gateways confiáveis</span>
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Copyright */}
-        <div className="mt-8 pt-6 border-t border-white/20 text-center text-sm opacity-75">
-          <p>© {anoAtual} {loja.nome} - Todos os direitos reservados</p>
-          <p className="mt-1">Desenvolvido por <span className="font-semibold">C4 Franquias</span></p>
+      {/* Disclaimer / Aviso Legal */}
+      <div className="bg-gray-900 py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 text-center">
+            <AlertTriangle size={14} className="text-yellow-500" />
+            <p className="text-xs text-gray-400">
+              <strong className="text-gray-300">AVISO:</strong> Esta loja é operada por um(a) <strong className="text-white">Revendedor(a) Independente Autorizado(a)</strong>. 
+              O(A) revendedor(a) é integralmente responsável por suas vendas, atendimento e entregas. 
+              A marca não se responsabiliza por transações realizadas através desta loja.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Copyright */}
+      <div className="bg-gray-950 py-3">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-xs text-gray-500">
+            © {anoAtual} {loja.nome} - Todos os direitos reservados | 
+            Desenvolvido por <span className="text-gray-400">C4 Franquias</span>
+          </p>
         </div>
       </div>
     </footer>
