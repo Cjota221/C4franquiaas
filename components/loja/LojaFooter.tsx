@@ -23,11 +23,8 @@ export default function LojaFooter() {
                 <BadgeCheck size={18} />
                 Revendedor(a) Autorizado(a)
               </h3>
-              <p className="text-sm opacity-90 mb-2">
+              <p className="text-sm opacity-90">
                 {loja.nome}
-              </p>
-              <p className="text-xs opacity-75">
-                {loja.descricao || 'Produtos de qualidade com atendimento personalizado.'}
               </p>
             </div>
 

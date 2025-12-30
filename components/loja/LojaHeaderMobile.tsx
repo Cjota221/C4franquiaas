@@ -113,26 +113,26 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
       )}
 
       {/* Header Mobile */}
-      <header className="sticky top-0 z-50 bg-white shadow-md md:hidden">
+      <header className="sticky top-0 z-50 bg-white shadow-md md:hidden" style={{ backgroundColor: loja.cor_primaria }}>
         {/* Linha 1: Menu + Logo + Carrinho */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          {/* Menu Hambúrguer - MAIOR */}
+        <div className="flex items-center justify-between px-4 py-2">
+          {/* Menu Hambúrguer */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors active:scale-95"
             aria-label="Abrir menu"
             style={{
-              minWidth: '48px',
-              minHeight: '48px',
+              minWidth: '44px',
+              minHeight: '44px',
             }}
           >
             <Menu 
-              size={28} 
-              style={{ color: loja.cor_primaria }} 
+              size={26} 
+              className="text-white"
             />
           </button>
 
-          {/* Logo Centralizada - 10% MAIOR */}
+          {/* Logo Centralizada */}
           <Link 
             href={`/loja/${dominio}`}
             className="flex-1 flex justify-center items-center px-3"
@@ -142,8 +142,8 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 className="relative overflow-hidden flex items-center justify-center"
                 style={{
                   ...getLogoStyle(),
-                  width: 'clamp(132px, 38.5vw, 198px)',
-                  height: 'clamp(55px, 16.5vw, 77px)',
+                  width: 'clamp(110px, 32vw, 160px)',
+                  height: 'clamp(45px, 14vw, 65px)',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -155,10 +155,9 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
               </div>
             ) : (
               <h1 
-                className="font-bold truncate"
+                className="font-bold truncate text-white"
                 style={{ 
-                  color: loja.cor_primaria,
-                  fontSize: 'clamp(19.8px, 5.5vw, 26.4px)',
+                  fontSize: 'clamp(18px, 5vw, 24px)',
                 }}
               >
                 {loja.nome}
@@ -166,25 +165,24 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
             )}
           </Link>
 
-          {/* Carrinho - MAIOR */}
+          {/* Carrinho */}
           <Link
             href={`/loja/${dominio}/carrinho`}
-            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95"
+            className="relative p-2 hover:bg-white/20 rounded-lg transition-colors active:scale-95"
             style={{
-              minWidth: '48px',
-              minHeight: '48px',
+              minWidth: '44px',
+              minHeight: '44px',
             }}
           >
             <ShoppingCart 
-              size={28} 
-              style={{ color: loja.cor_primaria }} 
+              size={26} 
+              className="text-white"
             />
             {totalItens > 0 && (
               <span 
-                className="absolute top-0 right-0 min-w-[22px] h-5.5 flex items-center justify-center rounded-full text-white text-xs font-bold px-1.5"
+                className="absolute top-0 right-0 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-white text-xs font-bold px-1"
                 style={{ 
-                  backgroundColor: loja.cor_primaria,
-                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                  color: loja.cor_primaria,
                 }}
               >
                 {totalItens > 99 ? '99+' : totalItens}
@@ -193,13 +191,14 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
           </Link>
         </div>
 
-        {/* Linha 2: Barra de Busca - ESTILO PÍLULA */}
-        <div className="px-4 py-3" ref={searchRef}>
+        {/* Linha 2: Barra de Busca - Dentro do header colorido */}
+        <div className="px-4 pb-3" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <div className="relative flex items-center">
               <Search 
                 size={20} 
-                className="absolute left-4 text-gray-400 pointer-events-none" 
+                className="absolute left-4 pointer-events-none" 
+                style={{ color: loja.cor_primaria }}
               />
               <input
                 type="search"
@@ -207,10 +206,11 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery && setShowSuggestions(true)}
                 placeholder="Buscar produtos..."
-                className="w-full pl-11 pr-10 py-3 border-2 border-gray-200 rounded-full focus:outline-none focus:border-gray-400 transition-colors"
+                className="w-full pl-11 pr-10 py-2.5 bg-white border-0 rounded-full focus:outline-none focus:ring-2 transition-colors"
                 style={{
                   fontSize: 'clamp(14px, 4vw, 16px)',
-                  minHeight: '48px',
+                  minHeight: '44px',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
                 }}
               />
               {searchQuery && (
