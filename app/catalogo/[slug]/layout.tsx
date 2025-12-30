@@ -1020,12 +1020,9 @@ export default function CatalogoLayout({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar Produtos"
-                  className={`w-full pl-4 pr-10 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400 text-sm ${
+                  className={`w-full pl-4 pr-10 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 focus:ring-pink-300 transition-colors placeholder-gray-400 text-sm ${
                     themeSettings?.button_style === 'rounded' || !themeSettings?.button_style ? 'rounded-full' : 'rounded-lg'
                   }`}
-                  style={{
-                    focusRingColor: primaryColor,
-                  }}
                 />
                 <button
                   type="submit"
