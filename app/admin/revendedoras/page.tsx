@@ -299,8 +299,9 @@ Qualquer dúvida, estamos à disposição!`;
               key={revendedora.id}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col lg:flex-row items-start gap-6">
+                {/* Conteúdo Principal - Esquerda */}
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-3 flex-wrap">
                     <h3 className="text-xl font-bold text-gray-900">
                       {revendedora.name}
@@ -319,26 +320,26 @@ Qualquer dúvida, estamos à disposição!`;
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
                     <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4" />
-                      <span><strong>Loja:</strong> {revendedora.store_name}</span>
+                      <Store className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate"><strong>Loja:</strong> {revendedora.store_name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <span>{revendedora.email}</span>
+                      <Mail className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{revendedora.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
+                      <Phone className="w-4 h-4 flex-shrink-0" />
                       <span>{revendedora.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
                       <span>Cadastro: {new Date(revendedora.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-4 text-sm">
+                  <div className="flex gap-4 text-sm flex-wrap">
                     <div className="flex items-center gap-1">
                       <TrendingUp className="w-4 h-4 text-purple-500" />
                       <span className="text-gray-600">
@@ -362,11 +363,12 @@ Qualquer dúvida, estamos à disposição!`;
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2 ml-4">
+                {/* Botões de Ação - Direita */}
+                <div className="flex lg:flex-col gap-2 flex-wrap lg:flex-nowrap w-full lg:w-auto">
                   {/* Botões de detalhes e catálogo - disponíveis para todos */}
                   <button
                     onClick={() => router.push(`/admin/revendedoras/${revendedora.id}`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                     title="Ver detalhes completos"
                   >
                     <Info className="w-4 h-4" />
@@ -376,7 +378,7 @@ Qualquer dúvida, estamos à disposição!`;
                   {revendedora.slug && (
                     <button
                       onClick={() => verCatalogo(revendedora.slug)}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors whitespace-nowrap"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                       title="Abrir catálogo em nova aba"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -388,14 +390,14 @@ Qualquer dúvida, estamos à disposição!`;
                     <>
                       <button
                         onClick={() => aprovar(revendedora.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                       >
                         <Check className="w-4 h-4" />
                         Aprovar
                       </button>
                       <button
                         onClick={() => rejeitar(revendedora.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                       >
                         <X className="w-4 h-4" />
                         Rejeitar
@@ -407,7 +409,7 @@ Qualquer dúvida, estamos à disposição!`;
                     <>
                       <button
                         onClick={() => enviarWhatsAppBoasVindas(revendedora)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                         title="Enviar mensagem de boas-vindas via WhatsApp"
                       >
                         <MessageCircle className="w-4 h-4" />
@@ -415,7 +417,7 @@ Qualquer dúvida, estamos à disposição!`;
                       </button>
                       <button
                         onClick={() => toggleAtivo(revendedora.id, revendedora.is_active)}
-                        className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                        className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px] ${
                           revendedora.is_active
                             ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                             : 'bg-green-500 text-white hover:bg-green-600'
@@ -429,7 +431,7 @@ Qualquer dúvida, estamos à disposição!`;
                   {revendedora.status === 'rejeitada' && (
                     <button
                       onClick={() => aprovar(revendedora.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
                     >
                       <Check className="w-4 h-4" />
                       Aprovar Agora
