@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS page_views (
   session_id TEXT NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE,
-  revendedora_id UUID REFERENCES revendedoras(id) ON DELETE SET NULL,
   
   -- Página visitada
   page_path TEXT NOT NULL,
@@ -192,29 +191,16 @@ SELECT
   pv.loja_id,
   l.nome as loja_nome,
   l.dominio,
-  r.name as revendedora_nome,
   
   -- Métricas de visualização
   COUNT(DISTINCT pv.id) as page_views,
   COUNT(DISTINCT pv.session_id) as sessoes,
   COUNT(DISTINCT CASE WHEN pv.device_type = 'mobile' THEN pv.session_id END) as sessoes_mobile,
-  COUNT(DISTINCT CASE WHEN pv.device_type = 'desktop' THEN pv.session_id END) as sessoes_desktop,
-  
-  -- Métricas de produto
-  (SELECT COUNT(*) FROM product_views WHERE loja_id = pv.loja_id AND DATE(created_at) = DATE(pv.created_at)) as produtos_visualizados,
-  
-  -- Métricas de carrinho
-  (SELECT COUNT(*) FROM cart_events WHERE loja_id = pv.loja_id AND event_type = 'add_to_cart' AND DATE(created_at) = DATE(pv.created_at)) as adicoes_carrinho,
-  (SELECT COUNT(*) FROM cart_events WHERE loja_id = pv.loja_id AND event_type = 'begin_checkout' AND DATE(created_at) = DATE(pv.created_at)) as checkouts_iniciados,
-  (SELECT COUNT(*) FROM cart_events WHERE loja_id = pv.loja_id AND event_type = 'purchase' AND DATE(created_at) = DATE(pv.created_at)) as compras,
-  
-  -- Métricas de busca
-  (SELECT COUNT(*) FROM search_events WHERE loja_id = pv.loja_id AND DATE(created_at) = DATE(pv.created_at)) as buscas
+  COUNT(DISTINCT CASE WHEN pv.device_type = 'desktop' THEN pv.session_id END) as sessoes_desktop
 
 FROM page_views pv
 LEFT JOIN lojas l ON l.id = pv.loja_id
-LEFT JOIN revendedoras r ON r.id = l.revendedora_id
-GROUP BY DATE(pv.created_at), pv.loja_id, l.nome, l.dominio, r.name
+GROUP BY DATE(pv.created_at), pv.loja_id, l.nome, l.dominio
 ORDER BY data DESC, page_views DESC;
 
 -- =============================================
@@ -227,49 +213,64 @@ SELECT
   pv.loja_id,
   COUNT(*) as visualizacoes,
   COUNT(DISTINCT pv.session_id) as visitantes_unicos,
-  (SELECT COUNT(*) FROM cart_events WHERE produto_id = pv.produto_id AND event_type = 'add_to_cart') as adicoes_carrinho,
-  ROUND(
-    (SELECT COUNT(*) FROM cart_events WHERE produto_id = pv.produto_id AND event_type = 'add_to_cart')::numeric / 
-    NULLIF(COUNT(DISTINCT pv.session_id), 0) * 100, 2
-  ) as taxa_adicao_carrinho
+  COALESCE(ce.adicoes_carrinho, 0) as adicoes_carrinho
 FROM product_views pv
+LEFT JOIN (
+  SELECT produto_id, COUNT(*) as adicoes_carrinho
+  FROM cart_events 
+  WHERE event_type = 'add_to_cart'
+  GROUP BY produto_id
+) ce ON ce.produto_id = pv.produto_id
 WHERE pv.created_at >= NOW() - INTERVAL '30 days'
-GROUP BY pv.produto_id, pv.produto_nome, pv.loja_id
+GROUP BY pv.produto_id, pv.produto_nome, pv.loja_id, ce.adicoes_carrinho
 ORDER BY visualizacoes DESC;
 
 -- =============================================
--- VIEW: Ranking de lojas/revendedoras
+-- VIEW: Ranking de lojas
 -- =============================================
 CREATE OR REPLACE VIEW analytics_store_ranking AS
 SELECT 
   l.id as loja_id,
   l.nome as loja_nome,
   l.dominio,
-  r.id as revendedora_id,
-  r.name as revendedora_nome,
   
-  -- Visualizações
-  COUNT(DISTINCT pv.id) as page_views_total,
-  COUNT(DISTINCT pv.session_id) as sessoes_total,
+  -- Visualizações (últimos 30 dias)
+  COALESCE(pv_count.total, 0) as page_views_total,
+  COALESCE(pv_count.sessoes, 0) as sessoes_total,
   
-  -- Produtos
-  (SELECT COUNT(DISTINCT produto_id) FROM product_views WHERE loja_id = l.id AND created_at >= NOW() - INTERVAL '30 days') as produtos_visualizados,
+  -- Produtos visualizados
+  COALESCE(prod_count.total, 0) as produtos_visualizados,
   
   -- Conversões
-  (SELECT COUNT(*) FROM cart_events WHERE loja_id = l.id AND event_type = 'add_to_cart' AND created_at >= NOW() - INTERVAL '30 days') as adicoes_carrinho,
-  (SELECT COUNT(*) FROM cart_events WHERE loja_id = l.id AND event_type = 'purchase' AND created_at >= NOW() - INTERVAL '30 days') as vendas,
-  
-  -- Taxa de conversão
-  ROUND(
-    (SELECT COUNT(*) FROM cart_events WHERE loja_id = l.id AND event_type = 'purchase' AND created_at >= NOW() - INTERVAL '30 days')::numeric /
-    NULLIF(COUNT(DISTINCT pv.session_id), 0) * 100, 2
-  ) as taxa_conversao
+  COALESCE(cart_add.total, 0) as adicoes_carrinho,
+  COALESCE(cart_purchase.total, 0) as vendas
 
 FROM lojas l
-LEFT JOIN revendedoras r ON r.id = l.revendedora_id
-LEFT JOIN page_views pv ON pv.loja_id = l.id AND pv.created_at >= NOW() - INTERVAL '30 days'
+LEFT JOIN (
+  SELECT loja_id, COUNT(*) as total, COUNT(DISTINCT session_id) as sessoes
+  FROM page_views 
+  WHERE created_at >= NOW() - INTERVAL '30 days'
+  GROUP BY loja_id
+) pv_count ON pv_count.loja_id = l.id
+LEFT JOIN (
+  SELECT loja_id, COUNT(DISTINCT produto_id) as total
+  FROM product_views 
+  WHERE created_at >= NOW() - INTERVAL '30 days'
+  GROUP BY loja_id
+) prod_count ON prod_count.loja_id = l.id
+LEFT JOIN (
+  SELECT loja_id, COUNT(*) as total
+  FROM cart_events 
+  WHERE event_type = 'add_to_cart' AND created_at >= NOW() - INTERVAL '30 days'
+  GROUP BY loja_id
+) cart_add ON cart_add.loja_id = l.id
+LEFT JOIN (
+  SELECT loja_id, COUNT(*) as total
+  FROM cart_events 
+  WHERE event_type = 'purchase' AND created_at >= NOW() - INTERVAL '30 days'
+  GROUP BY loja_id
+) cart_purchase ON cart_purchase.loja_id = l.id
 WHERE l.ativa = true
-GROUP BY l.id, l.nome, l.dominio, r.id, r.name
 ORDER BY page_views_total DESC;
 
 -- =============================================
@@ -317,9 +318,17 @@ CREATE POLICY "Admin pode ver search_events" ON search_events FOR SELECT
 CREATE POLICY "Admin pode ver sessions" ON analytics_sessions FOR SELECT 
   USING (EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin'));
 
--- Revendedora pode ver analytics da própria loja
-CREATE POLICY "Revendedora pode ver page_views da loja" ON page_views FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE revendedora_id IN (SELECT id FROM revendedoras WHERE user_id = auth.uid())));
+-- Franqueada pode ver analytics da própria loja
+CREATE POLICY "Franqueada pode ver page_views da loja" ON page_views FOR SELECT 
+  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+CREATE POLICY "Franqueada pode ver product_views da loja" ON product_views FOR SELECT 
+  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+CREATE POLICY "Franqueada pode ver cart_events da loja" ON cart_events FOR SELECT 
+  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+CREATE POLICY "Franqueada pode ver search_events da loja" ON search_events FOR SELECT 
+  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+CREATE POLICY "Franqueada pode ver sessions da loja" ON analytics_sessions FOR SELECT 
+  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
 
 COMMENT ON TABLE page_views IS 'Visualizações de páginas para analytics';
 COMMENT ON TABLE product_views IS 'Visualizações de produtos específicos';
