@@ -356,6 +356,7 @@ export default function CatalogoLayout({
     show_prices: true,
     show_stock: false,
     show_whatsapp_float: true,
+    border_radius: 'medium',
     announcement_bar: {
       enabled: false,
       text: '',
@@ -1021,9 +1022,9 @@ export default function CatalogoLayout({
                   placeholder="Buscar Produtos"
                   className="w-full pl-4 pr-12 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400"
                   style={{
-                    borderRadius: themeSettings.border_radius === 'large' ? '9999px' : 
-                                  themeSettings.border_radius === 'medium' ? '12px' :
-                                  themeSettings.border_radius === 'small' ? '6px' : '0px',
+                    borderRadius: (themeSettings?.border_radius || 'medium') === 'large' ? '9999px' : 
+                                  (themeSettings?.border_radius || 'medium') === 'medium' ? '12px' :
+                                  (themeSettings?.border_radius || 'medium') === 'small' ? '6px' : '0px',
                     fontSize: '15px',
                   }}
                 />
