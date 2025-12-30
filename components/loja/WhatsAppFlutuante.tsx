@@ -2,6 +2,7 @@
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { MessageCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { trackWhatsAppClick } from '@/lib/analytics';
 
 export default function WhatsAppFlutuante() {
   const loja = useLojaInfo();
@@ -28,11 +29,22 @@ export default function WhatsAppFlutuante() {
     ? 'bottom-24 md:bottom-6'  // Mobile: sobe | Desktop: posição normal
     : 'bottom-4 md:bottom-6';  // Posição padrão
 
+  // 📊 Função para trackear clique no WhatsApp
+  const handleWhatsAppClick = () => {
+    trackWhatsAppClick({
+      loja_nome: loja.nome,
+      loja_dominio: loja.dominio,
+      loja_id: loja.id,
+      origem: 'flutuante'
+    });
+  };
+
   return (
     <a
       href={`https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleWhatsAppClick}
       className={`fixed ${bottomClass} ${posicaoClass} z-40 
         flex flex-col items-center gap-2
         group`}

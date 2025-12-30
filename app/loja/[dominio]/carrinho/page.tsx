@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Package, MessageCircle } from 'lucide-react';
 import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
+import { trackWhatsAppClick, trackBeginCheckout } from '@/lib/analytics';
 
 type LojaInfo = {
+  id?: string;
   nome: string;
   cor_primaria: string;
   cor_secundaria: string;
@@ -93,6 +95,30 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
       alert('Não foi possível encontrar o WhatsApp da loja. Tente novamente mais tarde.');
       return;
     }
+
+    // 📊 Trackear clique no WhatsApp do carrinho
+    trackWhatsAppClick({
+      loja_nome: lojaInfo.nome,
+      loja_dominio: dominio,
+      loja_id: lojaInfo.id,
+      origem: 'carrinho',
+      produto_preco: total
+    });
+
+    // 📊 Trackear begin_checkout via WhatsApp
+    trackBeginCheckout({
+      loja_nome: lojaInfo.nome,
+      loja_dominio: dominio,
+      loja_id: lojaInfo.id || '',
+      cart_total: total,
+      items_count: itens.length,
+      items: itens.map(item => ({
+        id: item.id,
+        nome: item.nome,
+        preco: item.preco,
+        quantidade: item.quantidade
+      }))
+    });
 
     // Formatar número do WhatsApp (remover caracteres especiais)
     const numeroWhatsApp = (lojaInfo.whatsapp || lojaInfo.telefone || '')

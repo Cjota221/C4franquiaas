@@ -149,14 +149,31 @@ export function AnalyticsWrapper({ children }: { children: React.ReactNode }) {
       utm_campaign: utmCampaign
     })
 
-    // Também envia pro GA4 se configurado
+    // 📊 GA4: Enviar page_view com dados da loja
     if (typeof window !== 'undefined' && window.gtag) {
+      // Page view com contexto da loja
       window.gtag('event', 'page_view', {
         page_path: pathname,
-        page_title: document.title
+        page_title: document.title,
+        page_location: window.location.href,
+        // Dimensões personalizadas
+        loja_nome: loja.nome,
+        loja_dominio: loja.dominio,
+        loja_id: loja.id,
+        page_type: pageType,
+        device_type: getDeviceType()
       })
+
+      // Evento específico para catálogo
+      if (pageType === 'catalogo') {
+        window.gtag('event', 'view_catalog', {
+          catalog_name: loja.nome,
+          catalog_domain: loja.dominio,
+          loja_id: loja.id
+        })
+      }
     }
-  }, [pathname, searchParams, trackEvent, loja?.id])
+  }, [pathname, searchParams, trackEvent, loja?.id, loja?.nome, loja?.dominio])
 
   return <>{children}</>
 }
