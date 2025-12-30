@@ -3,9 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,8 +12,6 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
-  const router = useRouter()
-  const supabase = createClientComponentClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,51 +19,59 @@ export default function LoginPage() {
     setErro('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const supabase = createClient()
+
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: senha
       })
 
-      if (error) {
+      if (signInError) {
         setErro('Email ou senha incorretos')
         setLoading(false)
         return
       }
 
-      if (data.user) {
-        // Verificar se é revendedora
-        const { data: revendedora } = await supabase
-          .from('revendedoras')
-          .select('id, status')
-          .eq('user_id', data.user.id)
-          .single()
-
-        if (revendedora) {
-          if (revendedora.status === 'pendente') {
-            setErro('Seu cadastro ainda está em análise. Aguarde a aprovação!')
-            await supabase.auth.signOut()
-            setLoading(false)
-            return
-          }
-          if (revendedora.status === 'rejeitado') {
-            setErro('Seu cadastro foi rejeitado. Entre em contato conosco.')
-            await supabase.auth.signOut()
-            setLoading(false)
-            return
-          }
-          router.push('/revendedora')
-          return
-        }
-
-        // Se não é revendedora, desloga
-        setErro('Conta não encontrada como franqueada')
-        await supabase.auth.signOut()
+      if (!user) {
+        setErro('Usuário não encontrado')
+        setLoading(false)
+        return
       }
+
+      // Verificar se é revendedora (tabela resellers)
+      const { data: revendedora } = await supabase
+        .from('resellers')
+        .select('id, status, name')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!revendedora) {
+        await supabase.auth.signOut()
+        setErro('Conta não encontrada como franqueada')
+        setLoading(false)
+        return
+      }
+
+      if (revendedora.status !== 'aprovada') {
+        await supabase.auth.signOut()
+        if (revendedora.status === 'pendente') {
+          setErro('Seu cadastro ainda está em análise. Aguarde a aprovação!')
+        } else if (revendedora.status === 'rejeitada') {
+          setErro('Seu cadastro foi rejeitado. Entre em contato conosco.')
+        } else {
+          setErro('Sua conta não está ativa.')
+        }
+        setLoading(false)
+        return
+      }
+
+      // Login OK - redirecionar
+      window.location.href = '/revendedora/dashboard'
+
     } catch {
       setErro('Erro ao fazer login. Tente novamente.')
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
@@ -75,11 +80,11 @@ export default function LoginPage() {
       <header className="p-6">
         <Link href="/" className="flex items-center gap-2 w-fit">
           <Image 
-            src="/android-chrome-192x192.png" 
+            src="https://i.ibb.co/20Gxkv48/Design-sem-nome-62.png" 
             alt="C4 Franquias" 
             width={40} 
             height={40}
-            className="rounded-xl"
+            className="rounded-full"
           />
           <div className="flex flex-col">
             <span className="text-lg font-bold text-gray-900 leading-tight">C4 Franquias</span>

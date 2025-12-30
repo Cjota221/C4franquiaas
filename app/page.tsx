@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import {
   Headphones,
@@ -38,9 +39,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30">
-                <span className="text-white font-bold text-lg">C4</span>
-              </div>
+              <Image 
+                src="https://i.ibb.co/20Gxkv48/Design-sem-nome-62.png" 
+                alt="C4 Franquias" 
+                width={40} 
+                height={40}
+                className="rounded-full"
+              />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-gray-900 leading-tight">C4 Franquias</span>
                 <span className="text-xs text-pink-600 font-medium -mt-1">by Cjota Rasteirinhas</span>
@@ -51,12 +56,20 @@ export default function LandingPage() {
               <a href="#vantagens" className="text-gray-600 hover:text-pink-600 transition font-medium">Vantagens</a>
               <a href="#contato" className="text-gray-600 hover:text-pink-600 transition font-medium">Contato</a>
             </nav>
-            <Link
-              href="/login"
-              className="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg hover:shadow-pink-500/30 hover:-translate-y-0.5 transition-all"
-            >
-              Entrar
-            </Link>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-gray-700 font-medium hover:text-pink-600 transition text-sm sm:text-base"
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/cadastro/revendedora"
+                className="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-4 sm:px-6 py-2 rounded-full font-semibold hover:shadow-lg hover:shadow-pink-500/30 transition-all text-sm sm:text-base"
+              >
+                Cadastre-se
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -414,15 +427,19 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30">
-                  <span className="text-white font-bold text-xl">C4</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold text-white leading-tight">C4 Franquias</span>
-                  <span className="text-sm text-pink-400 font-medium -mt-1">by Cjota Rasteirinhas</span>
-                </div>
+              <Image 
+                src="https://i.ibb.co/20Gxkv48/Design-sem-nome-62.png" 
+                alt="C4 Franquias" 
+                width={48} 
+                height={48}
+                className="rounded-full"
+              />
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-white leading-tight">C4 Franquias</span>
+                <span className="text-sm text-pink-400 font-medium -mt-1">by Cjota Rasteirinhas</span>
               </div>
-              <p className="text-gray-400 mb-6 max-w-md">Rede de franquias de calçados femininos. Tenha seu próprio site com nossos produtos, personalize com sua marca e defina sua margem de lucro!</p>
+            </div>
+            <p className="text-gray-400 mb-6 max-w-md">Rede de franquias de calçados femininos. Tenha seu próprio site com nossos produtos, personalize com sua marca e defina sua margem de lucro!</p>
               <div className="flex gap-4">
                 <a href="https://instagram.com/cjotarasteirinhas" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-pink-600 transition-colors group">
                   <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />

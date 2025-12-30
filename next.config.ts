@@ -13,7 +13,8 @@ const nextConfig: NextConfig = {
       'c4franquiaas.netlify.app',
       'rprucmoavblepodvanga.supabase.co', // Supabase Storage
       'www.melhorenvio.com.br', // Melhor Envio
-      'melhorenvio.com.br' // Melhor Envio
+      'melhorenvio.com.br', // Melhor Envio
+      'i.ibb.co' // ImgBB
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
@@ -28,6 +29,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'rprucmoavblepodvanga.supabase.co', pathname: '/storage/v1/object/public/logos/**' },
       { protocol: 'https', hostname: 'www.melhorenvio.com.br', pathname: '/**' },
       { protocol: 'https', hostname: 'melhorenvio.com.br', pathname: '/**' },
+      { protocol: 'https', hostname: 'i.ibb.co', pathname: '/**' },
     ],
   },
 };
