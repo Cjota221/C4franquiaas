@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
 
-export default function LoginAdminPage() {
+export default function AdminSecretLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +36,7 @@ export default function LoginAdminPage() {
 
       if (!perfil || perfil.papel !== 'admin') {
         await supabase.auth.signOut();
-        throw new Error('Acesso negado. Esta área é exclusiva para administradores.');
+        throw new Error('Acesso negado.');
       }
 
       router.push('/admin/dashboard');
@@ -59,14 +58,14 @@ export default function LoginAdminPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-          <p className="text-sm text-gray-500">C4 Franquias - Acesso Restrito</p>
+          <p className="text-sm text-gray-500">Acesso Restrito</p>
         </div>
 
         {/* Formulário */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email do Administrador
+              Email
             </label>
             <input
               id="email"
@@ -77,7 +76,7 @@ export default function LoginAdminPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 mt-1 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all"
-              placeholder="admin@c4franquias.com"
+              placeholder="email@exemplo.com"
             />
           </div>
 
@@ -118,20 +117,10 @@ export default function LoginAdminPage() {
                 Autenticando...
               </span>
             ) : (
-              'Acessar Painel Admin'
+              'Entrar'
             )}
           </button>
         </form>
-
-        {/* Link para outros acessos */}
-        <div className="pt-4 border-t border-gray-200">
-          <p className="text-center text-sm text-gray-500">
-            Não é administrador?{' '}
-            <Link href="/login" className="text-[#DB1472] hover:underline font-medium">
-              Acesse por aqui
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
