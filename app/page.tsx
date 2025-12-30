@@ -2,17 +2,14 @@
 
 import Link from 'next/link'
 import { 
-  Store, 
   CreditCard, 
   Headphones,
   ArrowRight,
   Instagram,
   Phone,
   Sparkles,
-  ShieldCheck,
   Clock,
   MessageCircle,
-  ShoppingBag,
   Percent,
   Layout
 } from 'lucide-react'
@@ -58,13 +55,13 @@ export default function LandingPage() {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-              Potencialize suas vendas com um
-              <span className="text-pink-600"> catálogo profissional</span>
+              Seu próprio site de vendas
+              <span className="text-pink-600"> totalmente personalizado</span>
             </h1>
             
             <p className="mt-6 text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-              Somos especialistas em <strong>rasteirinhas femininas</strong> e criamos este sistema 
-              para <strong>impulsionar suas vendas</strong>. Tenha seu próprio site com nossos produtos 
+              Tenha um <strong>site profissional</strong> com a <strong>sua identidade visual</strong> — 
+              suas cores, seu estilo, sua marca. Mostre nossos produtos para suas clientes 
               e venda de forma moderna pelo WhatsApp.
             </p>
             
@@ -73,7 +70,7 @@ export default function LandingPage() {
                 href="/cadastro/revendedora"
                 className="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-pink-700 transition shadow-lg shadow-pink-600/30"
               >
-                Quero meu catálogo
+                Quero meu site
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link 
@@ -87,10 +84,10 @@ export default function LandingPage() {
             {/* Diferenciais rápidos */}
             <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
               {[
-                { icon: Layout, text: 'Site profissional' },
-                { icon: ShoppingBag, text: 'Catálogo completo' },
-                { icon: MessageCircle, text: 'Venda pelo WhatsApp' },
-                { icon: CreditCard, text: 'Cadastro grátis' }
+                { icon: Layout, text: 'Site completo' },
+                { icon: Sparkles, text: 'Personalizável' },
+                { icon: MessageCircle, text: 'WhatsApp integrado' },
+                { icon: CreditCard, text: 'Cadastro gratuito' }
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-center gap-2 bg-white px-4 py-3 rounded-xl shadow-sm">
                   <item.icon className="w-5 h-5 text-pink-600" />
@@ -119,18 +116,18 @@ export default function LandingPage() {
               },
               { 
                 step: '2', 
-                title: 'Receba seu catálogo', 
-                description: 'Você ganha um site profissional com todos os nossos produtos e preços.'
+                title: 'Personalize seu site', 
+                description: 'Escolha suas cores, adicione sua logo e deixe o site com a sua cara!'
               },
               { 
                 step: '3', 
-                title: 'Mostre às clientes', 
-                description: 'Compartilhe o link do seu catálogo no WhatsApp, Instagram e redes sociais.'
+                title: 'Divulgue para clientes', 
+                description: 'Compartilhe o link do seu site no WhatsApp, Instagram e redes sociais.'
               },
               { 
                 step: '4', 
-                title: 'Feche a venda', 
-                description: 'Sua cliente escolhe pelo site e finaliza a compra direto com você no WhatsApp!'
+                title: 'Venda pelo WhatsApp', 
+                description: 'Sua cliente escolhe no site e finaliza a compra direto com você!'
               }
             ].map((item, index) => (
               <div key={index} className="relative">
@@ -154,12 +151,12 @@ export default function LandingPage() {
           <div className="mt-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-3xl p-8 md:p-12 text-white">
             <div className="max-w-3xl mx-auto text-center">
               <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                Chega de catálogo em PDF ou fotos bagunçadas!
+                Um site de verdade, com a sua identidade!
               </h3>
               <p className="text-pink-100 text-lg">
-                Com seu catálogo digital, suas clientes navegam pelas rasteirinhas com facilidade, 
-                veem fotos de qualidade, preços atualizados e podem entrar em contato direto com você. 
-                <strong className="text-white"> Muito mais profissional do que ficar mandando foto por foto no WhatsApp!</strong>
+                Não é só um catálogo de fotos. É um <strong className="text-white">site completo</strong> que você personaliza 
+                com suas cores, sua logo e seu estilo. Suas clientes vão ver um site profissional 
+                com a <strong className="text-white">sua marca</strong>, não a nossa!
               </p>
             </div>
           </div>
@@ -171,10 +168,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Vantagens do catálogo digital
+              O que você recebe
             </h2>
             <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-              Por que ter seu próprio catálogo faz toda a diferença nas vendas
+              Tudo que você precisa para vender de forma profissional
             </p>
           </div>
           
@@ -182,23 +179,23 @@ export default function LandingPage() {
             {[
               { 
                 icon: Layout, 
-                title: 'Catálogo Profissional', 
-                description: 'Seu catálogo online bonito, organizado e fácil de navegar. Impressiona suas clientes!' 
+                title: 'Site Completo', 
+                description: 'Um site de verdade, não só um catálogo. Com páginas, navegação e tudo que um site profissional tem.' 
               },
               { 
-                icon: ShoppingBag, 
-                title: 'Rasteirinhas Atualizadas', 
-                description: 'Catálogo sempre atualizado com novidades, preços e disponibilidade em tempo real.' 
+                icon: Sparkles, 
+                title: 'Totalmente Personalizável', 
+                description: 'Escolha suas cores, adicione sua logo, defina seu estilo. O site fica com a SUA identidade visual!' 
               },
               { 
                 icon: MessageCircle, 
                 title: 'WhatsApp Integrado', 
-                description: 'Botão de WhatsApp no catálogo. A cliente vê a rasteirinha e já fala direto com você!' 
+                description: 'Botão de WhatsApp em todo o site. A cliente vê o produto e já fala direto com você!' 
               },
               { 
                 icon: CreditCard, 
-                title: '100% Gratuito', 
-                description: 'Não tem taxa de adesão, mensalidade ou custo escondido. Você só ganha!' 
+                title: 'Cadastro Gratuito', 
+                description: 'Você não paga nada para ter seu site. O cadastro é totalmente gratuito!' 
               },
               { 
                 icon: Headphones, 
@@ -233,8 +230,12 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               { 
-                q: 'Preciso pagar algo para ter meu catálogo?', 
-                a: 'Não! O cadastro é 100% gratuito. Você não paga nada para ter seu site.' 
+                q: 'Preciso pagar algo para ter meu site?', 
+                a: 'Não! O cadastro é gratuito. Você não paga nada para ter seu site personalizado.' 
+              },
+              { 
+                q: 'Posso personalizar o site com minhas cores?', 
+                a: 'Sim! Você escolhe a paleta de cores, adiciona sua logo e deixa o site com a sua identidade visual.' 
               },
               { 
                 q: 'Como funciona a venda?', 
@@ -243,10 +244,6 @@ export default function LandingPage() {
               { 
                 q: 'Como eu recebo os produtos?', 
                 a: 'Você faz o pedido conosco pelo site e enviamos para você. Aí você entrega para sua cliente.' 
-              },
-              { 
-                q: 'Como eu ganho dinheiro?', 
-                a: 'Você compra com preço de revenda e vende pelo preço que quiser. A diferença é seu lucro!' 
               },
               { 
                 q: 'Quanto tempo leva para aprovar meu cadastro?', 
@@ -270,16 +267,16 @@ export default function LandingPage() {
             Comece ainda hoje
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Pronta para ter sua própria loja virtual?
+            Pronta para ter seu próprio site?
           </h2>
           <p className="text-xl text-pink-100 mb-8">
-            Cadastre-se agora e receba sua loja profissional para começar a vender!
+            Cadastre-se agora e receba seu site personalizado para vender de forma profissional!
           </p>
           <Link 
             href="/cadastro/revendedora"
             className="inline-flex items-center justify-center gap-2 bg-white text-pink-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-pink-50 transition shadow-xl"
           >
-            Quero me cadastrar gratuitamente
+            Quero meu site gratuito
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
