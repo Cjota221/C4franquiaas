@@ -919,7 +919,7 @@ export default function CatalogoLayout({
           }}
         >
           {/* Linha 1: Menu + Logo + Carrinho */}
-          <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               {/* Esquerda: Menu Social */}
               {hasSocialLinks ? (
@@ -1012,7 +1012,7 @@ export default function CatalogoLayout({
           </div>
 
           {/* Linha 2: Barra de Busca - Integrada no header */}
-          <div className="px-4 pb-2" ref={searchRef}>
+          <div className="px-4 pb-3" ref={searchRef}>
             <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
               <div className="relative flex items-center">
                 <input
@@ -1020,16 +1020,16 @@ export default function CatalogoLayout({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar Produtos"
-                  className="w-full pl-3 pr-10 py-2 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400 text-sm"
+                  className={`w-full pl-4 pr-10 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400 text-sm ${
+                    themeSettings?.button_style === 'rounded' || !themeSettings?.button_style ? 'rounded-full' : 'rounded-lg'
+                  }`}
                   style={{
-                    borderRadius: (themeSettings?.border_radius || 'medium') === 'large' ? '9999px' : 
-                                  (themeSettings?.border_radius || 'medium') === 'medium' ? '12px' :
-                                  (themeSettings?.border_radius || 'medium') === 'small' ? '6px' : '0px',
+                    focusRingColor: primaryColor,
                   }}
                 />
                 <button
                   type="submit"
-                  className="absolute right-2.5 p-1"
+                  className="absolute right-3 p-1"
                 >
                   <Search size={18} style={{ color: primaryColor }} />
                 </button>

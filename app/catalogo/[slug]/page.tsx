@@ -3,7 +3,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, ChevronDown, Truck, Tag } from 'lucide-react';
+import { ChevronDown, Truck, Tag } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useCatalogo } from './layout';
 
 type Variacao = {
@@ -29,10 +30,13 @@ type ProductWithPrice = {
 export default function CatalogoPrincipal() {
   const { reseller, primaryColor, themeSettings, promotions, getProductPromotion } = useCatalogo();
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc'>('default');
+  
+  // Ler termo de busca da URL (vem do header)
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get('search') || '';
 
   const supabase = createClientComponentClient();
 
@@ -261,20 +265,6 @@ export default function CatalogoPrincipal() {
             <p className="text-gray-600">{reseller.bio}</p>
           </div>
         )}
-
-        {/* Barra de Busca */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar produtos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
-            />
-          </div>
-        </div>
 
         {/* Encontre sua Numeração - Círculos de Tamanhos */}
         {availableSizes.length > 0 && (
