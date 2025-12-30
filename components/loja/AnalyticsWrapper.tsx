@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useLoja } from '@/contexts/LojaContext'
+import { useLojaInfo } from '@/contexts/LojaContext'
 
 // Gerar ou recuperar session ID
 function getSessionId(): string {
@@ -61,7 +61,7 @@ function getPageType(pathname: string): string {
 }
 
 export function AnalyticsWrapper({ children }: { children: React.ReactNode }) {
-  const { loja } = useLoja()
+  const loja = useLojaInfo()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const lastTrackedPath = useRef<string>('')
