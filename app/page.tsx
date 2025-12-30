@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { 
-  Package, 
   Store, 
-  Truck, 
   CreditCard, 
   Headphones,
-  CheckCircle,
   ArrowRight,
   Instagram,
   Phone,
   Sparkles,
   ShieldCheck,
-  Clock
+  Clock,
+  MessageCircle,
+  ShoppingBag,
+  Percent,
+  Layout
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -27,7 +28,10 @@ export default function LandingPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-lg">C4</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">C4 Franquias</span>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-gray-900 leading-tight">C4 by Cjota</span>
+                <span className="text-xs text-pink-600 font-medium -mt-1">Rasteirinhas</span>
+              </div>
             </div>
             <nav className="hidden md:flex items-center gap-8">
               <a href="#como-funciona" className="text-gray-600 hover:text-pink-600 transition">Como Funciona</a>
@@ -50,18 +54,18 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-pink-100 text-pink-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
-              Novo modelo de revenda
+              Atacado de rasteirinhas femininas
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-              Venda moda feminina
-              <span className="text-pink-600"> sem precisar de estoque</span>
+              Potencialize suas vendas com um
+              <span className="text-pink-600"> catálogo profissional</span>
             </h1>
             
             <p className="mt-6 text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-              Você recebe uma <strong>loja virtual completa e profissional</strong> com nossos produtos. 
-              Compartilhe com suas clientes, faça a venda e <strong>nós cuidamos de todo o resto</strong> — 
-              estoque, embalagem e envio.
+              Somos especialistas em <strong>rasteirinhas femininas</strong> e criamos este sistema 
+              para <strong>impulsionar suas vendas</strong>. Tenha seu próprio site com nossos produtos 
+              e venda de forma moderna pelo WhatsApp.
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
@@ -69,7 +73,7 @@ export default function LandingPage() {
                 href="/cadastro/revendedora"
                 className="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-pink-700 transition shadow-lg shadow-pink-600/30"
               >
-                Quero ter minha loja
+                Quero meu catálogo
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link 
@@ -83,9 +87,9 @@ export default function LandingPage() {
             {/* Diferenciais rápidos */}
             <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
               {[
-                { icon: Package, text: 'Sem estoque' },
-                { icon: Store, text: 'Loja pronta' },
-                { icon: Truck, text: 'Nós enviamos' },
+                { icon: Layout, text: 'Site profissional' },
+                { icon: ShoppingBag, text: 'Catálogo completo' },
+                { icon: MessageCircle, text: 'Venda pelo WhatsApp' },
                 { icon: CreditCard, text: 'Cadastro grátis' }
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-center gap-2 bg-white px-4 py-3 rounded-xl shadow-sm">
@@ -103,7 +107,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Como funciona?</h2>
-            <p className="mt-4 text-xl text-gray-600">Um modelo simples e moderno de revenda</p>
+            <p className="mt-4 text-xl text-gray-600">Simples, rápido e profissional</p>
           </div>
           
           <div className="grid md:grid-cols-4 gap-8">
@@ -111,26 +115,22 @@ export default function LandingPage() {
               { 
                 step: '1', 
                 title: 'Faça seu cadastro', 
-                description: 'Preencha seus dados e aguarde a aprovação. É rápido e gratuito!',
-                icon: CheckCircle
+                description: 'Preencha seus dados e aguarde aprovação. É rápido e gratuito!'
               },
               { 
                 step: '2', 
-                title: 'Receba sua loja', 
-                description: 'Você ganha uma loja virtual profissional com todos os nossos produtos.',
-                icon: Store
+                title: 'Receba seu catálogo', 
+                description: 'Você ganha um site profissional com todos os nossos produtos e preços.'
               },
               { 
                 step: '3', 
-                title: 'Divulgue e venda', 
-                description: 'Compartilhe o link da sua loja no WhatsApp, Instagram e redes sociais.',
-                icon: Phone
+                title: 'Mostre às clientes', 
+                description: 'Compartilhe o link do seu catálogo no WhatsApp, Instagram e redes sociais.'
               },
               { 
                 step: '4', 
-                title: 'Nós entregamos', 
-                description: 'Sua cliente compra, nós embalamos e enviamos. Você só acompanha!',
-                icon: Truck
+                title: 'Feche a venda', 
+                description: 'Sua cliente escolhe pelo site e finaliza a compra direto com você no WhatsApp!'
               }
             ].map((item, index) => (
               <div key={index} className="relative">
@@ -154,12 +154,12 @@ export default function LandingPage() {
           <div className="mt-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-3xl p-8 md:p-12 text-white">
             <div className="max-w-3xl mx-auto text-center">
               <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                É como um Dropshipping, só que melhor!
+                Chega de catálogo em PDF ou fotos bagunçadas!
               </h3>
               <p className="text-pink-100 text-lg">
-                Você não precisa comprar produtos antecipadamente, não precisa ter estoque em casa, 
-                não precisa embalar e nem ir aos Correios. <strong className="text-white">Nós fazemos tudo isso por você.</strong> 
-                Seu trabalho é divulgar sua loja e conquistar clientes!
+                Com seu catálogo digital, suas clientes navegam pelas rasteirinhas com facilidade, 
+                veem fotos de qualidade, preços atualizados e podem entrar em contato direto com você. 
+                <strong className="text-white"> Muito mais profissional do que ficar mandando foto por foto no WhatsApp!</strong>
               </p>
             </div>
           </div>
@@ -171,34 +171,34 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Por que escolher a C4?
+              Vantagens do catálogo digital
             </h2>
             <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-              Vantagens exclusivas para nossas revendedoras
+              Por que ter seu próprio catálogo faz toda a diferença nas vendas
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { 
-                icon: Store, 
-                title: 'Loja Virtual Profissional', 
-                description: 'Você recebe uma loja completa, bonita e pronta para vender. Sem precisar entender de tecnologia.' 
+                icon: Layout, 
+                title: 'Catálogo Profissional', 
+                description: 'Seu catálogo online bonito, organizado e fácil de navegar. Impressiona suas clientes!' 
               },
               { 
-                icon: Package, 
-                title: 'Zero Estoque', 
-                description: 'Não precisa comprar produtos antes. O estoque é nosso e você vende o que quiser do catálogo.' 
+                icon: ShoppingBag, 
+                title: 'Rasteirinhas Atualizadas', 
+                description: 'Catálogo sempre atualizado com novidades, preços e disponibilidade em tempo real.' 
               },
               { 
-                icon: Truck, 
-                title: 'Nós Enviamos', 
-                description: 'Quando sua cliente compra, nós embalamos com carinho e enviamos direto para ela.' 
+                icon: MessageCircle, 
+                title: 'WhatsApp Integrado', 
+                description: 'Botão de WhatsApp no catálogo. A cliente vê a rasteirinha e já fala direto com você!' 
               },
               { 
                 icon: CreditCard, 
-                title: 'Cadastro 100% Gratuito', 
-                description: 'Não tem taxa de adesão, mensalidade ou qualquer custo escondido. Você só ganha!' 
+                title: '100% Gratuito', 
+                description: 'Não tem taxa de adesão, mensalidade ou custo escondido. Você só ganha!' 
               },
               { 
                 icon: Headphones, 
@@ -206,9 +206,9 @@ export default function LandingPage() {
                 description: 'Equipe pronta para te ajudar pelo WhatsApp sempre que precisar.' 
               },
               { 
-                icon: ShieldCheck, 
-                title: 'Produtos de Qualidade', 
-                description: 'Trabalhamos apenas com produtos selecionados que suas clientes vão amar.' 
+                icon: Percent, 
+                title: 'Preços de Atacado', 
+                description: 'Acesso a preços especiais de atacado para você lucrar em cada venda.' 
               }
             ].map((item, index) => (
               <div key={index} className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-xl hover:border-pink-100 transition-all duration-300">
@@ -233,24 +233,24 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               { 
-                q: 'Preciso pagar algo para começar?', 
-                a: 'Não! O cadastro é 100% gratuito. Não cobramos taxa de adesão nem mensalidade.' 
+                q: 'Preciso pagar algo para ter meu catálogo?', 
+                a: 'Não! O cadastro é 100% gratuito. Você não paga nada para ter seu site.' 
               },
               { 
-                q: 'Preciso ter estoque em casa?', 
-                a: 'Não! Todo o estoque fica conosco. Você só divulga sua loja e nós cuidamos do resto.' 
+                q: 'Como funciona a venda?', 
+                a: 'Sua cliente acessa seu site, escolhe os produtos e entra em contato com você pelo WhatsApp para finalizar a compra.' 
               },
               { 
-                q: 'Quem envia o produto para a cliente?', 
-                a: 'Nós enviamos! Quando sua cliente faz o pedido, nossa equipe embala e envia direto para ela.' 
+                q: 'Como eu recebo os produtos?', 
+                a: 'Você faz o pedido conosco pelo site e enviamos para você. Aí você entrega para sua cliente.' 
               },
               { 
                 q: 'Como eu ganho dinheiro?', 
-                a: 'Você define o preço de venda na sua loja. A diferença entre seu preço e o nosso preço de custo é seu lucro!' 
+                a: 'Você compra com preço de revenda e vende pelo preço que quiser. A diferença é seu lucro!' 
               },
               { 
                 q: 'Quanto tempo leva para aprovar meu cadastro?', 
-                a: 'Normalmente aprovamos em até 24 horas úteis. Você receberá um e-mail assim que for aprovada.' 
+                a: 'Normalmente aprovamos em até 24 horas úteis. Você receberá uma notificação assim que for aprovada.' 
               }
             ].map((item, index) => (
               <div key={index} className="bg-white p-6 rounded-xl border border-gray-100">
@@ -294,14 +294,17 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
                   <span className="text-white font-bold">C4</span>
                 </div>
-                <span className="text-xl font-bold text-white">C4 Franquias</span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold text-white leading-tight">C4 by Cjota</span>
+                  <span className="text-xs text-pink-400 font-medium -mt-1">Rasteirinhas</span>
+                </div>
               </div>
               <p className="text-gray-400 mb-4">
-                Oferecemos uma plataforma moderna de revenda onde você vende moda feminina 
-                sem precisar de estoque. Nós cuidamos de tudo para você!
+                Atacado de calçados femininos especializado em rasteirinhas. 
+                Oferecemos um catálogo digital profissional para impulsionar suas vendas!
               </p>
               <div className="flex gap-4">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition">
+                <a href="https://instagram.com/cjotarasteirinhas" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition">
                   <Instagram className="w-5 h-5" />
                 </a>
                 <a href="https://wa.me/5562981480687" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-600 transition">
@@ -321,14 +324,14 @@ export default function LandingPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Contato</h4>
               <ul className="space-y-2">
-                <li>contato@c4franquias.com.br</li>
+                <li>contato@cjotarasteirinhas.com.br</li>
                 <li>(62) 98148-0687</li>
                 <li>Goiânia - GO</li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-            <p>&copy; {new Date().getFullYear()} C4 Franquias. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} C4 by Cjota Rasteirinhas. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
