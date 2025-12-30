@@ -266,20 +266,17 @@ export default function CatalogoPrincipal() {
           </div>
         )}
 
-        {/* Encontre sua Numeração - Círculos de Tamanhos */}
+        {/* Encontre seu Tamanho - Scroll Horizontal */}
         {availableSizes.length > 0 && (
-          <div className="mb-6 bg-white rounded-2xl p-4 shadow-sm">
-            <h3 className="text-center text-gray-700 font-medium mb-4">
-              ✨ Encontre seu tamanho
-            </h3>
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="mb-5">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {/* Botão "Todos" */}
               <button
                 onClick={() => setSelectedSize('')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+                className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 border-2 ${
                   selectedSize === ''
-                    ? 'text-white shadow-lg scale-110'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'text-white shadow-md scale-105 border-transparent'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                 }`}
                 style={selectedSize === '' ? { backgroundColor: primaryColor } : {}}
               >
@@ -290,10 +287,10 @@ export default function CatalogoPrincipal() {
                 <button
                   key={size}
                   onClick={() => setSelectedSize(selectedSize === size ? '' : size)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+                  className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-base font-bold transition-all duration-200 border-2 ${
                     selectedSize === size
-                      ? 'text-white shadow-lg scale-110'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'text-white shadow-md scale-105 border-transparent'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                   }`}
                   style={selectedSize === size ? { backgroundColor: primaryColor } : {}}
                 >
