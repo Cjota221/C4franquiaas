@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 // Importa os ícones que vamos usar
-import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut, Coins, UserPlus, Truck, ImageIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut, Coins, UserPlus, Truck, ImageIcon, BarChart3 } from 'lucide-react';
 
 // Define os tipos de dados que o componente Sidebar espera receber
 interface SidebarProps {
@@ -27,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
     { id: 'pedidos', label: 'Pedidos', icon: Truck, href: '/admin/pedidos' },
     { id: 'moderacao', label: 'Moderação', icon: ImageIcon, href: '/admin/moderacao/banners' },
     { id: 'comissoes', label: 'Comissões', icon: Coins, href: '/admin/comissoes' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart, disabled: true },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, href: '/admin/configuracoes' },
   ];
