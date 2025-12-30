@@ -1012,7 +1012,7 @@ export default function CatalogoLayout({
           </div>
 
           {/* Linha 2: Barra de Busca - Integrada no header */}
-          <div className="px-4 pb-3" ref={searchRef}>
+          <div className="px-4 pb-2" ref={searchRef}>
             <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
               <div className="relative flex items-center">
                 <input
@@ -1020,19 +1020,18 @@ export default function CatalogoLayout({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar Produtos"
-                  className="w-full pl-4 pr-12 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400"
+                  className="w-full pl-3 pr-10 py-2 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400 text-sm"
                   style={{
                     borderRadius: (themeSettings?.border_radius || 'medium') === 'large' ? '9999px' : 
                                   (themeSettings?.border_radius || 'medium') === 'medium' ? '12px' :
                                   (themeSettings?.border_radius || 'medium') === 'small' ? '6px' : '0px',
-                    fontSize: '15px',
                   }}
                 />
                 <button
                   type="submit"
-                  className="absolute right-3 p-1.5"
+                  className="absolute right-2.5 p-1"
                 >
-                  <Search size={20} style={{ color: primaryColor }} />
+                  <Search size={18} style={{ color: primaryColor }} />
                 </button>
               </div>
             </form>
