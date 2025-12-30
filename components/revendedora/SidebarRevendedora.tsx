@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag } from 'lucide-react';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -16,6 +16,7 @@ export default function SidebarRevendedora() {
     { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
+    { label: 'Configurações', href: '/revendedora/configuracoes', icon: Settings },
   ];
 
   const isActive = (href: string) => pathname === href;
