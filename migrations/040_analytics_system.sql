@@ -320,15 +320,15 @@ CREATE POLICY "Admin pode ver sessions" ON analytics_sessions FOR SELECT
 
 -- Franqueada pode ver analytics da própria loja
 CREATE POLICY "Franqueada pode ver page_views da loja" ON page_views FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+  USING (loja_id IN (SELECT l.id FROM lojas l JOIN franqueadas f ON f.id = l.franqueada_id WHERE f.user_id = auth.uid()));
 CREATE POLICY "Franqueada pode ver product_views da loja" ON product_views FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+  USING (loja_id IN (SELECT l.id FROM lojas l JOIN franqueadas f ON f.id = l.franqueada_id WHERE f.user_id = auth.uid()));
 CREATE POLICY "Franqueada pode ver cart_events da loja" ON cart_events FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+  USING (loja_id IN (SELECT l.id FROM lojas l JOIN franqueadas f ON f.id = l.franqueada_id WHERE f.user_id = auth.uid()));
 CREATE POLICY "Franqueada pode ver search_events da loja" ON search_events FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+  USING (loja_id IN (SELECT l.id FROM lojas l JOIN franqueadas f ON f.id = l.franqueada_id WHERE f.user_id = auth.uid()));
 CREATE POLICY "Franqueada pode ver sessions da loja" ON analytics_sessions FOR SELECT 
-  USING (loja_id IN (SELECT id FROM lojas WHERE user_id = auth.uid()));
+  USING (loja_id IN (SELECT l.id FROM lojas l JOIN franqueadas f ON f.id = l.franqueada_id WHERE f.user_id = auth.uid()));
 
 COMMENT ON TABLE page_views IS 'Visualizações de páginas para analytics';
 COMMENT ON TABLE product_views IS 'Visualizações de produtos específicos';
