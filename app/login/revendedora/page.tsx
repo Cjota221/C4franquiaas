@@ -78,8 +78,8 @@ export default function LoginRevendedoraPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Portal da Revendedora</h1>
-          <p className="text-sm text-gray-500">C4 Franquias - Revenda</p>
+          <h1 className="text-2xl font-bold text-gray-900">Portal da Franqueada</h1>
+          <p className="text-sm text-gray-500">C4 Franquias</p>
         </div>
 
         {/* Formulário */}
@@ -146,20 +146,9 @@ export default function LoginRevendedoraPage() {
         {/* Links adicionais */}
         <div className="pt-4 border-t border-gray-200 space-y-3">
           <p className="text-center text-sm text-gray-500">
-            Ainda não é revendedora?{' '}
+            Ainda não é franqueada?{' '}
             <Link href="/cadastro/revendedora" className="text-purple-600 hover:underline font-medium">
               Cadastre-se aqui
-            </Link>
-          </p>
-          <p className="text-center text-sm text-gray-500">
-            É franqueada?{' '}
-            <Link href="/login/franqueada" className="text-[#DB1472] hover:underline font-medium">
-              Acesse aqui
-            </Link>
-          </p>
-          <p className="text-center text-sm text-gray-500">
-            <Link href="/login" className="text-gray-600 hover:underline">
-              ← Voltar ao login principal
             </Link>
           </p>
         </div>

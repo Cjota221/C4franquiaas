@@ -23,6 +23,7 @@ A API estará disponível em `http://localhost:8080`
 ### Opção 2: VPS Barata
 
 Recomendo:
+
 - **Hostinger VPS** - R$ 19/mês
 - **Contabo** - €5/mês
 - **Oracle Cloud** - Grátis (sempre grátis)
@@ -90,6 +91,7 @@ Escaneie o QR Code com o WhatsApp que será usado para enviar mensagens.
 ### 1. Notificação de Aprovação de Revendedora ✅
 
 Quando você aprovar uma revendedora, ela recebe:
+
 - Email (se Resend configurado)
 - WhatsApp (se Evolution configurada)
 
@@ -97,11 +99,11 @@ Quando você aprovar uma revendedora, ela recebe:
 
 Sistema automático de recuperação:
 
-| Tempo | Ação |
-|-------|------|
-| 30 min | Primeiro lembrete amigável |
-| 2 horas | Segundo lembrete (urgência) |
-| 24 horas | Carrinho expira |
+| Tempo    | Ação                        |
+| -------- | --------------------------- |
+| 30 min   | Primeiro lembrete amigável  |
+| 2 horas  | Segundo lembrete (urgência) |
+| 24 horas | Carrinho expira             |
 
 #### Como funciona:
 
@@ -127,6 +129,7 @@ curl -X GET "https://seu-site.netlify.app/api/whatsapp/carrinho-abandonado" \
 ### Proteger endpoint de cron
 
 Adicione no Netlify:
+
 ```env
 CRON_SECRET=uma_chave_secreta_longa_aqui
 ```
@@ -134,6 +137,7 @@ CRON_SECRET=uma_chave_secreta_longa_aqui
 ### Limites de envio
 
 A Evolution API não tem limites, mas o WhatsApp tem regras:
+
 - Não envie spam
 - Respeite opt-out
 - Máximo ~200 mensagens/dia para números novos
@@ -161,15 +165,19 @@ curl "https://sua-api.com/instance/connectionState/c4franquias" \
 ## 💡 Dicas
 
 ### 1. Use um número dedicado
+
 Não use seu WhatsApp pessoal! Compre um chip para isso.
 
 ### 2. Personalize as mensagens
+
 Edite os templates em `lib/whatsapp/evolution.ts`
 
 ### 3. Teste antes de produção
+
 Use números de teste antes de enviar para clientes reais.
 
 ### 4. Backup do número
+
 A Evolution API salva a sessão, mas faça backup regular.
 
 ---
@@ -177,14 +185,17 @@ A Evolution API salva a sessão, mas faça backup regular.
 ## 🆘 Problemas Comuns
 
 ### "Número desconectado"
+
 - Reescaneie o QR Code
 - Verifique se o WhatsApp não foi banido
 
 ### "Mensagem não enviada"
+
 - Verifique o formato do telefone (55 + DDD + número)
 - Confira se a API está rodando
 
 ### "Rate limit"
+
 - Reduza a velocidade de envio
 - Espere algumas horas
 
