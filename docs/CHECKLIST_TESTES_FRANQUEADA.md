@@ -390,10 +390,10 @@ Antes de iniciar os testes, certifique-se de:
 
 ## 📝 Notas de Teste
 
-**Testador:** ******\_******  
-**Data:** ******\_******  
+**Testador:** **\*\***\_**\*\***  
+**Data:** **\*\***\_**\*\***  
 **Ambiente:** Dev / Staging / Produção  
-**Browser:** ******\_******  
+**Browser:** **\*\***\_**\*\***  
 **Observações:**
 
 ```

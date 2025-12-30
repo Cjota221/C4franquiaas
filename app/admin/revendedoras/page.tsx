@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Check, X, Eye, Search, Store, Mail, Phone, Calendar, TrendingUp, Clock, MessageCircle } from 'lucide-react';
+import { Check, X, Eye, Search, Store, Mail, Phone, Calendar, TrendingUp, Clock, MessageCircle, ExternalLink, Info } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Revendedora {
   id: string;
@@ -20,6 +21,7 @@ interface Revendedora {
 }
 
 export default function AdminRevendedoras() {
+  const router = useRouter();
   const [revendedoras, setRevendedoras] = useState<Revendedora[]>([]);
   const [filtradas, setFiltradas] = useState<Revendedora[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,6 +172,16 @@ Qualquer dúvida, estamos à disposição!`;
 
     const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
+  }
+
+  // Função para abrir catálogo em nova aba
+  function verCatalogo(slug: string | null) {
+    if (!slug) {
+      alert('Esta revendedora ainda não configurou o catálogo');
+      return;
+    }
+    const catalogUrl = `${window.location.origin}/catalogo/${slug}`;
+    window.open(catalogUrl, '_blank');
   }
 
   if (loading) {
@@ -351,6 +363,27 @@ Qualquer dúvida, estamos à disposição!`;
                 </div>
 
                 <div className="flex flex-col gap-2 ml-4">
+                  {/* Botões de detalhes e catálogo - disponíveis para todos */}
+                  <button
+                    onClick={() => router.push(`/admin/revendedoras/${revendedora.id}`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap"
+                    title="Ver detalhes completos"
+                  >
+                    <Info className="w-4 h-4" />
+                    Detalhes
+                  </button>
+                  
+                  {revendedora.slug && (
+                    <button
+                      onClick={() => verCatalogo(revendedora.slug)}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors whitespace-nowrap"
+                      title="Abrir catálogo em nova aba"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Catálogo
+                    </button>
+                  )}
+
                   {revendedora.status === 'pendente' && (
                     <>
                       <button

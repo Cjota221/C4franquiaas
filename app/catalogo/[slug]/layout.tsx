@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
+import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
 
 // Tipos
 type Reseller = {
@@ -879,6 +880,17 @@ export default function CatalogoLayout({
       }}
     >
       <div className="min-h-screen bg-gray-50">
+        {/* Meta Tags para SEO */}
+        {reseller && (
+          <CatalogoMetaTags
+            storeName={reseller.store_name}
+            slug={reseller.slug}
+            bio={reseller.bio}
+            logoUrl={reseller.logo_url}
+            bannerUrl={reseller.banner_url}
+          />
+        )}
+
         {/* Modal de Captura de Lead */}
         <LeadCaptureModal
           isOpen={showLeadModal}

@@ -197,6 +197,21 @@ export async function PATCH(request: NextRequest) {
         .update(updateData)
         .eq('id', submission.reseller_id)
       
+      // 🆕 Criar notificação de aprovação
+      await supabase.from('reseller_notifications').insert({
+        reseller_id: submission.reseller_id,
+        type: 'banner_approved',
+        title: '✅ Banner aprovado!',
+        message: `Seu banner ${submission.banner_type === 'mobile' ? 'mobile' : 'desktop'} foi aprovado e já está ativo em seu catálogo.`,
+        metadata: {
+          submission_id: submission_id,
+          banner_type: submission.banner_type,
+          image_url: submission.image_url
+        },
+        action_url: '/revendedora/personalizacao',
+        action_label: 'Ver loja'
+      })
+      
       return NextResponse.json({ 
         success: true,
         message: 'Banner aprovado com sucesso!' 
@@ -224,6 +239,21 @@ export async function PATCH(request: NextRequest) {
           { status: 500 }
         )
       }
+      
+      // 🆕 Criar notificação de rejeição
+      await supabase.from('reseller_notifications').insert({
+        reseller_id: submission.reseller_id,
+        type: 'banner_rejected',
+        title: '❌ Banner recusado',
+        message: `Seu banner ${submission.banner_type === 'mobile' ? 'mobile' : 'desktop'} foi recusado.`,
+        metadata: {
+          submission_id: submission_id,
+          banner_type: submission.banner_type,
+          feedback: feedback || defaultFeedback
+        },
+        action_url: '/revendedora/personalizacao',
+        action_label: 'Enviar novo banner'
+      })
       
       return NextResponse.json({ 
         success: true,

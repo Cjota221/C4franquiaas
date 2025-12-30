@@ -3,6 +3,7 @@
 ## O que foi implementado
 
 ### 1. Sistema Interno de Analytics
+
 - **Visualizações de página** - Rastreia todas as páginas visitadas
 - **Visualizações de produto** - Rastreia quais produtos são mais vistos
 - **Eventos de carrinho** - Add to cart, checkout, compras
@@ -10,6 +11,7 @@
 - **Sessões** - Agrupa atividades de um mesmo visitante
 
 ### 2. Dashboard de Analytics
+
 - Acesse em: `/admin/analytics`
 - Métricas em tempo real
 - Gráficos de visualizações diárias
@@ -17,6 +19,7 @@
 - Filtro por período (7, 30, 90 dias)
 
 ### 3. Integração com Google Analytics 4 (opcional)
+
 - Eventos customizados enviados automaticamente
 - Funções prontas para tracking manual
 
@@ -41,7 +44,7 @@ Acesse o **Supabase SQL Editor** e execute em ordem:
 No arquivo `app/layout.tsx`, adicione:
 
 ```tsx
-import { AnalyticsTracker, GoogleAnalytics } from '@/components/Analytics'
+import { AnalyticsTracker, GoogleAnalytics } from '@/components/Analytics';
 
 export default function RootLayout({ children }) {
   return (
@@ -49,16 +52,16 @@ export default function RootLayout({ children }) {
       <body>
         {/* Google Analytics (opcional - adicione seu ID) */}
         <GoogleAnalytics measurementId="G-XXXXXXXXXX" />
-        
+
         {/* Tracker interno */}
         <Suspense fallback={null}>
           <AnalyticsTracker />
         </Suspense>
-        
+
         {children}
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -67,11 +70,11 @@ export default function RootLayout({ children }) {
 No componente de catálogo (`app/catalogo/[slug]/page.tsx`), adicione:
 
 ```tsx
-import { useAnalytics } from '@/components/Analytics'
+import { useAnalytics } from '@/components/Analytics';
 
 function CatalogoPage({ params }) {
-  const { trackProductView, trackAddToCart, trackSearch } = useAnalytics(lojaId)
-  
+  const { trackProductView, trackAddToCart, trackSearch } = useAnalytics(lojaId);
+
   // Ao clicar em um produto
   const handleProductClick = (produto) => {
     trackProductView({
@@ -79,10 +82,10 @@ function CatalogoPage({ params }) {
       nome: produto.nome,
       categoria: produto.categoria,
       preco: produto.preco,
-      source: 'catalogo'
-    })
-  }
-  
+      source: 'catalogo',
+    });
+  };
+
   // Ao adicionar ao carrinho
   const handleAddToCart = (produto, quantidade, tamanho) => {
     trackAddToCart({
@@ -90,17 +93,17 @@ function CatalogoPage({ params }) {
       nome: produto.nome,
       preco: produto.preco,
       quantidade,
-      variacao: tamanho
-    })
-  }
-  
+      variacao: tamanho,
+    });
+  };
+
   // Ao fazer uma busca
   const handleSearch = (query, results) => {
     trackSearch({
       query,
-      resultsCount: results.length
-    })
-  }
+      resultsCount: results.length,
+    });
+  };
 }
 ```
 
@@ -109,12 +112,14 @@ function CatalogoPage({ params }) {
 ## 🔍 O que você vai conseguir rastrear
 
 ### Por Produto
+
 - ✅ Quantas vezes foi visualizado
 - ✅ Quantas vezes foi adicionado ao carrinho
 - ✅ Taxa de conversão (visualização → carrinho)
 - ✅ De onde veio o clique (busca, catálogo, relacionados)
 
 ### Por Revendedora/Loja
+
 - ✅ Total de visualizações do catálogo
 - ✅ Número de sessões/visitantes
 - ✅ Produtos mais populares
@@ -122,11 +127,13 @@ function CatalogoPage({ params }) {
 - ✅ Taxa de conversão
 
 ### Por Dispositivo
+
 - ✅ Mobile vs Desktop vs Tablet
 - ✅ Navegadores mais usados
 - ✅ Sistemas operacionais
 
 ### Por Origem de Tráfego
+
 - ✅ Referrer (de onde veio)
 - ✅ UTM parameters (campanhas)
 - ✅ Links diretos vs orgânicos
@@ -138,17 +145,21 @@ function CatalogoPage({ params }) {
 Para análises ainda mais avançadas, configure o GA4:
 
 ### 1. Criar conta no Google Analytics
+
 - Acesse: https://analytics.google.com
 - Crie uma propriedade GA4
 - Copie o ID de medição (G-XXXXXXXXXX)
 
 ### 2. Adicionar no sistema
+
 No `layout.tsx`:
+
 ```tsx
 <GoogleAnalytics measurementId="G-SEU_ID_AQUI" />
 ```
 
 ### 3. Eventos enviados automaticamente
+
 - `page_view` - Cada página visitada
 - `view_item` - Visualização de produto
 - `add_to_cart` - Adição ao carrinho
@@ -161,6 +172,7 @@ No `layout.tsx`:
 ## 📈 Acessando os Dados
 
 ### Dashboard Interno
+
 - URL: `/admin/analytics`
 - Visualize métricas em tempo real
 - Gráficos e rankings
@@ -168,6 +180,7 @@ No `layout.tsx`:
 ### Queries Diretas (Supabase)
 
 **Top 10 produtos mais vistos (últimos 30 dias):**
+
 ```sql
 SELECT produto_nome, COUNT(*) as views
 FROM product_views
@@ -178,6 +191,7 @@ LIMIT 10;
 ```
 
 **Sessões por loja:**
+
 ```sql
 SELECT l.nome, COUNT(DISTINCT pv.session_id) as sessoes
 FROM page_views pv
@@ -188,6 +202,7 @@ ORDER BY sessoes DESC;
 ```
 
 **Taxa de conversão por loja:**
+
 ```sql
 SELECT * FROM analytics_store_ranking;
 ```
