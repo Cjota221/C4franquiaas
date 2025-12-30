@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2, Palette, Sparkles, ArrowRight, Bell } from 'lucide-react';
 import Link from 'next/link';
 
 interface Reseller {
@@ -14,10 +14,20 @@ interface Reseller {
   catalog_views: number;
 }
 
+interface NewProductsAlert {
+  count: number;
+  latestProducts: {
+    id: string;
+    nome: string;
+    created_at: string;
+  }[];
+}
+
 export default function DashboardRevendedora() {
   const [reseller, setReseller] = useState<Reseller | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newProductsAlert, setNewProductsAlert] = useState<NewProductsAlert | null>(null);
 
   const carregarDados = useCallback(async () => {
     console.log('🔄 Dashboard: Carregando dados...');
@@ -58,6 +68,41 @@ export default function DashboardRevendedora() {
 
       console.log('✅ Revendedora encontrada:', data.name, '| Slug:', data.slug || 'NÃO CONFIGURADO');
       setReseller(data);
+
+      // 🆕 Verificar se há produtos novos (adicionados nas últimas 24h)
+      const oneDayAgo = new Date();
+      oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+      const { data: newProducts } = await supabase
+        .from('reseller_products')
+        .select(`
+          product_id,
+          created_at,
+          produtos:product_id (
+            id,
+            nome,
+            created_at
+          )
+        `)
+        .eq('reseller_id', data.id)
+        .eq('is_active', true)
+        .gte('created_at', oneDayAgo.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (newProducts && newProducts.length > 0) {
+        setNewProductsAlert({
+          count: newProducts.length,
+          latestProducts: newProducts.map((np) => {
+            const prod = np.produtos as unknown as { id: string; nome: string; created_at: string } | null;
+            return {
+              id: prod?.id || '',
+              nome: prod?.nome || 'Produto',
+              created_at: np.created_at
+            };
+          })
+        });
+      }
     } catch (err) {
       console.error('❌ Erro geral:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -110,6 +155,47 @@ export default function DashboardRevendedora() {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-500 mt-1">Olá, {reseller.name}! Veja suas estatísticas.</p>
       </div>
+
+      {/* 🆕 Alerta de Produtos Novos */}
+      {newProductsAlert && newProductsAlert.count > 0 && (
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Package className="w-8 h-8" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold mb-2">
+                🎉 {newProductsAlert.count} {newProductsAlert.count === 1 ? 'Novo Produto' : 'Novos Produtos'}!
+              </h2>
+              <p className="text-blue-100 mb-3">
+                {newProductsAlert.count === 1 
+                  ? 'Um novo produto foi adicionado ao seu catálogo.' 
+                  : `${newProductsAlert.count} novos produtos foram adicionados ao seu catálogo nas últimas 24 horas.`}
+              </p>
+              <div className="mb-4">
+                {newProductsAlert.latestProducts.slice(0, 3).map((prod) => (
+                  <div key={prod.id} className="text-sm text-blue-100 mb-1">
+                    • {prod.nome}
+                  </div>
+                ))}
+                {newProductsAlert.count > 3 && (
+                  <div className="text-sm text-blue-100">
+                    ... e mais {newProductsAlert.count - 3} produtos
+                  </div>
+                )}
+              </div>
+              <Link 
+                href="/revendedora/produtos" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-all"
+              >
+                <Package size={18} />
+                Ver Todos os Produtos
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {metrics.map((metric) => {

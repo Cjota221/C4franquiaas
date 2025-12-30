@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import NotificationBell from './NotificationBell';
 
 export default function SidebarRevendedora() {
   const pathname = usePathname();
@@ -34,8 +35,13 @@ export default function SidebarRevendedora() {
       </button>
       <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-40 transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Painel Revendedora</h1>
-          <p className="text-sm text-gray-500 mt-1">Gerencie seu catálogo</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Painel Revendedora</h1>
+              <p className="text-sm text-gray-500 mt-1">Gerencie seu catálogo</p>
+            </div>
+            <NotificationBell />
+          </div>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
