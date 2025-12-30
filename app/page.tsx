@@ -215,8 +215,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Browser mockup */}
-          <div className="relative max-w-5xl mx-auto">
+          {/* Browser mockup com imagem real */}
+          <div className="relative max-w-4xl mx-auto">
             <div className="absolute -inset-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl blur-2xl opacity-20" />
             <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
               <div className="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b">
@@ -232,20 +232,21 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="p-8 bg-gradient-to-br from-pink-50 to-white min-h-[350px] flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                  <span className="text-white font-bold text-xl">SL</span>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">Sua Loja</h3>
-                <p className="text-gray-500 text-sm mb-6">Com suas cores e sua logo</p>
-                <div className="grid grid-cols-4 gap-3 max-w-lg">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg" />
-                  ))}
-                </div>
-                <p className="mt-4 text-xs text-gray-400">Produtos já cadastrados pela C4 ↑</p>
+              {/* Imagem real do site */}
+              <div className="relative">
+                <Image
+                  src="https://i.ibb.co/211c1zhZ/Design-sem-nome-63.png"
+                  alt="Exemplo de loja C4 Franquias"
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto"
+                  priority
+                />
               </div>
             </div>
+            <p className="text-center text-sm text-gray-500 mt-4">
+              ✨ Exemplo real de uma loja no C4 Franquias
+            </p>
           </div>
         </div>
       </section>
