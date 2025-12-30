@@ -1,9 +1,10 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X } from 'lucide-react';
+import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
 
 // Tipos
@@ -175,6 +176,11 @@ export default function CatalogoLayout({
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [appliedPromotions, setAppliedPromotions] = useState<AppliedPromotion[]>([]);
+  
+  // Estados para busca
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   
   const supabase = createClientComponentClient();
 
@@ -795,6 +801,14 @@ export default function CatalogoLayout({
     return promo || null;
   }, [promotions]);
 
+  // Função de busca
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/catalogo/${slug}?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   // Carregar cupom salvo do localStorage
   useEffect(() => {
     if (!slug) return;
@@ -903,7 +917,8 @@ export default function CatalogoLayout({
               : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` 
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 py-3">
+          {/* Linha 1: Menu + Logo + Carrinho */}
+          <div className="max-w-7xl mx-auto px-4 py-2">
             <div className="flex items-center justify-between">
               {/* Esquerda: Menu Social */}
               {hasSocialLinks ? (
@@ -961,7 +976,7 @@ export default function CatalogoLayout({
                 <div className="w-10" /> /* Espaçador quando não tem redes sociais */
               )}
 
-              {/* Centro: Logo (sem nome da loja no catálogo) */}
+              {/* Centro: Logo */}
               <Link href={`/catalogo/${slug}`} className="flex items-center justify-center">
                 {reseller.logo_url ? (
                   <Image
@@ -969,7 +984,7 @@ export default function CatalogoLayout({
                     alt={reseller.store_name}
                     width={themeSettings.logo_shape === 'rectangle' ? 120 : 48}
                     height={48}
-                    className={`h-12 w-auto object-contain ${
+                    className={`h-10 w-auto object-contain ${
                       themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
                     }`}
                   />
@@ -985,12 +1000,41 @@ export default function CatalogoLayout({
               >
                 <ShoppingCart size={22} />
                 {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-xs font-bold rounded-full flex items-center justify-center"
+                    style={{ color: primaryColor }}
+                  >
                     {getTotalItems()}
                   </span>
                 )}
               </Link>
             </div>
+          </div>
+
+          {/* Linha 2: Barra de Busca - Integrada no header */}
+          <div className="px-4 pb-3" ref={searchRef}>
+            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
+              <div className="relative flex items-center">
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar Produtos"
+                  className="w-full pl-4 pr-12 py-2.5 bg-white text-gray-800 border-0 focus:outline-none focus:ring-2 transition-colors placeholder-gray-400"
+                  style={{
+                    borderRadius: themeSettings.border_radius === 'large' ? '9999px' : 
+                                  themeSettings.border_radius === 'medium' ? '12px' :
+                                  themeSettings.border_radius === 'small' ? '6px' : '0px',
+                    fontSize: '15px',
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 p-1.5"
+                >
+                  <Search size={20} style={{ color: primaryColor }} />
+                </button>
+              </div>
+            </form>
           </div>
         </header>
 
