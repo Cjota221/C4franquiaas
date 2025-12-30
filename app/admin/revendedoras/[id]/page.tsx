@@ -28,6 +28,23 @@ interface RevendedoraDetalhes {
   facebook: string | null;
   created_at: string;
   colors: { primary: string; secondary: string } | null;
+  // Dados pessoais completos
+  cpf: string | null;
+  birth_date: string | null;
+  // Endereço completo
+  cep: string | null;
+  address_street: string | null;
+  address_number: string | null;
+  address_complement: string | null;
+  address_neighborhood: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  // Dados do cadastro
+  how_met: string | null;
+  has_experience: string | null;
+  sales_channels: string | null;
+  expected_sales: string | null;
+  rejection_reason: string | null;
 }
 
 interface Produto {
@@ -328,76 +345,211 @@ export default function RevendedoraDetalhesPage() {
           {/* Tab: Informações */}
           {activeTab === 'info' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Contato</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-700">{revendedora.email}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-700">{revendedora.phone}</span>
-                    </div>
+              {/* Dados Pessoais */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Store className="w-5 h-5 text-pink-600" />
+                  Dados Pessoais
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600">Nome Completo</label>
+                    <p className="text-gray-900 font-medium">{revendedora.name}</p>
                   </div>
+                  {revendedora.cpf && (
+                    <div>
+                      <label className="text-sm text-gray-600">CPF</label>
+                      <p className="text-gray-900 font-medium">{revendedora.cpf}</p>
+                    </div>
+                  )}
+                  {revendedora.birth_date && (
+                    <div>
+                      <label className="text-sm text-gray-600">Data de Nascimento</label>
+                      <p className="text-gray-900 font-medium">
+                        {new Date(revendedora.birth_date).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Redes Sociais</h3>
-                  <div className="space-y-3">
-                    {revendedora.instagram && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-gray-600">Instagram:</span>
-                        <a
-                          href={`https://instagram.com/${revendedora.instagram}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          @{revendedora.instagram}
-                        </a>
-                      </div>
-                    )}
-                    {revendedora.facebook && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-gray-600">Facebook:</span>
-                        <a
-                          href={revendedora.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Ver perfil
-                        </a>
-                      </div>
-                    )}
+              {/* Contato */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-pink-600" />
+                  Contato
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600">Email</label>
+                    <p className="text-gray-900 font-medium">{revendedora.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Telefone</label>
+                    <p className="text-gray-900 font-medium">{revendedora.phone}</p>
                   </div>
                 </div>
               </div>
 
-              {revendedora.bio && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Biografia</h3>
-                  <p className="text-gray-700">{revendedora.bio}</p>
+              {/* Endereço */}
+              {(revendedora.cep || revendedora.address_street) && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Phone className="w-5 h-5 text-pink-600" />
+                    Endereço
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {revendedora.cep && (
+                      <div>
+                        <label className="text-sm text-gray-600">CEP</label>
+                        <p className="text-gray-900 font-medium">{revendedora.cep}</p>
+                      </div>
+                    )}
+                    {revendedora.address_street && (
+                      <div>
+                        <label className="text-sm text-gray-600">Rua</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_street}</p>
+                      </div>
+                    )}
+                    {revendedora.address_number && (
+                      <div>
+                        <label className="text-sm text-gray-600">Número</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_number}</p>
+                      </div>
+                    )}
+                    {revendedora.address_complement && (
+                      <div>
+                        <label className="text-sm text-gray-600">Complemento</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_complement}</p>
+                      </div>
+                    )}
+                    {revendedora.address_neighborhood && (
+                      <div>
+                        <label className="text-sm text-gray-600">Bairro</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_neighborhood}</p>
+                      </div>
+                    )}
+                    {revendedora.address_city && (
+                      <div>
+                        <label className="text-sm text-gray-600">Cidade</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_city}</p>
+                      </div>
+                    )}
+                    {revendedora.address_state && (
+                      <div>
+                        <label className="text-sm text-gray-600">Estado</label>
+                        <p className="text-gray-900 font-medium">{revendedora.address_state}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
+              {/* Sobre a Loja */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Store className="w-5 h-5 text-pink-600" />
+                  Sobre a Loja
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-600">Nome da Loja</label>
+                    <p className="text-gray-900 font-medium">{revendedora.store_name}</p>
+                  </div>
+                  {revendedora.how_met && (
+                    <div>
+                      <label className="text-sm text-gray-600">Como Conheceu</label>
+                      <p className="text-gray-900 font-medium">{revendedora.how_met}</p>
+                    </div>
+                  )}
+                  {revendedora.has_experience && (
+                    <div>
+                      <label className="text-sm text-gray-600">Tem Experiência</label>
+                      <p className="text-gray-900 font-medium">{revendedora.has_experience}</p>
+                    </div>
+                  )}
+                  {revendedora.sales_channels && (
+                    <div>
+                      <label className="text-sm text-gray-600">Canais de Venda</label>
+                      <p className="text-gray-900 font-medium">{revendedora.sales_channels}</p>
+                    </div>
+                  )}
+                  {revendedora.expected_sales && (
+                    <div>
+                      <label className="text-sm text-gray-600">Expectativa de Vendas</label>
+                      <p className="text-gray-900 font-medium">{revendedora.expected_sales}</p>
+                    </div>
+                  )}
+                </div>
+                {revendedora.bio && (
+                  <div className="mt-4">
+                    <label className="text-sm text-gray-600">Sobre Mim</label>
+                    <p className="text-gray-900 mt-1">{revendedora.bio}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Redes Sociais */}
+              {(revendedora.instagram || revendedora.facebook) && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Redes Sociais</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {revendedora.instagram && (
+                      <div>
+                        <label className="text-sm text-gray-600">Instagram</label>
+                        <a
+                          href={`https://instagram.com/${revendedora.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline font-medium flex items-center gap-1"
+                        >
+                          @{revendedora.instagram}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                    {revendedora.facebook && (
+                      <div>
+                        <label className="text-sm text-gray-600">Facebook</label>
+                        <a
+                          href={revendedora.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline font-medium flex items-center gap-1"
+                        >
+                          Ver perfil
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Link do Catálogo */}
               {catalogUrl && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Link do Catálogo</h3>
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                    <code className="text-sm text-gray-700 flex-1">{catalogUrl}</code>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Link do Catálogo Público</h3>
+                  <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
+                    <code className="text-sm text-gray-700 flex-1 break-all">{catalogUrl}</code>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(catalogUrl);
                         alert('Link copiado!');
                       }}
-                      className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                      className="px-3 py-2 bg-pink-600 text-white text-sm rounded hover:bg-pink-700 transition-colors whitespace-nowrap"
                     >
-                      Copiar
+                      Copiar Link
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Motivo da Rejeição (se aplicável) */}
+              {revendedora.status === 'rejeitada' && revendedora.rejection_reason && (
+                <div className="bg-red-50 rounded-lg p-6 border border-red-200">
+                  <h3 className="font-semibold text-red-900 mb-2">Motivo da Rejeição</h3>
+                  <p className="text-red-800">{revendedora.rejection_reason}</p>
                 </div>
               )}
             </div>
