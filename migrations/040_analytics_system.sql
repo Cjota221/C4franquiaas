@@ -298,6 +298,24 @@ ALTER TABLE cart_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE search_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_sessions ENABLE ROW LEVEL SECURITY;
 
+-- Remover policies existentes (caso existam)
+DROP POLICY IF EXISTS "Permitir insert analytics" ON page_views;
+DROP POLICY IF EXISTS "Permitir insert product_views" ON product_views;
+DROP POLICY IF EXISTS "Permitir insert cart_events" ON cart_events;
+DROP POLICY IF EXISTS "Permitir insert search_events" ON search_events;
+DROP POLICY IF EXISTS "Permitir insert sessions" ON analytics_sessions;
+DROP POLICY IF EXISTS "Permitir update sessions" ON analytics_sessions;
+DROP POLICY IF EXISTS "Admin pode ver page_views" ON page_views;
+DROP POLICY IF EXISTS "Admin pode ver product_views" ON product_views;
+DROP POLICY IF EXISTS "Admin pode ver cart_events" ON cart_events;
+DROP POLICY IF EXISTS "Admin pode ver search_events" ON search_events;
+DROP POLICY IF EXISTS "Admin pode ver sessions" ON analytics_sessions;
+DROP POLICY IF EXISTS "Franqueada pode ver page_views da loja" ON page_views;
+DROP POLICY IF EXISTS "Franqueada pode ver product_views da loja" ON product_views;
+DROP POLICY IF EXISTS "Franqueada pode ver cart_events da loja" ON cart_events;
+DROP POLICY IF EXISTS "Franqueada pode ver search_events da loja" ON search_events;
+DROP POLICY IF EXISTS "Franqueada pode ver sessions da loja" ON analytics_sessions;
+
 -- Permitir INSERT para todos (tracking anônimo)
 CREATE POLICY "Permitir insert analytics" ON page_views FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir insert product_views" ON product_views FOR INSERT WITH CHECK (true);
