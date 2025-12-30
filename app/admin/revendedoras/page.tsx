@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Check, X, Eye, Search, Store, Mail, Phone, Calendar, TrendingUp, Clock } from 'lucide-react';
+import { Check, X, Eye, Search, Store, Mail, Phone, Calendar, TrendingUp, Clock, MessageCircle } from 'lucide-react';
 
 interface Revendedora {
   id: string;
@@ -148,6 +148,29 @@ export default function AdminRevendedoras() {
     aprovadas: revendedoras.filter(r => r.status === 'aprovada').length,
     rejeitadas: revendedoras.filter(r => r.status === 'rejeitada').length
   };
+
+  // Função para enviar WhatsApp de boas-vindas
+  function enviarWhatsAppBoasVindas(revendedora: Revendedora) {
+    const telefone = revendedora.phone.replace(/\D/g, '');
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
+    const loginUrl = `${baseUrl}/login/revendedora`;
+    
+    const mensagem = `Olá ${revendedora.name}! 🎉
+
+Temos uma ótima notícia! Seu cadastro como franqueada foi *APROVADO*! ✅
+
+Sua loja "${revendedora.store_name}" já está pronta para você começar a vender!
+
+🔑 *Acesse sua conta:*
+${loginUrl}
+
+Use o email cadastrado: ${revendedora.email}
+
+Qualquer dúvida, estamos à disposição! 💜`;
+
+    const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+    window.open(urlWhatsApp, '_blank');
+  }
 
   if (loading) {
     return (
@@ -348,16 +371,26 @@ export default function AdminRevendedoras() {
                   )}
 
                   {revendedora.status === 'aprovada' && (
-                    <button
-                      onClick={() => toggleAtivo(revendedora.id, revendedora.is_active)}
-                      className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-                        revendedora.is_active
-                          ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                          : 'bg-green-500 text-white hover:bg-green-600'
-                      }`}
-                    >
-                      {revendedora.is_active ? 'Desativar' : 'Ativar'}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => enviarWhatsAppBoasVindas(revendedora)}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap"
+                        title="Enviar mensagem de boas-vindas via WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </button>
+                      <button
+                        onClick={() => toggleAtivo(revendedora.id, revendedora.is_active)}
+                        className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                          revendedora.is_active
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                            : 'bg-green-500 text-white hover:bg-green-600'
+                        }`}
+                      >
+                        {revendedora.is_active ? 'Desativar' : 'Ativar'}
+                      </button>
+                    </>
                   )}
 
                   {revendedora.status === 'rejeitada' && (
