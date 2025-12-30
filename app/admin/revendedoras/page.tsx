@@ -155,18 +155,18 @@ export default function AdminRevendedoras() {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
     const loginUrl = `${baseUrl}/login/revendedora`;
     
-    const mensagem = `Ola ${revendedora.name}!
+    const mensagem = `Olá ${revendedora.name}!
 
-Temos uma otima noticia! Seu cadastro como franqueada foi *APROVADO*!
+Temos uma ótima notícia! Seu cadastro como franqueada foi *APROVADO*!
 
-Sua loja "${revendedora.store_name}" ja esta pronta para voce comecar a vender!
+Sua loja "${revendedora.store_name}" já está pronta para você começar a vender!
 
 *Acesse sua conta:*
 ${loginUrl}
 
-Use o email cadastrado: ${revendedora.email}
+Use o e-mail cadastrado: ${revendedora.email}
 
-Qualquer duvida, estamos a disposicao!`;
+Qualquer dúvida, estamos à disposição!`;
 
     const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
