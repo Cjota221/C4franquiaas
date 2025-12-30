@@ -270,7 +270,7 @@ LEFT JOIN (
   WHERE event_type = 'purchase' AND created_at >= NOW() - INTERVAL '30 days'
   GROUP BY loja_id
 ) cart_purchase ON cart_purchase.loja_id = l.id
-WHERE l.ativa = true
+WHERE l.ativo = true
 ORDER BY page_views_total DESC;
 
 -- =============================================
