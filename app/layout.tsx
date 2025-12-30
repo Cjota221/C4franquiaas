@@ -5,6 +5,7 @@ import "./responsive.css";
 import ClientErrorLoggerWrapper from '@/components/ClientErrorLoggerWrapper';
 import DebugScriptInjector from "@/components/DebugScriptInjector";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { GoogleAnalyticsTracker } from "@/components/GoogleAnalyticsTracker";
 import { Suspense } from "react";
 import Script from "next/script";
 
@@ -71,6 +72,7 @@ export default function RootLayout({
         <ClientErrorLoggerWrapper />
         <Suspense fallback={null}>
           <DebugScriptInjector />
+          <GoogleAnalyticsTracker />
         </Suspense>
       </body>
     </html>
