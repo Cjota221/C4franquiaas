@@ -33,17 +33,17 @@ interface RevendedoraDetalhes {
   birth_date: string | null;
   // Endereço completo
   cep: string | null;
-  address_street: string | null;
-  address_number: string | null;
-  address_complement: string | null;
-  address_neighborhood: string | null;
-  address_city: string | null;
-  address_state: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
   // Dados do cadastro
-  how_met: string | null;
-  has_experience: string | null;
-  sales_channels: string | null;
-  expected_sales: string | null;
+  how_did_you_find_us: string | null;
+  has_experience_selling: boolean | null;
+  main_sales_channel: string | null;
+  expected_monthly_sales: string | null;
   rejection_reason: string | null;
 }
 
@@ -392,7 +392,7 @@ export default function RevendedoraDetalhesPage() {
               </div>
 
               {/* Endereço */}
-              {(revendedora.cep || revendedora.address_street) && (
+              {(revendedora.cep || revendedora.street) && (
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <Phone className="w-5 h-5 text-pink-600" />
@@ -405,40 +405,40 @@ export default function RevendedoraDetalhesPage() {
                         <p className="text-gray-900 font-medium">{revendedora.cep}</p>
                       </div>
                     )}
-                    {revendedora.address_street && (
+                    {revendedora.street && (
                       <div>
                         <label className="text-sm text-gray-600">Rua</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_street}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.street}</p>
                       </div>
                     )}
-                    {revendedora.address_number && (
+                    {revendedora.number && (
                       <div>
                         <label className="text-sm text-gray-600">Número</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_number}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.number}</p>
                       </div>
                     )}
-                    {revendedora.address_complement && (
+                    {revendedora.complement && (
                       <div>
                         <label className="text-sm text-gray-600">Complemento</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_complement}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.complement}</p>
                       </div>
                     )}
-                    {revendedora.address_neighborhood && (
+                    {revendedora.neighborhood && (
                       <div>
                         <label className="text-sm text-gray-600">Bairro</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_neighborhood}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.neighborhood}</p>
                       </div>
                     )}
-                    {revendedora.address_city && (
+                    {revendedora.city && (
                       <div>
                         <label className="text-sm text-gray-600">Cidade</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_city}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.city}</p>
                       </div>
                     )}
-                    {revendedora.address_state && (
+                    {revendedora.state && (
                       <div>
                         <label className="text-sm text-gray-600">Estado</label>
-                        <p className="text-gray-900 font-medium">{revendedora.address_state}</p>
+                        <p className="text-gray-900 font-medium">{revendedora.state}</p>
                       </div>
                     )}
                   </div>
@@ -456,28 +456,30 @@ export default function RevendedoraDetalhesPage() {
                     <label className="text-sm text-gray-600">Nome da Loja</label>
                     <p className="text-gray-900 font-medium">{revendedora.store_name}</p>
                   </div>
-                  {revendedora.how_met && (
+                  {revendedora.how_did_you_find_us && (
                     <div>
                       <label className="text-sm text-gray-600">Como Conheceu</label>
-                      <p className="text-gray-900 font-medium">{revendedora.how_met}</p>
+                      <p className="text-gray-900 font-medium">{revendedora.how_did_you_find_us}</p>
                     </div>
                   )}
-                  {revendedora.has_experience && (
+                  {revendedora.has_experience_selling !== null && (
                     <div>
                       <label className="text-sm text-gray-600">Tem Experiência</label>
-                      <p className="text-gray-900 font-medium">{revendedora.has_experience}</p>
+                      <p className="text-gray-900 font-medium">
+                        {revendedora.has_experience_selling ? 'Sim' : 'Não'}
+                      </p>
                     </div>
                   )}
-                  {revendedora.sales_channels && (
+                  {revendedora.main_sales_channel && (
                     <div>
                       <label className="text-sm text-gray-600">Canais de Venda</label>
-                      <p className="text-gray-900 font-medium">{revendedora.sales_channels}</p>
+                      <p className="text-gray-900 font-medium">{revendedora.main_sales_channel}</p>
                     </div>
                   )}
-                  {revendedora.expected_sales && (
+                  {revendedora.expected_monthly_sales && (
                     <div>
                       <label className="text-sm text-gray-600">Expectativa de Vendas</label>
-                      <p className="text-gray-900 font-medium">{revendedora.expected_sales}</p>
+                      <p className="text-gray-900 font-medium">{revendedora.expected_monthly_sales}</p>
                     </div>
                   )}
                 </div>
