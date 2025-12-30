@@ -58,8 +58,12 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-Q1TM0EYRBN', {
+              send_page_view: true,
               page_path: window.location.pathname,
+              page_location: window.location.href,
+              page_title: document.title
             });
+            console.log('📊 GA4 Inicializado:', window.location.pathname);
           `}
         </Script>
       </head>
