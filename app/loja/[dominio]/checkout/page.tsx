@@ -34,6 +34,49 @@ export default function CheckoutPage() {
     console.log('📦 [Checkout] Items do Zustand:', items);
     console.log('💾 [Checkout] localStorage:', localStorage.getItem('c4-carrinho-storage'));
     setMounted(true);
+    
+    // 📊 Trackear begin_checkout
+    const trackBeginCheckout = async () => {
+      try {
+        const sessionId = sessionStorage.getItem('analytics_session_id');
+        if (!sessionId || !loja?.id || items.length === 0) return;
+
+        const total = items.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_type: 'begin_checkout',
+            session_id: sessionId,
+            loja_id: loja.id,
+            cart_total: total,
+            cart_items_count: items.length,
+            device_type: window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop'
+          })
+        });
+
+        // Também envia pro GA4 se disponível
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'begin_checkout', {
+            currency: 'BRL',
+            value: total,
+            items: items.map(item => ({
+              item_id: item.id,
+              item_name: item.nome,
+              price: item.preco,
+              quantity: item.quantidade
+            }))
+          });
+        }
+      } catch (error) {
+        console.debug('Begin checkout tracking error:', error);
+      }
+    };
+
+    if (items.length > 0) {
+      trackBeginCheckout();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // ✅ Array vazio - só roda uma vez na montagem
 

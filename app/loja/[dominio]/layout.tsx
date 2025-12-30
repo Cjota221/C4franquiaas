@@ -5,6 +5,7 @@ import Script from 'next/script';
 import ConditionalLayout from '@/components/loja/ConditionalLayout';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
 import { CartProvider } from '@/contexts/CartContext';
+import { AnalyticsWrapper } from '@/components/loja/AnalyticsWrapper';
 import { createClient } from '@supabase/supabase-js';
 
 // Busca diretamente no Supabase (evita fetch para API interna em Server Component)
@@ -212,9 +213,11 @@ export default async function LojaLayout({
 
       <LojaProvider loja={loja}>
         <CartProvider>
-          <ConditionalLayout dominio={dominio}>
-            {children}
-          </ConditionalLayout>
+          <AnalyticsWrapper>
+            <ConditionalLayout dominio={dominio}>
+              {children}
+            </ConditionalLayout>
+          </AnalyticsWrapper>
         </CartProvider>
       </LojaProvider>
     </>

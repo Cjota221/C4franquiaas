@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
@@ -79,6 +79,45 @@ function ProdutoDetalheContent() {
   const [skuSelecionado, setSkuSelecionado] = useState<string | null>(null);
   const [quantidade, setQuantidade] = useState<number>(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  
+  // 📊 Função para trackear visualização de produto
+  const trackProductView = useCallback(async (prod: Produto) => {
+    try {
+      const sessionId = sessionStorage.getItem('analytics_session_id');
+      if (!sessionId || !loja?.id) return;
+
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'product_view',
+          session_id: sessionId,
+          loja_id: loja.id,
+          produto_id: prod.id,
+          produto_nome: prod.nome,
+          produto_preco: prod.preco_final,
+          produto_categoria: prod.categoria_id,
+          source: 'pdp', // Product Detail Page
+          device_type: window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop'
+        })
+      });
+
+      // Também envia pro GA4 se disponível
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'view_item', {
+          currency: 'BRL',
+          value: prod.preco_final,
+          items: [{
+            item_id: prod.id,
+            item_name: prod.nome,
+            price: prod.preco_final
+          }]
+        });
+      }
+    } catch (error) {
+      console.debug('Product view tracking error:', error);
+    }
+  }, [loja?.id]);
   
   // ⭐ Dados para adicionar após captura do cliente
   const [pendingCartItem, setPendingCartItem] = useState<{
@@ -167,6 +206,9 @@ function ProdutoDetalheContent() {
 
         setProduto(produtoData);
         console.log('[Produto Detalhe] Estado do produto atualizado com sucesso');
+        
+        // 📊 Trackear visualização do produto
+        trackProductView(produtoData);
       } catch (error) {
         console.error('[Produto Detalhe] Erro ao buscar produto:', error);
         // Redirecionar para página de produtos se não encontrar
@@ -179,6 +221,7 @@ function ProdutoDetalheContent() {
     if (dominio && produtoId) {
       fetchProduto();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dominio, produtoId, router]);
 
   // Verificar favoritos

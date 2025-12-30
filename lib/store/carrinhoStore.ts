@@ -12,7 +12,61 @@ export type ProdutoCarrinho = {
   tamanho?: string;  // Nome do tamanho/variação
   variacaoId?: string | null;
   variacaoSku?: string;
+  lojaId?: string;  // ID da loja para analytics
 };
+
+// Função para enviar eventos de analytics
+async function trackCartEvent(eventType: string, produto: ProdutoCarrinho, lojaId?: string) {
+  try {
+    const sessionId = typeof window !== 'undefined' 
+      ? sessionStorage.getItem('analytics_session_id') 
+      : null;
+    
+    if (!sessionId) return;
+
+    await fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: eventType,
+        session_id: sessionId,
+        loja_id: lojaId || produto.lojaId,
+        produto_id: produto.id,
+        produto_nome: produto.nome,
+        produto_preco: produto.preco,
+        quantidade: produto.quantidade,
+        variacao: produto.tamanho || produto.sku,
+        device_type: typeof window !== 'undefined' 
+          ? (window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop')
+          : 'desktop'
+      })
+    });
+
+    // Também envia pro GA4 se disponível
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', eventType, {
+        currency: 'BRL',
+        value: produto.preco * produto.quantidade,
+        items: [{
+          item_id: produto.id,
+          item_name: produto.nome,
+          price: produto.preco,
+          quantity: produto.quantidade,
+          item_variant: produto.tamanho || produto.sku
+        }]
+      });
+    }
+  } catch (error) {
+    console.debug('Cart analytics error:', error);
+  }
+}
+
+// Declaração do gtag
+declare global {
+  interface Window {
+    gtag: (...args: unknown[]) => void;
+  }
+}
 
 type CarrinhoStore = {
   items: ProdutoCarrinho[];
@@ -43,6 +97,9 @@ export const useCarrinhoStore = create<CarrinhoStore>()(
           return chaveItem === chaveUnica;
         });
         
+        // 📊 Tracking: add_to_cart
+        trackCartEvent('add_to_cart', produto);
+        
         if (existing) {
           // ✅ Atualizar quantidade se produto (com mesmo SKU) já existe
           return {
@@ -63,6 +120,12 @@ export const useCarrinhoStore = create<CarrinhoStore>()(
       }),
       
       removeItem: (id, sku?) => set((state) => {
+        // 📊 Tracking: remove_from_cart
+        const itemToRemove = state.items.find(i => sku ? (i.id === id && i.sku === sku) : i.id === id);
+        if (itemToRemove) {
+          trackCartEvent('remove_from_cart', itemToRemove);
+        }
+        
         if (sku) {
           // Remover item com SKU específico
           return {
