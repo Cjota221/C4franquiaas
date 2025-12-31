@@ -127,8 +127,8 @@ export default function FranqueadaProdutosPage() {
             created_at?: string;
           } | null;
           
-          // FILTRO: Não mostrar produtos inativos no admin ou sem estoque
-          if (!produto || !produto.ativo || produto.estoque <= 0) return null;
+          // ✅ CORREÇÃO: Mostrar TODOS os produtos, controlar na interface
+          if (!produto) return null;
 
           const preco = precos?.find(p => p.produto_franqueada_id === v.id);
 
@@ -189,7 +189,8 @@ export default function FranqueadaProdutosPage() {
             imagens: imagensArray,
             created_at: produto.created_at ?? new Date().toISOString(),
             produto_ativo: produto.ativo,
-            pode_ativar: true // Sempre pode ativar porque já filtramos inativos
+            // ✅ CORREÇÃO: Só pode ativar se tiver estoque E estiver ativo no admin
+            pode_ativar: produto.ativo && produto.estoque > 0
           } as ProdutoFranqueada;
         })
         .filter((p): p is ProdutoFranqueada => p !== null && 'id' in p);
