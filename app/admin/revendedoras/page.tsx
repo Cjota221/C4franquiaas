@@ -33,7 +33,22 @@ export default function AdminRevendedoras() {
   }, []);
 
   useEffect(() => {
-    filtrarRevendedoras();
+    let resultado = [...revendedoras];
+
+    if (filtro !== 'todas') {
+      resultado = resultado.filter(r => r.status === filtro);
+    }
+
+    if (busca) {
+      const termo = busca.toLowerCase();
+      resultado = resultado.filter(r =>
+        r.name.toLowerCase().includes(termo) ||
+        r.email.toLowerCase().includes(termo) ||
+        r.store_name.toLowerCase().includes(termo)
+      );
+    }
+
+    setFiltradas(resultado);
   }, [revendedoras, filtro, busca]);
 
   async function carregarRevendedoras() {
@@ -59,25 +74,6 @@ export default function AdminRevendedoras() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function filtrarRevendedoras() {
-    let resultado = [...revendedoras];
-
-    if (filtro !== 'todas') {
-      resultado = resultado.filter(r => r.status === filtro);
-    }
-
-    if (busca) {
-      const termo = busca.toLowerCase();
-      resultado = resultado.filter(r =>
-        r.name.toLowerCase().includes(termo) ||
-        r.email.toLowerCase().includes(termo) ||
-        r.store_name.toLowerCase().includes(termo)
-      );
-    }
-
-    setFiltradas(resultado);
   }
 
   async function aprovar(id: string) {
@@ -196,19 +192,20 @@ Qualquer dúvida, estamos à disposição!`;
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-           Gerenciar Revendedoras
-        </h1>
-        <p className="text-gray-600">
-          Aprove, rejeite ou gerencie as revendedoras cadastradas
-        </p>
-      </div>
+    <div className="min-h-screen w-full bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+             Gerenciar Revendedoras
+          </h1>
+          <p className="text-gray-600">
+            Aprove, rejeite ou gerencie as revendedoras cadastradas
+          </p>
+        </div>
 
       {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total</p>
@@ -218,7 +215,7 @@ Qualquer dúvida, estamos à disposição!`;
           </div>
         </div>
 
-        <div className="bg-yellow-50 rounded-lg shadow p-6 border border-yellow-200">
+        <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-yellow-700 text-sm">Pendentes</p>
@@ -228,7 +225,7 @@ Qualquer dúvida, estamos à disposição!`;
           </div>
         </div>
 
-        <div className="bg-green-50 rounded-lg shadow p-6 border border-green-200">
+        <div className="bg-green-50 rounded-lg shadow p-4 border border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-700 text-sm">Aprovadas</p>
@@ -238,7 +235,7 @@ Qualquer dúvida, estamos à disposição!`;
           </div>
         </div>
 
-        <div className="bg-red-50 rounded-lg shadow p-6 border border-red-200">
+        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-700 text-sm">Rejeitadas</p>
@@ -443,6 +440,7 @@ Qualquer dúvida, estamos à disposição!`;
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
