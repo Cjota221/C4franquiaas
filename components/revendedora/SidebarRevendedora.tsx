@@ -1,19 +1,22 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings } from 'lucide-react';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
+import { useNewProductsCount } from '@/hooks/useNewProductsCount';
 
 export default function SidebarRevendedora() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { count: newProductsCount } = useNewProductsCount();
 
   const menuItems = [
     { label: 'Dashboard', href: '/revendedora/dashboard', icon: Home },
     { label: 'Produtos', href: '/revendedora/produtos', icon: Package },
+    { label: 'Produtos Novos', href: '/revendedora/produtos/novos', icon: Sparkles, badge: newProductsCount },
     { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
@@ -46,10 +49,16 @@ export default function SidebarRevendedora() {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
+            const showBadge = item.badge && item.badge > 0;
             return (
-              <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(item.href) ? 'bg-pink-50 text-pink-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}>
+              <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative ${isActive(item.href) ? 'bg-pink-50 text-pink-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}>
                 <Icon size={20} />
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {showBadge && (
+                  <span className="ml-auto bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
