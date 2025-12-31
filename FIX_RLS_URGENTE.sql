@@ -31,7 +31,7 @@ FOR SELECT
 TO authenticated
 USING (
   reseller_id IN (
-    SELECT id FROM revendedoras WHERE user_id = auth.uid()
+    SELECT id FROM resellers WHERE user_id = auth.uid()
   )
 );
 
@@ -55,7 +55,7 @@ FOR SELECT
 TO authenticated
 USING (
   reseller_id IN (
-    SELECT id FROM revendedoras WHERE user_id = auth.uid()
+    SELECT id FROM resellers WHERE user_id = auth.uid()
   )
 );
 
