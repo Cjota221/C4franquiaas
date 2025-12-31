@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,74 +40,102 @@ export default function CatalogoPrincipal() {
 
   const supabase = createClientComponentClient();
 
+  // Função para carregar produtos (reutilizável e memoizada)
+  const loadProducts = useCallback(async () => {
+    if (!reseller?.id) return;
+
+    const { data } = await supabase
+      .from('reseller_products')
+      .select(`
+        *,
+        produtos:product_id (
+          id,
+          nome,
+          preco_base,
+          imagem,
+          estoque,
+          ativo,
+          variacoes_meta
+        )
+      `)
+      .eq('reseller_id', reseller.id)
+      .eq('is_active', true);
+
+    // Filtrar apenas produtos ativos no admin e com estoque
+    const productsWithPrice: ProductWithPrice[] =
+      data
+        ?.filter((p) => p.produtos?.ativo === true && (p.produtos?.estoque || 0) > 0)
+        .map((p) => {
+        // Parse variações do JSONB
+        let variacoes: Variacao[] = [];
+        if (p.produtos.variacoes_meta) {
+          try {
+            const meta = typeof p.produtos.variacoes_meta === 'string' 
+              ? JSON.parse(p.produtos.variacoes_meta) 
+              : p.produtos.variacoes_meta;
+            
+            if (Array.isArray(meta)) {
+              variacoes = meta.map((v: { sku?: string; nome?: string; tamanho?: string; estoque?: number }) => {
+                // Extrair tamanho: usa tamanho direto, ou nome, ou última parte do SKU
+                const tamanho = v.tamanho || v.nome || v.sku?.split('-').pop() || '';
+                const estoque = typeof v.estoque === 'number' ? v.estoque : 0;
+                return {
+                  ...v,
+                  tamanho,
+                  estoque,
+                };
+              });
+            }
+          } catch {
+            variacoes = [];
+          }
+        }
+        
+        return {
+          id: p.produtos.id,
+          nome: p.produtos.nome,
+          preco_base: p.produtos.preco_base,
+          imagem: p.produtos.imagem,
+          estoque: p.produtos.estoque || 0,
+          finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
+          variacoes,
+        };
+      }) || [];
+
+    setProducts(productsWithPrice);
+    setLoading(false);
+  }, [reseller?.id, supabase]);
+
+  // Carregar produtos inicialmente
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  // 🔥 REALTIME: Atualizar automaticamente quando estoque mudar
   useEffect(() => {
     if (!reseller?.id) return;
 
-    async function loadProducts() {
-      const { data } = await supabase
-        .from('reseller_products')
-        .select(`
-          *,
-          produtos:product_id (
-            id,
-            nome,
-            preco_base,
-            imagem,
-            estoque,
-            ativo,
-            variacoes_meta
-          )
-        `)
-        .eq('reseller_id', reseller.id)
-        .eq('is_active', true);
+    // Inscrever para mudanças na tabela produtos
+    const channel = supabase
+      .channel('produtos-catalog-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // UPDATE, INSERT, DELETE
+          schema: 'public',
+          table: 'produtos',
+        },
+        (payload) => {
+          console.log('🔄 [Catálogo] Atualização detectada:', payload);
+          loadProducts(); // Recarregar produtos
+        }
+      )
+      .subscribe();
 
-      // Filtrar apenas produtos ativos no admin e com estoque
-      const productsWithPrice: ProductWithPrice[] =
-        data
-          ?.filter((p) => p.produtos?.ativo === true && (p.produtos?.estoque || 0) > 0)
-          .map((p) => {
-          // Parse variações do JSONB
-          let variacoes: Variacao[] = [];
-          if (p.produtos.variacoes_meta) {
-            try {
-              const meta = typeof p.produtos.variacoes_meta === 'string' 
-                ? JSON.parse(p.produtos.variacoes_meta) 
-                : p.produtos.variacoes_meta;
-              
-              if (Array.isArray(meta)) {
-                variacoes = meta.map((v: { sku?: string; nome?: string; tamanho?: string; estoque?: number }) => {
-                  // Extrair tamanho: usa tamanho direto, ou nome, ou última parte do SKU
-                  const tamanho = v.tamanho || v.nome || v.sku?.split('-').pop() || '';
-                  const estoque = typeof v.estoque === 'number' ? v.estoque : 0;
-                  return {
-                    ...v,
-                    tamanho,
-                    estoque,
-                  };
-                });
-              }
-            } catch {
-              variacoes = [];
-            }
-          }
-          
-          return {
-            id: p.produtos.id,
-            nome: p.produtos.nome,
-            preco_base: p.produtos.preco_base,
-            imagem: p.produtos.imagem,
-            estoque: p.produtos.estoque || 0,
-            finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
-            variacoes,
-          };
-        }) || [];
-
-      setProducts(productsWithPrice);
-      setLoading(false);
-    }
-
-    loadProducts();
-  }, [reseller?.id, supabase]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [reseller?.id, supabase, loadProducts]);
 
   // Extrair todos os tamanhos únicos disponíveis
   const availableSizes = useMemo(() => {
