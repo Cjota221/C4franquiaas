@@ -4,6 +4,10 @@ import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '
 
 // extractCategoryNames removed: categories should be managed manually in admin panel
 
+// ⏱️ Configuração de timeout
+export const maxDuration = 300; // 5 minutos (Vercel Pro)
+export const dynamic = 'force-dynamic';
+
 // GET também funciona para permitir cron jobs externos (cron-job.org, etc)
 export async function GET() {
   return handleSync();
@@ -38,13 +42,23 @@ async function handleSync(page?: number, length?: number) {
       produtos = res.produtos ?? [];
       totalPages = 1;
     } else {
-      console.log('📚 Buscando TODOS os produtos do FácilZap...');
+      console.log('📚 Buscando TODOS os produtos do FácilZap (PODE DEMORAR)...');
       const inicio = Date.now();
-      const res = await fetchAllProdutosFacilZap();
+      
+      // ⏱️ Timeout de 4 minutos para busca completa
+      const timeout = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: FácilZap API demorou mais de 4 minutos')), 240000)
+      );
+      
+      const res = await Promise.race([
+        fetchAllProdutosFacilZap(),
+        timeout
+      ]);
+      
       const duracao = Date.now() - inicio;
       produtos = res.produtos ?? [];
       totalPages = res.pages ?? 0;
-      console.log(`⏱️ Tempo de busca: ${duracao}ms, Páginas: ${totalPages}`);
+      console.log(`⏱️ Tempo de busca: ${(duracao/1000).toFixed(1)}s, Páginas: ${totalPages}, Produtos: ${produtos.length}`);
     }
 
     console.log(`✅ Recebidos ${produtos.length} produtos do FácilZap`);
@@ -76,9 +90,9 @@ async function handleSync(page?: number, length?: number) {
         const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
         const estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
         
-        // 🔥 NOVO FLUXO: Produtos NOVOS ficam PENDENTES de aprovação do Admin
-        // Produtos EXISTENTES mantêm aprovação anterior (tratado no upsert)
-        const ativo = false; // Sempre false até admin aprovar
+        // 🔥 FLUXO DE APROVAÇÃO: Produtos NOVOS ficam pendentes
+        // Este valor será substituído no upsert para produtos existentes
+        const ativo = false; // Valor inicial para produtos NOVOS
         
         const imagem = (rec['imagem'] ?? null) as string | null;
         const imagens = Array.isArray(rec['imagens']) ? rec['imagens'] as string[] : (rec['imagens'] ? [String(rec['imagens'])] : [] as string[]);
@@ -137,31 +151,31 @@ async function handleSync(page?: number, length?: number) {
           }
           
           // 🔥 PRESERVAR aprovação e status ativo de produtos existentes
-          let novoAtivo = existing.ativo; // Manter status atual
+          let novoAtivo = existing.ativo; // IMPORTANTE: Manter status atual
           const adminAprovado = existing.admin_aprovado ?? false;
           const adminRejeitado = existing.admin_rejeitado ?? false;
           const ehProdutoNovo = false; // Produto já existe, não é novo
           
-          // Se produto foi reativado no FácilZap (tem estoque agora)
+          // ✅ Se produto foi reativado no FácilZap (tem estoque agora)
           if (newProduct.estoque > 0 && existing.estoque === 0) {
-            // Se estava aprovado antes, reativar
-            if (adminAprovado) {
+            // Se estava aprovado antes, reativar automaticamente
+            if (adminAprovado && !existing.desativado_manual) {
               novoAtivo = true;
-              changes.push(`reativado: estoque ${existing.estoque} → ${newProduct.estoque}`);
+              changes.push(`✅ reativado: estoque restaurado ${existing.estoque} → ${newProduct.estoque}`);
             }
           }
           
-          // Se produto ficou sem estoque
+          // ❌ Se produto ficou sem estoque
           if (newProduct.estoque === 0 && existing.estoque > 0) {
             novoAtivo = false;
-            changes.push(`desativado: sem estoque`);
+            changes.push(`❌ desativado: sem estoque`);
           }
           
-          // 🆕 RESPEITAR desativação manual
+          // 🚫 RESPEITAR desativação manual (prioridade máxima)
           if (existing.desativado_manual === true) {
             novoAtivo = false;
-            if (existing.ativo === true) {
-              changes.push(`ativo: mantido FALSE (desativado_manual)`);
+            if (changes.length === 0 || existing.ativo === true) {
+              changes.push(`🚫 mantido desativado (manual)`);
             }
           }
           
