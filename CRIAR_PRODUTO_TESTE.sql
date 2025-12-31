@@ -2,7 +2,12 @@
 -- LIMPAR PRODUTOS DE TESTE ANTERIORES
 -- ============================================
 
--- Deletar produtos de teste antigos
+-- Deletar de TODAS as tabelas relacionadas na ordem correta
+DELETE FROM produtos_franqueadas 
+WHERE produto_id IN (
+  SELECT id FROM produtos WHERE id_externo LIKE 'TESTE-%'
+);
+
 DELETE FROM reseller_products 
 WHERE product_id IN (
   SELECT id FROM produtos WHERE id_externo LIKE 'TESTE-%'
