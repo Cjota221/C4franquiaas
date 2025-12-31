@@ -76,10 +76,9 @@ async function handleSync(page?: number, length?: number) {
         const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
         const estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
         
-        // 🔥 REGRA CRÍTICA: Se tem estoque, DEVE estar ativo!
-        const ativoVal = rec['ativo'];
-        const ativoFromAPI = typeof ativoVal === 'boolean' ? ativoVal : (ativoVal ?? true) as boolean;
-        const ativo = estoque > 0 ? true : ativoFromAPI; // Forçar ativo=true se tiver estoque
+        // 🔥 NOVO FLUXO: Produtos NOVOS ficam PENDENTES de aprovação do Admin
+        // Produtos EXISTENTES mantêm aprovação anterior (tratado no upsert)
+        const ativo = false; // Sempre false até admin aprovar
         
         const imagem = (rec['imagem'] ?? null) as string | null;
         const imagens = Array.isArray(rec['imagens']) ? rec['imagens'] as string[] : (rec['imagens'] ? [String(rec['imagens'])] : [] as string[]);
@@ -91,7 +90,7 @@ async function handleSync(page?: number, length?: number) {
           nome,
           preco_base,
           estoque,
-          ativo,
+          ativo, // Sempre false inicialmente
           imagem,
           imagens,
           codigo_barras,
@@ -101,6 +100,10 @@ async function handleSync(page?: number, length?: number) {
           facilzap_id: id_externo, // Mesmo valor do id_externo
           sincronizado_facilzap: true, // Marca como sincronizado
           ultima_sincronizacao: new Date().toISOString(), // Timestamp da sync
+          // 🆕 Fluxo de aprovação
+          admin_aprovado: false, // Produtos novos aguardam aprovação
+          admin_rejeitado: false,
+          eh_produto_novo: true, // Marcar como novo
         };
       });
 
@@ -108,7 +111,7 @@ async function handleSync(page?: number, length?: number) {
       const idsExternos = batch.map(p => p.id_externo).filter(id => id !== null);
       const { data: existingProducts } = await supabase
         .from('produtos')
-        .select('id, id_externo, estoque, preco_base, ativo, desativado_manual, ultima_sincronizacao')
+        .select('id, id_externo, estoque, preco_base, ativo, desativado_manual, ultima_sincronizacao, admin_aprovado, admin_rejeitado')
         .in('id_externo', idsExternos);
 
       // Identificar produtos novos, alterados e inalterados
@@ -119,11 +122,11 @@ async function handleSync(page?: number, length?: number) {
         const existing = existingProducts?.find((p: { id_externo: string }) => p.id_externo === newProduct.id_externo);
         
         if (!existing) {
-          // Produto NOVO
+          // ✨ Produto NOVO - fica PENDENTE de aprovação
           productsToUpsert.push(newProduct);
           totalNew++;
         } else {
-          // Verificar se houve mudanças
+          // 🔄 Produto EXISTENTE - PRESERVAR aprovação
           const changes: string[] = [];
           
           if (existing.estoque !== newProduct.estoque) {
@@ -133,21 +136,43 @@ async function handleSync(page?: number, length?: number) {
             changes.push(`preço: ${existing.preco_base} → ${newProduct.preco_base}`);
           }
           
-          // 🆕 RESPEITAR desativação manual
-          // Se o produto foi desativado manualmente, NÃO reativar automaticamente
-          let novoAtivo = newProduct.ativo;
-          if (existing.desativado_manual === true) {
-            // Produto foi desativado pelo admin, manter desativado
-            novoAtivo = false;
-            if (newProduct.ativo !== existing.ativo) {
-              changes.push(`ativo: mantido FALSE (desativado_manual)`);
+          // 🔥 PRESERVAR aprovação e status ativo de produtos existentes
+          let novoAtivo = existing.ativo; // Manter status atual
+          const adminAprovado = existing.admin_aprovado ?? false;
+          const adminRejeitado = existing.admin_rejeitado ?? false;
+          const ehProdutoNovo = false; // Produto já existe, não é novo
+          
+          // Se produto foi reativado no FácilZap (tem estoque agora)
+          if (newProduct.estoque > 0 && existing.estoque === 0) {
+            // Se estava aprovado antes, reativar
+            if (adminAprovado) {
+              novoAtivo = true;
+              changes.push(`reativado: estoque ${existing.estoque} → ${newProduct.estoque}`);
             }
-          } else if (existing.ativo !== newProduct.ativo) {
-            changes.push(`ativo: ${existing.ativo} → ${newProduct.ativo}`);
           }
           
-          // Atualizar o valor de ativo no produto
-          const productToUpsert = { ...newProduct, ativo: novoAtivo };
+          // Se produto ficou sem estoque
+          if (newProduct.estoque === 0 && existing.estoque > 0) {
+            novoAtivo = false;
+            changes.push(`desativado: sem estoque`);
+          }
+          
+          // 🆕 RESPEITAR desativação manual
+          if (existing.desativado_manual === true) {
+            novoAtivo = false;
+            if (existing.ativo === true) {
+              changes.push(`ativo: mantido FALSE (desativado_manual)`);
+            }
+          }
+          
+          // Atualizar o produto preservando aprovação
+          const productToUpsert = { 
+            ...newProduct, 
+            ativo: novoAtivo,
+            admin_aprovado: adminAprovado,
+            admin_rejeitado: adminRejeitado,
+            eh_produto_novo: ehProdutoNovo
+          };
           
           if (changes.length > 0) {
             // Produto ALTERADO
