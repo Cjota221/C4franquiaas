@@ -195,10 +195,13 @@ export default function CatalogoLayout({
     if (!slug) return;
 
     async function loadReseller() {
+      // ⚠️ SEGURANÇA: Selecionar APENAS campos públicos necessários
       const { data } = await supabase
         .from('resellers')
-        .select('*')
+        .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings')
         .eq('slug', slug)
+        .eq('is_active', true) // Apenas revendedoras ativas
+        .eq('status', 'aprovada') // Apenas aprovadas
         .single();
 
       if (data) {
