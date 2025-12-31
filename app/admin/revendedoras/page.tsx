@@ -301,7 +301,8 @@ Qualquer dúvida, estamos à disposição!`;
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-3 flex-wrap">
                     <h3 className="text-xl font-bold text-gray-900">
-                      {revendedora.name}
+                      {revendedora.name.split(' ')[0]} {/* Mostra só o primeiro nome */}
+                      <span className="blur-sm ml-2">{revendedora.name.split(' ').slice(1).join(' ')}</span>
                     </h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       revendedora.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
@@ -324,11 +325,11 @@ Qualquer dúvida, estamos à disposição!`;
                     </div>
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{revendedora.email}</span>
+                      <span className="truncate blur-sm">{revendedora.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 flex-shrink-0" />
-                      <span>{revendedora.phone}</span>
+                      <span className="blur-sm">{revendedora.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 flex-shrink-0" />

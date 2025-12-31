@@ -68,16 +68,13 @@ export default function RevendedoraDetalhesPage() {
   const [activeTab, setActiveTab] = useState<'info' | 'produtos'>('info');
 
   useEffect(() => {
-    carregarDados();
-  }, [revendedoraId]);
+    async function carregarDados() {
+      try {
+        const supabase = createClient();
 
-  async function carregarDados() {
-    try {
-      const supabase = createClient();
-
-      // Buscar revendedora
-      const { data: revendedoraData, error: revendedoraError } = await supabase
-        .from('resellers')
+        // Buscar revendedora
+        const { data: revendedoraData, error: revendedoraError } = await supabase
+          .from('resellers')
         .select('*')
         .eq('id', revendedoraId)
         .single();
@@ -122,7 +119,10 @@ export default function RevendedoraDetalhesPage() {
     } finally {
       setLoading(false);
     }
-  }
+    }
+    
+    carregarDados();
+  }, [revendedoraId]);
 
   async function toggleAtivo() {
     if (!revendedora) return;
@@ -139,7 +139,8 @@ export default function RevendedoraDetalhesPage() {
       alert('Erro ao atualizar status');
     } else {
       alert(`Revendedora ${novoStatus ? 'ativada' : 'desativada'} com sucesso!`);
-      carregarDados();
+      // Recarregar a página
+      window.location.reload();
     }
   }
 
@@ -183,7 +184,8 @@ export default function RevendedoraDetalhesPage() {
   const catalogUrl = revendedora.slug ? `${window.location.origin}/catalogo/${revendedora.slug}` : null;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -609,6 +611,7 @@ export default function RevendedoraDetalhesPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

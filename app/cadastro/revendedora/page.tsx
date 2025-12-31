@@ -163,7 +163,11 @@ export default function CadastroRevendedoraPage() {
         }
         return true;
         
-      case 4: // Redes sociais (opcional)
+      case 4: // Redes sociais - Instagram obrigatório
+        if (!form.instagram) {
+          setErro('O Instagram é obrigatório para prosseguir');
+          return false;
+        }
         return true;
         
       case 5: // Acesso
