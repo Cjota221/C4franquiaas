@@ -73,9 +73,14 @@ async function handleSync(page?: number, length?: number) {
         const id_externo = (rec['id_externo'] ?? rec['id'] ?? null) as string | null;
         const nome = (rec['nome'] ?? rec['name'] ?? null) as string | null;
         const preco_base = (rec['preco_base'] ?? rec['preco'] ?? null) as number | string | null;
-        const estoque = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
+        const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
+        const estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
+        
+        // 🔥 REGRA CRÍTICA: Se tem estoque, DEVE estar ativo!
         const ativoVal = rec['ativo'];
-        const ativo = typeof ativoVal === 'boolean' ? ativoVal : (ativoVal ?? true) as boolean;
+        const ativoFromAPI = typeof ativoVal === 'boolean' ? ativoVal : (ativoVal ?? true) as boolean;
+        const ativo = estoque > 0 ? true : ativoFromAPI; // Forçar ativo=true se tiver estoque
+        
         const imagem = (rec['imagem'] ?? null) as string | null;
         const imagens = Array.isArray(rec['imagens']) ? rec['imagens'] as string[] : (rec['imagens'] ? [String(rec['imagens'])] : [] as string[]);
         const codigo_barras = (rec['codigo_barras'] ?? rec['barcode'] ?? null) as string | null;
