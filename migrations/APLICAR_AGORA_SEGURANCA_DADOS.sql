@@ -36,8 +36,12 @@ ALTER VIEW resellers_public SET (security_invoker = true);
 -- STEP 3: Grant de leitura pública
 GRANT SELECT ON resellers_public TO anon, authenticated;
 
--- STEP 4: Remover política RLS muito permissiva da tabela original
+-- STEP 4: Remover políticas existentes
 DROP POLICY IF EXISTS "Resellers publicos para leitura" ON resellers;
+DROP POLICY IF EXISTS "Revendedora vê apenas seus dados completos" ON resellers;
+DROP POLICY IF EXISTS "Revendedora pode ver seus dados" ON resellers;
+DROP POLICY IF EXISTS "Revendedora pode atualizar seus dados" ON resellers;
+DROP POLICY IF EXISTS "Admin gerencia resellers" ON resellers;
 
 -- STEP 5: Criar política RLS mais restritiva na tabela resellers
 -- Apenas autenticados podem ler seus próprios dados ou admin pode ver tudo
@@ -49,13 +53,18 @@ CREATE POLICY "Revendedora vê apenas seus dados completos"
     auth.jwt() ->> 'user_role' = 'admin'
   );
 
--- STEP 6: Política para admin gerenciar
-DROP POLICY IF EXISTS "Admin gerencia resellers" ON resellers;
+-- STEP 6: Permitir revendedora atualizar seus próprios dados
+CREATE POLICY "Revendedora atualiza seus dados" 
+  ON resellers FOR UPDATE 
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- STEP 7: Política para admin gerenciar tudo
 CREATE POLICY "Admin gerencia resellers" 
   ON resellers FOR ALL 
   USING (auth.jwt() ->> 'user_role' = 'admin');
 
--- STEP 7: Adicionar comentários de segurança
+-- STEP 8: Adicionar comentários de segurança
 COMMENT ON VIEW resellers_public IS 'VIEW PÚBLICA SEGURA: Expõe apenas dados não-sensíveis para catálogos';
 COMMENT ON COLUMN resellers.cpf IS 'DADO SENSÍVEL - Não expor publicamente';
 COMMENT ON COLUMN resellers.email IS 'DADO SENSÍVEL - Não expor publicamente';
@@ -67,7 +76,7 @@ COMMENT ON COLUMN resellers.neighborhood IS 'DADO SENSÍVEL - Não expor publica
 COMMENT ON COLUMN resellers.city IS 'DADO SENSÍVEL - Não expor publicamente';
 COMMENT ON COLUMN resellers.state IS 'DADO SENSÍVEL - Não expor publicamente';
 
--- STEP 8: Validação final
+-- STEP 9: Validação final
 DO $$
 DECLARE
   view_exists boolean;
