@@ -32,7 +32,13 @@ export default function ProdutosRelacionados({
       try {
         setLoading(true);
         
-        const response = await fetch(`/api/loja/${dominio}/produtos/relacionados/${produtoId}`);
+        // Tentar API de catálogo (revendedoras) primeiro
+        let response = await fetch(`/api/catalogo/${dominio}/produtos/relacionados/${produtoId}`);
+        
+        // Se falhar, tentar API de loja (franqueadas)
+        if (!response.ok) {
+          response = await fetch(`/api/loja/${dominio}/produtos/relacionados/${produtoId}`);
+        }
         
         if (!response.ok) {
           setProdutos([]);
@@ -100,7 +106,7 @@ export default function ProdutosRelacionados({
                 return (
                   <Link
                     key={produto.id}
-                    href={`/loja/${dominio}/produto/${produto.id}`}
+                    href={`/catalogo/${dominio}/produto/${produto.id}`}
                     className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex-none snap-start w-[160px] sm:w-[180px] md:w-[220px] lg:w-[240px]"
                   >
                     {/* Imagem */}
