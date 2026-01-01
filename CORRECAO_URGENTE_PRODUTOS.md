@@ -5,6 +5,7 @@
 A Migration 049 desativou **TODOS os produtos** ao definir `ativo = false` por padrão no sync.
 
 **Sintoma:**
+
 - Erro 504 na sincronização (timeout)
 - Produtos que estavam ativos ficaram inativos
 - Sites públicos podem estar sem produtos
@@ -27,7 +28,7 @@ WHERE admin_aprovado = true
   AND ativo = false;
 
 -- Verificação
-SELECT 
+SELECT
   COUNT(*) FILTER (WHERE ativo = true) as ativos,
   COUNT(*) FILTER (WHERE admin_aprovado = true) as aprovados,
   COUNT(*) as total
@@ -35,6 +36,7 @@ FROM produtos;
 ```
 
 **Resultado esperado:**
+
 ```
 ativos: 219 (ou mais)
 aprovados: 219 (ou mais)
@@ -52,6 +54,7 @@ npm run build
 ```
 
 **Mudanças aplicadas:**
+
 - ✅ Timeout de 4 minutos na API FácilZap
 - ✅ Export `maxDuration = 300` para Vercel/Netlify
 - ✅ Sync preserva status `ativo` de produtos existentes
@@ -62,6 +65,7 @@ npm run build
 ## 🔍 VERIFICAÇÃO
 
 ### Testar Sincronização:
+
 ```bash
 # No navegador ou Postman
 GET https://seu-site.com/api/sync-produtos
@@ -77,11 +81,13 @@ GET https://seu-site.com/api/sync-produtos
 ```
 
 ### Verificar Produtos no Painel:
+
 1. Acessar `/admin/produtos`
 2. ✅ Ver produtos ativos
 3. ✅ Filtrar "Somente Ativos" deve mostrar produtos
 
 ### Verificar Site Público:
+
 1. Acessar `https://slug-franqueada.sualoja.com.br/catalogo`
 2. ✅ Produtos devem estar visíveis
 
@@ -93,7 +99,7 @@ Execute no Supabase para diagnosticar:
 
 ```sql
 -- Ver resumo dos produtos
-SELECT 
+SELECT
   ativo,
   admin_aprovado,
   admin_rejeitado,
@@ -107,19 +113,21 @@ ORDER BY ativo DESC, admin_aprovado DESC;
 **Resultado esperado:**
 
 | ativo | admin_aprovado | admin_rejeitado | quantidade | estoque_total |
-|-------|----------------|-----------------|------------|---------------|
-| true  | true          | false           | 219        | 1500+         |
-| false | true          | false           | 0          | 0             |
-| false | false         | false           | 5          | 0             |
+| ----- | -------------- | --------------- | ---------- | ------------- |
+| true  | true           | false           | 219        | 1500+         |
+| false | true           | false           | 0          | 0             |
+| false | false          | false           | 5          | 0             |
 
 ---
 
 ## 🛠️ O QUE FOI CORRIGIDO
 
 ### Arquivo: `migrations/050_corrigir_produtos_ativos.sql`
+
 - Restaura `ativo = true` para produtos aprovados com estoque
 
 ### Arquivo: `app/api/sync-produtos/route.ts`
+
 - **Timeout:** 4 minutos para evitar 504
 - **Export config:** `maxDuration = 300` e `dynamic = 'force-dynamic'`
 - **Preservação:** Mantém `ativo = true` de produtos existentes
@@ -139,7 +147,7 @@ if (!existing) {
 } else {
   // Produto EXISTENTE → MANTÉM status atual
   ativo = existing.ativo; // ✅ Preserva
-  
+
   // Se reestocado e aprovado → reativa
   if (estoque > 0 && existing.estoque === 0 && admin_aprovado) {
     ativo = true; // ✅ Reativa
@@ -182,14 +190,16 @@ POST /api/sync-produtos
 ### Problema: Produtos não aparecem no site
 
 **Verificar RLS:**
+
 ```sql
 -- No Supabase SQL Editor
-SELECT * FROM reseller_products 
-WHERE reseller_id = 'UUID_DA_FRANQUEADA' 
+SELECT * FROM reseller_products
+WHERE reseller_id = 'UUID_DA_FRANQUEADA'
 AND is_active = true;
 ```
 
 Se retornar vazio:
+
 ```sql
 -- Reativar produtos na franqueada
 UPDATE reseller_products rp

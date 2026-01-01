@@ -13,6 +13,7 @@
 A tabela `resellers` está expondo **TODOS os dados sensíveis** publicamente através da política RLS muito permissiva:
 
 ### Dados Expostos Publicamente:
+
 - ❌ CPF completo
 - ❌ Email
 - ❌ Data de nascimento
@@ -21,16 +22,18 @@ A tabela `resellers` está expondo **TODOS os dados sensíveis** publicamente at
 - ❌ Outros dados pessoais
 
 ### Como Estava Configurado:
+
 ```sql
-CREATE POLICY "Resellers publicos para leitura" 
-  ON resellers FOR SELECT 
+CREATE POLICY "Resellers publicos para leitura"
+  ON resellers FOR SELECT
   USING (status = 'aprovada' AND is_active = true);
 ```
 
 Isso permite que **qualquer pessoa** faça:
+
 ```javascript
 // Qualquer visitante consegue ver TODOS os dados!
-supabase.from('resellers').select('*').eq('slug', 'qualquer-loja')
+supabase.from('resellers').select('*').eq('slug', 'qualquer-loja');
 ```
 
 ---
@@ -38,11 +41,13 @@ supabase.from('resellers').select('*').eq('slug', 'qualquer-loja')
 ## ✅ A Solução
 
 Criamos:
+
 1. **VIEW pública segura** (`resellers_public`) com apenas dados necessários
 2. **RLS restritivo** na tabela original
 3. **Proteção de dados sensíveis**
 
 ### Dados Públicos (resellers_public):
+
 - ✅ Nome da loja
 - ✅ Slug
 - ✅ Telefone (para WhatsApp do catálogo)
@@ -52,6 +57,7 @@ Criamos:
 - ✅ Tema e cores
 
 ### Dados Privados (apenas proprietário/admin):
+
 - 🔒 CPF
 - 🔒 Email
 - 🔒 Data de nascimento
@@ -73,6 +79,7 @@ Criamos:
 ### PASSO 2: Verificar no Supabase
 
 Execute esta query para confirmar:
+
 ```sql
 -- Deve retornar apenas dados públicos
 SELECT * FROM resellers_public LIMIT 1;
@@ -88,19 +95,23 @@ SELECT cpf, email FROM resellers LIMIT 1;
 ### Arquivo Alterado: `app/catalogo/[slug]/layout.tsx`
 
 **ANTES (VULNERÁVEL):**
+
 ```typescript
 const { data } = await supabase
   .from('resellers')
-  .select('*')  // ❌ Expõe todos os dados!
+  .select('*') // ❌ Expõe todos os dados!
   .eq('slug', slug)
   .single();
 ```
 
 **DEPOIS (SEGURO):**
+
 ```typescript
 const { data } = await supabase
   .from('resellers')
-  .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings')
+  .select(
+    'id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings',
+  )
   .eq('slug', slug)
   .eq('is_active', true)
   .eq('status', 'aprovada')
@@ -112,12 +123,14 @@ const { data } = await supabase
 ## 🎯 Impacto da Correção
 
 ### ✅ Benefícios:
+
 - Dados sensíveis das revendedoras protegidos
 - Conformidade com LGPD
 - Impossível vazar CPF, email, endereço
 - Catálogo público continua funcionando normalmente
 
 ### ⚠️ Sem Impacto Negativo:
+
 - Catálogo público funciona igual
 - Revendedoras continuam acessando seus dados
 - Admin continua gerenciando tudo

@@ -25,12 +25,13 @@ Verificar se há vazamento de dados sensíveis das revendedoras cadastradas no s
 // ❌ ANTES - VULNERÁVEL
 const { data } = await supabase
   .from('resellers')
-  .select('*')  // Expõe CPF, email, endereço completo!
+  .select('*') // Expõe CPF, email, endereço completo!
   .eq('slug', slug)
   .single();
 ```
 
 **Dados Expostos Publicamente:**
+
 - ❌ CPF completo
 - ❌ Email pessoal
 - ❌ Data de nascimento
@@ -41,6 +42,7 @@ const { data } = await supabase
 - ❌ Dados financeiros (se houver)
 
 **Impacto:**
+
 - Qualquer visitante do catálogo pode ver TODOS os dados pessoais
 - Violação da LGPD
 - Risco de roubo de identidade
@@ -58,7 +60,9 @@ const { data } = await supabase
 // ✅ DEPOIS - SEGURO
 const { data } = await supabase
   .from('resellers')
-  .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings')
+  .select(
+    'id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings',
+  )
   .eq('slug', slug)
   .eq('is_active', true)
   .eq('status', 'aprovada')
@@ -66,6 +70,7 @@ const { data } = await supabase
 ```
 
 **Dados Públicos (apenas o necessário):**
+
 - ✅ Nome da loja
 - ✅ Slug (URL da loja)
 - ✅ Telefone (para WhatsApp do catálogo)
@@ -75,6 +80,7 @@ const { data } = await supabase
 - ✅ Cores e tema
 
 **Dados Protegidos (NÃO expostos):**
+
 - 🔒 CPF
 - 🔒 Email
 - 🔒 Data de nascimento
@@ -88,6 +94,7 @@ const { data } = await supabase
 **Arquivo:** `migrations/APLICAR_AGORA_SEGURANCA_DADOS.sql`
 
 Criada migration que:
+
 1. ✅ Remove política RLS permissiva
 2. ✅ Cria RLS restritivo (apenas proprietário/admin)
 3. ✅ Documenta campos sensíveis
@@ -98,6 +105,7 @@ Criada migration que:
 ## 📊 ANÁLISE DE RISCO
 
 ### Antes da Correção
+
 ```
 SEVERIDADE: 🔴 CRÍTICA (10/10)
 EXPOSIÇÃO: Pública (qualquer visitante)
@@ -107,6 +115,7 @@ RISCO DE MULTA: Alto (até 2% do faturamento)
 ```
 
 ### Depois da Correção
+
 ```
 SEVERIDADE: 🟢 BAIXA (1/10)
 EXPOSIÇÃO: Controlada (apenas dados públicos)
@@ -122,11 +131,13 @@ RISCO DE MULTA: Mitigado
 ### ✅ Proteções Já Existentes
 
 1. **Blur nos Dados da Lista** (implementado hoje)
+
    - Nome: Mostra só primeiro nome, resto borrado
    - Email: Completamente borrado
    - Telefone: Completamente borrado
 
 2. **Autenticação nas Páginas Admin**
+
    - ✅ Painel admin requer login
    - ✅ Detalhes completos só para admin autenticado
 
@@ -142,6 +153,7 @@ RISCO DE MULTA: Mitigado
 ### URGENTE - Fazer Agora ⚡
 
 1. **Aplicar Migration no Supabase**
+
    - Arquivo: `migrations/APLICAR_AGORA_SEGURANCA_DADOS.sql`
    - Como: Copiar e colar no SQL Editor do Supabase
    - Tempo: 30 segundos
@@ -158,11 +170,13 @@ RISCO DE MULTA: Mitigado
 ### Segurança Contínua
 
 1. **Auditoria Regular**
+
    - Revisar queries `select('*')` mensalmente
    - Verificar novos endpoints públicos
    - Monitorar logs de acesso
 
 2. **Princípios a Seguir**
+
    - ✅ Sempre especificar campos em vez de `*`
    - ✅ Adicionar filtros `is_active` e `status`
    - ✅ Documentar dados sensíveis
@@ -178,6 +192,7 @@ RISCO DE MULTA: Mitigado
 ## 📈 IMPACTO DA CORREÇÃO
 
 ### Antes
+
 ```
 🔴 Qualquer pessoa podia ver:
    - CPF: 123.456.789-00
@@ -188,6 +203,7 @@ RISCO DE MULTA: Mitigado
 ```
 
 ### Depois
+
 ```
 🟢 Visitantes veem apenas:
    - Loja: Beleza da Maria
@@ -201,14 +217,17 @@ RISCO DE MULTA: Mitigado
 ## ✅ CONCLUSÃO
 
 ### Vulnerabilidade Identificada ✅
+
 - Exposição crítica de dados sensíveis no catálogo público
 
 ### Correção Implementada ✅
+
 - Código atualizado e commitado
 - Migration SQL criada
 - Documentação completa
 
 ### Próximo Passo ⚠️
+
 - **APLICAR A MIGRATION NO SUPABASE AGORA**
 - Arquivo: `SEGURANCA_DADOS_CORRECAO_URGENTE.md` (guia completo)
 
@@ -217,6 +236,7 @@ RISCO DE MULTA: Mitigado
 ## 📞 Suporte
 
 **Dúvidas sobre a correção?**
+
 1. Leia: `SEGURANCA_DADOS_CORRECAO_URGENTE.md`
 2. Aplique: `migrations/APLICAR_AGORA_SEGURANCA_DADOS.sql`
 3. Teste: Acesse um catálogo e verifique

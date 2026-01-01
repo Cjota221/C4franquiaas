@@ -18,11 +18,14 @@ if (!produto || !produto.ativo || produto.estoque <= 0) return null;
 ```
 
 #### ⚠️ **PROBLEMA:**
+
 Este filtro **BLOQUEIA COMPLETAMENTE** produtos que:
+
 - Estão inativos no admin (`!produto.ativo`)
 - Têm estoque zerado (`produto.estoque <= 0`)
 
 #### 🎯 **IMPACTO:**
+
 1. ❌ Se você desativar um produto no admin, ele **DESAPARECE** da lista das franqueadas
 2. ❌ Se o estoque zerar, o produto **DESAPARECE** da lista
 3. ❌ **Quando você repõe o estoque**, o produto continua desaparecido até a próxima sincronização
@@ -37,6 +40,7 @@ Este filtro **BLOQUEIA COMPLETAMENTE** produtos que:
 #### Comportamento Atual:
 
 1. **Quando estoque = 0:**
+
    - ✅ Desativa automaticamente em `produtos_franqueadas_precos` (campo `ativo_no_site`)
    - ✅ Desativa automaticamente em `reseller_products` (campo `is_active`)
 
@@ -46,6 +50,7 @@ Este filtro **BLOQUEIA COMPLETAMENTE** produtos que:
    - ⚠️ **MAS** isso só acontece na **sincronização**
 
 #### ⚠️ **PROBLEMA:**
+
 ```
 Você repõe estoque manualmente no admin
     ↓
@@ -63,9 +68,11 @@ Produto continua invisível! 😱
 ### **3. PRODUTOS NÃO ATIVAM MESMO COM ESTOQUE** 🔴
 
 **Cenário reportado:**
+
 > "Tem um modelo que eu tentei ativar e ele está disponível mas ele está inativo, e eu tentei ativar e ele não ativou"
 
 #### Causa Raiz:
+
 1. Produto estava sem estoque
 2. Foi desativado automaticamente pela sincronização
 3. Você repôs o estoque manualmente
@@ -81,12 +88,12 @@ graph TD
     A[Estoque Zerado no ERP] --> B[Sincronização]
     B --> C[Produto desativado automaticamente]
     C --> D[Produto desaparece da lista franqueada]
-    
+
     E[Admin repõe estoque] --> F[Estoque > 0]
     F --> G{Sincronização rodou?}
     G -->|NÃO| H[Produto continua invisível]
     G -->|SIM| I[Produto aparece novamente]
-    
+
     H --> J[Franqueada não consegue ativar]
     I --> K[Franqueada pode ativar]
 ```
@@ -98,6 +105,7 @@ graph TD
 ### ✅ O que FUNCIONA:
 
 1. **Sincronização automática de estoque**
+
    - ERP → Admin: Funciona
    - Estoque = 0 → Desativa automaticamente
    - Estoque > 0 → Reativa automaticamente (na sync)
@@ -108,11 +116,13 @@ graph TD
 ### ❌ O que NÃO FUNCIONA:
 
 1. **Reposição manual de estoque**
+
    - ❌ Produto não reaparece até sincronização
    - ❌ Franqueada não consegue ativar
    - ❌ Produto fica "fantasma"
 
 2. **Ativação manual após reposição**
+
    - ❌ Produto invisível na lista
    - ❌ Botão de ativar não funciona
    - ❌ Necessita sincronização manual
@@ -139,6 +149,7 @@ if (!produto) return null;
 ```
 
 **Benefícios:**
+
 - ✅ Franqueada vê TODOS os produtos vinculados
 - ✅ Pode ver status de estoque (0, 10, 100, etc)
 - ✅ Pode ver se produto está ativo no admin
@@ -146,6 +157,7 @@ if (!produto) return null;
 - ✅ Transparência total
 
 **Ajuste na Interface:**
+
 - Mostrar badge "SEM ESTOQUE" em vermelho
 - Mostrar badge "INATIVO NO ADMIN" em cinza
 - Desabilitar botão de ativar se estoque = 0 OU inativo no admin
@@ -164,22 +176,22 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Se estoque mudou de 0 para > 0 e produto está ativo
   IF OLD.estoque = 0 AND NEW.estoque > 0 AND NEW.ativo = true THEN
-    
+
     -- Reativar em franqueadas
     UPDATE produtos_franqueadas_precos
     SET ativo_no_site = true
     WHERE produto_franqueada_id IN (
       SELECT id FROM produtos_franqueadas WHERE produto_id = NEW.id
     );
-    
+
     -- Reativar em revendedoras
     UPDATE reseller_products
     SET is_active = true
     WHERE product_id = NEW.id;
-    
+
     RAISE NOTICE 'Produto % reativado automaticamente (estoque: %)', NEW.nome, NEW.estoque;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -192,6 +204,7 @@ EXECUTE FUNCTION reativar_produto_com_estoque();
 ```
 
 **Benefícios:**
+
 - ✅ Reativação instantânea quando estoque é reposto
 - ✅ Não depende de sincronização
 - ✅ Funciona com alterações manuais
@@ -201,14 +214,16 @@ EXECUTE FUNCTION reativar_produto_com_estoque();
 ### **SOLUÇÃO 3: Adicionar Filtro Toggle na Interface**
 
 **Adicionar opção:**
+
 ```typescript
 const [mostrarInativos, setMostrarInativos] = useState(false);
 ```
 
 **Na interface:**
+
 ```tsx
 <label className="flex items-center gap-2">
-  <input 
+  <input
     type="checkbox"
     checked={mostrarInativos}
     onChange={(e) => setMostrarInativos(e.target.checked)}
@@ -218,6 +233,7 @@ const [mostrarInativos, setMostrarInativos] = useState(false);
 ```
 
 **Benefícios:**
+
 - ✅ Franqueada escolhe o que ver
 - ✅ Padrão: mostra apenas produtos disponíveis
 - ✅ Opção: ver todos para gerenciar melhor
@@ -229,10 +245,12 @@ const [mostrarInativos, setMostrarInativos] = useState(false);
 ### Implementar as 3 soluções em ordem:
 
 1. **URGENTE** 🔴 - **SOLUÇÃO 1:** Remover filtro (30 min)
+
    - Impacto imediato
    - Resolve problema de visibilidade
 
 2. **IMPORTANTE** 🟡 - **SOLUÇÃO 2:** Criar trigger (15 min)
+
    - Automação real-time
    - Independe de sincronização
 
@@ -247,6 +265,7 @@ const [mostrarInativos, setMostrarInativos] = useState(false);
 ### Após implementar:
 
 1. **Teste 1: Reposição de estoque**
+
    - Zerar estoque de um produto
    - Esperar desativação automática
    - Repor estoque manualmente
@@ -254,11 +273,13 @@ const [mostrarInativos, setMostrarInativos] = useState(false);
    - ✅ Verificar se reativa automaticamente
 
 2. **Teste 2: Ativação manual**
+
    - Produto com estoque > 0
    - Produto ativo no admin
    - ✅ Verificar se consegue ativar na franqueada
 
 3. **Teste 3: Produto inativo no admin**
+
    - Desativar produto no admin
    - ✅ Verificar se mostra badge "INATIVO"
    - ✅ Verificar se desabilita botão de ativar
@@ -273,11 +294,13 @@ const [mostrarInativos, setMostrarInativos] = useState(false);
 ## 📊 ESTATÍSTICAS DE IMPACTO
 
 **Produtos Afetados:**
+
 - Produtos com estoque zerado: Invisíveis
 - Produtos repostos: Invisíveis até sync
 - Produtos inativos admin: Invisíveis
 
 **Usuários Impactados:**
+
 - ✅ Franqueadas: Não conseguem ver/ativar produtos repostos
 - ✅ Admin: Precisa rodar sync manual frequentemente
 - ✅ Clientes finais: Produtos disponíveis mas não aparecem no site

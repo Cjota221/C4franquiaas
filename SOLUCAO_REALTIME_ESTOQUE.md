@@ -1,6 +1,7 @@
 # 🔥 SOLUÇÃO: Estoque Não Atualiza nos Sites
 
 ## ❌ PROBLEMA
+
 - Estoque atualiza nos painéis admin e franqueadas/revendedoras ✅
 - **MAS** não atualiza nos sites públicos (catálogos) ❌
 - Cliente precisa dar F5 para ver produtos com estoque reposto
@@ -8,6 +9,7 @@
 ## ✅ SOLUÇÃO IMPLEMENTADA
 
 ### 1. **Realtime no Catálogo** (CÓDIGO)
+
 Adicionado **Supabase Realtime** em `app/catalogo/[slug]/page.tsx`:
 
 ```typescript
@@ -28,7 +30,7 @@ useEffect(() => {
       (payload) => {
         console.log('🔄 [Catálogo] Atualização detectada:', payload);
         loadProducts(); // Recarregar produtos
-      }
+      },
     )
     .subscribe();
 
@@ -39,6 +41,7 @@ useEffect(() => {
 ```
 
 **O que isso faz:**
+
 - Escuta mudanças na tabela `produtos` em tempo real
 - Quando estoque muda (UPDATE), recarrega os produtos automaticamente
 - Cliente vê produtos aparecerem/sumirem sem dar F5
@@ -60,6 +63,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE produtos;
 4. Clique em **Run** ▶️
 
 **Verificar se funcionou:**
+
 ```sql
 SELECT schemaname, tablename, pubname
 FROM pg_publication_tables
@@ -67,6 +71,7 @@ WHERE tablename = 'produtos' AND pubname = 'supabase_realtime';
 ```
 
 ✅ Deve retornar:
+
 ```
 schemaname | tablename | pubname
 -----------+-----------+-------------------
@@ -78,12 +83,14 @@ public     | produtos  | supabase_realtime
 ## 🎯 RESULTADO FINAL
 
 ### ANTES:
+
 1. Admin altera estoque → produtos.estoque = 10
 2. Painel admin mostra estoque ✅
 3. **Site público não atualiza** ❌
 4. Cliente precisa dar F5 manualmente
 
 ### DEPOIS:
+
 1. Admin altera estoque → produtos.estoque = 10
 2. Painel admin mostra estoque ✅
 3. **Site público atualiza AUTOMATICAMENTE** ✅
@@ -108,6 +115,7 @@ public     | produtos  | supabase_realtime
 ## 🔒 SEGURANÇA
 
 ✅ **Realtime está seguro:**
+
 - Apenas dados públicos são transmitidos (RLS ativo)
 - Clientes não veem dados sensíveis
 - Payload contém apenas ID do produto alterado
@@ -116,11 +124,11 @@ public     | produtos  | supabase_realtime
 
 ## 📝 RESUMO
 
-| Componente | Status | O que faz |
-|------------|--------|-----------|
-| `app/catalogo/[slug]/page.tsx` | ✅ Atualizado | Escuta mudanças em tempo real |
-| `migrations/APLICAR_REALTIME_CATALOGO.sql` | ⏳ **APLICAR MANUALMENTE** | Habilita Realtime no banco |
-| Código commitado | ✅ Pronto | Push já feito no GitHub |
+| Componente                                 | Status                     | O que faz                     |
+| ------------------------------------------ | -------------------------- | ----------------------------- |
+| `app/catalogo/[slug]/page.tsx`             | ✅ Atualizado              | Escuta mudanças em tempo real |
+| `migrations/APLICAR_REALTIME_CATALOGO.sql` | ⏳ **APLICAR MANUALMENTE** | Habilita Realtime no banco    |
+| Código commitado                           | ✅ Pronto                  | Push já feito no GitHub       |
 
 ---
 
@@ -135,21 +143,24 @@ public     | produtos  | supabase_realtime
 ## 🆘 TROUBLESHOOTING
 
 ### "Não vejo a mensagem no console"
+
 - Abra o Console do navegador (F12)
 - Vá na aba **Console**
 - Altere estoque no admin
 - Deve aparecer: `🔄 [Catálogo] Atualização detectada`
 
 ### "Produtos não atualizam automaticamente"
+
 1. Verificar se aplicou a migration SQL ✅
 2. Verificar se realtime está ativo:
    ```sql
-   SELECT * FROM pg_publication_tables 
+   SELECT * FROM pg_publication_tables
    WHERE tablename = 'produtos';
    ```
 3. Recarregar página do catálogo (F5 uma vez)
 
 ### "Erro no console"
+
 - Compartilhe o erro exato
 - Verificar se Supabase está online
 - Verificar políticas RLS na tabela `produtos`

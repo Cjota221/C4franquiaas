@@ -4,15 +4,16 @@
 
 ```json
 {
-  "estoque": 11,              // ✅ TEM ESTOQUE
-  "ativo": false,             // ❌ DESATIVADO!
+  "estoque": 11, // ✅ TEM ESTOQUE
+  "ativo": false, // ❌ DESATIVADO!
   "ultima_sincronizacao": null // ❌ NUNCA SINCRONIZADO
 }
 ```
 
 **TODOS os produtos estavam:**
+
 - ✅ Com estoque disponível (11 unidades)
-- ❌ **Marcados como `ativo: false`** 
+- ❌ **Marcados como `ativo: false`**
 - ❌ **Nunca sincronizados** (`ultima_sincronizacao: null`)
 
 **Por isso não apareciam nos sites!**
@@ -22,9 +23,11 @@
 ## 🔍 **POR QUE ACONTECEU?**
 
 ### **Causa Raiz:**
+
 O FácilZap estava retornando produtos com `ativo: false` na API, e o sistema importava esse valor SEM VALIDAR se tinha estoque.
 
 **Fluxo problemático:**
+
 ```
 FácilZap API → ativo: false, estoque: 11
     ↓
@@ -48,11 +51,11 @@ Catálogo filtra: "só mostra se ativo=true E estoque>0"
 ```sql
 -- Ativa TODOS os produtos que têm estoque
 UPDATE produtos
-SET 
+SET
   ativo = true,
   ultima_sincronizacao = NOW()
-WHERE 
-  estoque > 0 
+WHERE
+  estoque > 0
   AND ativo = false;
 ```
 
@@ -65,18 +68,21 @@ WHERE
 **Arquivo:** `app/api/sync-produtos/route.ts`
 
 **ANTES:**
+
 ```typescript
-const ativo = typeof ativoVal === 'boolean' ? ativoVal : (ativoVal ?? true);
+const ativo = typeof ativoVal === 'boolean' ? ativoVal : ativoVal ?? true;
 // ❌ Confiava cegamente no valor do FácilZap
 ```
 
 **DEPOIS:**
+
 ```typescript
 const ativo = estoque > 0 ? true : ativoFromAPI;
 // ✅ REGRA: Se tem estoque, DEVE estar ativo!
 ```
 
 **Lógica nova:**
+
 - Se `estoque > 0` → **FORÇAR `ativo: true`** (ignora FácilZap)
 - Se `estoque = 0` → Respeita valor do FácilZap
 
@@ -92,9 +98,10 @@ Adicionado **Supabase Realtime** para atualização automática:
 useEffect(() => {
   const channel = supabase
     .channel('produtos-catalog-updates')
-    .on('postgres_changes', 
+    .on(
+      'postgres_changes',
       { event: '*', schema: 'public', table: 'produtos' },
-      () => loadProducts() // Recarrega quando BD mudar
+      () => loadProducts(), // Recarrega quando BD mudar
     )
     .subscribe();
   return () => supabase.removeChannel(channel);
@@ -114,11 +121,11 @@ useEffect(() => {
 
 ```sql
 UPDATE produtos
-SET 
+SET
   ativo = true,
   ultima_sincronizacao = NOW()
-WHERE 
-  estoque > 0 
+WHERE
+  estoque > 0
   AND ativo = false;
 ```
 
@@ -134,11 +141,13 @@ WHERE
 O código já foi commitado e enviado para o GitHub.
 
 **Se usar Netlify:**
+
 1. Build automático será disparado
 2. Aguarde ~3-5 minutos
 3. Nova versão entra no ar
 
 **Se usar Vercel:**
+
 1. Deploy automático após push
 2. Aguarde ~2 minutos
 
@@ -197,23 +206,25 @@ SELECT COUNT(*) FROM produtos WHERE estoque > 0 AND ativo = false;
 
 ## 🎯 **RESUMO EXECUTIVO**
 
-| Item | Status | O Que Faz |
-|------|--------|-----------|
-| **SQL de Correção** | ⏳ **EXECUTAR AGORA** | Ativa produtos existentes |
-| **Código Corrigido** | ✅ **NO GITHUB** | Evita problema no futuro |
-| **Deploy Automático** | 🔄 **AGUARDANDO** | Netlify/Vercel buildam |
-| **Realtime SQL** | ⏳ **OPCIONAL** | Sites atualizam sem F5 |
+| Item                  | Status                | O Que Faz                 |
+| --------------------- | --------------------- | ------------------------- |
+| **SQL de Correção**   | ⏳ **EXECUTAR AGORA** | Ativa produtos existentes |
+| **Código Corrigido**  | ✅ **NO GITHUB**      | Evita problema no futuro  |
+| **Deploy Automático** | 🔄 **AGUARDANDO**     | Netlify/Vercel buildam    |
+| **Realtime SQL**      | ⏳ **OPCIONAL**       | Sites atualizam sem F5    |
 
 ---
 
 ## 🔒 **GARANTIAS PÓS-CORREÇÃO**
 
 ### **✅ O que NUNCA mais vai acontecer:**
+
 - ❌ Produtos com estoque ficarem desativados
 - ❌ Sincronização importar `ativo: false` quando há estoque
 - ❌ Clientes não verem produtos disponíveis
 
 ### **✅ O que VAI acontecer:**
+
 - ✅ Todo produto com estoque > 0 fica `ativo: true` automaticamente
 - ✅ Sincronização valida e força ativação
 - ✅ Sites mostram TODOS os produtos disponíveis
@@ -237,7 +248,7 @@ Se após executar o SQL os produtos NÃO aparecerem:
 
 ```sql
 -- Verificar se atualizou
-SELECT 
+SELECT
   COUNT(*) FILTER (WHERE ativo = true AND estoque > 0) as ativos_com_estoque,
   COUNT(*) FILTER (WHERE ativo = false AND estoque > 0) as bug_ainda_existe
 FROM produtos;

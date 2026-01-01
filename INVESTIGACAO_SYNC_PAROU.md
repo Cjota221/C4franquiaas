@@ -1,6 +1,7 @@
 # 🚨 INVESTIGAÇÃO: POR QUE A SINCRONIZAÇÃO PAROU
 
 ## ❌ PROBLEMA REAL
+
 - **ANTES**: Tudo funcionava, estoque sendo atualizado normalmente
 - **AGORA**: Nada sincroniza mais (parou do nada)
 - **CRÍTICO**: Sistema não pode entrar em produção assim
@@ -10,22 +11,27 @@
 ## 🔍 POSSÍVEIS CAUSAS (ordem de probabilidade)
 
 ### 1. **Token do FácilZap Expirou** 🔑 (MAIS PROVÁVEL)
+
 **Sintoma**: API para de responder ou retorna 401
 **Como verificar**: Execute `node test-sync-facilzap.mjs`
 
 ### 2. **Cron Job / Webhook Parou de Ser Chamado** ⏰
+
 **Sintoma**: Produtos não atualizam há horas/dias
 **Como verificar**: Query 1 do `DIAGNOSTICO_SYNC_COMPLETO.sql`
 
 ### 3. **Erro no Código que Quebrou o Processo** 🐛
+
 **Sintoma**: Sync inicia mas falha no meio
 **Como verificar**: Logs de erro, Query 5 do diagnóstico
 
 ### 4. **Banco de Dados com Lock/Timeout** 💾
+
 **Sintoma**: Queries lentas ou travadas
 **Como verificar**: Performance do Supabase
 
 ### 5. **API do FácilZap Fora do Ar** 🌐
+
 **Sintoma**: Requisições falham com timeout
 **Como verificar**: Status da API FácilZap
 
@@ -39,7 +45,7 @@ Abra **Supabase SQL Editor** e execute:
 
 ```sql
 -- Quando foi a última sincronização?
-SELECT 
+SELECT
   MAX(ultima_sincronizacao) as ultima_sync,
   COUNT(*) as total_produtos
 FROM produtos
@@ -80,6 +86,7 @@ node test-sync-facilzap.mjs
 Teste manualmente clicando no botão **"Sincronizar FácilZap"** no painel admin.
 
 **O que observar:**
+
 - Console do navegador (F12) - tem erros?
 - Quanto tempo demora? (mais de 30s = problema)
 - Retorna sucesso ou erro?
@@ -92,7 +99,7 @@ Execute no Supabase:
 
 ```sql
 -- Produtos com estoque mas inativos (inconsistência)
-SELECT 
+SELECT
   id, nome, estoque, ativo,
   ultima_sincronizacao
 FROM produtos
@@ -131,6 +138,7 @@ Use este checklist para ir eliminando possibilidades:
 ## 🆘 AÇÕES IMEDIATAS
 
 **1. Execute AGORA:**
+
 ```powershell
 node test-sync-facilzap.mjs
 ```
@@ -138,14 +146,16 @@ node test-sync-facilzap.mjs
 **2. Me envie o resultado completo** (toda a saída do terminal)
 
 **3. Execute esta query no Supabase:**
+
 ```sql
-SELECT 
+SELECT
   MAX(ultima_sincronizacao) as ultima_sync,
   COUNT(*) as total
 FROM produtos;
 ```
 
 **4. Me diga:**
+
 - Quando exatamente parou de funcionar? (dia/hora aproximada)
 - Alguma mudança foi feita antes disso? (deploy, atualização, etc)
 - Está acontecendo em dev, produção ou ambos?
@@ -159,11 +169,13 @@ FROM produtos;
 🔑 **Aposto que é o Token do FácilZap que expirou!**
 
 Tokens de API geralmente têm validade de:
+
 - 24h (tokens temporários)
 - 30 dias (tokens normais)
 - 90 dias (tokens de longa duração)
 
 **Solução rápida se for isso:**
+
 1. Renove o token no painel do FácilZap
 2. Atualize no `.env.local` ou Supabase
 3. Faça deploy/restart

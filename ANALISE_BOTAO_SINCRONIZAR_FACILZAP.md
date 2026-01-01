@@ -24,13 +24,13 @@ O botão **"Sincronizar FácilZap"** no painel admin **FUNCIONA SIM** e está **
 ### **1. Ao Clicar no Botão:**
 
 ```typescript
-<button 
-  onClick={sincronizarProdutos}  // ✅ Tem função
-  disabled={sincronizando}        // ✅ Previne cliques duplos
+<button
+  onClick={sincronizarProdutos} // ✅ Tem função
+  disabled={sincronizando} // ✅ Previne cliques duplos
   className="px-4 py-2 bg-green-600 text-white..."
 >
   {sincronizando ? (
-    <> Sincronizando... </>       // ✅ Feedback visual
+    <> Sincronizando... </> // ✅ Feedback visual
   ) : (
     <> Sincronizar FacilZap </>
   )}
@@ -61,9 +61,9 @@ const sincronizarProdutos = async () => {
     }
 
     // 4. ✅ Mostra sucesso
-    setStatusMsg({ 
-      type: 'success', 
-      text: `✅ ${data.imported} produto(s) sincronizado(s)!` 
+    setStatusMsg({
+      type: 'success',
+      text: `✅ ${data.imported} produto(s) sincronizado(s)!`,
     });
 
     // 5. ✅ Recarrega lista de produtos
@@ -71,13 +71,12 @@ const sincronizarProdutos = async () => {
       carregarProdutos(pagina, debouncedSearchTerm);
       setStatusMsg(null);
     }, 2000);
-
   } catch (err) {
     // 6. ✅ Mostra erro
     console.error('❌ Erro ao sincronizar:', err);
-    setStatusMsg({ 
-      type: 'error', 
-      text: `❌ Erro: ${errorMessage}` 
+    setStatusMsg({
+      type: 'error',
+      text: `❌ Erro: ${errorMessage}`,
     });
   } finally {
     // 7. ✅ Desativa loading
@@ -96,59 +95,69 @@ const sincronizarProdutos = async () => {
 ### **O que a API faz:**
 
 #### **STEP 1: Buscar Produtos do FácilZap**
+
 ```typescript
 const res = await fetchAllProdutosFacilZap();
 produtos = res.produtos ?? [];
 ```
+
 ✅ Busca TODOS os produtos da API FácilZap
 
 #### **STEP 2: Processar em Lotes**
+
 ```typescript
 const BATCH_SIZE = 50;
 for (let i = 0; i < produtos.length; i += BATCH_SIZE) {
   // Processa 50 produtos por vez
 }
 ```
+
 ✅ Evita sobrecarga de memória
 
 #### **STEP 3: Upsert no Banco**
+
 ```typescript
-const { data, error } = await supabase
-  .from('produtos')
-  .upsert(batch, { 
-    onConflict: 'facilzap_id' 
-  });
+const { data, error } = await supabase.from('produtos').upsert(batch, {
+  onConflict: 'facilzap_id',
+});
 ```
+
 ✅ Insere novos ou atualiza existentes
 
 #### **STEP 4: Registrar Logs**
+
 ```typescript
 await supabase.from('logs_sincronizacao').insert({
   tipo: resultado.novoRegistro ? 'novo_produto' : 'atualizacao',
   produto_id: produto.id,
   facilzap_id: produto.facilzap_id,
-  sucesso: true
+  sucesso: true,
 });
 ```
+
 ✅ Auditoria completa
 
 #### **STEP 5: Gerenciar Estoque**
+
 ```typescript
 await desativarProdutosEstoqueZero(supabase);
 await reativarProdutosComEstoque(supabase);
 ```
+
 ✅ Desativa/reativa automaticamente
 
 #### **STEP 6: Retornar Resultado**
+
 ```typescript
-return NextResponse.json({ 
-  ok: true, 
+return NextResponse.json({
+  ok: true,
   processed: totalProcessed,
   new: totalNew,
   updated: totalUpdated,
-  imported: totalNew + totalUpdated
+  imported: totalNew + totalUpdated,
 });
 ```
+
 ✅ Estatísticas detalhadas
 
 ---
@@ -207,6 +216,7 @@ return NextResponse.json({
 ## 🧪 **TESTES FUNCIONAIS**
 
 ### ✅ **Teste 1: Sincronização Básica**
+
 ```
 1. Clicar em "Sincronizar FácilZap"
 2. Aguardar mensagem "Sincronizando..."
@@ -215,6 +225,7 @@ return NextResponse.json({
 ```
 
 ### ✅ **Teste 2: Novos Produtos**
+
 ```
 1. Adicionar produto no ERP FácilZap
 2. Clicar em "Sincronizar FácilZap"
@@ -222,6 +233,7 @@ return NextResponse.json({
 ```
 
 ### ✅ **Teste 3: Atualização de Dados**
+
 ```
 1. Alterar nome/preço no ERP
 2. Clicar em "Sincronizar FácilZap"
@@ -229,6 +241,7 @@ return NextResponse.json({
 ```
 
 ### ✅ **Teste 4: Estoque Zerado**
+
 ```
 1. Zerar estoque no ERP
 2. Clicar em "Sincronizar FácilZap"
@@ -236,6 +249,7 @@ return NextResponse.json({
 ```
 
 ### ✅ **Teste 5: Reposição de Estoque**
+
 ```
 1. Repor estoque no ERP
 2. Clicar em "Sincronizar FácilZap"
@@ -276,21 +290,24 @@ ORDER BY created_at DESC;
 ✅ Usa SERVICE_ROLE_KEY do Supabase  
 ✅ Valida token FácilZap  
 ✅ Sanitiza dados antes de inserir  
-✅ Registra logs de auditoria  
+✅ Registra logs de auditoria
 
 ---
 
 ## 🐛 **TROUBLESHOOTING**
 
 ### Problema: "Token FácilZap ausente"
+
 **Causa:** Variável `FACILZAP_TOKEN` não configurada  
 **Solução:** Adicionar no `.env.local`
 
 ### Problema: "Nenhum produto sincronizado"
+
 **Causa:** API FácilZap fora do ar ou token inválido  
 **Solução:** Verificar status da API e renovar token
 
 ### Problema: "Timeout"
+
 **Causa:** Muitos produtos (>1000)  
 **Solução:** Sincronizar por páginas ou aumentar timeout
 
@@ -307,7 +324,7 @@ O botão **"Sincronizar FácilZap"** é **TOTALMENTE FUNCIONAL** e:
 ✅ Mostra feedback visual  
 ✅ Registra logs de auditoria  
 ✅ Gerencia estoque automaticamente  
-✅ Recarrega lista após sincronização  
+✅ Recarrega lista após sincronização
 
 **NÃO é um botão "nulo" ou decorativo!** 🚀
 
@@ -318,7 +335,7 @@ O botão **"Sincronizar FácilZap"** é **TOTALMENTE FUNCIONAL** e:
 Para ver quantas vezes foi usado:
 
 ```sql
-SELECT 
+SELECT
   COUNT(*) as total_sincronizacoes,
   COUNT(DISTINCT DATE(created_at)) as dias_diferentes,
   MAX(created_at) as ultima_sincronizacao

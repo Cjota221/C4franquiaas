@@ -1,4 +1,3 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -6,7 +5,7 @@ export async function middleware(request: NextRequest) {
 
   // 🚨 TEMPORARIAMENTE DESABILITADO PARA DEBUG
   // O middleware estava bloqueando o login
-  console.log('� Middleware ativo na rota:', pathname)
+  console.log('🔐 Middleware ativo na rota:', pathname)
   
   // Apenas passar a requisição sem verificar autenticação
   return NextResponse.next()

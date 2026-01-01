@@ -11,12 +11,14 @@ Sistema completo de **aprovação em 2 níveis** para controle de produtos entre
 ## 🎯 Problema Resolvido
 
 ### Antes
+
 - ❌ Produtos do FácilZap iam direto para as franqueadas sem controle
 - ❌ Revendedoras tinham produtos inadequados (ex: Kit Empreendedora)
 - ❌ Sem visibilidade de produtos novos
 - ❌ Sem rastreabilidade de aprovações
 
 ### Depois
+
 - ✅ Admin aprova produtos antes de ir para franqueadas
 - ✅ Franqueadas ativam produtos com margem personalizada
 - ✅ Notificações em tempo real
@@ -28,9 +30,11 @@ Sistema completo de **aprovação em 2 níveis** para controle de produtos entre
 ## 🗂️ Estrutura Implementada
 
 ### 1️⃣ DATABASE (Migration 049)
+
 **Arquivo:** `migrations/049_fluxo_aprovacao_produtos.sql`
 
 #### Campos Adicionados à Tabela `produtos`:
+
 ```sql
 admin_aprovado BOOLEAN DEFAULT false         -- Admin aprovou?
 admin_rejeitado BOOLEAN DEFAULT false        -- Admin rejeitou?
@@ -41,6 +45,7 @@ eh_produto_novo BOOLEAN DEFAULT false        -- Produto veio do sync recente?
 ```
 
 #### Campos Adicionados à Tabela `reseller_products`:
+
 ```sql
 vista_pela_franqueada BOOLEAN DEFAULT false  -- Franqueada já viu o produto?
 data_ativacao TIMESTAMP                      -- Quando foi ativado no site?
@@ -49,18 +54,21 @@ data_ativacao TIMESTAMP                      -- Quando foi ativado no site?
 #### Funções PL/pgSQL Criadas:
 
 **`aprovar_produtos(produto_ids UUID[], admin_user_id UUID, notas TEXT)`**
+
 - Marca produtos como `admin_aprovado = true`
 - Cria entradas em `reseller_products` com margem padrão (20%)
 - Envia notificação para todas franqueadas aprovadas
 - Retorna quantidade de produtos aprovados
 
 **`rejeitar_produtos(produto_ids UUID[], admin_user_id UUID, notas TEXT)`**
+
 - Marca produtos como `admin_rejeitado = true`
 - Desativa produtos (`ativo = false`)
 - Armazena motivo em `admin_notas`
 - Retorna quantidade de produtos rejeitados
 
 **`ativar_produto_franqueada(p_product_id UUID, p_reseller_id UUID, p_margem DECIMAL, p_custom_price DECIMAL)`**
+
 - Ativa produto no catálogo da franqueada
 - Aplica margem ou preço customizado
 - Marca produto como visto
@@ -70,16 +78,19 @@ data_ativacao TIMESTAMP                      -- Quando foi ativado no site?
 #### Views Criadas:
 
 **`produtos_pendentes_aprovacao`**
+
 ```sql
-SELECT * FROM produtos 
-WHERE NOT admin_aprovado 
-  AND NOT admin_rejeitado 
+SELECT * FROM produtos
+WHERE NOT admin_aprovado
+  AND NOT admin_rejeitado
   AND eh_produto_novo = true
 ```
+
 - Mostra produtos aguardando aprovação do admin
 - Usada no painel `/admin/produtos/pendentes`
 
 **`produtos_novos_franqueada`**
+
 ```sql
 SELECT p.*, rp.margem_percent, rp.vista_pela_franqueada
 FROM produtos p
@@ -88,10 +99,12 @@ WHERE p.admin_aprovado = true
   AND rp.ativo = false
   AND rp.reseller_id = auth.uid()
 ```
+
 - Mostra produtos aprovados pelo admin mas ainda não ativados pela franqueada
 - Usada no painel `/revendedora/produtos/novos`
 
 #### RLS Policies:
+
 - Admin tem acesso total para aprovar/rejeitar
 - Franqueadas veem apenas produtos aprovados para elas
 - Views aplicam filtros automáticos por usuário logado
@@ -99,9 +112,11 @@ WHERE p.admin_aprovado = true
 ---
 
 ### 2️⃣ SYNC MODIFICADO
+
 **Arquivo:** `app/api/sync-produtos/route.ts`
 
 #### Lógica Implementada:
+
 ```typescript
 // NOVOS PRODUTOS → Ficam PENDENTES
 const ativo = false;
@@ -113,6 +128,7 @@ const eh_produto_novo = true;
 ```
 
 **Resultado:**
+
 - Produtos novos do FácilZap **não vão direto** para franqueadas
 - Admin precisa aprovar antes
 - Produtos já aprovados que reestocam → reativam automaticamente
@@ -120,10 +136,12 @@ const eh_produto_novo = true;
 ---
 
 ### 3️⃣ PAINEL ADMIN
+
 **URL:** `/admin/produtos/pendentes`
 **Arquivo:** `app/admin/produtos/pendentes/page.tsx`
 
 #### Funcionalidades:
+
 - 📦 Grid visual de produtos pendentes
 - ☑️ Seleção múltipla (checkboxes)
 - ✅ Botão "Aprovar Selecionados" (verde)
@@ -132,6 +150,7 @@ const eh_produto_novo = true;
 - 📊 Mostra: imagem, nome, categorias, preço base
 
 **API Endpoint:** `/api/admin/produtos/aprovar`
+
 ```typescript
 POST /api/admin/produtos/aprovar
 {
@@ -144,10 +163,12 @@ POST /api/admin/produtos/aprovar
 ---
 
 ### 4️⃣ PAINEL FRANQUEADA
+
 **URL:** `/revendedora/produtos/novos`
 **Arquivo:** `app/revendedora/produtos/novos/page.tsx`
 
 #### Funcionalidades:
+
 - 🆕 Badge "NOVO" nos produtos
 - 📦 Grid visual de produtos aprovados
 - 💰 Ajuste de margem por produto (slider/input)
@@ -158,6 +179,7 @@ POST /api/admin/produtos/aprovar
 - 📊 Mostra: imagem, nome, categorias, preço base
 
 **API Endpoint:** `/api/revendedora/produtos/ativar`
+
 ```typescript
 POST /api/revendedora/produtos/ativar
 {
@@ -170,16 +192,19 @@ POST /api/revendedora/produtos/ativar
 ---
 
 ### 5️⃣ BADGE CONTADOR NO MENU
+
 **Arquivo:** `components/revendedora/SidebarRevendedora.tsx`
 **Hook:** `hooks/useNewProductsCount.ts`
 
 #### Funcionalidades:
+
 - 🔴 Badge vermelho animado com contagem
 - 🔄 Atualização automática a cada 30 segundos
 - ✨ Ícone "Sparkles" no item "Produtos Novos"
 - 👁️ Visível apenas quando há produtos novos
 
 **Menu Atualizado:**
+
 ```
 Dashboard
 Produtos
@@ -259,15 +284,16 @@ c43511d feat: Implementar fluxo de aprovação no sync FácilZap
 ## 🧪 Como Testar
 
 ### 1. Criar Produto de Teste
+
 ```sql
 INSERT INTO produtos (
-  nome, 
-  descricao, 
-  preco_base, 
-  estoque, 
-  ativo, 
-  admin_aprovado, 
-  admin_rejeitado, 
+  nome,
+  descricao,
+  preco_base,
+  estoque,
+  ativo,
+  admin_aprovado,
+  admin_rejeitado,
   eh_produto_novo
 ) VALUES (
   'Produto Teste Aprovação',
@@ -282,6 +308,7 @@ INSERT INTO produtos (
 ```
 
 ### 2. Admin Aprova
+
 1. Login como admin
 2. Acessar `/admin/produtos/pendentes`
 3. Selecionar "Produto Teste Aprovação"
@@ -289,6 +316,7 @@ INSERT INTO produtos (
 5. ✅ Verificar notificação de sucesso
 
 ### 3. Franqueada Ativa
+
 1. Login como franqueada
 2. Ver badge **[1]** no menu "Produtos Novos"
 3. Acessar `/revendedora/produtos/novos`
@@ -298,6 +326,7 @@ INSERT INTO produtos (
 7. ✅ Produto aparece no catálogo público
 
 ### 4. Verificar no Site Público
+
 1. Acessar `https://seu-slug.sualoja.com.br/catalogo`
 2. ✅ Produto "Teste Aprovação" visível
 3. ✅ Preço mostrado: R$ 65,00
@@ -307,19 +336,22 @@ INSERT INTO produtos (
 ## 📊 Queries de Monitoramento
 
 ### Ver produtos pendentes de aprovação:
+
 ```sql
 SELECT * FROM produtos_pendentes_aprovacao;
 ```
 
 ### Ver produtos novos para franqueada específica:
+
 ```sql
-SELECT * FROM produtos_novos_franqueada 
+SELECT * FROM produtos_novos_franqueada
 WHERE reseller_id = 'UUID_DA_FRANQUEADA';
 ```
 
 ### Ver histórico de aprovações:
+
 ```sql
-SELECT 
+SELECT
   p.nome,
   p.admin_aprovado,
   p.admin_rejeitado,
@@ -332,8 +364,9 @@ ORDER BY p.admin_data_aprovacao DESC;
 ```
 
 ### Contar produtos novos por franqueada:
+
 ```sql
-SELECT 
+SELECT
   r.name as franqueada,
   COUNT(*) as produtos_novos
 FROM produtos_novos_franqueada pnf
@@ -346,6 +379,7 @@ GROUP BY r.name;
 ## 🚀 Próximos Passos (Opcional)
 
 ### Melhorias Futuras:
+
 - [ ] Filtros no painel admin (categoria, preço, estoque)
 - [ ] Busca por nome no painel franqueada
 - [ ] Histórico de ativações
@@ -355,6 +389,7 @@ GROUP BY r.name;
 - [ ] Templates de margem por categoria
 
 ### Migration Realtime (já pronta):
+
 ```bash
 # Aplicar quando quiser updates instantâneos
 psql -h <host> -U postgres -d postgres -f migrations/APLICAR_REALTIME_CATALOGO.sql
@@ -365,6 +400,7 @@ psql -h <host> -U postgres -d postgres -f migrations/APLICAR_REALTIME_CATALOGO.s
 ## 📞 Suporte
 
 ### Arquivos Importantes:
+
 - `migrations/049_fluxo_aprovacao_produtos.sql` - Estrutura do banco
 - `app/api/sync-produtos/route.ts` - Lógica de sync
 - `app/admin/produtos/pendentes/page.tsx` - Painel admin
@@ -372,6 +408,7 @@ psql -h <host> -U postgres -d postgres -f migrations/APLICAR_REALTIME_CATALOGO.s
 - `hooks/useNewProductsCount.ts` - Contador automático
 
 ### Em Caso de Problemas:
+
 1. Verificar RLS policies ativas: `SELECT * FROM pg_policies WHERE tablename IN ('produtos', 'reseller_products')`
 2. Verificar migration aplicada: `SELECT * FROM schema_migrations WHERE version = '049'`
 3. Logs do sync: Verificar console em `/api/sync-produtos`

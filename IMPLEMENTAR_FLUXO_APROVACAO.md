@@ -15,7 +15,7 @@
 ### **NÍVEL 1: ADMIN APROVA PRIMEIRO**
 
 ```
-FácilZap → Admin Panel (AGUARDANDO APROVAÇÃO) 
+FácilZap → Admin Panel (AGUARDANDO APROVAÇÃO)
                 ↓
          Admin revisa
                 ↓
@@ -25,6 +25,7 @@ FácilZap → Admin Panel (AGUARDANDO APROVAÇÃO)
 ```
 
 **Novo campo na tabela `produtos`:**
+
 ```sql
 ALTER TABLE produtos
 ADD COLUMN IF NOT EXISTS admin_aprovado BOOLEAN DEFAULT false,
@@ -38,7 +39,7 @@ ADD COLUMN IF NOT EXISTS admin_notas TEXT;
 ### **NÍVEL 2: FRANQUEADA ATIVA NO SITE DELA**
 
 ```
-Admin aprovou → Franqueada vê "PRODUTOS NOVOS" 
+Admin aprovou → Franqueada vê "PRODUTOS NOVOS"
                        ↓
               Franqueada revisa
                        ↓
@@ -48,6 +49,7 @@ Admin aprovou → Franqueada vê "PRODUTOS NOVOS"
 ```
 
 **Campo `is_active` em `reseller_products`:**
+
 - `false` por padrão quando Admin aprova
 - Franqueada decide depois
 
@@ -56,8 +58,9 @@ Admin aprovou → Franqueada vê "PRODUTOS NOVOS"
 ### **NÍVEL 3: SITE PÚBLICO**
 
 Só aparece se:
+
 - ✅ `produtos.admin_aprovado = true`
-- ✅ `produtos.ativo = true` 
+- ✅ `produtos.ativo = true`
 - ✅ `produtos.estoque > 0`
 - ✅ `reseller_products.is_active = true`
 
@@ -66,6 +69,7 @@ Só aparece se:
 ## 🛠️ MUDANÇAS NECESSÁRIAS
 
 ### 1️⃣ **Alterar sincronização FácilZap**
+
 ```typescript
 // app/api/sync-produtos/route.ts
 // ANTES: Produto ficava ativo automaticamente
@@ -80,6 +84,7 @@ const produtoData = {
 ```
 
 ### 2️⃣ **Criar painel "Produtos Aguardando Aprovação"**
+
 ```
 /admin/produtos/aguardando-aprovacao
 
@@ -97,6 +102,7 @@ const produtoData = {
 ```
 
 ### 3️⃣ **API de Aprovação/Rejeição**
+
 ```typescript
 // POST /api/admin/produtos/aprovar
 {
@@ -107,16 +113,18 @@ const produtoData = {
 ```
 
 ### 4️⃣ **Vincular SOMENTE produtos aprovados**
+
 ```sql
 -- Modificar VINCULAR_PRODUTOS_AUTOMATICO.sql
 INSERT INTO reseller_products (...)
-WHERE 
+WHERE
   p.admin_aprovado = true  -- ✅ SÓ SE ADMIN APROVOU
   AND p.ativo = true
   AND r.status = 'aprovada'
 ```
 
 ### 5️⃣ **Painel Franqueada: "Produtos Novos"**
+
 ```
 /revendedora/produtos/novos
 
@@ -136,6 +144,7 @@ WHERE
 ```
 
 ### 6️⃣ **Notificações**
+
 ```typescript
 // Quando Admin aprova 10 produtos:
 INSERT INTO reseller_notifications (
@@ -151,13 +160,13 @@ INSERT INTO reseller_notifications (
 
 ## 📊 TABELA DE ESTADOS
 
-| Situação | admin_aprovado | ativo | is_active (reseller) | Aparece no Site? |
-|----------|----------------|-------|---------------------|------------------|
-| Chegou FácilZap | `false` | `false` | - | ❌ NÃO |
-| Admin aprovou | `true` | `true` | `false` | ❌ NÃO |
-| Franqueada ativou | `true` | `true` | `true` | ✅ SIM |
-| Admin rejeitou | `false` | `false` | - | ❌ NUNCA |
-| Sem estoque | `true` | `false` | `true` | ❌ NÃO |
+| Situação          | admin_aprovado | ativo   | is_active (reseller) | Aparece no Site? |
+| ----------------- | -------------- | ------- | -------------------- | ---------------- |
+| Chegou FácilZap   | `false`        | `false` | -                    | ❌ NÃO           |
+| Admin aprovou     | `true`         | `true`  | `false`              | ❌ NÃO           |
+| Franqueada ativou | `true`         | `true`  | `true`               | ✅ SIM           |
+| Admin rejeitou    | `false`        | `false` | -                    | ❌ NUNCA         |
+| Sem estoque       | `true`         | `false` | `true`               | ❌ NÃO           |
 
 ---
 
@@ -175,17 +184,20 @@ INSERT INTO reseller_notifications (
 ## 🚀 PRIORIDADE DE IMPLEMENTAÇÃO
 
 ### **FASE 1: Urgente (hoje)**
+
 - [ ] Adicionar campos `admin_aprovado` na tabela `produtos`
 - [ ] Modificar sync FácilZap para `admin_aprovado = false`
 - [ ] Criar página `/admin/produtos/pendentes`
 - [ ] Criar API `/api/admin/produtos/aprovar`
 
 ### **FASE 2: Importante (amanhã)**
+
 - [ ] Modificar vinculação para só vincular produtos aprovados
 - [ ] Adicionar badge "NOVO" nos produtos `is_active = false`
 - [ ] Criar página `/revendedora/produtos/novos`
 
 ### **FASE 3: Melhorias (depois)**
+
 - [ ] Sistema de notificações push
 - [ ] Histórico de aprovações
 - [ ] Aprovação em massa
@@ -195,15 +207,17 @@ INSERT INTO reseller_notifications (
 ## 🔍 QUERIES ÚTEIS
 
 ### Ver produtos aguardando aprovação:
+
 ```sql
 SELECT id, nome, estoque, preco_base, ultima_sincronizacao
 FROM produtos
-WHERE admin_aprovado = false 
+WHERE admin_aprovado = false
   AND admin_rejeitado = false
 ORDER BY ultima_sincronizacao DESC;
 ```
 
 ### Ver produtos novos para uma franqueada:
+
 ```sql
 SELECT p.id, p.nome, p.preco_base, rp.is_active
 FROM produtos p
@@ -219,6 +233,7 @@ ORDER BY rp.created_at DESC;
 ## ❓ QUER QUE EU IMPLEMENTE?
 
 Posso começar pela **FASE 1** agora:
+
 1. Criar migration com novos campos
 2. Modificar sync FácilZap
 3. Criar página de aprovação do Admin
