@@ -18,7 +18,11 @@ const ALLOWED_HOSTS = [
 ];
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_ORIGINS = ['https://c4franquiaas.netlify.app', 'https://cjotarasteirinhas.com.br'];
+const ALLOWED_ORIGINS = [
+  'https://c4franquiaas.netlify.app',
+  'https://c4franquias.com',
+  'https://cjotarasteirinhas.com.br'
+];
 
 exports.handler = async function (event) {
   // Prefer explicit 'facilzap' param (original URL) when provided, fall back to 'url'
