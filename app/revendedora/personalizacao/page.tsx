@@ -680,7 +680,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200 space-y-4">
-            <h3 className="font-semibold text-gray-800">Opções do Catálogo</h3>
+            <h3 className="font-semibold text-gray-800">Opções do Site</h3>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Mostrar Preços</p>

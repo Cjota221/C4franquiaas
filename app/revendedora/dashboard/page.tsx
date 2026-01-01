@@ -222,15 +222,15 @@ export default function DashboardRevendedora() {
         })}
       </div>
 
-      {/* Se JÁ configurou a loja - Mostra o catálogo pronto */}
+      {/* Se JÁ configurou a loja - Mostra o site pronto */}
       {hasConfiguredStore ? (
         <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg p-6 text-white">
-          <h2 className="text-xl font-bold mb-2">🎉 Seu Catálogo Está Pronto!</h2>
+          <h2 className="text-xl font-bold mb-2">🎉 Seu Site Está Pronto!</h2>
           <p className="text-pink-100 mb-4">Compartilhe com suas clientes e comece a vender</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link href={catalogUrl} target="_blank" className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-pink-600 font-medium rounded-lg hover:bg-pink-50 transition-all">
               <ExternalLink size={18} />
-              Ver Catálogo
+              Ver Meu Site
             </Link>
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-6 py-3 bg-white/20 backdrop-blur text-white font-medium rounded-lg hover:bg-white/30 transition-all">
               <Share2 size={18} />
@@ -238,7 +238,7 @@ export default function DashboardRevendedora() {
             </a>
           </div>
           <div className="mt-4 p-3 bg-white/10 rounded-lg">
-            <p className="text-sm text-pink-100 mb-1">Link do seu catálogo:</p>
+            <p className="text-sm text-pink-100 mb-1">Link do seu site:</p>
             <code className="text-sm font-mono bg-black/20 px-3 py-1 rounded block overflow-x-auto">{catalogUrl}</code>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function DashboardRevendedora() {
               <Sparkles className="w-8 h-8" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold mb-2">Configure seu Catálogo!</h2>
+              <h2 className="text-xl font-bold mb-2">Configure Seu Site!</h2>
               <p className="text-amber-100 mb-4">
                 Para começar a vender, você precisa personalizar sua loja. 
                 Defina o nome da sua loja, escolha suas cores e adicione seu logo.
@@ -289,14 +289,14 @@ export default function DashboardRevendedora() {
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-sm font-medium">2</span>
             <div>
-              <p className="font-medium text-gray-900">Adicione produtos ao seu catálogo</p>
+              <p className="font-medium text-gray-900">Adicione produtos ao seu site</p>
               <p className="text-sm text-gray-500">Vá em &quot;Produtos&quot; e ative os produtos que deseja vender</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
             <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${hasConfiguredStore ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-400'}`}>3</span>
             <div>
-              <p className={`font-medium ${hasConfiguredStore ? 'text-gray-900' : 'text-gray-400'}`}>Compartilhe seu catálogo</p>
+              <p className={`font-medium ${hasConfiguredStore ? 'text-gray-900' : 'text-gray-400'}`}>Compartilhe seu site</p>
               <p className={`text-sm ${hasConfiguredStore ? 'text-gray-500' : 'text-gray-400'}`}>
                 {hasConfiguredStore 
                   ? 'Envie o link para suas clientes via WhatsApp ou redes sociais'
