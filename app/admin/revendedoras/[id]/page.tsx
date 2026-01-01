@@ -150,6 +150,59 @@ export default function RevendedoraDetalhesPage() {
     window.open(`https://wa.me/55${telefone}`, '_blank');
   }
 
+  // 🆕 Copiar número do telefone
+  function copiarNumero() {
+    if (!revendedora) return;
+    const telefone = revendedora.phone.replace(/\D/g, '');
+    const numeroFormatado = `55${telefone}`;
+    navigator.clipboard.writeText(numeroFormatado);
+    alert(`✅ Número copiado: ${numeroFormatado}`);
+  }
+
+  // 🆕 Copiar mensagem de boas-vindas
+  function copiarMensagem() {
+    if (!revendedora) return;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
+    const loginUrl = `${baseUrl}/login/revendedora`;
+    
+    const mensagem = `*PARABENS ${revendedora.name.toUpperCase()}!*
+
+Temos uma otima noticia! Seu cadastro como franqueada foi *APROVADO*!
+
+Sua loja *"${revendedora.store_name}"* ja esta pronta para voce comecar a vender!
+
+*ACESSE SUA CONTA:*
+${loginUrl}
+
+Use o e-mail cadastrado: ${revendedora.email}
+
+━━━━━━━━━━━━━━━━━━━━
+
+*JUNTE-SE A NOSSA COMUNIDADE!*
+
+Entre no *Grupo das Franqueadas C4* para trocar experiencias, tirar duvidas e receber dicas exclusivas!
+
+*LINK DO GRUPO:*
+https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
+
+*REGRAS DO GRUPO:*
+• Falar apenas sobre o projeto C4 Franquias
+• Proibido venda de outros produtos ou spam
+• Imagens/conversas inadequadas = remocao imediata
+• Violacao das regras = desativacao da conta
+
+_Ao entrar no grupo, voce concorda com as regras._
+
+━━━━━━━━━━━━━━━━━━━━
+
+Qualquer duvida, estamos a disposicao!
+
+*Bem-vinda a equipe C4 Franquias!*`;
+
+    navigator.clipboard.writeText(mensagem);
+    alert('✅ Mensagem copiada! Cole no WhatsApp Web.');
+  }
+
   function verCatalogo() {
     if (!revendedora?.slug) {
       alert('Esta revendedora ainda não configurou o catálogo');
@@ -240,7 +293,7 @@ export default function RevendedoraDetalhesPage() {
           </div>
 
           {/* Botões de ação */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {catalogUrl && (
               <button
                 onClick={verCatalogo}
@@ -250,6 +303,31 @@ export default function RevendedoraDetalhesPage() {
                 Ver Catálogo
               </button>
             )}
+            
+            {/* 🆕 Botão Copiar Número */}
+            <button
+              onClick={copiarNumero}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+              title="Copiar número para WhatsApp Web"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copiar Número
+            </button>
+
+            {/* 🆕 Botão Copiar Mensagem */}
+            <button
+              onClick={copiarMensagem}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+              title="Copiar mensagem de boas-vindas"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Copiar Mensagem
+            </button>
+
             <button
               onClick={enviarWhatsApp}
               className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
