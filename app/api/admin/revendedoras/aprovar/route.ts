@@ -58,6 +58,37 @@ function getApprovalEmailHTML(nome: string, nomeLoja: string, loginUrl: string) 
               <li>Compartilhe o link da sua loja com seus clientes!</li>
             </ol>
           </div>
+
+          <!-- 🆕 GRUPO WHATSAPP DA COMUNIDADE -->
+          <div style="background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%); border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin: 25px 0;">
+            <p style="margin: 0 0 10px; color: #065f46; font-size: 16px; font-weight: bold; text-align: center;">
+              💬 Junte-se à Nossa Comunidade!
+            </p>
+            <p style="font-size: 14px; color: #047857; margin: 0 0 15px; text-align: center; line-height: 1.6;">
+              Entre no <strong>Grupo das Franqueadas C4</strong> para trocar experiências, tirar dúvidas e receber dicas exclusivas!
+            </p>
+            <div style="text-align: center; margin: 15px 0;">
+              <a href="https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os" style="display: inline-block; background: #25D366; color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                📱 Entrar no Grupo
+              </a>
+            </div>
+            
+            <!-- TERMOS DO GRUPO -->
+            <div style="background: white; border-radius: 8px; padding: 15px; margin-top: 15px;">
+              <p style="margin: 0 0 8px; color: #b91c1c; font-size: 13px; font-weight: bold;">
+                ⚠️ Regras do Grupo:
+              </p>
+              <ul style="font-size: 12px; color: #374151; margin: 0; padding-left: 20px; line-height: 1.7;">
+                <li><strong>Conteúdo exclusivo:</strong> Falar apenas sobre o projeto C4 Franquias</li>
+                <li><strong>Proibido:</strong> Venda de outros produtos, spam ou mensagens não relacionadas</li>
+                <li><strong>Respeito:</strong> Imagens ou conversas inadequadas resultam em remoção imediata</li>
+                <li><strong>Consequência:</strong> Violação das regras = desativação da conta e remoção do grupo</li>
+              </ul>
+              <p style="font-size: 11px; color: #6b7280; margin: 10px 0 0; text-align: center;">
+                Ao entrar no grupo, você concorda com essas regras.
+              </p>
+            </div>
+          </div>
           
           <p style="font-size: 14px; color: #9ca3af; margin: 30px 0 0; text-align: center;">
             Dúvidas? Entre em contato conosco.

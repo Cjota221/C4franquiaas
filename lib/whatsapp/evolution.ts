@@ -204,13 +204,31 @@ Sua conta de revendedora foi *APROVADA*!
 
 Agora você pode acessar o painel e começar a vender!
 
-👉 Acesse: ${loginUrl}
+👉 *Acesse:* ${loginUrl}
 
 *Próximos passos:*
 1️⃣ Faça login com seu email e senha
 2️⃣ Personalize sua loja
 3️⃣ Selecione os produtos
 4️⃣ Compartilhe seu link!
+
+---
+
+💬 *JUNTE-SE À NOSSA COMUNIDADE!*
+
+Entre no *Grupo das Franqueadas C4* para trocar experiências, tirar dúvidas e receber dicas exclusivas!
+
+📱 *Link do Grupo:* https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
+
+⚠️ *REGRAS DO GRUPO:*
+• Falar apenas sobre o projeto C4 Franquias
+• Proibido venda de outros produtos ou spam
+• Imagens/conversas inadequadas = remoção imediata
+• Violação das regras = desativação da conta
+
+_Ao entrar no grupo, você concorda com as regras._
+
+---
 
 Bem-vinda à equipe! 💜
   `.trim(),
