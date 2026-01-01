@@ -34,18 +34,35 @@ type Props = {
 export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Se não há guia de tamanhos, não mostra nada
-  if (!sizeGuide || (!sizeGuide.image_url && !sizeGuide.instrucoes && (!sizeGuide.measurements || sizeGuide.measurements.length === 0))) {
-    return null;
-  }
+  // Medidas padrão de calçados femininos
+  const medidasPadraoCalcados: MedidaCalcado[] = [
+    { tamanho: '34', centimetros: '23,5' },
+    { tamanho: '35', centimetros: '24,0' },
+    { tamanho: '36', centimetros: '25,5' },
+    { tamanho: '37', centimetros: '26,0' },
+    { tamanho: '38', centimetros: '26,5' },
+    { tamanho: '39', centimetros: '27,0' },
+    { tamanho: '40', centimetros: '27,5' },
+    { tamanho: '41', centimetros: '28,0' },
+    { tamanho: '42', centimetros: '29,5' },
+    { tamanho: '43', centimetros: '30,0' },
+  ];
+
+  // Se não há guia de tamanhos, usar as medidas padrão de calçados
+  const medidasFinais = (sizeGuide?.measurements && sizeGuide.measurements.length > 0) 
+    ? sizeGuide.measurements 
+    : medidasPadraoCalcados;
+
+  // Se não tem imagem, instruções e nem medidas customizadas, ainda assim mostramos a tabela padrão
+  // então não retornar null aqui
 
   // Detectar se é estrutura de calçados ou roupas
-  const isCalcado = sizeGuide.measurements && sizeGuide.measurements.length > 0 && 
-    'tamanho' in sizeGuide.measurements[0];
+  const isCalcado = medidasFinais && medidasFinais.length > 0 && 
+    'tamanho' in medidasFinais[0];
 
   // Descobrir quais colunas de medidas existem (para roupas)
-  const colunasRoupa = !isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0
-    ? Object.keys(sizeGuide.measurements[0]).filter(k => k !== 'size' && (sizeGuide.measurements as MedidaRoupa[])?.some(m => m[k]))
+  const colunasRoupa = !isCalcado && medidasFinais && medidasFinais.length > 0
+    ? Object.keys(medidasFinais[0]).filter(k => k !== 'size' && (medidasFinais as MedidaRoupa[])?.some(m => m[k]))
     : [];
 
   const traduzirColuna = (coluna: string) => {
@@ -102,7 +119,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
             {/* Conteúdo */}
             <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
               {/* Imagem/Ilustração do guia */}
-              {sizeGuide.image_url && (
+              {sizeGuide?.image_url && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
                     📐 Como Medir
@@ -119,7 +136,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
               )}
 
               {/* Instruções de como medir */}
-              {sizeGuide.instrucoes && (
+              {sizeGuide?.instrucoes && (
                 <div className="mb-6 p-4 bg-pink-50 rounded-xl border border-pink-100">
                   <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                     📝 Instruções
@@ -131,7 +148,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
               )}
 
               {/* Tabela de medidas - CALÇADOS */}
-              {isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0 && (
+              {isCalcado && medidasFinais && medidasFinais.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     👟 Tabela de Medidas - Calçados
@@ -155,7 +172,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                         </tr>
                       </thead>
                       <tbody>
-                        {(sizeGuide.measurements as MedidaCalcado[]).map((medida, index) => (
+                        {(medidasFinais as MedidaCalcado[]).map((medida, index) => (
                           <tr 
                             key={medida.tamanho || index} 
                             className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
@@ -175,7 +192,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
               )}
 
               {/* Tabela de medidas - ROUPAS (compatibilidade com estrutura antiga) */}
-              {!isCalcado && sizeGuide.measurements && sizeGuide.measurements.length > 0 && (
+              {!isCalcado && medidasFinais && medidasFinais.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     👗 Tabela de Medidas (em cm)
@@ -202,7 +219,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                         </tr>
                       </thead>
                       <tbody>
-                        {(sizeGuide.measurements as MedidaRoupa[]).map((medida, index) => (
+                        {(medidasFinais as MedidaRoupa[]).map((medida, index) => (
                           <tr 
                             key={medida.size || index} 
                             className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
@@ -227,7 +244,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
               )}
 
               {/* Dica extra quando não tem instruções */}
-              {!sizeGuide.instrucoes && (
+              {!sizeGuide?.instrucoes && (
                 <div className="mt-6 p-4 bg-gray-50 rounded-xl">
                   <h4 className="font-semibold text-gray-900 mb-2">� Dica</h4>
                   <p className="text-sm text-gray-600">
