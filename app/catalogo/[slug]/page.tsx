@@ -25,6 +25,7 @@ type ProductWithPrice = {
   finalPrice: number;
   estoque: number;
   variacoes?: Variacao[];
+  created_at?: string; // Data de criação do vínculo
 };
 
 export default function CatalogoPrincipal() {
@@ -32,7 +33,7 @@ export default function CatalogoPrincipal() {
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<string>('');
-  const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc'>('default');
+  const [sortOrder, setSortOrder] = useState<'default' | 'price_asc' | 'price_desc' | 'stock' | 'newest'>('default');
   
   // Ler termo de busca da URL (vem do header)
   const searchParams = useSearchParams();
@@ -99,6 +100,7 @@ export default function CatalogoPrincipal() {
           estoque: p.produtos.estoque || 0,
           finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
           variacoes,
+          created_at: p.created_at, // 🆕 Data de criação do vínculo
         };
       }) || [];
 
@@ -174,8 +176,34 @@ export default function CatalogoPrincipal() {
       );
     }
 
-    // Ordenar
-    if (sortOrder === 'price_asc') {
+    // 🆕 ORDENAÇÃO INTELIGENTE
+    if (sortOrder === 'default') {
+      // PADRÃO: Priorizar produtos com MAIS ESTOQUE e MAIS NOVOS
+      filtered = [...filtered].sort((a, b) => {
+        // 1️⃣ Primeiro critério: ESTOQUE (maior estoque primeiro)
+        const estoqueDiff = b.estoque - a.estoque;
+        if (estoqueDiff !== 0) return estoqueDiff;
+        
+        // 2️⃣ Segundo critério: DATA (mais recente primeiro)
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        
+        // 3️⃣ Terceiro critério: Nome (alfabético)
+        return a.nome.localeCompare(b.nome);
+      });
+    } else if (sortOrder === 'stock') {
+      // Ordenar APENAS por estoque (maior primeiro)
+      filtered = [...filtered].sort((a, b) => b.estoque - a.estoque);
+    } else if (sortOrder === 'newest') {
+      // Ordenar APENAS por data (mais recente primeiro)
+      filtered = [...filtered].sort((a, b) => {
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return 0;
+      });
+    } else if (sortOrder === 'price_asc') {
       filtered = [...filtered].sort((a, b) => a.finalPrice - b.finalPrice);
     } else if (sortOrder === 'price_desc') {
       filtered = [...filtered].sort((a, b) => b.finalPrice - a.finalPrice);
@@ -339,12 +367,14 @@ export default function CatalogoPrincipal() {
           <div className="relative">
             <select
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'default' | 'price_asc' | 'price_desc')}
+              onChange={(e) => setSortOrder(e.target.value as 'default' | 'price_asc' | 'price_desc' | 'stock' | 'newest')}
               className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:outline-none cursor-pointer"
             >
-              <option value="default">Mais relevantes</option>
-              <option value="price_asc">Menor preço</option>
-              <option value="price_desc">Maior preço</option>
+              <option value="default">✨ Mais relevantes (Estoque + Novos)</option>
+              <option value="stock">📦 Maior estoque</option>
+              <option value="newest">🆕 Mais recentes</option>
+              <option value="price_asc">💰 Menor preço</option>
+              <option value="price_desc">💎 Maior preço</option>
             </select>
             <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
