@@ -208,13 +208,18 @@ export default function CatalogoLayout({
       // ⚠️ SEGURANÇA: Selecionar APENAS campos públicos necessários
       const { data } = await supabase
         .from('resellers')
-        .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings')
+        .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status')
         .eq('slug', slug)
-        .eq('is_active', true) // Apenas revendedoras ativas
-        .eq('status', 'aprovada') // Apenas aprovadas
         .single();
 
-      if (data) {
+      // 🆕 VERIFICAR SE EXISTE MAS ESTÁ DESATIVADA (is_active=false)
+      if (data && (!data.is_active || data.status !== 'aprovada')) {
+        setReseller({ ...data, desativada: true } as Reseller & { desativada: boolean });
+        setLoading(false);
+        return;
+      }
+
+      if (data && data.is_active && data.status === 'aprovada') {
         setReseller(data);
         
         // Carregar promoções ativas da revendedora
@@ -842,6 +847,49 @@ export default function CatalogoLayout({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
+
+  // 🆕 TELA DE SITE DESATIVADO (quando revendedora existe mas is_active=false)
+  if (reseller && 'desativada' in reseller && (reseller as Reseller & { desativada: boolean }).desativada) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+          {/* Ícone */}
+          <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+          </div>
+
+          {/* Mensagem */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Site Temporariamente Desativado
+          </h1>
+          
+          <p className="text-gray-600 mb-6">
+            Este site está temporariamente <strong>indisponível</strong>.
+          </p>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+            <p className="text-sm text-gray-700 mb-3">
+              <strong>Informação:</strong>
+            </p>
+            <p className="text-sm text-gray-600">
+              A revendedora está com o catálogo desativado no momento. 
+              Por favor, tente novamente mais tarde ou entre em contato diretamente.
+            </p>
+          </div>
+
+          {/* Link de Voltar */}
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+          >
+            Voltar à Página Inicial
+          </Link>
+        </div>
       </div>
     );
   }

@@ -38,13 +38,19 @@ export default function LoginRevendedoraPage() {
       console.log('🔍 Buscando dados da revendedora...');
       const { data: revendedora } = await supabase
         .from('resellers')
-        .select('id, status, name')
+        .select('id, status, name, is_active')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (!revendedora) {
         await supabase.auth.signOut();
         throw new Error('Acesso negado. Esta área é exclusiva para revendedoras.');
+      }
+
+      // 🆕 VERIFICAR SE ESTÁ DESATIVADA (is_active=false)
+      if (!revendedora.is_active) {
+        await supabase.auth.signOut();
+        throw new Error('🚫 Revendedora desativada. Sua conta foi temporariamente desativada. Entre em contato com o administrador para mais informações.');
       }
 
       if (revendedora.status !== 'aprovada') {
