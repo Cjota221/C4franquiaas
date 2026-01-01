@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Minus, ShoppingBag, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
+import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
 
 type Variacao = {
   sku: string;
@@ -266,6 +267,17 @@ export default function ProdutoPage() {
           <p className="text-3xl font-bold mb-4" style={{ color: primaryColor }}>
             R$ {calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}
           </p>
+
+          {/* Aviso "Sob Encomenda" */}
+          {themeSettings?.delivery_notice?.enabled && (
+            <div className="mb-4">
+              <DeliveryNoticeBadge 
+                days={themeSettings.delivery_notice.days}
+                message={themeSettings.delivery_notice.message}
+                variant="default"
+              />
+            </div>
+          )}
 
           {/* Guia de Tamanhos */}
           {produto.size_guide && (
