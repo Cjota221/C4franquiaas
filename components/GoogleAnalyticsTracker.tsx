@@ -31,6 +31,15 @@ export function GoogleAnalyticsTracker() {
       // Determinar tipo de página para dimensão customizada
       let pageType = 'outro'
       let lojaDominio = ''
+      let revendedoraNome = ''
+
+      // Extrair nome da revendedora do título (formato: "Seção - Nome da Loja | C4 Franquias")
+      if (pageTitle.includes(' - ') && pageTitle.includes(' | C4 Franquias')) {
+        const match = pageTitle.match(/- (.+?) \| C4 Franquias/)
+        if (match) {
+          revendedoraNome = match[1]
+        }
+      }
 
       // Extrair informações da URL
       const pathParts = pathname.split('/')
@@ -53,6 +62,8 @@ export function GoogleAnalyticsTracker() {
         pageType = 'admin'
       } else if (pathname.startsWith('/franqueada')) {
         pageType = 'franqueada'
+      } else if (pathname.startsWith('/revendedora')) {
+        pageType = 'painel_revendedora'
       } else if (pathname === '/') {
         pageType = 'landing'
       }
@@ -62,7 +73,10 @@ export function GoogleAnalyticsTracker() {
         page_path: fullUrl,
         page_title: pageTitle,
         page_location: window.location.origin + fullUrl,
-        send_page_view: true
+        send_page_view: true,
+        // Dimensões customizadas
+        revendedora_nome: revendedoraNome,
+        page_type: pageType,
       })
 
       // MÉTODO 2: Enviar evento personalizado para ter mais detalhes
@@ -72,12 +86,16 @@ export function GoogleAnalyticsTracker() {
         page_title: pageTitle,
         page_type: pageType,
         loja_dominio: lojaDominio,
-        loja_nome: lojaDominio ? lojaDominio.charAt(0).toUpperCase() + lojaDominio.slice(1) : ''
+        loja_nome: lojaDominio ? lojaDominio.charAt(0).toUpperCase() + lojaDominio.slice(1) : '',
+        revendedora_nome: revendedoraNome,
       })
 
       console.log(`📊 GA4 Pageview: ${fullUrl}`)
       console.log(`📋 Título da Página: "${pageTitle}"`)
       console.log(`🏪 Tipo: ${pageType}, Domínio: ${lojaDominio}`)
+      if (revendedoraNome) {
+        console.log(`👤 Revendedora: ${revendedoraNome}`)
+      }
     }
 
     // Pequeno delay para garantir que a página carregou
