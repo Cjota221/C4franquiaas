@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
 import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
-import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
+// import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados'; // REMOVIDO TEMPORARIAMENTE
 
 type Variacao = {
   sku: string;
@@ -405,8 +405,8 @@ export default function ProdutoPage() {
         </div>
       )}
 
-      {/* 🆕 Produtos Relacionados */}
-      {(() => {
+      {/* 🆕 Produtos Relacionados - REMOVIDO TEMPORARIAMENTE */}
+      {/* {(() => {
         console.log('🔍 [Produtos Relacionados] Verificando condições:', {
           themeSettings,
           show_related_products: themeSettings?.show_related_products,
@@ -424,7 +424,7 @@ export default function ProdutoPage() {
             subtitulo="Produtos selecionados especialmente para você"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 }

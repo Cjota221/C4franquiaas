@@ -691,6 +691,7 @@ export default function PersonalizacaoRevendedoraPage() {
               </button>
             </div>
             
+            {/* REMOVIDO TEMPORARIAMENTE - Produtos Relacionados
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Produtos Relacionados</p>
@@ -710,6 +711,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
               </button>
             </div>
+            */}
           </div>
           
           {/* 🆕 Aviso de Sob Encomenda */}
