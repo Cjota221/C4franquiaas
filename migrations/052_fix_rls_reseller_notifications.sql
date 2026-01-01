@@ -13,7 +13,9 @@ ALTER TABLE reseller_notifications ENABLE ROW LEVEL SECURITY;
 -- ============================================
 DROP POLICY IF EXISTS "Revendedoras podem ver suas notificações" ON reseller_notifications;
 DROP POLICY IF EXISTS "Revendedoras podem marcar como lidas" ON reseller_notifications;
+DROP POLICY IF EXISTS "Admins podem criar notificações" ON reseller_notifications;
 DROP POLICY IF EXISTS "Admins podem gerenciar notificações" ON reseller_notifications;
+DROP POLICY IF EXISTS "Admins podem gerenciar todas notificações" ON reseller_notifications;
 
 -- PASSO 3: Criar política de leitura para revendedoras
 -- ============================================
@@ -47,35 +49,7 @@ WITH CHECK (
   )
 );
 
--- PASSO 5: Criar política de inserção para admins
--- ============================================
-CREATE POLICY "Admins podem criar notificações"
-ON reseller_notifications
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = auth.uid()
-    AND role = 'admin'
-  )
-);
-
--- PASSO 6: Criar política de gestão completa para admins
--- ============================================
-CREATE POLICY "Admins podem gerenciar todas notificações"
-ON reseller_notifications
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = auth.uid()
-    AND role = 'admin'
-  )
-);
-
--- PASSO 7: Comentários
+-- PASSO 5: Comentários
 -- ============================================
 COMMENT ON POLICY "Revendedoras podem ver suas notificações" ON reseller_notifications IS 
   'Permite que revendedoras vejam apenas suas próprias notificações';
@@ -83,20 +57,14 @@ COMMENT ON POLICY "Revendedoras podem ver suas notificações" ON reseller_notif
 COMMENT ON POLICY "Revendedoras podem marcar como lidas" ON reseller_notifications IS 
   'Permite que revendedoras marquem suas notificações como lidas';
 
-COMMENT ON POLICY "Admins podem criar notificações" ON reseller_notifications IS 
-  'Permite que admins criem notificações para revendedoras';
-
-COMMENT ON POLICY "Admins podem gerenciar todas notificações" ON reseller_notifications IS 
-  'Permite que admins façam qualquer operação em notificações';
-
--- PASSO 8: Verificação final
+-- PASSO 6: Verificação final
 -- ============================================
 DO $$
 BEGIN
   RAISE NOTICE '✅ Migration 052 aplicada com sucesso!';
   RAISE NOTICE '🔒 RLS configurado para reseller_notifications';
   RAISE NOTICE '👥 Revendedoras podem ler e atualizar suas notificações';
-  RAISE NOTICE '🔑 Admins podem gerenciar todas notificações';
+  RAISE NOTICE '🔑 Admins usam service_role_key (bypass RLS)';
 END $$;
 
 -- ============================================
