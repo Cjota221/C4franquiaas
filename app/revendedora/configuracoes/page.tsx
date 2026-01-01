@@ -11,7 +11,9 @@ import {
   Loader2,
   Wifi,
   WifiOff,
-  Bell
+  Bell,
+  Clock,
+  Construction
 } from 'lucide-react'
 
 interface ResellerData {
@@ -198,7 +200,60 @@ export default function ConfiguracoesRevendedora() {
         Configurações
       </h1>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      {/* Card de Em Construção */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-lg shadow-md p-6 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-amber-500 rounded-full">
+            <Construction className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-amber-900 mb-2 flex items-center gap-2">
+              🚧 Funcionalidades em Desenvolvimento
+            </h2>
+            <p className="text-amber-800 mb-4">
+              Estamos trabalhando em novas integrações e recursos para melhorar ainda mais sua experiência! 
+              As seguintes funcionalidades estarão disponíveis em breve:
+            </p>
+            <div className="space-y-2 text-amber-700">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                <span className="font-medium">• Integração com WhatsApp</span>
+                <span className="text-xs bg-amber-200 px-2 py-1 rounded-full">Em breve</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                <span className="font-medium">• Notificações Personalizadas</span>
+                <span className="text-xs bg-amber-200 px-2 py-1 rounded-full">Em breve</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span className="font-medium">• Automações Avançadas</span>
+                <span className="text-xs bg-amber-200 px-2 py-1 rounded-full">Em breve</span>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-white/50 rounded-lg border border-amber-200">
+              <p className="text-sm text-amber-900">
+                💡 <strong>Enquanto isso:</strong> Você já pode usar todas as outras funcionalidades do painel 
+                para gerenciar seus produtos, personalizar sua loja e acompanhar vendas!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cards desabilitados com overlay */}
+      <div className="relative mb-6">
+        {/* Overlay de "Em breve" */}
+        <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+          <div className="bg-white rounded-full px-6 py-3 shadow-lg border-2 border-amber-500">
+            <span className="font-bold text-amber-600 flex items-center gap-2">
+              <Clock className="w-5 h-5 animate-pulse" />
+              Disponível em breve
+            </span>
+          </div>
+        </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 opacity-60 pointer-events-none">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Smartphone className="w-5 h-5 text-green-600" />
           Conexão WhatsApp
@@ -280,7 +335,7 @@ export default function ConfiguracoesRevendedora() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-6 opacity-60 pointer-events-none">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Bell className="w-5 h-5 text-blue-600" />
           Notificações WhatsApp
@@ -350,6 +405,7 @@ export default function ConfiguracoesRevendedora() {
         >
           Salvar Configurações
         </button>
+      </div>
       </div>
     </div>
   )

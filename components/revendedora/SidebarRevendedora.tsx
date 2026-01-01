@@ -32,11 +32,30 @@ export default function SidebarRevendedora() {
 
   return (
     <>
-      <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg">
+      {/* Botão Hamburger - Fixo no topo */}
+      <button 
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all"
+        aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+      >
         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-40 transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="p-6 border-b border-gray-200">
+
+      {/* Sidebar - Mobile: Full Height | Desktop: Sticky */}
+      <aside className={`
+        fixed lg:sticky 
+        top-0 left-0 
+        h-screen 
+        w-64 
+        bg-white 
+        border-r border-gray-200 
+        flex flex-col 
+        z-40 
+        transition-transform duration-300 
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Header da Sidebar */}
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">Painel Revendedora</h1>
@@ -45,12 +64,25 @@ export default function SidebarRevendedora() {
             <NotificationBell />
           </div>
         </div>
+
+        {/* Menu Items - Flex-1 para ocupar espaço disponível */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const showBadge = item.badge && item.badge > 0;
             return (
-              <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative ${isActive(item.href) ? 'bg-pink-50 text-pink-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}>
+              <Link 
+                key={item.href} 
+                href={item.href} 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative
+                  ${isActive(item.href) 
+                    ? 'bg-pink-50 text-pink-600 font-medium shadow-sm' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }
+                `}
+              >
                 <Icon size={20} />
                 <span className="flex-1">{item.label}</span>
                 {showBadge && (
@@ -62,14 +94,26 @@ export default function SidebarRevendedora() {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-gray-200">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-gray-50 rounded-lg transition-all" onClick={handleLogout}>
+
+        {/* Footer - Botão Sair */}
+        <div className="p-4 border-t border-gray-200 flex-shrink-0">
+          <button 
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all" 
+            onClick={handleLogout}
+          >
             <LogOut size={20} />
             <span>Sair</span>
           </button>
         </div>
       </aside>
-      {mobileMenuOpen && (<div className="lg:hidden fixed inset-0 bg-black/50 z-30" onClick={() => setMobileMenuOpen(false)} />)}
+
+      {/* Overlay escuro quando menu mobile está aberto */}
+      {mobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
     </>
   );
 }
