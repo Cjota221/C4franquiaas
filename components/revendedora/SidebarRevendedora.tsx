@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, Sparkles } from 'lucide-react';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
@@ -15,8 +15,7 @@ export default function SidebarRevendedora() {
 
   const menuItems = [
     { label: 'Dashboard', href: '/revendedora/dashboard', icon: Home },
-    { label: 'Produtos', href: '/revendedora/produtos', icon: Package },
-    { label: 'Produtos Novos', href: '/revendedora/produtos/novos', icon: Sparkles, badge: newProductsCount },
+    { label: 'Produtos', href: '/revendedora/produtos', icon: Package, badge: newProductsCount },
     { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },

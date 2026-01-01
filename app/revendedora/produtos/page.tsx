@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { 
   Package, DollarSign, CheckCircle, TrendingUp, Loader2, 
   Search, Filter, X, Eye, 
-  EyeOff, Percent, ChevronDown, ChevronUp, Link2, Check
+  EyeOff, Percent, ChevronDown, ChevronUp, Link2, Check, Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -258,6 +258,11 @@ export default function ProdutosRevendedoraPage() {
   // Filtrar produtos
   const categorias = ['todas', ...new Set(produtos.map(p => p.categorias))];
 
+  // 🆕 Identificar produtos novos (desativados + sem margem ou margem zero)
+  const produtosNovos = produtos.filter(p => 
+    !p.is_active && (p.margin_percent === 0 || p.margin_percent === null || p.margin_percent === undefined)
+  );
+
   const produtosFiltrados = produtos.filter(p => {
     const matchBusca = p.nome.toLowerCase().includes(buscaDebounced.toLowerCase());
     const matchCategoria = categoriaFiltro === 'todas' || p.categorias === categoriaFiltro;
@@ -291,7 +296,8 @@ export default function ProdutosRevendedoraPage() {
     total: produtos.length,
     ativos: produtos.filter(p => p.is_active).length,
     inativos: produtos.filter(p => !p.is_active).length,
-    comEstoque: produtos.filter(p => p.estoque > 0).length
+    comEstoque: produtos.filter(p => p.estoque > 0).length,
+    novos: produtosNovos.length
   };
 
   // Selecionar/desselecionar todos
@@ -361,6 +367,51 @@ export default function ProdutosRevendedoraPage() {
           </div>
         </div>
       </div>
+
+      {/* 🆕 Card de Produtos Novos (se houver) */}
+      {stats.novos > 0 && (
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6 text-white">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-6 h-6" />
+                <h2 className="text-lg md:text-xl font-bold">Produtos Novos Chegaram!</h2>
+              </div>
+              <p className="text-sm md:text-base text-purple-100 mb-4">
+                {stats.novos} {stats.novos === 1 ? 'produto novo precisa' : 'produtos novos precisam'} da sua atenção. 
+                {stats.novos === 1 ? 'Ele está' : 'Eles estão'} desativado{stats.novos > 1 ? 's' : ''} e aguardando que você defina sua margem de lucro!
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    setStatusFiltro('inativo');
+                    setFiltrosAbertos(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-purple-600 font-medium rounded-lg hover:bg-purple-50 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Ver Produtos Novos</span>
+                </button>
+                <button
+                  onClick={() => {
+                    // Selecionar todos os produtos novos
+                    const novoIds = new Set(produtosNovos.map(p => p.id));
+                    setSelectedIds(novoIds);
+                    setShowModalMargem(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white font-medium rounded-lg hover:bg-white/30 transition-colors"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>Definir Margem em Massa</span>
+                </button>
+              </div>
+            </div>
+            <div className="ml-4 bg-white/20 rounded-full w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+              <span className="text-3xl md:text-4xl font-black">{stats.novos}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filtros - Colapsável no Mobile */}
       <div className="bg-white rounded-lg shadow mb-4 md:mb-6">
