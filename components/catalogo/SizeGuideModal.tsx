@@ -36,16 +36,16 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
 
   // Medidas padrão de calçados femininos
   const medidasPadraoCalcados: MedidaCalcado[] = [
-    { tamanho: '34', centimetros: '23,5' },
-    { tamanho: '35', centimetros: '24,0' },
-    { tamanho: '36', centimetros: '25,5' },
-    { tamanho: '37', centimetros: '26,0' },
-    { tamanho: '38', centimetros: '26,5' },
-    { tamanho: '39', centimetros: '27,0' },
-    { tamanho: '40', centimetros: '27,5' },
-    { tamanho: '41', centimetros: '28,0' },
-    { tamanho: '42', centimetros: '29,5' },
-    { tamanho: '43', centimetros: '30,0' },
+    { tamanho: '34', centimetros: '23,5 cm' },
+    { tamanho: '35', centimetros: '24,0 cm' },
+    { tamanho: '36', centimetros: '25,5 cm' },
+    { tamanho: '37', centimetros: '26,0 cm' },
+    { tamanho: '38', centimetros: '26,5 cm' },
+    { tamanho: '39', centimetros: '27,0 cm' },
+    { tamanho: '40', centimetros: '27,5 cm' },
+    { tamanho: '41', centimetros: '28,0 cm' },
+    { tamanho: '42', centimetros: '29,5 cm' },
+    { tamanho: '43', centimetros: '30,0 cm' },
   ];
 
   // Se não há guia de tamanhos, usar as medidas padrão de calçados
@@ -181,7 +181,7 @@ export default function SizeGuideModal({ sizeGuide, primaryColor = '#DB1472' }: 
                               {medida.tamanho}
                             </td>
                             <td className="px-6 py-3 text-center text-gray-600 border border-gray-200">
-                              {medida.centimetros} cm
+                              {medida.centimetros}
                             </td>
                           </tr>
                         ))}
