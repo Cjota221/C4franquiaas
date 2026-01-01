@@ -107,6 +107,8 @@ export async function GET(
         const margem = item.margin_percent || 0;
         const precoFinal = precoBase * (1 + margem / 100);
 
+        console.log(`🖼️ [API] Produto: ${prod.nome} | Imagem: ${prod.imagem}`);
+
         return {
           id: prod.id,
           nome: prod.nome,
