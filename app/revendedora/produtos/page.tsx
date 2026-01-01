@@ -101,13 +101,12 @@ export default function ProdutosRevendedoraPage() {
         return;
       }
 
-      // 3. Buscar detalhes dos produtos - APENAS produtos ATIVOS no admin
+      // 3. Buscar detalhes dos produtos - TODOS produtos vinculados
       const { data: produtosData, error: produtosError } = await supabase
         .from('produtos')
         .select('id, nome, preco_base, imagem, categorias, ativo, estoque')
         .in('id', produtoIds)
-        .eq('ativo', true) // Só mostrar produtos ativos no admin
-        .gt('estoque', 0)  // Só mostrar produtos com estoque
+        .eq('ativo', true) // Só mostrar produtos ativos no ADMIN (aprovados)
         .order('nome');
 
       if (produtosError) throw produtosError;
