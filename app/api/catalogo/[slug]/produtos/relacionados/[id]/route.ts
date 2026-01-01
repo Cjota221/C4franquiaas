@@ -87,15 +87,14 @@ export async function GET(
     // 4. Formatar produtos e embaralhar (shuffle) para variar
     const produtosFormatados = (relacionados || [])
       .filter(item => {
-        // Supabase retorna produtos como array
-        const prodArray = item.produtos as Array<{ id: string; nome: string; preco_base: number; imagem: string }>;
-        return prodArray && prodArray.length > 0;
+        // Supabase retorna produtos como OBJETO único, não array
+        const prod = item.produtos as { id: string; nome: string; preco_base: number; imagem: string } | null;
+        return prod && prod.id; // Verificar se o produto existe
       })
       .sort(() => Math.random() - 0.5) // Embaralhar aleatoriamente
       .map(item => {
-        // Pegar o primeiro produto do array
-        const prodArray = item.produtos as Array<{ id: string; nome: string; preco_base: number; imagem: string }>;
-        const prod = prodArray[0];
+        // Produto é um objeto único
+        const prod = item.produtos as { id: string; nome: string; preco_base: number; imagem: string };
         const precoBase = prod.preco_base || 0;
         const margem = item.margin_percent || 0;
         const precoFinal = precoBase * (1 + margem / 100);
