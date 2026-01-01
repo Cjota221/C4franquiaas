@@ -31,24 +31,34 @@ export default function ProdutosRelacionados({
     async function carregarProdutosRelacionados() {
       try {
         setLoading(true);
+        console.log('🔍 [ProdutosRelacionados] Iniciando carregamento...', { produtoId, dominio });
         
         // Tentar API de catálogo (revendedoras) primeiro
-        let response = await fetch(`/api/catalogo/${dominio}/produtos/relacionados/${produtoId}`);
+        const urlCatalogo = `/api/catalogo/${dominio}/produtos/relacionados/${produtoId}`;
+        console.log('🔍 [ProdutosRelacionados] Tentando URL catálogo:', urlCatalogo);
+        let response = await fetch(urlCatalogo);
+        
+        console.log('🔍 [ProdutosRelacionados] Response catálogo:', response.status, response.ok);
         
         // Se falhar, tentar API de loja (franqueadas)
         if (!response.ok) {
-          response = await fetch(`/api/loja/${dominio}/produtos/relacionados/${produtoId}`);
+          const urlLoja = `/api/loja/${dominio}/produtos/relacionados/${produtoId}`;
+          console.log('🔍 [ProdutosRelacionados] Tentando URL loja:', urlLoja);
+          response = await fetch(urlLoja);
+          console.log('🔍 [ProdutosRelacionados] Response loja:', response.status, response.ok);
         }
         
         if (!response.ok) {
+          console.log('❌ [ProdutosRelacionados] Nenhuma API respondeu OK');
           setProdutos([]);
           return;
         }
 
         const data = await response.json();
+        console.log('✅ [ProdutosRelacionados] Dados recebidos:', data);
         setProdutos(data.produtos || []);
       } catch (error) {
-        console.error('Erro ao carregar produtos relacionados:', error);
+        console.error('❌ [ProdutosRelacionados] Erro ao carregar:', error);
         setProdutos([]);
       } finally {
         setLoading(false);
@@ -56,7 +66,10 @@ export default function ProdutosRelacionados({
     }
 
     if (produtoId && dominio) {
+      console.log('🚀 [ProdutosRelacionados] Carregando produtos relacionados...', { produtoId, dominio });
       carregarProdutosRelacionados();
+    } else {
+      console.log('⚠️ [ProdutosRelacionados] Faltam parâmetros:', { produtoId, dominio });
     }
   }, [produtoId, dominio]);
 

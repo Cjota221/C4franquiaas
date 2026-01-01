@@ -406,7 +406,16 @@ export default function ProdutoPage() {
       )}
 
       {/* 🆕 Produtos Relacionados */}
-      {themeSettings?.show_related_products !== false && (
+      {(() => {
+        console.log('🔍 [Produtos Relacionados] Verificando condições:', {
+          themeSettings,
+          show_related_products: themeSettings?.show_related_products,
+          condicao: themeSettings?.show_related_products !== false,
+          produtoId: params.id,
+          slug: params.slug
+        });
+        return themeSettings?.show_related_products !== false;
+      })() && (
         <div className="mt-12 border-t pt-8">
           <ProdutosRelacionados 
             produtoId={params.id as string}
