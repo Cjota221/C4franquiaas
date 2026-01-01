@@ -153,7 +153,7 @@ export default function AdminRevendedoras() {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
     const loginUrl = `${baseUrl}/login/revendedora`;
     
-    const mensagem = `Olá ${revendedora.name}!
+    const mensagem = `🎉 Olá ${revendedora.name}!
 
 Temos uma ótima notícia! Seu cadastro como franqueada foi *APROVADO*!
 
@@ -164,7 +164,28 @@ ${loginUrl}
 
 Use o e-mail cadastrado: ${revendedora.email}
 
-Qualquer dúvida, estamos à disposição!`;
+---
+
+💬 *JUNTE-SE À NOSSA COMUNIDADE!*
+
+Entre no *Grupo das Franqueadas C4* para trocar experiências, tirar dúvidas e receber dicas exclusivas!
+
+📱 *Link do Grupo:*
+https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
+
+⚠️ *REGRAS DO GRUPO:*
+• Falar apenas sobre o projeto C4 Franquias
+• Proibido venda de outros produtos ou spam
+• Imagens/conversas inadequadas = remoção imediata
+• Violação das regras = desativação da conta
+
+_Ao entrar no grupo, você concorda com as regras._
+
+---
+
+Qualquer dúvida, estamos à disposição!
+
+Bem-vinda à equipe! 💜`;
 
     const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
