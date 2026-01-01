@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, SquareIcon, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 
 type ThemeSettings = {
@@ -25,6 +25,7 @@ type ThemeSettings = {
   font_style: "modern" | "classic" | "elegant";
   product_name_size: "small" | "medium" | "large";
   button_color?: string; // Cor específica do botão (usa primary se não definido)
+  header_color?: string; // Cor específica do cabeçalho (usa primary se não definido)
 };
 
 type BannerSubmission = {
@@ -67,6 +68,7 @@ const DEFAULT_THEME: ThemeSettings = {
   font_style: "modern",
   product_name_size: "medium",
   button_color: undefined, // Usa cor primária por padrão
+  header_color: undefined, // Usa cor primária por padrão
 };
 
 export default function PersonalizacaoRevendedoraPage() {
@@ -395,19 +397,22 @@ export default function PersonalizacaoRevendedoraPage() {
             
             {themeSettings.announcement_bar?.enabled && (
               <div className="space-y-4 pt-4 border-t border-gray-100">
-                {/* Preview */}
-                <div 
-                  className="p-3 text-center text-sm font-medium rounded-lg"
-                  style={{ 
-                    backgroundColor: themeSettings.announcement_bar?.bg_color || "#000000",
-                    color: themeSettings.announcement_bar?.text_color || "#ffffff"
-                  }}
-                >
-                  {themeSettings.announcement_bar?.text || "Sua mensagem aqui"}
+                {/* Preview Melhorado */}
+                <div>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">Prévia da Barra</label>
+                  <div 
+                    className="p-4 text-center text-sm font-medium rounded-xl border-2 border-gray-200"
+                    style={{ 
+                      backgroundColor: themeSettings.announcement_bar?.bg_color || "#000000",
+                      color: themeSettings.announcement_bar?.text_color || "#ffffff"
+                    }}
+                  >
+                    {themeSettings.announcement_bar?.text || "Sua mensagem aqui"}
+                  </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-500 mb-2">Texto do Anúncio</label>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">Texto do Anúncio</label>
                   <input 
                     type="text" 
                     value={themeSettings.announcement_bar?.text || ""} 
@@ -416,7 +421,7 @@ export default function PersonalizacaoRevendedoraPage() {
                       announcement_bar: { ...themeSettings.announcement_bar, text: e.target.value } 
                     })} 
                     placeholder="Ex: 🔥 Frete grátis acima de R$ 150!"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
                     maxLength={60}
                   />
                   <p className="text-xs text-gray-400 text-right mt-1">{(themeSettings.announcement_bar?.text || "").length}/60</p>
@@ -424,8 +429,8 @@ export default function PersonalizacaoRevendedoraPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-500 mb-2">Cor de Fundo</label>
-                    <div className="flex items-center gap-2">
+                    <label className="block text-sm text-gray-500 mb-2 font-medium">Cor de Fundo</label>
+                    <div className="flex items-center gap-3">
                       <input 
                         type="color" 
                         value={themeSettings.announcement_bar?.bg_color || "#000000"} 
@@ -433,7 +438,7 @@ export default function PersonalizacaoRevendedoraPage() {
                           ...themeSettings, 
                           announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
                         })} 
-                        className="w-12 h-10 rounded-lg cursor-pointer border border-gray-200" 
+                        className="w-16 h-12 rounded-lg cursor-pointer border-2 border-gray-300" 
                       />
                       <input 
                         type="text" 
@@ -447,8 +452,8 @@ export default function PersonalizacaoRevendedoraPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-500 mb-2">Cor do Texto</label>
-                    <div className="flex items-center gap-2">
+                    <label className="block text-sm text-gray-500 mb-2 font-medium">Cor do Texto</label>
+                    <div className="flex items-center gap-3">
                       <input 
                         type="color" 
                         value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
@@ -456,7 +461,7 @@ export default function PersonalizacaoRevendedoraPage() {
                           ...themeSettings, 
                           announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
                         })} 
-                        className="w-12 h-10 rounded-lg cursor-pointer border border-gray-200" 
+                        className="w-16 h-12 rounded-lg cursor-pointer border-2 border-gray-300" 
                       />
                       <input 
                         type="text" 
@@ -501,7 +506,7 @@ export default function PersonalizacaoRevendedoraPage() {
           {/* ESTILO DA IMAGEM DO PRODUTO */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-4">Imagem do Produto</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => setThemeSettings({ ...themeSettings, card_image_style: "square" })} 
                 className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_image_style === "square" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
@@ -516,13 +521,6 @@ export default function PersonalizacaoRevendedoraPage() {
                 <div className="bg-gray-300 h-16 mb-2 rounded-xl" />
                 <p className="text-xs font-medium text-gray-700">Arredondada</p>
               </button>
-              <button 
-                onClick={() => setThemeSettings({ ...themeSettings, card_image_style: "circle" })} 
-                className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_image_style === "circle" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
-              >
-                <div className="bg-gray-300 h-16 w-16 mx-auto mb-2 rounded-full" />
-                <p className="text-xs font-medium text-gray-700">Circular</p>
-              </button>
             </div>
           </div>
 
@@ -531,13 +529,51 @@ export default function PersonalizacaoRevendedoraPage() {
             <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabeçalho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
-                <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }} />
+                <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
                 <p className="text-sm font-medium text-gray-700">Degradê</p>
               </button>
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "solid" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "solid" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
-                <div className="h-12 rounded-lg mb-3" style={{ backgroundColor: primaryColor }} />
+                <div className="h-12 rounded-lg mb-3" style={{ backgroundColor: themeSettings.header_color || primaryColor }} />
                 <p className="text-sm font-medium text-gray-700">Cor Sólida</p>
               </button>
+            </div>
+            
+            {/* Cor Personalizada do Cabeçalho */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="font-medium text-gray-800">Cor do Cabeçalho</p>
+                  <p className="text-xs text-gray-500">Diferente da cor primária</p>
+                </div>
+                <button 
+                  onClick={() => setThemeSettings({ ...themeSettings, header_color: themeSettings.header_color ? undefined : primaryColor })}
+                  className={`w-14 h-8 rounded-full transition-colors ${themeSettings.header_color ? "bg-green-500" : "bg-gray-300"}`}
+                >
+                  <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.header_color ? "translate-x-7" : "translate-x-1"}`} />
+                </button>
+              </div>
+              {themeSettings.header_color && (
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <input 
+                      type="color" 
+                      value={themeSettings.header_color || primaryColor} 
+                      onChange={(e) => setThemeSettings({ ...themeSettings, header_color: e.target.value })} 
+                      className="w-16 h-12 rounded-lg cursor-pointer border-2 border-gray-300" 
+                    />
+                    <input 
+                      type="text" 
+                      value={themeSettings.header_color || ""} 
+                      onChange={(e) => setThemeSettings({ ...themeSettings, header_color: e.target.value })} 
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                      placeholder="#000000"
+                    />
+                  </div>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">💡 <strong>Dica:</strong> Útil quando sua logo é escura e a cor primária também. Use uma cor clara para o cabeçalho para destacar a logo.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -662,12 +698,22 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-4">Formato da Logo</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[{ id: "circle", label: "Redonda", Icon: CircleIcon }, { id: "square", label: "Quadrada", Icon: SquareIcon }, { id: "rectangle", label: "Horizontal", Icon: ImageIcon }].map((shape) => (
+            <div className="grid grid-cols-2 gap-3">
+              {[{ id: "circle", label: "Redonda", Icon: CircleIcon, size: "200x200px" }, { id: "rectangle", label: "Horizontal", Icon: ImageIcon, size: "400x100px" }].map((shape) => (
                 <button key={shape.id} onClick={() => setThemeSettings({ ...themeSettings, logo_shape: shape.id as "circle" | "square" | "rectangle" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.logo_shape === shape.id ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
-                  <shape.Icon className="w-8 h-8 mx-auto mb-2 text-gray-600" /><span className="text-sm font-medium">{shape.label}</span>
+                  <shape.Icon className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                  <span className="text-sm font-medium block">{shape.label}</span>
+                  <span className="text-xs text-gray-500">{shape.size}</span>
                 </button>
               ))}
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-xs text-blue-800 font-medium">💡 Dicas importantes:</p>
+              <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                <li>• Use imagem com <strong>fundo transparente (PNG)</strong></li>
+                <li>• <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
+                <li>• <strong>Horizontal:</strong> ideal para logos retangulares (400x100px)</li>
+              </ul>
             </div>
           </div>
         </div>

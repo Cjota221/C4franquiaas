@@ -44,6 +44,7 @@ type Reseller = {
     font_style?: 'modern' | 'classic' | 'elegant';
     product_name_size?: 'small' | 'medium' | 'large';
     button_color?: string; // Cor específica do botão
+    header_color?: string; // Cor específica do cabeçalho
   };
 };
 
@@ -367,6 +368,7 @@ export default function CatalogoLayout({
       bg_color: '#000000',
       text_color: '#ffffff',
     },
+    header_color: undefined, // Usa primaryColor por padrão
   };
 
   // Verificar se precisa capturar lead (primeira vez adicionando ao carrinho)
@@ -929,8 +931,8 @@ export default function CatalogoLayout({
           className="sticky top-0 z-40 text-white shadow-lg"
           style={{ 
             background: themeSettings.header_style === 'solid' 
-              ? primaryColor 
-              : `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` 
+              ? (themeSettings.header_color || primaryColor)
+              : `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` 
           }}
         >
           {/* Linha 1: Menu + Logo + Carrinho */}
