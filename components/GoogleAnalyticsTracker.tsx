@@ -75,7 +75,9 @@ export function GoogleAnalyticsTracker() {
         loja_nome: lojaDominio ? lojaDominio.charAt(0).toUpperCase() + lojaDominio.slice(1) : ''
       })
 
-      console.log(`📊 GA4 Pageview: ${fullUrl}`, { pageType, lojaDominio })
+      console.log(`📊 GA4 Pageview: ${fullUrl}`)
+      console.log(`📋 Título da Página: "${pageTitle}"`)
+      console.log(`🏪 Tipo: ${pageType}, Domínio: ${lojaDominio}`)
     }
 
     // Pequeno delay para garantir que a página carregou
