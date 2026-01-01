@@ -153,39 +153,39 @@ export default function AdminRevendedoras() {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
     const loginUrl = `${baseUrl}/login/revendedora`;
     
-    const mensagem = `🎉 Olá ${revendedora.name}!
+    const mensagem = `*PARABENS ${revendedora.name.toUpperCase()}!*
 
-Temos uma ótima notícia! Seu cadastro como franqueada foi *APROVADO*!
+Temos uma otima noticia! Seu cadastro como franqueada foi *APROVADO*!
 
-Sua loja "${revendedora.store_name}" já está pronta para você começar a vender!
+Sua loja *"${revendedora.store_name}"* ja esta pronta para voce comecar a vender!
 
-*Acesse sua conta:*
+*ACESSE SUA CONTA:*
 ${loginUrl}
 
 Use o e-mail cadastrado: ${revendedora.email}
 
----
+━━━━━━━━━━━━━━━━━━━━
 
-💬 *JUNTE-SE À NOSSA COMUNIDADE!*
+*JUNTE-SE A NOSSA COMUNIDADE!*
 
-Entre no *Grupo das Franqueadas C4* para trocar experiências, tirar dúvidas e receber dicas exclusivas!
+Entre no *Grupo das Franqueadas C4* para trocar experiencias, tirar duvidas e receber dicas exclusivas!
 
-📱 *Link do Grupo:*
+*LINK DO GRUPO:*
 https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
 
-⚠️ *REGRAS DO GRUPO:*
+*REGRAS DO GRUPO:*
 • Falar apenas sobre o projeto C4 Franquias
 • Proibido venda de outros produtos ou spam
-• Imagens/conversas inadequadas = remoção imediata
-• Violação das regras = desativação da conta
+• Imagens/conversas inadequadas = remocao imediata
+• Violacao das regras = desativacao da conta
 
-_Ao entrar no grupo, você concorda com as regras._
+_Ao entrar no grupo, voce concorda com as regras._
 
----
+━━━━━━━━━━━━━━━━━━━━
 
-Qualquer dúvida, estamos à disposição!
+Qualquer duvida, estamos a disposicao!
 
-Bem-vinda à equipe! 💜`;
+*Bem-vinda a equipe C4 Franquias!*`;
 
     const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
