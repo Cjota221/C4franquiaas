@@ -117,6 +117,11 @@ export default function ProdutosRelacionados({
             >
               {produtos.slice(0, 20).map((produto) => {
                 const imagemPrincipal = produto.imagens?.[0] || '/placeholder-produto.png';
+                console.log('🖼️ [ProdutosRelacionados] Imagem:', { 
+                  produtoNome: produto.nome, 
+                  imagemUrl: imagemPrincipal,
+                  imagensArray: produto.imagens 
+                });
                 
                 return (
                   <Link
