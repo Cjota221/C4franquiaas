@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { 
   Package, DollarSign, CheckCircle, TrendingUp, Loader2, 
-  Search, Filter, X, MoreVertical, Eye, 
-  EyeOff, Percent, ChevronDown, ChevronUp
+  Search, Filter, X, Eye, 
+  EyeOff, Percent, ChevronDown, ChevronUp, Link2, Check
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -35,7 +35,9 @@ export default function ProdutosRevendedoraPage() {
   const [produtos, setProdutos] = useState<ProdutoComMargem[]>([]);
   const [loading, setLoading] = useState(true);
   const [revendedoraId, setRevendedoraId] = useState<string | null>(null);
+  const [revendedoraSlug, setRevendedoraSlug] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
   
   // Estados de filtros
   const [busca, setBusca] = useState('');
@@ -74,7 +76,7 @@ export default function ProdutosRevendedoraPage() {
 
       const { data: revendedora, error: revendedoraError } = await supabase
         .from('resellers')
-        .select('id')
+        .select('id, slug')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -82,6 +84,7 @@ export default function ProdutosRevendedoraPage() {
       if (!revendedora) throw new Error('Revendedora não encontrada');
 
       setRevendedoraId(revendedora.id);
+      setRevendedoraSlug(revendedora.slug);
 
       // 2. Buscar produtos vinculados
       const { data: vinculacoes, error: vinculacoesError } = await supabase
@@ -234,6 +237,22 @@ export default function ProdutosRevendedoraPage() {
     } finally {
       setProcessando(false);
     }
+  }
+
+  // Copiar link do produto
+  function copiarLinkProduto(produtoId: string) {
+    if (!revendedoraSlug) {
+      alert('Configure seu catálogo primeiro!');
+      return;
+    }
+
+    const url = `${window.location.origin}/catalogo/${revendedoraSlug}/produto/${produtoId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedProductId(produtoId);
+      setTimeout(() => setCopiedProductId(null), 2000);
+    }).catch(() => {
+      alert('Erro ao copiar link');
+    });
   }
 
   // Filtrar produtos
@@ -524,7 +543,7 @@ export default function ProdutosRevendedoraPage() {
                   Status
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                  Ações
+                  Compartilhar
                 </th>
               </tr>
             </thead>
@@ -611,8 +630,22 @@ export default function ProdutosRevendedoraPage() {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button className="p-2 hover:bg-gray-100 rounded">
-                      <MoreVertical className="w-4 h-4 text-gray-600" />
+                    <button 
+                      onClick={() => copiarLinkProduto(produto.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg transition-colors"
+                      title="Copiar link do produto"
+                    >
+                      {copiedProductId === produto.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Link2 className="w-3.5 h-3.5" />
+                          <span>Copiar Link</span>
+                        </>
+                      )}
                     </button>
                   </td>
                 </tr>
@@ -707,36 +740,56 @@ export default function ProdutosRevendedoraPage() {
             </div>
 
             {/* Footer: Estoque + Status + Ação */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {/* Estoque Badge */}
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  (produto.estoque ?? 0) > 0 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {(produto.estoque ?? 0) > 0 ? `${produto.estoque} un` : 'Esgotado'}
-                </span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* Estoque Badge */}
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    (produto.estoque ?? 0) > 0 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {(produto.estoque ?? 0) > 0 ? `${produto.estoque} un` : 'Esgotado'}
+                  </span>
+                </div>
+
+                {/* Botão de Status */}
+                <button
+                  onClick={() => toggleAtivacao(produto.id)}
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+                    produto.is_active
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {produto.is_active ? (
+                    <>
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      Ativo
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5 mr-1" />
+                      Inativo
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* Botão de Status */}
-              <button
-                onClick={() => toggleAtivacao(produto.id)}
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
-                  produto.is_active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
+              {/* Botão Copiar Link - Full Width */}
+              <button 
+                onClick={() => copiarLinkProduto(produto.id)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
               >
-                {produto.is_active ? (
+                {copiedProductId === produto.id ? (
                   <>
-                    <Eye className="w-3.5 h-3.5 mr-1" />
-                    Ativo
+                    <Check className="w-4 h-4" />
+                    <span>Link Copiado!</span>
                   </>
                 ) : (
                   <>
-                    <EyeOff className="w-3.5 h-3.5 mr-1" />
-                    Inativo
+                    <Link2 className="w-4 h-4" />
+                    <span>Copiar Link do Produto</span>
                   </>
                 )}
               </button>
