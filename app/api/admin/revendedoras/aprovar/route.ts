@@ -179,6 +179,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erro ao atualizar status' }, { status: 500 });
     }
 
+    // ========================================
+    // 🆕 VINCULAR TODOS OS PRODUTOS APROVADOS
+    // ========================================
+    if (action === 'aprovar') {
+      console.log('[aprovar-revendedora] 🔗 Vinculando produtos aprovados...');
+      
+      // 1. Buscar todos os produtos aprovados e ativos
+      const { data: produtosAprovados, error: produtosError } = await supabase
+        .from('produtos')
+        .select('id')
+        .eq('admin_aprovado', true)
+        .eq('ativo', true);
+
+      if (produtosError) {
+        console.error('[aprovar-revendedora] ⚠️ Erro ao buscar produtos:', produtosError);
+      } else if (produtosAprovados && produtosAprovados.length > 0) {
+        // 2. Criar vinculações DESATIVADAS e com margem ZERO
+        const vinculacoes = produtosAprovados.map(produto => ({
+          reseller_id: resellerId,
+          product_id: produto.id,
+          margin_percent: 0, // 🆕 SEM margem pré-definida
+          is_active: false,  // 🆕 DESATIVADO (revendedora precisa definir margem)
+          custom_price: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }));
+
+        const { error: vinculacaoError } = await supabase
+          .from('reseller_products')
+          .upsert(vinculacoes, { onConflict: 'reseller_id,product_id', ignoreDuplicates: true });
+
+        if (vinculacaoError) {
+          console.error('[aprovar-revendedora] ⚠️ Erro ao vincular produtos:', vinculacaoError);
+        } else {
+          console.log(`[aprovar-revendedora] ✅ ${vinculacoes.length} produtos vinculados (DESATIVADOS, margem=0)`);
+        }
+      } else {
+        console.log('[aprovar-revendedora] ℹ️ Nenhum produto aprovado para vincular');
+      }
+    }
+
     // Enviar email de notificação
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://c4franquiaas.netlify.app';
     const loginUrl = `${baseUrl}/login/revendedora`;
