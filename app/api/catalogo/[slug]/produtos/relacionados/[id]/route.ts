@@ -85,16 +85,24 @@ export async function GET(
     console.log(`📊 Ativos: ${ativos} | Desativados: ${desativados}`);
 
     // 4. Formatar produtos e embaralhar (shuffle) para variar
+    type ProdutoData = { id: string; nome: string; preco_base: number; imagem: string };
+    
     const produtosFormatados = (relacionados || [])
       .filter(item => {
-        // Supabase retorna produtos como OBJETO único, não array
-        const prod = item.produtos as { id: string; nome: string; preco_base: number; imagem: string } | null;
-        return prod && prod.id; // Verificar se o produto existe
+        // Supabase pode retornar objeto único OU array dependendo da query
+        const produtos = item.produtos as ProdutoData | ProdutoData[] | null;
+        if (!produtos) return false;
+        
+        // Se for array, pegar o primeiro
+        const prod = Array.isArray(produtos) ? produtos[0] : produtos;
+        return prod && prod.id;
       })
       .sort(() => Math.random() - 0.5) // Embaralhar aleatoriamente
       .map(item => {
-        // Produto é um objeto único
-        const prod = item.produtos as { id: string; nome: string; preco_base: number; imagem: string };
+        // Normalizar: pode ser array ou objeto
+        const produtos = item.produtos as ProdutoData | ProdutoData[];
+        const prod = Array.isArray(produtos) ? produtos[0] : produtos;
+        
         const precoBase = prod.preco_base || 0;
         const margem = item.margin_percent || 0;
         const precoFinal = precoBase * (1 + margem / 100);
