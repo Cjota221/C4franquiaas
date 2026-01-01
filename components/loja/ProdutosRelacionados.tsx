@@ -56,6 +56,8 @@ export default function ProdutosRelacionados({
 
         const data = await response.json();
         console.log('✅ [ProdutosRelacionados] Dados recebidos:', data);
+        console.log('📦 [ProdutosRelacionados] Array de produtos:', data.produtos);
+        console.log('📊 [ProdutosRelacionados] Quantidade:', data.produtos?.length || 0);
         setProdutos(data.produtos || []);
       } catch (error) {
         console.error('❌ [ProdutosRelacionados] Erro ao carregar:', error);

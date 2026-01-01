@@ -60,6 +60,7 @@ export async function GET(
       .select(`
         product_id,
         margin_percent,
+        is_active,
         produtos:product_id (
           id,
           nome,
@@ -77,7 +78,16 @@ export async function GET(
       return NextResponse.json({ produtos: [] }, { status: 200 });
     }
 
-    console.log(`✨ ${relacionados?.length || 0} produtos encontrados`);
+    console.log(`✨ ${relacionados?.length || 0} produtos ATIVOS encontrados`);
+    
+    // 🔍 DEBUG: Ver quantos produtos DESATIVADOS existem
+    const { count: totalDesativados } = await supabase
+      .from('reseller_products')
+      .select('*', { count: 'exact', head: true })
+      .eq('reseller_id', reseller.id)
+      .eq('is_active', false);
+    
+    console.log(`⚠️ Produtos DESATIVADOS na revendedora: ${totalDesativados || 0}`);
 
     // 4. Formatar produtos e embaralhar (shuffle) para variar
     const produtosFormatados = (relacionados || [])
