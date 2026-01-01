@@ -53,8 +53,8 @@ export async function GET(
 
     console.log(`📦 Buscando produtos relacionados (sem filtro de categoria)...`);
 
-    // 3. Buscar produtos relacionados (TODOS ativos, diferentes do atual)
-    // 🆕 SEM filtro de categoria - apenas produtos aleatórios
+    // 3. Buscar produtos relacionados (TODOS vinculados, diferentes do atual)
+    // 🆕 SEM filtro de is_active - mostrar TODOS produtos para aumentar conversão
     const { data: relacionados, error: relacionadosError } = await supabase
       .from('reseller_products')
       .select(`
@@ -69,7 +69,6 @@ export async function GET(
         )
       `)
       .eq('reseller_id', reseller.id)
-      .eq('is_active', true)
       .neq('product_id', produtoId)
       .limit(20); // Buscar mais produtos para randomizar
 
@@ -78,16 +77,12 @@ export async function GET(
       return NextResponse.json({ produtos: [] }, { status: 200 });
     }
 
-    console.log(`✨ ${relacionados?.length || 0} produtos ATIVOS encontrados`);
+    console.log(`✨ ${relacionados?.length || 0} produtos encontrados (ativos + inativos)`);
     
-    // 🔍 DEBUG: Ver quantos produtos DESATIVADOS existem
-    const { count: totalDesativados } = await supabase
-      .from('reseller_products')
-      .select('*', { count: 'exact', head: true })
-      .eq('reseller_id', reseller.id)
-      .eq('is_active', false);
-    
-    console.log(`⚠️ Produtos DESATIVADOS na revendedora: ${totalDesativados || 0}`);
+    // 🔍 DEBUG: Ver quantos são ativos vs desativados
+    const ativos = relacionados?.filter(p => p.is_active).length || 0;
+    const desativados = (relacionados?.length || 0) - ativos;
+    console.log(`📊 Ativos: ${ativos} | Desativados: ${desativados}`);
 
     // 4. Formatar produtos e embaralhar (shuffle) para variar
     const produtosFormatados = (relacionados || [])
