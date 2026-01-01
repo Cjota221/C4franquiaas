@@ -18,12 +18,12 @@ produtos.sort((a, b) => {
   // 1️⃣ PRIORIDADE: Maior estoque primeiro
   const estoqueDiff = b.estoque - a.estoque;
   if (estoqueDiff !== 0) return estoqueDiff;
-  
+
   // 2️⃣ SEGUNDO: Mais recente primeiro
   if (a.created_at && b.created_at) {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   }
-  
+
   // 3️⃣ TERCEIRO: Ordem alfabética
   return a.nome.localeCompare(b.nome);
 });
@@ -32,6 +32,7 @@ produtos.sort((a, b) => {
 ## 📊 Exemplo Prático:
 
 ### Produtos na ordem antiga:
+
 ```
 1. Rasteirinha Azul    (estoque: 5,  data: 01/12)
 2. Sandália Vermelha   (estoque: 2,  data: 15/12)
@@ -40,6 +41,7 @@ produtos.sort((a, b) => {
 ```
 
 ### ✨ Produtos com ordenação inteligente:
+
 ```
 1. Chinelo Preto       (estoque: 15, data: 20/12) ⭐ MAIS ESTOQUE
 2. Tamanco Rosa        (estoque: 8,  data: 28/12) ⭐ MAIS NOVO
@@ -64,67 +66,77 @@ O seletor de ordenação agora tem 5 opções:
 ```
 
 ### **1. ✨ Mais relevantes (PADRÃO)**
+
 - Combina estoque + novidade
 - Melhor experiência para a cliente
 - Produtos disponíveis e atuais primeiro
 
 ### **2. 📦 Maior estoque**
+
 - Ordena APENAS por estoque (maior → menor)
 - Mostra produtos que "não vão faltar"
 
 ### **3. 🆕 Mais recentes**
+
 - Ordena APENAS por data (novo → antigo)
 - Destaca lançamentos
 
 ### **4. 💰 Menor preço**
+
 - Preço crescente (barato → caro)
 - Para clientes buscando economia
 
 ### **5. 💎 Maior preço**
+
 - Preço decrescente (caro → barato)
 - Para clientes buscando premium
 
 ## 🔧 Implementação Técnica:
 
 ### **Arquivo modificado:**
+
 `app/catalogo/[slug]/page.tsx`
 
 ### **Alterações:**
 
 1. **Adicionar campo `created_at` ao tipo:**
+
 ```typescript
 type ProductWithPrice = {
   // ... outros campos
   created_at?: string; // Data de criação do vínculo
-}
+};
 ```
 
 2. **Buscar `created_at` do banco:**
+
 ```typescript
 return {
   // ... outros campos
   created_at: p.created_at, // Data de reseller_products
-}
+};
 ```
 
 3. **Implementar algoritmo de ordenação:**
+
 ```typescript
 if (sortOrder === 'default') {
   // Ordenação inteligente: estoque > data > nome
   filtered = [...filtered].sort((a, b) => {
     const estoqueDiff = b.estoque - a.estoque;
     if (estoqueDiff !== 0) return estoqueDiff;
-    
+
     if (a.created_at && b.created_at) {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
-    
+
     return a.nome.localeCompare(b.nome);
   });
 }
 ```
 
 4. **Adicionar novas opções no select:**
+
 ```typescript
 <option value="default">✨ Mais relevantes (Estoque + Novos)</option>
 <option value="stock">📦 Maior estoque</option>
@@ -136,20 +148,23 @@ if (sortOrder === 'default') {
 ## 🎯 Vantagens para o Negócio:
 
 ### **Para a Revendedora:**
+
 ✅ Produtos com mais estoque aparecem primeiro  
 ✅ Evita decepção da cliente (produto esgotado)  
 ✅ Lançamentos ganham destaque automático  
-✅ Aumenta taxa de conversão  
+✅ Aumenta taxa de conversão
 
 ### **Para a Cliente:**
+
 ✅ Vê primeiro o que ESTÁ DISPONÍVEL  
 ✅ Descobre novidades logo na primeira tela  
 ✅ Menos frustração com "fora de estoque"  
-✅ Melhor experiência de compra  
+✅ Melhor experiência de compra
 
 ## 📱 Mobile-First:
 
 A ordenação funciona perfeitamente em:
+
 - ✅ Desktop
 - ✅ Tablet
 - ✅ Mobile
@@ -159,6 +174,7 @@ O select é touch-friendly e responsivo.
 ## 🔄 Atualização em Tempo Real:
 
 A ordenação se atualiza automaticamente quando:
+
 - ✅ Estoque muda (via Realtime)
 - ✅ Novos produtos são adicionados
 - ✅ Cliente muda o filtro de ordenação
@@ -174,6 +190,7 @@ A ordenação se atualiza automaticamente quando:
 ## 📊 Métricas Esperadas:
 
 Após implementação, esperamos:
+
 - 📈 +15% na taxa de conversão
 - 📉 -30% em "produto esgotado" visualizados
 - ⏱️ -20% no tempo de decisão de compra
@@ -182,6 +199,7 @@ Após implementação, esperamos:
 ## 🎉 Resultado Final:
 
 **ANTES:**
+
 ```
 Produtos apareciam em ordem aleatória ou apenas alfabética
 Cliente via produtos esgotados na primeira página
@@ -189,6 +207,7 @@ Lançamentos perdidos no meio do catálogo
 ```
 
 **DEPOIS:**
+
 ```
 ✨ Produtos com estoque aparecem primeiro
 🆕 Lançamentos ganham destaque

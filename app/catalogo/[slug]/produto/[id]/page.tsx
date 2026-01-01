@@ -391,6 +391,18 @@ export default function ProdutoPage() {
           </div>
         </div>
       )}
+
+      {/* 🆕 Produtos Relacionados */}
+      {themeSettings?.show_related_products !== false && (
+        <div className="mt-12 border-t pt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            ✨ Você também pode gostar
+          </h2>
+          <div className="text-gray-500 text-center py-8">
+            <p>Sugestões de produtos personalizadas em breve...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

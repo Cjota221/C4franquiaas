@@ -7,11 +7,13 @@ Cada produto no painel da revendedora agora tem um **botão "Copiar Link"** que 
 ## 📍 Onde está o botão:
 
 ### Desktop (Tabela)
+
 - **Localização**: Última coluna "Compartilhar"
 - **Visual**: Botão com ícone de link + texto "Copiar Link"
 - **Feedback**: Quando clicado, muda para ícone de check + "Copiado!" por 2 segundos
 
 ### Mobile (Cards)
+
 - **Localização**: Botão full-width abaixo do status do produto
 - **Visual**: Botão rosa com ícone + texto "Copiar Link do Produto"
 - **Feedback**: Quando clicado, muda para "Link Copiado!" por 2 segundos
@@ -25,11 +27,13 @@ https://c4franquiaas.netlify.app/catalogo/{slug-da-revendedora}/produto/{id-do-p
 ```
 
 **Exemplo:**
+
 ```
 https://c4franquiaas.netlify.app/catalogo/beleza-da-maria/produto/28af26c3-9695-4139-8590-9853e553498b
 ```
 
 Quando a cliente clicar neste link:
+
 - ✅ Vai direto para a **página do produto específico**
 - ✅ No **catálogo da revendedora** (com as cores, logo, etc da revendedora)
 - ✅ Com o **preço personalizado** da revendedora (com a margem dela)
@@ -44,6 +48,7 @@ Quando a cliente clicar neste link:
 ## 💡 Casos de Uso:
 
 ### Instagram Stories
+
 ```
 Compartilhe nos Stories com:
 "Olha que linda essa rasteirinha! 🌸✨
@@ -51,12 +56,14 @@ Link na bio ou manda DM!"
 ```
 
 ### WhatsApp Status
+
 ```
 Cole o link direto no Status do WhatsApp
 para suas clientes clicarem e comprarem
 ```
 
 ### Posts no Feed
+
 ```
 "✨ CHEGOU! Modelo Novo! 🔥
 Link nos comentários 👇"
@@ -64,6 +71,7 @@ Link nos comentários 👇"
 ```
 
 ### Mensagens Diretas
+
 ```
 Quando a cliente perguntar sobre um
 produto específico, envie o link direto!
@@ -78,15 +86,19 @@ produto específico, envie o link direto!
 ## 📝 Implementação Técnica:
 
 ### Arquivo modificado:
+
 - `app/revendedora/produtos/page.tsx`
 
 ### Alterações:
+
 1. **Query atualizada**: Agora busca também o `slug` da revendedora
 2. **Estados adicionados**:
+
    - `revendedoraSlug`: Armazena o slug para construir a URL
    - `copiedProductId`: Controla o feedback visual "Copiado!"
 
 3. **Nova função**: `copiarLinkProduto(produtoId)`
+
    - Valida se revendedora tem slug
    - Constrói URL: `/catalogo/{slug}/produto/{id}`
    - Copia para clipboard
@@ -95,6 +107,7 @@ produto específico, envie o link direto!
 4. **Ícones importados**: `Link2`, `Check` do lucide-react
 
 ### Estrutura de dados:
+
 ```typescript
 // Busca slug da revendedora
 const { data: revendedora } = await supabase

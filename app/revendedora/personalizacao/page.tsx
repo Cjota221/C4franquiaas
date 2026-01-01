@@ -26,6 +26,15 @@ type ThemeSettings = {
   product_name_size: "small" | "medium" | "large";
   button_color?: string; // Cor específica do botão (usa primary se não definido)
   header_color?: string; // Cor específica do cabeçalho (usa primary se não definido)
+  // 🆕 Sob Encomenda
+  delivery_notice?: {
+    enabled: boolean;
+    days: number; // Prazo em dias
+    message?: string; // Mensagem customizada
+  };
+  // 🆕 Produtos Relacionados
+  show_related_products?: boolean;
+  show_related_in_cart?: boolean;
 };
 
 type BannerSubmission = {
@@ -69,6 +78,15 @@ const DEFAULT_THEME: ThemeSettings = {
   product_name_size: "medium",
   button_color: undefined, // Usa cor primária por padrão
   header_color: undefined, // Usa cor primária por padrão
+  // 🆕 Sob Encomenda
+  delivery_notice: {
+    enabled: false,
+    days: 15,
+    message: "Produzido sob encomenda"
+  },
+  // 🆕 Produtos Relacionados
+  show_related_products: true,
+  show_related_in_cart: true,
 };
 
 export default function PersonalizacaoRevendedoraPage() {
@@ -672,6 +690,114 @@ export default function PersonalizacaoRevendedoraPage() {
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} />
               </button>
             </div>
+            
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="font-medium text-gray-800">Produtos Relacionados</p>
+                <p className="text-sm text-gray-500">Mostra sugestões na página do produto</p>
+              </div>
+              <button onClick={() => setThemeSettings({ ...themeSettings, show_related_products: !themeSettings.show_related_products })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_products ? "bg-green-500" : "bg-gray-300"}`}>
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_products ? "translate-x-7" : "translate-x-1"}`} />
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="font-medium text-gray-800">Relacionados no Carrinho</p>
+                <p className="text-sm text-gray-500">Sugestões no carrinho de compras</p>
+              </div>
+              <button onClick={() => setThemeSettings({ ...themeSettings, show_related_in_cart: !themeSettings.show_related_in_cart })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_in_cart ? "bg-green-500" : "bg-gray-300"}`}>
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
+              </button>
+            </div>
+          </div>
+          
+          {/* 🆕 Aviso de Sob Encomenda */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                  Aviso &quot;Sob Encomenda&quot;
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">Exibe prazo de entrega nos produtos</p>
+              </div>
+              <button 
+                onClick={() => setThemeSettings({ 
+                  ...themeSettings, 
+                  delivery_notice: { 
+                    ...themeSettings.delivery_notice, 
+                    enabled: !themeSettings.delivery_notice?.enabled 
+                  } 
+                })} 
+                className={`w-14 h-8 rounded-full transition-colors ${themeSettings.delivery_notice?.enabled ? "bg-green-500" : "bg-gray-300"}`}
+              >
+                <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.delivery_notice?.enabled ? "translate-x-7" : "translate-x-1"}`} />
+              </button>
+            </div>
+            
+            {themeSettings.delivery_notice?.enabled && (
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                {/* Preview */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-medium text-amber-900 mb-1">📦 Preview:</p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                    <Clock className="w-4 h-4" />
+                    {themeSettings.delivery_notice?.message || "Produzido sob encomenda"} • {themeSettings.delivery_notice?.days || 15} dias
+                  </div>
+                </div>
+                
+                {/* Prazo em dias */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prazo de Entrega (dias)
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    max="60"
+                    value={themeSettings.delivery_notice?.days || 15} 
+                    onChange={(e) => setThemeSettings({ 
+                      ...themeSettings, 
+                      delivery_notice: { 
+                        ...themeSettings.delivery_notice, 
+                        days: parseInt(e.target.value) || 15 
+                      } 
+                    })} 
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 text-lg font-semibold text-center"
+                  />
+                  <p className="text-xs text-gray-500 mt-1 text-center">Prazo de produção e entrega</p>
+                </div>
+                
+                {/* Mensagem customizada */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mensagem (opcional)
+                  </label>
+                  <input 
+                    type="text" 
+                    value={themeSettings.delivery_notice?.message || ""} 
+                    onChange={(e) => setThemeSettings({ 
+                      ...themeSettings, 
+                      delivery_notice: { 
+                        ...themeSettings.delivery_notice, 
+                        message: e.target.value 
+                      } 
+                    })} 
+                    placeholder="Produzido sob encomenda"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-gray-400 text-right mt-1">{(themeSettings.delivery_notice?.message || "").length}/50</p>
+                </div>
+                
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800">
+                    💡 <strong>Dica:</strong> Esse aviso aparecerá em todos os produtos do seu catálogo, ideal para lojas que trabalham com produção sob encomenda.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>

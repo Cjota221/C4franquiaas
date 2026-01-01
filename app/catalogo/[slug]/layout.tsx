@@ -45,6 +45,15 @@ type Reseller = {
     product_name_size?: 'small' | 'medium' | 'large';
     button_color?: string; // Cor específica do botão
     header_color?: string; // Cor específica do cabeçalho
+    // 🆕 Sob Encomenda
+    delivery_notice?: {
+      enabled: boolean;
+      days: number;
+      message?: string;
+    };
+    // 🆕 Produtos Relacionados
+    show_related_products?: boolean;
+    show_related_in_cart?: boolean;
   };
 };
 

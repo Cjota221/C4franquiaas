@@ -3,15 +3,18 @@
 ## 🎯 O que foi alterado:
 
 ### 1️⃣ **Produtos novos agora vêm DESATIVADOS**
+
 - ❌ Antes: Vinham com margem de 20% pré-definida
 - ✅ Agora: Vêm com `margin_percent = 0` e `is_active = false`
 - ✅ Revendedora **PRECISA** definir margem antes de ativar
 
 ### 2️⃣ **Menu "Produtos Novos" removido**
+
 - ❌ Removido: Item separado no menu lateral
 - ✅ Agora: Badge de contador no menu "Produtos" principal
 
 ### 3️⃣ **Card visual de Produtos Novos**
+
 - ✅ Card roxo/rosa chamativo na página de produtos
 - ✅ Mostra quantos produtos novos chegaram
 - ✅ 2 botões de ação rápida:
@@ -21,11 +24,13 @@
 ## 📝 Como funciona agora:
 
 ### Admin aprova produto no painel:
+
 1. Admin vai em `/admin/produtos/pendentes`
 2. Seleciona produtos e clica "Aprovar"
 3. Produtos são vinculados às revendedoras
 
 ### Produto chega para revendedora:
+
 ```typescript
 {
   product_id: "abc-123",
@@ -37,6 +42,7 @@
 ```
 
 ### Revendedora vê o card:
+
 ```
 ╔══════════════════════════════════════════════════╗
 ║  ✨ Produtos Novos Chegaram!                 5  ║
@@ -50,12 +56,14 @@
 ```
 
 ### Revendedora define margem:
+
 1. Clica em "Definir Margem em Massa"
 2. Define margem (ex: 35%)
 3. Sistema calcula `custom_price = preco_base * 1.35`
 4. Produto continua **desativado**
 
 ### Revendedora ativa produto:
+
 1. Após definir margem, clica no botão de ativar
 2. Produto muda para `is_active = true`
 3. Agora aparece no catálogo público!
@@ -63,6 +71,7 @@
 ## 🎨 Visual do Card:
 
 ### Desktop:
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ ✨ Produtos Novos Chegaram!                          [5] │
@@ -75,6 +84,7 @@
 ```
 
 ### Mobile:
+
 ```
 ┌────────────────────────────────┐
 │ ✨ Produtos Novos!        [5] │
@@ -96,7 +106,7 @@
 ```sql
 -- Antes (Migration 049)
 INSERT INTO reseller_products (...)
-SELECT 
+SELECT
   r.id,
   p.id,
   p.preco_base * 1.20,  -- ❌ Margem pré-definida
@@ -106,7 +116,7 @@ SELECT
 
 -- Agora (Migration 051)
 INSERT INTO reseller_products (...)
-SELECT 
+SELECT
   r.id,
   p.id,
   NULL,                  -- ✅ SEM preço pré-definido
@@ -116,9 +126,10 @@ SELECT
 ```
 
 **View atualizada:**
+
 ```sql
 CREATE OR REPLACE VIEW produtos_novos_franqueada AS
-SELECT ... 
+SELECT ...
 WHERE p.admin_aprovado = true
   AND p.ativo = true
   AND rp.is_active = false              -- Desativado
@@ -128,9 +139,10 @@ WHERE p.admin_aprovado = true
 ## 🎯 Identificação de Produtos Novos:
 
 ```typescript
-const produtosNovos = produtos.filter(p => 
-  !p.is_active &&  // Está desativado
-  (p.margin_percent === 0 || p.margin_percent === null)  // Sem margem
+const produtosNovos = produtos.filter(
+  (p) =>
+    !p.is_active && // Está desativado
+    (p.margin_percent === 0 || p.margin_percent === null), // Sem margem
 );
 ```
 
@@ -149,6 +161,7 @@ const produtosNovos = produtos.filter(p =>
 ## 🚀 Para Aplicar:
 
 1. **Execute a migration no Supabase:**
+
    ```sql
    -- Copie o conteúdo de migrations/051_produtos_novos_desativados.sql
    -- Cole no SQL Editor do Supabase
@@ -156,6 +169,7 @@ const produtosNovos = produtos.filter(p =>
    ```
 
 2. **Reinicie o servidor Next.js:**
+
    ```bash
    npm run dev
    ```
