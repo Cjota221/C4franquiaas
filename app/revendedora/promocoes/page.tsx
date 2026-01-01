@@ -196,7 +196,7 @@ export default function PromocoesPage() {
 
         const { data: reseller, error: resellerError } = await supabase
           .from('resellers')
-          .select('id')
+          .select('id, store_name')
           .eq('user_id', user.id)
           .single()
 
@@ -205,6 +205,9 @@ export default function PromocoesPage() {
           setLoading(false)
           return
         }
+
+        // 🆕 Atualizar título da página para Google Analytics
+        document.title = `Promoções - ${reseller.store_name} | C4 Franquias`;
 
         setResellerId(reseller.id)
         await loadPromotions(reseller.id)

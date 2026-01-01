@@ -76,7 +76,7 @@ export default function ProdutosRevendedoraPage() {
 
       const { data: revendedora, error: revendedoraError } = await supabase
         .from('resellers')
-        .select('id, slug')
+        .select('id, slug, store_name')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -85,6 +85,9 @@ export default function ProdutosRevendedoraPage() {
 
       setRevendedoraId(revendedora.id);
       setRevendedoraSlug(revendedora.slug);
+
+      // 🆕 Atualizar título da página para Google Analytics
+      document.title = `Produtos - ${revendedora.store_name} | C4 Franquias`;
 
       // 2. Buscar produtos vinculados
       const { data: vinculacoes, error: vinculacoesError } = await supabase

@@ -29,6 +29,13 @@ export default function DashboardRevendedora() {
   const [error, setError] = useState<string | null>(null);
   const [newProductsAlert, setNewProductsAlert] = useState<NewProductsAlert | null>(null);
 
+  // 🆕 Atualizar título da página para Google Analytics
+  useEffect(() => {
+    if (reseller) {
+      document.title = `Dashboard - ${reseller.store_name} | C4 Franquias`;
+    }
+  }, [reseller]);
+
   const carregarDados = useCallback(async () => {
     console.log('🔄 Dashboard: Carregando dados...');
     try {

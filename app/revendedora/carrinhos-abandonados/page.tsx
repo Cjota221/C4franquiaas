@@ -85,7 +85,7 @@ export default function CarrinhosAbandonadosPage() {
 
         const { data: reseller, error: resellerError } = await supabase
           .from('resellers')
-          .select('id')
+          .select('id, store_name')
           .eq('user_id', user.id)
           .single()
 
@@ -94,6 +94,9 @@ export default function CarrinhosAbandonadosPage() {
           setLoading(false)
           return
         }
+
+        // 🆕 Atualizar título da página para Google Analytics
+        document.title = `Carrinhos Abandonados - ${reseller.store_name} | C4 Franquias`;
 
         setResellerId(reseller.id)
         await loadCarts(reseller.id)

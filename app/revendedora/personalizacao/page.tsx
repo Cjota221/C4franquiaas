@@ -140,6 +140,10 @@ export default function PersonalizacaoRevendedoraPage() {
         setReseller(data);
         setCurrentSlug(data.slug || "");
         setStoreName(data.store_name || "");
+        
+        // 🆕 Atualizar título da página para Google Analytics
+        document.title = `Personalização - ${data.store_name} | C4 Franquias`;
+        
         setBio(data.bio || "");
         setPhone(data.phone || "");
         setInstagram(data.instagram || "");

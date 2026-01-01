@@ -68,6 +68,10 @@ export default function ConfiguracoesRevendedora() {
         
         if (resellerData) {
           setReseller(resellerData)
+          
+          // 🆕 Atualizar título da página para Google Analytics
+          document.title = `Configurações - ${resellerData.store_name} | C4 Franquias`;
+          
           if (resellerData.whatsapp_instance_id) {
             checkWhatsAppStatus(resellerData.whatsapp_instance_id)
           }
