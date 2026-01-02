@@ -944,12 +944,24 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
             
             {bannerMobileUrl && !pendingMobile && (
-              <label className="block">
-                <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                  Enviar novo banner para aprovação
-                </div>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
-              </label>
+              <div className="space-y-2">
+                <label className="block">
+                  <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
+                    Enviar novo banner para aprovação
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
+                </label>
+                <button
+                  onClick={() => {
+                    if (confirm('Tem certeza que deseja remover este banner?')) {
+                      setBannerMobileUrl("");
+                    }
+                  }}
+                  className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Remover Banner Mobile
+                </button>
+              </div>
             )}
             
             <p className="text-xs text-gray-500 text-center mt-2">Tamanho ideal: 800x800 (quadrado)</p>
@@ -1015,12 +1027,24 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
             
             {bannerUrl && !pendingDesktop && (
-              <label className="block">
-                <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                  Enviar novo banner para aprovação
-                </div>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
-              </label>
+              <div className="space-y-2">
+                <label className="block">
+                  <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
+                    Enviar novo banner para aprovação
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
+                </label>
+                <button
+                  onClick={() => {
+                    if (confirm('Tem certeza que deseja remover este banner?')) {
+                      setBannerUrl("");
+                    }
+                  }}
+                  className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Remover Banner Desktop
+                </button>
+              </div>
             )}
             
             <p className="text-xs text-gray-500 text-center mt-2">Tamanho ideal: 1920x600 (horizontal)</p>
