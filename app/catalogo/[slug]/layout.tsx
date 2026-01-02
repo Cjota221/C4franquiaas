@@ -1,12 +1,13 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search, Gift } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
 import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
+import CuponsModal from '@/components/catalogo/CuponsModal';
 
 // Tipos
 type Reseller = {
@@ -195,6 +196,9 @@ export default function CatalogoLayout({
   
   // Estado para controlar scroll (logo encolhe)
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Estado para modal de cupons
+  const [showCuponsModal, setShowCuponsModal] = useState(false);
   
   const supabase = createClientComponentClient();
 
@@ -1163,6 +1167,25 @@ export default function CatalogoLayout({
             <MessageCircle size={28} className="text-white" />
           </a>
         )}
+
+        {/* Botão Cupons Flutuante */}
+        <button
+          onClick={() => setShowCuponsModal(true)}
+          className="fixed bottom-6 left-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 animate-pulse"
+          style={{ 
+            background: `linear-gradient(135deg, ${reseller.colors?.primary || '#ec4899'}, ${reseller.colors?.secondary || '#8b5cf6'})`
+          }}
+          aria-label="Ver cupons disponíveis"
+        >
+          <Gift size={28} className="text-white" />
+        </button>
+
+        {/* Modal de Cupons */}
+        <CuponsModal
+          isOpen={showCuponsModal}
+          onClose={() => setShowCuponsModal(false)}
+          resellerId={reseller.id}
+        />
       </div>
     </CatalogoContext.Provider>
   );
