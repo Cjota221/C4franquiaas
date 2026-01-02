@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora';
 import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 export default function RevendedoraRootLayout({
   children,
@@ -130,6 +131,7 @@ export default function RevendedoraRootLayout({
   return (
     <div className="flex min-h-screen">
       <GoogleAnalyticsTracker />
+      <PWAInstallPrompt />
       <SidebarRevendedora />
       <main className="flex-1 w-full lg:ml-0">
         <div className="pt-16 lg:pt-0">

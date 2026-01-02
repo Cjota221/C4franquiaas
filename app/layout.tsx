@@ -30,7 +30,12 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'C4 Franquias',
+  },
 };
 
 export const viewport = {
@@ -47,6 +52,12 @@ export default function RootLayout({
     <html lang="pt-BR">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#DB1472" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="C4 Franquias" />
+        <link rel="manifest" href="/manifest.json" />
+        
         {/* Google Analytics 4 - C4 Franquias */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Q1TM0EYRBN"

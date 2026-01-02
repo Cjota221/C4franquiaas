@@ -119,3 +119,19 @@
 .animate-marquee {
   animation: marquee 20s linear infinite;
 }
+
+/* Animação slide-up para PWA install prompt */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
