@@ -167,21 +167,21 @@ export default function ProdutoPage() {
     // Construir URL do produto
     const productUrl = `${window.location.origin}/catalogo/${reseller.slug}/produto/${produto.id}`;
     
-    // Mensagem formatada
-    let mensagem = `Olá! 👋\n\n`;
+    // Mensagem formatada SEM EMOJIS
+    let mensagem = `Olá!\n\n`;
     mensagem += `Tenho interesse neste produto:\n\n`;
     mensagem += `*${produto.nome}*\n`;
-    mensagem += `💰 Preço: R$ ${calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}\n\n`;
+    mensagem += `*Preço:* R$ ${calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}\n\n`;
     
     if (selectedVariacao) {
-      mensagem += `📏 Tamanho: ${selectedVariacao.tamanho}\n`;
+      mensagem += `*Tamanho:* ${selectedVariacao.tamanho}\n`;
       if (selectedVariacao.cor) {
-        mensagem += `🎨 Cor: ${selectedVariacao.cor}\n`;
+        mensagem += `*Cor:* ${selectedVariacao.cor}\n`;
       }
       mensagem += `\n`;
     }
     
-    mensagem += `🔗 Link do produto:\n${productUrl}\n\n`;
+    mensagem += `*Link do produto:*\n${productUrl}\n\n`;
     mensagem += `Gostaria de tirar uma dúvida sobre este produto.`;
     
     const whatsappUrl = `https://wa.me/${phoneWithCountryCode}?text=${encodeURIComponent(mensagem)}`;
