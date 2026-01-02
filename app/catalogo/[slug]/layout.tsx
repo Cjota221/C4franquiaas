@@ -1080,7 +1080,7 @@ export default function CatalogoLayout({
                         // Logos quadradas geralmente têm fundo, então redondo fica melhor
                         themeSettings.logo_shape === 'rectangle' 
                           ? `${isScrolled ? 'h-12' : 'h-16'} w-auto object-contain` 
-                          : `${isScrolled ? 'w-14 h-14' : 'w-20 h-20'} rounded-full border-[3px] border-white/40`
+                          : `${isScrolled ? 'w-14 h-14' : 'w-20 h-20'} rounded-full border-2 border-white/50`
                       }`}
                       style={{
                         filter: themeSettings.logo_shape === 'rectangle' 
@@ -1088,8 +1088,8 @@ export default function CatalogoLayout({
                           : 'none',
                         boxShadow: themeSettings.logo_shape !== 'rectangle'
                           ? isScrolled 
-                            ? '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 8px rgba(0,0,0,0.1)'
-                            : '0 8px 20px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.2), inset 0 3px 12px rgba(0,0,0,0.15)'
+                            ? '0 3px 10px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1)'
+                            : '0 6px 16px rgba(0,0,0,0.2), 0 3px 8px rgba(0,0,0,0.15)'
                           : undefined
                       }}
                     />

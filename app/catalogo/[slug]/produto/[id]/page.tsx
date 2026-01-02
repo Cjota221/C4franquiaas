@@ -48,6 +48,8 @@ export default function ProdutoPage() {
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   const supabase = createClientComponentClient();
 
@@ -119,6 +121,40 @@ export default function ProdutoPage() {
 
     loadProduct();
   }, [reseller?.id, params.id, supabase]);
+
+  // Funções de swipe para galeria
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    const imagens = produto?.imagens && produto.imagens.length > 0 
+      ? produto.imagens 
+      : produto?.imagem 
+        ? [produto.imagem] 
+        : [];
+
+    if (isLeftSwipe && selectedImage < imagens.length - 1) {
+      setSelectedImage(selectedImage + 1);
+    }
+    
+    if (isRightSwipe && selectedImage > 0) {
+      setSelectedImage(selectedImage - 1);
+    }
+    
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
 
   const calcularPreco = (precoBase: number) => {
     return precoBase * (1 + marginPercent / 100);
@@ -205,16 +241,19 @@ export default function ProdutoPage() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Galeria de Imagens - Formato 3:4 (960x1280) */}
+        {/* Galeria de Imagens - Formato 3:4 (960x1280) com Swipe */}
         <div>
           <div 
-            className="relative overflow-hidden bg-gray-50 mb-4 shadow-lg" 
+            className="relative overflow-hidden bg-gray-50 mb-4 shadow-lg cursor-grab active:cursor-grabbing" 
             style={{ 
               aspectRatio: '3/4',
               borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
                 : themeSettings?.border_radius === 'small' ? '4px'
                 : themeSettings?.border_radius === 'large' ? '24px' : '12px'
             }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <Image
               src={imagens[selectedImage]}
@@ -225,32 +264,49 @@ export default function ProdutoPage() {
               priority
               className="object-cover"
             />
+            {/* Indicador de foto atual */}
+            {imagens.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                {imagens.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all ${
+                      selectedImage === index 
+                        ? 'w-8 bg-white' 
+                        : 'w-1.5 bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           
-          {/* Miniaturas - Alta qualidade */}
+          {/* Miniaturas - Maiores e com espaçamento */}
           {imagens.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 px-2">
               {imagens.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-20 h-20 overflow-hidden flex-shrink-0 border-2 transition-all shadow-sm ${
+                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 border-2 transition-all shadow-md hover:shadow-lg ${
                     selectedImage === index 
-                      ? 'border-pink-500 scale-105' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'ring-2 ring-offset-2 scale-105' 
+                      : 'border-gray-200 hover:border-gray-400'
                   }`}
                   style={{ 
                     borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
-                      : themeSettings?.border_radius === 'small' ? '4px'
-                      : themeSettings?.border_radius === 'large' ? '16px' : '8px'
-                  }}
+                      : themeSettings?.border_radius === 'small' ? '6px'
+                      : themeSettings?.border_radius === 'large' ? '16px' : '10px',
+                    borderColor: selectedImage === index ? primaryColor : undefined,
+                    '--tw-ring-color': primaryColor,
+                  } as React.CSSProperties}
                 >
                   <Image
                     src={img}
                     alt={`${produto.nome} - ${index + 1}`}
                     fill
-                    sizes="80px"
-                    quality={80}
+                    sizes="96px"
+                    quality={85}
                     className="object-cover"
                   />
                 </button>
