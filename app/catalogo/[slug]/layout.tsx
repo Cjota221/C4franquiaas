@@ -193,12 +193,25 @@ export default function CatalogoLayout({
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
+  // Estado para controlar scroll (logo encolhe)
+  const [isScrolled, setIsScrolled] = useState(false);
+  
   const supabase = createClientComponentClient();
 
   // Carregar slug
   useEffect(() => {
     params.then(p => setSlug(p.slug));
   }, [params]);
+
+  // Detectar scroll para encolher logo
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Carregar dados do revendedor
   useEffect(() => {
@@ -1052,19 +1065,32 @@ export default function CatalogoLayout({
               )}
 
               {/* Centro: Logo */}
-              <Link href={`/catalogo/${slug}`} className="flex items-center justify-center">
+              <Link href={`/catalogo/${slug}`} className="flex items-center justify-center transition-all duration-300">
                 {reseller.logo_url ? (
-                  <Image
-                    src={reseller.logo_url}
-                    alt={reseller.store_name}
-                    width={themeSettings.logo_shape === 'rectangle' ? 120 : 48}
-                    height={48}
-                    className={`h-10 w-auto object-contain ${
-                      themeSettings.logo_shape === 'circle' ? 'rounded-full' : ''
-                    }`}
-                  />
+                  <div className={`relative transition-all duration-300 ${
+                    isScrolled ? '' : 'scale-110'
+                  }`}>
+                    <Image
+                      src={reseller.logo_url}
+                      alt={reseller.store_name}
+                      width={isScrolled ? 56 : 80}
+                      height={isScrolled ? 56 : 80}
+                      className={`object-cover transition-all duration-300 ${
+                        // 🎯 SEMPRE FORÇAR REDONDO se não for retângulo (decisão de design)
+                        // Logos quadradas geralmente têm fundo, então redondo fica melhor
+                        themeSettings.logo_shape === 'rectangle' 
+                          ? `${isScrolled ? 'h-12' : 'h-16'} w-auto object-contain` 
+                          : `${isScrolled ? 'w-14 h-14' : 'w-20 h-20'} rounded-full shadow-lg border-4 border-white/30`
+                      }`}
+                      style={{
+                        filter: isScrolled ? 'none' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))',
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <span className="text-lg font-bold">{reseller.store_name}</span>
+                  <span className={`font-bold transition-all duration-300 ${
+                    isScrolled ? 'text-lg' : 'text-2xl'
+                  }`}>{reseller.store_name}</span>
                 )}
               </Link>
 
