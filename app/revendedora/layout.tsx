@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora';
-import GoogleAnalyticsTracker from '@/components/GoogleAnalyticsTracker';
+import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
 
 export default function RevendedoraRootLayout({
   children,
