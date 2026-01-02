@@ -288,17 +288,16 @@ export default function ProdutoPage() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 border-2 transition-all shadow-md hover:shadow-lg ${
+                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 transition-all ${
                     selectedImage === index 
-                      ? 'ring-2 ring-offset-2 scale-105' 
-                      : 'border-gray-200 hover:border-gray-400'
+                      ? 'ring-1 ring-offset-1 scale-105 shadow-lg' 
+                      : 'border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
                   }`}
                   style={{ 
                     borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
                       : themeSettings?.border_radius === 'small' ? '6px'
                       : themeSettings?.border_radius === 'large' ? '16px' : '10px',
-                    borderColor: selectedImage === index ? primaryColor : undefined,
-                    '--tw-ring-color': primaryColor,
+                    '--tw-ring-color': selectedImage === index ? primaryColor : 'transparent',
                   } as React.CSSProperties}
                 >
                   <Image
@@ -307,7 +306,7 @@ export default function ProdutoPage() {
                     fill
                     sizes="96px"
                     quality={85}
-                    className="object-cover"
+                    className="object-contain p-1"
                   />
                 </button>
               ))}
