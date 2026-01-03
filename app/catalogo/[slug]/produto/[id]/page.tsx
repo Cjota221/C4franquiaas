@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
-import { ArrowLeft, Plus, Minus, ShoppingBag, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, ShoppingBag, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
@@ -156,38 +156,6 @@ export default function ProdutoPage() {
     setTouchEnd(0);
   };
 
-  const handleWhatsAppDuvida = () => {
-    if (!produto || !reseller?.phone) return;
-    
-    const phoneNumber = reseller.phone.replace(/\D/g, '');
-    const phoneWithCountryCode = phoneNumber.startsWith('55') 
-      ? phoneNumber 
-      : `55${phoneNumber}`;
-    
-    // Construir URL do produto
-    const productUrl = `${window.location.origin}/catalogo/${reseller.slug}/produto/${produto.id}`;
-    
-    // Mensagem formatada SEM EMOJIS
-    let mensagem = `Olá!\n\n`;
-    mensagem += `Tenho interesse neste produto:\n\n`;
-    mensagem += `*${produto.nome}*\n`;
-    mensagem += `*Preço:* R$ ${calcularPreco(produto.preco_base).toFixed(2).replace('.', ',')}\n\n`;
-    
-    if (selectedVariacao) {
-      mensagem += `*Tamanho:* ${selectedVariacao.tamanho}\n`;
-      if (selectedVariacao.cor) {
-        mensagem += `*Cor:* ${selectedVariacao.cor}\n`;
-      }
-      mensagem += `\n`;
-    }
-    
-    mensagem += `*Link do produto:*\n${productUrl}\n\n`;
-    mensagem += `Gostaria de tirar uma dúvida sobre este produto.`;
-    
-    const whatsappUrl = `https://wa.me/${phoneWithCountryCode}?text=${encodeURIComponent(mensagem)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
   const calcularPreco = (precoBase: number) => {
     return precoBase * (1 + marginPercent / 100);
   };
@@ -320,16 +288,17 @@ export default function ProdutoPage() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 transition-all ${
+                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 border-2 transition-all shadow-md hover:shadow-lg ${
                     selectedImage === index 
-                      ? 'ring-1 ring-offset-1 scale-105 shadow-lg' 
-                      : 'border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
+                      ? 'ring-2 ring-offset-2 scale-105' 
+                      : 'border-gray-200 hover:border-gray-400'
                   }`}
                   style={{ 
                     borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
                       : themeSettings?.border_radius === 'small' ? '6px'
                       : themeSettings?.border_radius === 'large' ? '16px' : '10px',
-                    '--tw-ring-color': selectedImage === index ? primaryColor : 'transparent',
+                    borderColor: selectedImage === index ? primaryColor : undefined,
+                    '--tw-ring-color': primaryColor,
                   } as React.CSSProperties}
                 >
                   <Image
@@ -338,7 +307,7 @@ export default function ProdutoPage() {
                     fill
                     sizes="96px"
                     quality={85}
-                    className="object-contain p-1"
+                    className="object-cover"
                   />
                 </button>
               ))}
@@ -466,21 +435,6 @@ export default function ProdutoPage() {
                 Adicionar ao Carrinho
               </>
             )}
-          </button>
-
-          {/* Botão WhatsApp - Tirar Dúvida */}
-          <button
-            onClick={handleWhatsAppDuvida}
-            className="w-full mt-3 py-4 font-bold text-white bg-green-500 hover:bg-green-600 flex items-center justify-center gap-2 transition-all"
-            style={{ 
-              borderRadius: themeSettings?.button_style === 'rounded' ? '9999px' 
-                : themeSettings?.border_radius === 'none' ? '0px'
-                : themeSettings?.border_radius === 'small' ? '4px'
-                : themeSettings?.border_radius === 'large' ? '24px' : '12px'
-            }}
-          >
-            <MessageCircle size={20} />
-            Tirar Dúvida no WhatsApp
           </button>
 
           {/* Link para o Carrinho */}

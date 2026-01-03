@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
 
   const rootClass = mobile
     ? 'w-64 bg-white flex flex-col h-full p-4 border-r border-gray-200 shadow-lg'
-    : 'hidden md:flex md:fixed md:top-0 md:left-0 md:w-64 md:bg-white md:flex-col md:h-screen md:p-4 md:border-r md:border-gray-200 md:shadow-lg md:overflow-y-auto';
+    : 'hidden md:flex md:w-64 md:bg-white md:flex-col md:h-screen md:p-4 md:border-r md:border-gray-200 md:shadow-lg';
 
   const pathname = usePathname();
 

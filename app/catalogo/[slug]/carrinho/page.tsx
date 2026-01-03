@@ -118,13 +118,7 @@ export default function CarrinhoPage() {
     
     const mensagem = formatarPedidoWhatsApp();
     const phoneNumber = reseller.phone.replace(/\D/g, '');
-    
-    // Garantir que tem o código do país (55 para Brasil)
-    const phoneWithCountryCode = phoneNumber.startsWith('55') 
-      ? phoneNumber 
-      : `55${phoneNumber}`;
-    
-    const whatsappUrl = `https://wa.me/${phoneWithCountryCode}?text=${encodeURIComponent(mensagem)}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(mensagem)}`;
     
     window.open(whatsappUrl, '_blank');
     
