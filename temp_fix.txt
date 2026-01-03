@@ -1,0 +1,6 @@
+﻿const { data: existing } = await supabase
+        .from('promotions')
+        .select('id')
+        .eq('coupon_code', coupon_code.toUpperCase())
+        .eq('reseller_id', reseller_id)
+        .single()

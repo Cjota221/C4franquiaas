@@ -1,0 +1,306 @@
+{
+  "timestamp": "2026-01-03T15:31:34.526Z",
+  "admin_total": 0,
+  "total_resellers": 33,
+  "orphan_products": 0,
+  "orphan_list": [],
+  "resellers_report": [
+    {
+      "store_name": "Beleza de cassia & Maria",
+      "slug": "beleza-de-cassia-maria",
+      "email": "pedrohenriquelgredbeatriz2019@gmail.com",
+      "reseller_id": "ebb40232-c975-4eda-beec-f87b5b44b184",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Beleza Maria ",
+      "slug": "beleza-maria-",
+      "email": "cassianoeliana91@gmail.com",
+      "reseller_id": "563660d2-9d5f-4706-8013-9636ea34503f",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Bella Fashion Store ",
+      "slug": "bella-fashion-store",
+      "email": "jessica.apj@icloud.com",
+      "reseller_id": "26f9809f-2769-4c93-965c-535460e0749a",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Bella Mulher",
+      "slug": "bella-mulher",
+      "email": "fernandacarvalhoo2013@gmail.com",
+      "reseller_id": "08d00585-182f-4324-8f03-52acd79235bd",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "CACAU SHOES",
+      "slug": "cacau-shoes",
+      "email": "teste@hotmail.com",
+      "reseller_id": "f95a79b9-e332-45d4-a2b8-cd9ea69bba92",
+      "total_linked": 196,
+      "total_active": 94,
+      "faltantes": -196
+    },
+    {
+      "store_name": "Camila shoes ",
+      "slug": "camila-shoes",
+      "email": "kamilaribeirorezende@hotmail.com",
+      "reseller_id": "56c4dac7-62e7-407b-8323-415001a17a5a",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Carly variedades",
+      "slug": "carly-variedades",
+      "email": "Carlianemacedo1203@gmail.com",
+      "reseller_id": "8e2121ef-1e9b-4293-be42-d08114e7b13c",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Charme & Cia Rasteirinhas",
+      "slug": "charme-cia-rasteirinhas",
+      "email": "atendimento.charmecia@gmail.com",
+      "reseller_id": "591b3dae-7e18-4d55-9a26-3f2a34d1f42c",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Cjota Rasteirinhas",
+      "slug": "cjota-rasteirinhas",
+      "email": "Joseciromartins@gmail.com",
+      "reseller_id": "f98cb0c0-7806-411f-aeb8-f4dea3618605",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Crprataseperfumaria",
+      "slug": "crprataseperfumaria",
+      "email": "cassia.ac048497@hotmail.com",
+      "reseller_id": "8e6870ac-ff46-4f99-9ca1-970f988e64fb",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Danny confecções ",
+      "slug": "danny-confeccoes-",
+      "email": "danieletelaroli@gmail.com",
+      "reseller_id": "8734c247-d5ce-4dd7-b221-ea42c912340c",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Donna Sandália ",
+      "slug": "donna-sandalia-",
+      "email": "rozasouza557@gmail.com",
+      "reseller_id": "20ca4e14-11ea-42b7-aaea-f49970ae2555",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Esther ",
+      "slug": "esther-",
+      "email": "jf5947383@gmail.com",
+      "reseller_id": "9a3f5ba8-73e7-41d2-82bc-f65bd472bc32",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Fc Variedades",
+      "slug": "fc-variedades",
+      "email": "ffcaixeta28@icloud.com",
+      "reseller_id": "4c33a3b9-ef4a-4887-8ed0-596675eef31c",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Kelly langerir ",
+      "slug": "kelly-langerir-",
+      "email": "kellyjanaina0429@gmail.com",
+      "reseller_id": "6f5911c9-679e-401d-b9dd-f8fc16878fe8",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Laços&Passos",
+      "slug": "lacos-passos",
+      "email": "nayane.vieira10@hotmail.com",
+      "reseller_id": "f8277e01-db4d-44a3-aa99-1082aca6c424",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Lainemoda.fashion",
+      "slug": "lainemoda-fashion",
+      "email": "queirozelaine16@gmail.com",
+      "reseller_id": "85238fb2-0810-4998-8f99-d9faa6933614",
+      "total_linked": 110,
+      "total_active": 92,
+      "faltantes": -110
+    },
+    {
+      "store_name": "Me use shoes ",
+      "slug": "me-use-shoes-",
+      "email": "carlananda48@gmail.com",
+      "reseller_id": "4823ef78-62cd-422c-9863-e13f22576485",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Meire Flats",
+      "slug": "meire-flats",
+      "email": "meire25pires@gmail.com",
+      "reseller_id": "ea4ed4b0-bbe4-47f2-a830-86a36d2075e8",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Miranda Shoes ",
+      "slug": "miranda-shoes-",
+      "email": "mirandanatalia830@gmail.com",
+      "reseller_id": "e84c992f-9cbd-4921-a0a7-84585ae6b8b1",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Morelli Shoes",
+      "slug": "morelli-shoes",
+      "email": "ellenangelalol@gmail.com",
+      "reseller_id": "f68345c4-9363-4ca7-9f3f-8762d155e6e2",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Nunes Moda e Utilidades",
+      "slug": "nunes-moda-e-utilidades",
+      "email": "elienip119@gmail.com",
+      "reseller_id": "9bba813d-4746-4626-82d0-61488810f250",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Passarela",
+      "slug": "passarela",
+      "email": "lorennapassarello7@gmail.com",
+      "reseller_id": "c0f876d0-8e96-4055-b820-9c8bab63b02d",
+      "total_linked": 110,
+      "total_active": 92,
+      "faltantes": -110
+    },
+    {
+      "store_name": "Patrícia Shoes  ",
+      "slug": "patricia-shoes",
+      "email": "patyamorim009@gmail.com",
+      "reseller_id": "c8805b16-4542-4e84-bcfa-d024681f007d",
+      "total_linked": 110,
+      "total_active": 92,
+      "faltantes": -110
+    },
+    {
+      "store_name": "Prime",
+      "slug": "prime",
+      "email": "constantinobuffone@gmail.com",
+      "reseller_id": "0323ff12-c192-4f38-935e-821e64eb944f",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Ramazya Shoes ",
+      "slug": "ramazya-shoes-",
+      "email": "ramazyasilva985@gmail.com",
+      "reseller_id": "5cce9d80-9b9e-40af-b893-509f31ed235e",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "rosanenunesshoes ",
+      "slug": "rosanenunesshoes",
+      "email": "rosane.v25@gmail.com",
+      "reseller_id": "dc4226ca-9b92-410f-95b1-d40379baf931",
+      "total_linked": 110,
+      "total_active": 92,
+      "faltantes": -110
+    },
+    {
+      "store_name": "RR Elegance calçados ",
+      "slug": "rr-elegance-calcados-",
+      "email": "robertarosatxr115@gmail.com",
+      "reseller_id": "a4072fd2-8615-4d22-bffc-c34427e31f0a",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Sofia calçados femininos ",
+      "slug": "sofia-calcados-femininos",
+      "email": "as8164376@gmail.com",
+      "reseller_id": "c193de24-b065-4e9a-a735-54d18777a64a",
+      "total_linked": 112,
+      "total_active": 92,
+      "faltantes": -112
+    },
+    {
+      "store_name": "Tout'a",
+      "slug": "touta",
+      "email": "toutaecommerce@gmail.com",
+      "reseller_id": "f1c5c760-d9f1-4541-b29b-aefa3a51e093",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Varandas Boutiqueee ",
+      "slug": "varandas-boutiqueee-",
+      "email": "varandaboutiquecalcados@gmail.com",
+      "reseller_id": "a33267c9-6f89-474e-826c-e18d2338c732",
+      "total_linked": 0,
+      "total_active": 0,
+      "faltantes": 0
+    },
+    {
+      "store_name": "Versátil ",
+      "slug": "versatil-",
+      "email": "camilatj2512@icloud.com",
+      "reseller_id": "293e4e5f-e3f6-4337-8ee8-dcf46e853d1b",
+      "total_linked": 110,
+      "total_active": 92,
+      "faltantes": -110
+    },
+    {
+      "store_name": "vivaz",
+      "slug": "vivaz",
+      "email": "carolinecarvalho075@hotmail.com",
+      "reseller_id": "29657534-930c-4df0-82c5-f63177b39fa4",
+      "total_linked": 145,
+      "total_active": 94,
+      "faltantes": -145
+    }
+  ]
+}
