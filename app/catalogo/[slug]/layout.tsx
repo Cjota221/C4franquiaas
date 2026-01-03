@@ -306,7 +306,7 @@ export default function CatalogoLayout({
         .eq('reseller_id', reseller.id)
         .eq('customer_phone', lead.phone)
         .eq('status', 'abandoned')
-        .single();
+        .maybeSingle();
 
       let cartId = existingCart?.id;
 
