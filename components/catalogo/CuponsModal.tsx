@@ -34,6 +34,7 @@ export default function CuponsModal({ isOpen, onClose, resellerId, onCouponCopy 
     if (isOpen && resellerId) {
       loadCupons()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, resellerId])
 
   const loadCupons = async () => {
@@ -42,29 +43,42 @@ export default function CuponsModal({ isOpen, onClose, resellerId, onCouponCopy 
       const supabase = createClient()
       
       const { data, error } = await supabase
-        .from('coupons')
+        .from('promotions')
         .select('*')
         .eq('reseller_id', resellerId)
-        .eq('active', true)
+        .eq('is_active', true)
+        .not('coupon_code', 'is', null)
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      // Filtrar cupons válidos
-      const cuponsValidos = (data || []).filter((cupom: Cupom) => {
+      // Filtrar cupons válidos e mapear para o formato esperado
+      const cuponsValidos = (data || []).filter((cupom) => {
         // Verificar validade
-        if (cupom.valid_until) {
-          const dataValidade = new Date(cupom.valid_until)
+        if (cupom.ends_at) {
+          const dataValidade = new Date(cupom.ends_at)
           if (dataValidade < new Date()) return false
         }
         
         // Verificar limite de uso
-        if (cupom.usage_limit && cupom.used_count >= cupom.usage_limit) {
+        if (cupom.max_uses && cupom.uses_count >= cupom.max_uses) {
           return false
         }
         
         return true
-      })
+      }).map((cupom) => ({
+        id: cupom.id,
+        code: cupom.coupon_code,
+        type: cupom.type,
+        discount_value: cupom.discount_value,
+        min_purchase: cupom.min_purchase_value,
+        max_discount: cupom.max_discount_value,
+        valid_until: cupom.ends_at,
+        usage_limit: cupom.max_uses,
+        used_count: cupom.uses_count || 0,
+        active: cupom.is_active,
+        description: cupom.description
+      }))
 
       setCupons(cuponsValidos)
     } catch (error) {
@@ -85,160 +99,146 @@ export default function CuponsModal({ isOpen, onClose, resellerId, onCouponCopy 
     }
   }
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'frete_gratis': return 'Frete Grátis'
-      case 'desconto_percentual': return 'Desconto'
-      case 'desconto_valor': return 'Desconto'
-      case 'cupom_desconto': return 'Desconto'
-      default: return 'Promoção'
-    }
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return null
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR')
   }
 
   const getDiscountText = (cupom: Cupom) => {
     if (cupom.type === 'frete_gratis') {
       return 'Frete Grátis'
     }
-    if (cupom.type === 'desconto_percentual') {
-      return `${cupom.discount_value}% OFF`
+    if (cupom.type === 'cupom_desconto' || cupom.type === 'desconto_percentual') {
+      if (cupom.discount_value) {
+        return `${cupom.discount_value}% de desconto`
+      }
     }
-    if (cupom.type === 'desconto_valor') {
-      return `R$ ${cupom.discount_value?.toFixed(2)} OFF`
+    if (cupom.type === 'desconto_valor' && cupom.discount_value) {
+      return `R$ ${cupom.discount_value.toFixed(2)} de desconto`
     }
-    return cupom.description || 'Desconto especial'
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    return 'Desconto especial'
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-6 text-white relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          
+        <div className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 flex items-center justify-between text-white">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <Gift className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">Cupons Disponíveis</h2>
-              <p className="text-pink-100 text-sm">Copie e use no carrinho</p>
-            </div>
+            <Gift size={24} />
+            <h2 className="text-xl font-bold">Cupons Disponíveis</h2>
           </div>
+          <button 
+            onClick={onClose}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
         </div>
 
-        {/* Lista de Cupons */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Conteúdo */}
+        <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
             </div>
           ) : cupons.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <Tag className="w-10 h-10 text-gray-400" />
-              </div>
-              <p className="text-gray-600 font-medium">Nenhum cupom disponível</p>
-              <p className="text-gray-400 text-sm mt-1">Volte mais tarde para novas promoções!</p>
+              <Gift size={48} className="mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500 text-lg font-medium">Nenhum cupom disponível</p>
+              <p className="text-gray-400 text-sm mt-2">Volte mais tarde para conferir novidades!</p>
             </div>
           ) : (
-            cupons.map((cupom) => (
-              <div
-                key={cupom.id}
-                className="border-2 border-gray-200 rounded-2xl p-4 hover:border-pink-300 hover:shadow-lg transition-all"
-              >
-                {/* Badge do tipo */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-semibold rounded-full">
-                    <Percent className="w-3 h-3" />
-                    {getTypeLabel(cupom.type)}
-                  </span>
-                  
+            <div className="space-y-4">
+              {cupons.map((cupom) => (
+                <div 
+                  key={cupom.id}
+                  className="bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-4 hover:shadow-lg transition-shadow"
+                >
+                  {/* Tipo e Desconto */}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      {cupom.type === 'frete_gratis' ? (
+                        <Tag className="w-5 h-5 text-white" />
+                      ) : (
+                        <Percent className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 text-lg">
+                        {getDiscountText(cupom)}
+                      </p>
+                      {cupom.description && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {cupom.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Validade */}
                   {cupom.valid_until && (
-                    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
-                      <Calendar className="w-3 h-3" />
-                      Até {formatDate(cupom.valid_until)}
-                    </span>
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                      <Calendar size={12} />
+                      Válido até {formatDate(cupom.valid_until)}
+                    </p>
+                  )}
+
+                  {/* Requisitos */}
+                  {cupom.min_purchase && (
+                    <p className="text-xs text-gray-500 mb-3">
+                      Válido para compras acima de R$ {cupom.min_purchase.toFixed(2)}
+                    </p>
+                  )}
+
+                  {/* Código e botão copiar */}
+                  <div className="flex items-center gap-2 p-3 bg-white rounded-xl border-2 border-dashed border-pink-300">
+                    <code className="flex-1 text-lg font-bold text-pink-600 tracking-wider">
+                      {cupom.code}
+                    </code>
+                    
+                    <button
+                      onClick={() => handleCopy(cupom.code)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                        copiedCode === cupom.code
+                          ? 'bg-green-500 text-white'
+                          : 'bg-pink-500 text-white hover:bg-pink-600'
+                      }`}
+                    >
+                      {copiedCode === cupom.code ? (
+                        <>
+                          <Check size={16} />
+                          Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={16} />
+                          Copiar
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Limite de uso */}
+                  {cupom.usage_limit && (
+                    <p className="text-xs text-gray-400 mt-2 text-center">
+                      {cupom.used_count}/{cupom.usage_limit} usos
+                    </p>
                   )}
                 </div>
-
-                {/* Valor do desconto */}
-                <p className="text-xl font-bold text-gray-900 mb-2">
-                  {getDiscountText(cupom)}
-                </p>
-
-                {/* Descrição */}
-                {cupom.description && (
-                  <p className="text-sm text-gray-600 mb-3">
-                    {cupom.description}
-                  </p>
-                )}
-
-                {/* Requisitos */}
-                {cupom.min_purchase && (
-                  <p className="text-xs text-gray-500 mb-3">
-                    Válido para compras acima de R$ {cupom.min_purchase.toFixed(2)}
-                  </p>
-                )}
-
-                {/* Código e botão copiar */}
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                  <code className="flex-1 text-lg font-bold text-pink-600 tracking-wider">
-                    {cupom.code}
-                  </code>
-                  
-                  <button
-                    onClick={() => handleCopy(cupom.code)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      copiedCode === cupom.code
-                        ? 'bg-green-500 text-white'
-                        : 'bg-pink-500 text-white hover:bg-pink-600'
-                    }`}
-                  >
-                    {copiedCode === cupom.code ? (
-                      <span className="flex items-center gap-2">
-                        <Check className="w-4 h-4" />
-                        Copiado!
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Copy className="w-4 h-4" />
-                        Copiar
-                      </span>
-                    )}
-                  </button>
-                </div>
-
-                {/* Limite de uso */}
-                {cupom.usage_limit && (
-                  <p className="text-xs text-gray-400 mt-2 text-center">
-                    {cupom.usage_limit - cupom.used_count} usos restantes
-                  </p>
-                )}
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Footer */}
-        {cupons.length > 0 && (
-          <div className="p-4 bg-gray-50 border-t border-gray-200">
-            <p className="text-center text-xs text-gray-500">
-              💡 Copie o código e cole no campo de cupom no carrinho
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )

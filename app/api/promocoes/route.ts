@@ -132,17 +132,18 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Se for cupom, validar código único
+    // Se for cupom, validar código único POR REVENDEDORA (não globalmente)
     if (coupon_code) {
       const { data: existing } = await supabase
         .from('promotions')
         .select('id')
         .eq('coupon_code', coupon_code.toUpperCase())
+        .eq('reseller_id', reseller_id) // ✅ Verifica apenas no painel da mesma revendedora
         .single()
       
       if (existing) {
         return NextResponse.json(
-          { error: 'Este código de cupom já está em uso' },
+          { error: 'Você já tem um cupom com este código. Escolha outro código.' },
           { status: 400 }
         )
       }
@@ -212,20 +213,30 @@ export async function PATCH(request: NextRequest) {
       )
     }
     
-    // Se estiver atualizando cupom, verificar unicidade
+    // Se estiver atualizando cupom, verificar unicidade POR REVENDEDORA
     if (updates.coupon_code) {
-      const { data: existing } = await supabase
+      // Primeiro, buscar a promoção atual para pegar o reseller_id
+      const { data: currentPromo } = await supabase
         .from('promotions')
-        .select('id')
-        .eq('coupon_code', updates.coupon_code.toUpperCase())
-        .neq('id', id)
+        .select('reseller_id')
+        .eq('id', id)
         .single()
       
-      if (existing) {
-        return NextResponse.json(
-          { error: 'Este código de cupom já está em uso' },
-          { status: 400 }
-        )
+      if (currentPromo) {
+        const { data: existing } = await supabase
+          .from('promotions')
+          .select('id')
+          .eq('coupon_code', updates.coupon_code.toUpperCase())
+          .eq('reseller_id', currentPromo.reseller_id) // ✅ Verifica apenas no painel da mesma revendedora
+          .neq('id', id)
+          .single()
+        
+        if (existing) {
+          return NextResponse.json(
+            { error: 'Você já tem outro cupom com este código. Escolha um código diferente.' },
+            { status: 400 }
+          )
+        }
       }
       
       updates.coupon_code = updates.coupon_code.toUpperCase()
