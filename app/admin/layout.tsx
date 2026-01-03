@@ -36,8 +36,8 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Main content */}
-        <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        {/* Main content - com margem esquerda para compensar sidebar fixo */}
+        <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto md:ml-64">
           {/* Notificações de Estoque em Tempo Real */}
           <EstoqueNotifications />
           

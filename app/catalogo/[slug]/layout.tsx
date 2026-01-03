@@ -79,9 +79,6 @@ type Promotion = {
   coupon_code: string | null;
   min_purchase_value: number | null;
   max_discount_value: number | null;
-  max_uses: number | null;
-  uses_count: number;
-  is_active: boolean;
   applies_to: 'all' | 'categories' | 'products';
   product_ids: string[] | null;
   category_ids: string[] | null;
@@ -186,7 +183,6 @@ export default function CatalogoLayout({
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [pendingCartItem, setPendingCartItem] = useState<CartItem | null>(null);
-  const [isCuponsModalOpen, setIsCuponsModalOpen] = useState(false);
   
   // Estados para promoções
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -200,6 +196,9 @@ export default function CatalogoLayout({
   
   // Estado para controlar scroll (logo encolhe)
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Estado para modal de cupons
+  const [showCuponsModal, setShowCuponsModal] = useState(false);
   
   const supabase = createClientComponentClient();
 
@@ -1106,48 +1105,20 @@ export default function CatalogoLayout({
                 )}
               </Link>
 
-              {/* Direita: Cupons + Carrinho */}
-              <div className="flex items-center gap-2">
-                {/* Botão de Cupons - Só aparece se houver cupons ativos */}
-                {promotions.some(p => 
-                  p.is_active && 
-                  p.coupon_code && 
-                  (!p.ends_at || new Date(p.ends_at) > new Date()) &&
-                  (!p.max_uses || (p.uses_count || 0) < p.max_uses)
-                ) && (
-                  <button
-                    onClick={() => setIsCuponsModalOpen(true)}
-                    className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                    title="Cupons disponíveis"
+              {/* Direita: Carrinho */}
+              <Link
+                href={`/catalogo/${slug}/carrinho`}
+                className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
+              >
+                <ShoppingCart size={22} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-xs font-bold rounded-full flex items-center justify-center"
+                    style={{ color: primaryColor }}
                   >
-                    <Gift size={22} />
-                    {/* Badge de notificação */}
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {promotions.filter(p => 
-                        p.is_active && 
-                        p.coupon_code && 
-                        (!p.ends_at || new Date(p.ends_at) > new Date()) &&
-                        (!p.max_uses || (p.uses_count || 0) < p.max_uses)
-                      ).length}
-                    </span>
-                  </button>
+                    {getTotalItems()}
+                  </span>
                 )}
-
-                {/* Carrinho */}
-                <Link
-                  href={`/catalogo/${slug}/carrinho`}
-                  className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                >
-                  <ShoppingCart size={22} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-xs font-bold rounded-full flex items-center justify-center"
-                      style={{ color: primaryColor }}
-                    >
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </Link>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -1197,15 +1168,23 @@ export default function CatalogoLayout({
           </a>
         )}
 
+        {/* Botão Cupons Flutuante */}
+        <button
+          onClick={() => setShowCuponsModal(true)}
+          className="fixed bottom-6 left-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 animate-pulse"
+          style={{ 
+            background: `linear-gradient(135deg, ${reseller.colors?.primary || '#ec4899'}, ${reseller.colors?.secondary || '#8b5cf6'})`
+          }}
+          aria-label="Ver cupons disponíveis"
+        >
+          <Gift size={28} className="text-white" />
+        </button>
+
         {/* Modal de Cupons */}
         <CuponsModal
-          isOpen={isCuponsModalOpen}
-          onClose={() => setIsCuponsModalOpen(false)}
+          isOpen={showCuponsModal}
+          onClose={() => setShowCuponsModal(false)}
           resellerId={reseller.id}
-          onCouponCopy={(code) => {
-            // Opcional: Pode redirecionar para o carrinho com o cupom
-            console.log('Cupom copiado:', code)
-          }}
         />
       </div>
     </CatalogoContext.Provider>
