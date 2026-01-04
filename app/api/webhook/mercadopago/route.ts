@@ -135,10 +135,77 @@ async function updateVendaStatus(paymentId: string, paymentDetails: Record<strin
   if (status === 'approved') {
     console.log('💰 [Webhook MP] Pagamento APROVADO! Dando baixa no estoque...');
     await darBaixaNoEstoque(venda);
-  } else if (status === 'rejected' || status === 'cancelled') {
-    console.log('❌ [Webhook MP] Pagamento RECUSADO/CANCELADO');
+  } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
+    console.log('❌ [Webhook MP] Pagamento RECUSADO/CANCELADO/ESTORNADO - Restaurando estoque...');
+    await restaurarEstoque(venda);
   } else {
     console.log('⏳ [Webhook MP] Pagamento em processamento:', status);
+  }
+}
+
+/**
+ * Reativar produto nas franquias e revendedoras quando estoque volta
+ */
+async function reativarProdutoNasFranquias(produtoId: string) {
+  try {
+    console.log(`[Webhook MP] 🟢 Reativando produto ${produtoId} (estoque disponível)`);
+
+    // Reativar em produtos_franqueadas_precos
+    const { error: errPrecos } = await supabaseAdmin
+      .from('produtos_franqueadas_precos')
+      .update({ ativo_no_site: true })
+      .eq('produto_id', produtoId);
+
+    if (errPrecos) {
+      console.error('[Webhook MP] ❌ Erro ao reativar em franqueadas:', errPrecos);
+    }
+
+    // Reativar em reseller_products
+    const { error: errRevendedoras } = await supabaseAdmin
+      .from('reseller_products')
+      .update({ is_active: true })
+      .eq('product_id', produtoId);
+
+    if (errRevendedoras) {
+      console.error('[Webhook MP] ❌ Erro ao reativar em revendedoras:', errRevendedoras);
+    }
+
+    console.log(`[Webhook MP] ✅ Produto ${produtoId} reativado nas franquias/revendedoras`);
+  } catch (error) {
+    console.error('[Webhook MP] ❌ Erro ao reativar produto:', error);
+  }
+}
+
+/**
+ * Desativar produto nas franquias e revendedoras quando estoque zera
+ */
+async function desativarProdutoNasFranquias(produtoId: string) {
+  try {
+    console.log(`[Webhook MP] 🔴 Desativando produto ${produtoId} (estoque zerado)`);
+
+    // Desativar em produtos_franqueadas_precos
+    const { error: errPrecos } = await supabaseAdmin
+      .from('produtos_franqueadas_precos')
+      .update({ ativo_no_site: false })
+      .eq('produto_id', produtoId);
+
+    if (errPrecos) {
+      console.error('[Webhook MP] ❌ Erro ao desativar em franqueadas:', errPrecos);
+    }
+
+    // Desativar em reseller_products
+    const { error: errRevendedoras } = await supabaseAdmin
+      .from('reseller_products')
+      .update({ is_active: false })
+      .eq('product_id', produtoId);
+
+    if (errRevendedoras) {
+      console.error('[Webhook MP] ❌ Erro ao desativar em revendedoras:', errRevendedoras);
+    }
+
+    console.log(`[Webhook MP] ✅ Produto ${produtoId} desativado nas franquias/revendedoras`);
+  } catch (error) {
+    console.error('[Webhook MP] ❌ Erro ao desativar produto:', error);
   }
 }
 
@@ -207,10 +274,94 @@ async function darBaixaNoEstoque(venda: Record<string, unknown>) {
       console.error(`❌ Erro ao atualizar estoque do produto ${item.id}:`, updateEstoqueError);
     } else {
       console.log(`✅ Estoque atualizado: ${variacaoAtual.estoque} → ${novoEstoque}`);
+      
+      // Se estoque zerou, desativar produto nas franquias/revendedoras
+      if (novoEstoque === 0 && variacaoAtual.estoque > 0) {
+        console.log(`🔴 Estoque ZEROU! Desativando produto ${item.id}...`);
+        await desativarProdutoNasFranquias(item.id);
+      }
     }
   }
 
   console.log('🎉 [Webhook MP] Baixa no estoque concluída!');
+}
+
+/**
+ * Restaurar estoque quando pagamento é cancelado/estornado
+ */
+async function restaurarEstoque(venda: Record<string, unknown>) {
+  const items = venda.items as Array<{
+    id: string;
+    nome: string;
+    tamanho: string;
+    sku: string;
+    quantidade: number;
+  }>;
+
+  console.log('📈 [Webhook MP] Restaurando estoque de', items.length, 'itens');
+
+  for (const item of items) {
+    console.log(`  + ${item.nome} (Tamanho: ${item.tamanho}, Qtd: ${item.quantidade})`);
+
+    // Buscar variação do produto
+    const { data: produto, error: produtoError } = await supabaseAdmin
+      .from('produtos')
+      .select('id, nome, variacoes')
+      .eq('id', item.id)
+      .single();
+
+    if (produtoError || !produto) {
+      console.error(`❌ Produto ${item.id} não encontrado:`, produtoError);
+      continue;
+    }
+
+    // Encontrar variação específica
+    const variacoes = produto.variacoes as Array<{
+      tamanho: string;
+      sku: string;
+      estoque: number;
+      disponivel: boolean;
+    }>;
+    const variacaoIndex = variacoes.findIndex(v => 
+      v.tamanho === item.tamanho && v.sku === item.sku
+    );
+
+    if (variacaoIndex === -1) {
+      console.error(`❌ Variação não encontrada: ${item.tamanho} / ${item.sku}`);
+      continue;
+    }
+
+    // RESTAURAR estoque (adicionar de volta)
+    const variacaoAtual = variacoes[variacaoIndex];
+    const estoqueAnterior = variacaoAtual.estoque || 0;
+    const novoEstoque = estoqueAnterior + item.quantidade;
+
+    variacoes[variacaoIndex] = {
+      ...variacaoAtual,
+      estoque: novoEstoque,
+      disponivel: novoEstoque > 0
+    };
+
+    // Salvar no banco
+    const { error: updateEstoqueError } = await supabaseAdmin
+      .from('produtos')
+      .update({ variacoes })
+      .eq('id', item.id);
+
+    if (updateEstoqueError) {
+      console.error(`❌ Erro ao restaurar estoque do produto ${item.id}:`, updateEstoqueError);
+    } else {
+      console.log(`✅ Estoque restaurado: ${estoqueAnterior} → ${novoEstoque}`);
+      
+      // Se estava zerado e voltou, reativar produto
+      if (estoqueAnterior === 0 && novoEstoque > 0) {
+        console.log(`🟢 Estoque RESTAURADO! Reativando produto ${item.id}...`);
+        await reativarProdutoNasFranquias(item.id);
+      }
+    }
+  }
+
+  console.log('🎉 [Webhook MP] Estoque restaurado com sucesso!');
 }
 
 // Permitir GET para validar URL do webhook no MP
