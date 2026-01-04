@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import VideoTutorialButton from "@/components/VideoTutorialButton";
 import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 import BannerEditorFinal from "@/components/revendedora/BannerEditorFinal";
@@ -103,6 +104,7 @@ export default function PersonalizacaoRevendedoraPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [bannerMobileUrl, setBannerMobileUrl] = useState("");
+  const [pendingBanner, setPendingBanner] = useState(false);
   const [primaryColor, setPrimaryColor] = useState("#ec4899");
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
@@ -277,16 +279,16 @@ export default function PersonalizacaoRevendedoraPage() {
                 texto_adicional: bannerData.textoAdicional,
                 font_family: bannerData.fontFamily,
                 text_color: bannerData.textColor,
-                desktop_position_x: bannerData.desktopPosition.x,
-                desktop_position_y: bannerData.desktopPosition.y,
+                desktop_position_x: Math.round(bannerData.desktopPosition.x),
+                desktop_position_y: Math.round(bannerData.desktopPosition.y),
                 desktop_alignment: bannerData.desktopAlignment,
-                desktop_font_size: bannerData.desktopFontSize,
-                mobile_position_x: bannerData.mobilePosition.x,
-                mobile_position_y: bannerData.mobilePosition.y,
+                desktop_font_size: Math.round(bannerData.desktopFontSize),
+                mobile_position_x: Math.round(bannerData.mobilePosition.x),
+                mobile_position_y: Math.round(bannerData.mobilePosition.y),
                 mobile_alignment: bannerData.mobileAlignment,
-                mobile_font_size: bannerData.mobileFontSize,
-                line_spacing: bannerData.lineSpacing,
-                letter_spacing: bannerData.letterSpacing,
+                mobile_font_size: Math.round(bannerData.mobileFontSize),
+                line_spacing: Math.round(bannerData.lineSpacing),
+                letter_spacing: Math.round(bannerData.letterSpacing),
                 status: "pending",
               }])
               .select()
@@ -1192,5 +1194,10 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  return null;
+  return (
+    <>
+      <VideoTutorialButton pagina="personalizacao" />
+      {null}
+    </>
+  );
 }

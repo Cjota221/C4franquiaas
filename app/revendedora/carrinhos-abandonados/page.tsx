@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
   ShoppingCart, 
   Phone, 
@@ -574,6 +575,8 @@ export default function CarrinhosAbandonadosPage() {
             </div>
           </div>
         )}
+      
+      <VideoTutorialButton pagina="carrinhos" />
     </div>
   )
 }

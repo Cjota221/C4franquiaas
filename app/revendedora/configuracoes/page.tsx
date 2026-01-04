@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { QRCodeSVG } from 'qrcode.react'
+import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
   Settings, 
   Smartphone, 
@@ -411,6 +412,8 @@ export default function ConfiguracoesRevendedora() {
         </button>
       </div>
       </div>
+      
+      <VideoTutorialButton pagina="configuracoes" />
     </div>
   )
 }

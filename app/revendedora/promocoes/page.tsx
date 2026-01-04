@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
   Tag, 
   Plus,
@@ -1018,6 +1019,8 @@ export default function PromocoesPage() {
             </div>
           </div>
         )}
+      
+      <VideoTutorialButton pagina="promocoes" />
     </div>
   )
 }
