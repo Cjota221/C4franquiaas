@@ -8,7 +8,7 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, serviceKey)
 }
 
-// GET - Buscar submissões de banners (TABELA ANTIGA: banners)
+// GET - Buscar submissões de banners da tabela banner_submissions
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin()
@@ -18,23 +18,32 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') // 'pending', 'approved', 'rejected', 'all'
     const forAdmin = searchParams.get('admin') === 'true'
     
-    // BUSCAR DA TABELA ANTIGA "banners"
+    // BUSCAR DA TABELA banner_submissions (CORRETA)
     let query = supabase
-      .from('banners')
+      .from('banner_submissions')
       .select(`
         *,
-        reseller:reseller_id (
+        template:template_id (
           id,
-          store_name,
-          slug,
-          logo_url
+          nome,
+          desktop_url,
+          mobile_url
         )
       `)
       .order('created_at', { ascending: false })
     
-    // Filtrar por revendedora (se não for admin)
+    // Filtrar por revendedora através do user_id
     if (resellerId && !forAdmin) {
-      query = query.eq('reseller_id', resellerId)
+      // Buscar user_id da revendedora
+      const { data: resellerData } = await supabase
+        .from('resellers')
+        .select('user_id')
+        .eq('id', resellerId)
+        .single()
+      
+      if (resellerData?.user_id) {
+        query = query.eq('user_id', resellerData.user_id)
+      }
     }
     
     // Filtrar por status
@@ -152,7 +161,7 @@ export async function PATCH(request: NextRequest) {
     
     // Buscar a submissão
     const { data: submission, error: fetchError } = await supabase
-      .from('banners')
+      .from('banner_submissions')
       .select('*')
       .eq('id', submission_id)
       .single()
@@ -164,13 +173,27 @@ export async function PATCH(request: NextRequest) {
       )
     }
     
+    // Buscar reseller_id a partir do user_id
+    const { data: resellerData } = await supabase
+      .from('resellers')
+      .select('id')
+      .eq('user_id', submission.user_id)
+      .single()
+    
+    if (!resellerData) {
+      return NextResponse.json(
+        { error: 'Revendedora não encontrada' },
+        { status: 404 }
+      )
+    }
+    
     if (action === 'approve') {
-      // Aprovar: atualizar status e setar banner no reseller
+      // Aprovar: atualizar status
       const { error: updateError } = await supabase
-        .from('banners')
+        .from('banner_submissions')
         .update({
           status: 'approved',
-          reviewed_at: new Date().toISOString(),
+          approved_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', submission_id)
@@ -182,32 +205,31 @@ export async function PATCH(request: NextRequest) {
         )
       }
       
-      // Atualizar o banner no reseller
-      const updateData = submission.banner_type === 'mobile'
-        ? { 
-            banner_mobile_url: submission.image_url,
-            approved_banner_mobile_id: submission_id 
-          }
-        : { 
-            banner_url: submission.image_url,
-            approved_banner_id: submission_id 
-          }
+      // Atualizar o banner no reseller (usar desktop_final_url e mobile_final_url)
+      const updateData: { banner_url?: string; banner_mobile_url?: string } = {}
+      if (submission.desktop_final_url) {
+        updateData.banner_url = submission.desktop_final_url
+      }
+      if (submission.mobile_final_url) {
+        updateData.banner_mobile_url = submission.mobile_final_url
+      }
       
-      await supabase
-        .from('resellers')
-        .update(updateData)
-        .eq('id', submission.reseller_id)
+      if (Object.keys(updateData).length > 0) {
+        await supabase
+          .from('resellers')
+          .update(updateData)
+          .eq('id', resellerData.id)
+      }
       
       // 🆕 Criar notificação de aprovação
       await supabase.from('reseller_notifications').insert({
-        reseller_id: submission.reseller_id,
+        reseller_id: resellerData.id,
         type: 'banner_approved',
         title: '✅ Banner aprovado!',
-        message: `Seu banner ${submission.banner_type === 'mobile' ? 'mobile' : 'desktop'} foi aprovado e já está ativo em seu catálogo.`,
+        message: `Seu banner personalizado foi aprovado e já está ativo em seu catálogo.`,
         metadata: {
           submission_id: submission_id,
-          banner_type: submission.banner_type,
-          image_url: submission.image_url
+          template_id: submission.template_id
         },
         action_url: '/revendedora/personalizacao',
         action_label: 'Ver loja'
@@ -221,15 +243,13 @@ export async function PATCH(request: NextRequest) {
     } else {
       // Recusar
       const defaultFeedback = 'O banner enviado não atende aos critérios da plataforma C4. ' +
-        'Lembre-se: os banners devem conter apenas produtos do nosso catálogo. ' +
-        'Em caso de dúvidas, entre em contato pelo WhatsApp.'
+        'Por favor, revise o conteúdo e tente novamente.'
       
       const { error: updateError } = await supabase
-        .from('banners')
+        .from('banner_submissions')
         .update({
           status: 'rejected',
-          admin_feedback: feedback || defaultFeedback,
-          reviewed_at: new Date().toISOString(),
+          rejection_reason: feedback || defaultFeedback,
           updated_at: new Date().toISOString()
         })
         .eq('id', submission_id)
@@ -243,13 +263,13 @@ export async function PATCH(request: NextRequest) {
       
       // 🆕 Criar notificação de rejeição
       await supabase.from('reseller_notifications').insert({
-        reseller_id: submission.reseller_id,
+        reseller_id: resellerData.id,
         type: 'banner_rejected',
         title: '❌ Banner recusado',
-        message: `Seu banner ${submission.banner_type === 'mobile' ? 'mobile' : 'desktop'} foi recusado.`,
+        message: `Seu banner personalizado foi recusado.`,
         metadata: {
           submission_id: submission_id,
-          banner_type: submission.banner_type,
+          template_id: submission.template_id,
           feedback: feedback || defaultFeedback
         },
         action_url: '/revendedora/personalizacao',
