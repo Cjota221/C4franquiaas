@@ -199,7 +199,24 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
     setSaving(true);
     try {
-      await onSave(bannerData);
+      // Arredondar todos os valores numéricos antes de salvar
+      const dataToSave = {
+        ...bannerData,
+        desktopPosition: {
+          x: Math.round(bannerData.desktopPosition.x),
+          y: Math.round(bannerData.desktopPosition.y)
+        },
+        mobilePosition: {
+          x: Math.round(bannerData.mobilePosition.x),
+          y: Math.round(bannerData.mobilePosition.y)
+        },
+        desktopFontSize: Math.round(bannerData.desktopFontSize),
+        mobileFontSize: Math.round(bannerData.mobileFontSize),
+        lineSpacing: Math.round(bannerData.lineSpacing),
+        letterSpacing: Math.round(bannerData.letterSpacing)
+      };
+      
+      await onSave(dataToSave);
     } catch (error) {
       console.error("Erro ao salvar:", error);
     } finally {
@@ -286,8 +303,8 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8">
-            {/* Coluna Esquerda - Controles (ROLÁVEL) */}
-            <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-4 pb-20 
+            {/* Coluna Esquerda - Controles (ROLÁVEL) - ORDER 2 no mobile */}
+            <div className="order-2 lg:order-1 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-4 pb-20 
                           scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-gray-100 
                           hover:scrollbar-thumb-pink-400">
               <div className="bg-white rounded-xl border-2 border-gray-200 p-6 space-y-6">
@@ -616,8 +633,8 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
               </div>
             </div>
 
-            {/* Coluna Direita - Preview (FIXO) */}
-            <div className="lg:sticky lg:top-6 lg:self-start space-y-4 lg:max-h-[calc(100vh-100px)] lg:overflow-hidden">
+            {/* Coluna Direita - Preview (FIXO NO TOPO) - ORDER 1 no mobile */}
+            <div className="order-1 lg:order-2 sticky top-0 lg:top-6 self-start space-y-4 lg:max-h-[calc(100vh-100px)] lg:overflow-hidden bg-white z-20 pb-4 lg:pb-0">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold text-gray-900">
