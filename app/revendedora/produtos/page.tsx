@@ -8,6 +8,7 @@ import {
   EyeOff, Percent, ChevronDown, ChevronUp, Link2, Check, Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
+import VideoTutorialButton from '@/components/VideoTutorialButton';
 
 interface Produto {
   id: string;
@@ -995,6 +996,9 @@ export default function ProdutosRevendedoraPage() {
           </div>
         </div>
       )}
+
+      {/* Botão de Vídeo Tutorial */}
+      <VideoTutorialButton pagina="produtos" />
     </div>
   );
 }
