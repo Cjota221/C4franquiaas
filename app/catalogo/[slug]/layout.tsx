@@ -12,6 +12,7 @@ import CuponsModal from '@/components/catalogo/CuponsModal';
 // Tipos
 type Reseller = {
   id: string;
+  user_id: string;
   store_name: string;
   slug: string;
   phone: string;

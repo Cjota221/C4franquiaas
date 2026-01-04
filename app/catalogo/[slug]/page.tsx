@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronDown, Truck, Tag } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useCatalogo } from './layout';
+import BannerComTexto from '@/components/catalogo/BannerComTexto';
 
 type Variacao = {
   id?: string;
@@ -223,44 +224,13 @@ export default function CatalogoPrincipal() {
 
   return (
     <div>
-      {/* Banner FULL WIDTH - Desktop e Mobile responsivo */}
-      {(reseller?.banner_url || reseller?.banner_mobile_url) && (
-        <div className="w-full">
-          {/* Banner Desktop - visível em telas grandes */}
-          {reseller?.banner_url && (
-            <div className="hidden md:block relative w-full" style={{ aspectRatio: '1920/600' }}>
-              <Image
-                src={reseller.banner_url}
-                alt="Banner"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-          {/* Banner Mobile - visível em telas pequenas */}
-          {reseller?.banner_mobile_url ? (
-            <div className="md:hidden relative aspect-square w-full">
-              <Image
-                src={reseller.banner_mobile_url}
-                alt="Banner"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          ) : reseller?.banner_url && (
-            <div className="md:hidden relative w-full" style={{ aspectRatio: '1920/600' }}>
-              <Image
-                src={reseller.banner_url}
-                alt="Banner"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-        </div>
+      {/* Banner FULL WIDTH com textos personalizados */}
+      {(reseller?.banner_url || reseller?.banner_mobile_url) && reseller?.user_id && (
+        <BannerComTexto 
+          userId={reseller.user_id}
+          bannerUrl={reseller.banner_url}
+          bannerMobileUrl={reseller.banner_mobile_url || reseller.banner_url}
+        />
       )}
 
       {/* Banner de Promoções Ativas - usando cor da loja */}
