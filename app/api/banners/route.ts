@@ -218,13 +218,29 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (action === 'approve') {
-      // Aprovar: atualizar status
+      // Buscar o template para obter as URLs
+      const { data: template } = await supabase
+        .from('banner_templates')
+        .select('desktop_url, mobile_url')
+        .eq('id', submission.template_id)
+        .single()
+      
+      if (!template) {
+        return NextResponse.json(
+          { error: 'Template não encontrado' },
+          { status: 404 }
+        )
+      }
+      
+      // Aprovar: atualizar status e setar as URLs finais
       const { error: updateError } = await supabase
         .from('banner_submissions')
         .update({
           status: 'approved',
           approved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          desktop_final_url: template.desktop_url,
+          mobile_final_url: template.mobile_url
         })
         .eq('id', submission_id)
       
@@ -235,13 +251,13 @@ export async function PATCH(request: NextRequest) {
         )
       }
       
-      // Atualizar o banner no reseller (usar desktop_final_url e mobile_final_url)
+      // Atualizar o banner no reseller usando as URLs do template
       const updateData: { banner_url?: string; banner_mobile_url?: string } = {}
-      if (submission.desktop_final_url) {
-        updateData.banner_url = submission.desktop_final_url
+      if (template.desktop_url) {
+        updateData.banner_url = template.desktop_url
       }
-      if (submission.mobile_final_url) {
-        updateData.banner_mobile_url = submission.mobile_final_url
+      if (template.mobile_url) {
+        updateData.banner_mobile_url = template.mobile_url
       }
       
       if (Object.keys(updateData).length > 0) {
