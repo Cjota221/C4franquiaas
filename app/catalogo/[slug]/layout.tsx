@@ -227,7 +227,7 @@ export default function CatalogoLayout({
       // ⚠️ SEGURANÇA: Selecionar APENAS campos públicos necessários
       const { data } = await supabase
         .from('resellers')
-        .select('id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status')
+        .select('id, user_id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status')
         .eq('slug', slug)
         .single();
 
