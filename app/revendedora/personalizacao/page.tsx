@@ -269,7 +269,7 @@ export default function PersonalizacaoRevendedoraPage() {
             // Salvar no banco de dados
             const { data, error } = await supabase
               .from("banner_submissions")
-              .insert({
+              .insert([{
                 user_id: user.id,
                 template_id: bannerData.templateId,
                 titulo: bannerData.titulo,
@@ -288,7 +288,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 line_spacing: bannerData.lineSpacing,
                 letter_spacing: bannerData.letterSpacing,
                 status: "pending",
-              })
+              }])
               .select()
               .single();
 
