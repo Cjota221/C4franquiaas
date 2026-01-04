@@ -61,6 +61,36 @@ export async function GET(request: NextRequest) {
       )
     }
     
+    // Se for admin, buscar dados das revendedoras para cada submission
+    if (forAdmin && submissions && submissions.length > 0) {
+      const userIds = [...new Set(submissions.map(s => s.user_id))]
+      
+      // Buscar revendedoras
+      const { data: resellers } = await supabase
+        .from('resellers')
+        .select('user_id, id, store_name, slug, logo_url')
+        .in('user_id', userIds)
+      
+      // Mapear revendedoras por user_id
+      const resellersMap = new Map()
+      if (resellers) {
+        resellers.forEach(r => resellersMap.set(r.user_id, r))
+      }
+      
+      // Adicionar dados da revendedora a cada submission
+      const submissionsWithReseller = submissions.map(submission => ({
+        ...submission,
+        reseller: resellersMap.get(submission.user_id) || {
+          id: '',
+          store_name: 'Desconhecido',
+          slug: '',
+          logo_url: null
+        }
+      }))
+      
+      return NextResponse.json({ submissions: submissionsWithReseller })
+    }
+    
     return NextResponse.json({ submissions })
     
   } catch (error) {

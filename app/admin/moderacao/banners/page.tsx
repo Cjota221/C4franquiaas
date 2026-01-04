@@ -22,18 +22,42 @@ const AdminBannersPage = dynamic(() => import('../../banners/page'), {
 
 interface BannerSubmission {
   id: string
-  reseller_id: string
-  banner_type: 'desktop' | 'mobile'
-  image_url: string
+  user_id: string
+  template_id: string
+  titulo: string
+  subtitulo: string | null
+  texto_adicional: string | null
+  font_family: string
+  text_color: string
+  desktop_position_x: number
+  desktop_position_y: number
+  desktop_alignment: string
+  desktop_font_size: number
+  mobile_position_x: number
+  mobile_position_y: number
+  mobile_alignment: string
+  mobile_font_size: number
+  line_spacing: number
+  letter_spacing: number
   status: 'pending' | 'approved' | 'rejected'
-  admin_feedback: string | null
-  reviewed_at: string | null
+  desktop_final_url: string | null
+  mobile_final_url: string | null
+  rejection_reason: string | null
   created_at: string
+  updated_at: string
+  approved_at: string | null
+  approved_by: string | null
   reseller: {
     id: string
     store_name: string
     slug: string
     logo_url: string | null
+  }
+  template?: {
+    id: string
+    nome: string
+    desktop_url: string
+    mobile_url: string
   }
 }
 
@@ -307,24 +331,62 @@ export default function ModeracaoBannersPage() {
             >
               {/* Preview do Banner */}
               <div className="relative bg-gray-100">
-                <div 
-                  className="relative w-full"
-                  style={{ 
-                    aspectRatio: submission.banner_type === 'mobile' ? '1/1' : '16/5' 
-                  }}
-                >
-                  <Image
-                    src={submission.image_url}
-                    alt="Banner"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="absolute top-2 right-2">
-                  <span className="px-2 py-1 bg-black/50 text-white rounded text-xs">
-                    {submission.banner_type === 'mobile' ? '📱 Mobile' : '🖥️ Desktop'}
-                  </span>
-                </div>
+                {/* Preview Desktop */}
+                {submission.desktop_final_url && (
+                  <div className="mb-2">
+                    <div className="relative w-full" style={{ aspectRatio: '16/5' }}>
+                      <Image
+                        src={submission.desktop_final_url}
+                        alt="Banner Desktop"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <span className="px-2 py-1 bg-black/50 text-white rounded text-xs">
+                        🖥️ Desktop
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Preview Mobile */}
+                {submission.mobile_final_url && (
+                  <div>
+                    <div className="relative w-full max-w-[200px] mx-auto" style={{ aspectRatio: '1/1' }}>
+                      <Image
+                        src={submission.mobile_final_url}
+                        alt="Banner Mobile"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="absolute bottom-2 right-2">
+                      <span className="px-2 py-1 bg-black/50 text-white rounded text-xs">
+                        📱 Mobile
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Se não tiver URLs finais, mostrar template */}
+                {!submission.desktop_final_url && !submission.mobile_final_url && submission.template && (
+                  <div>
+                    <div className="relative w-full" style={{ aspectRatio: '16/5' }}>
+                      <Image
+                        src={submission.template.desktop_url}
+                        alt="Template"
+                        fill
+                        className="object-cover opacity-50"
+                      />
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">
+                        ⏳ Processando
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Info */}
@@ -363,11 +425,11 @@ export default function ModeracaoBannersPage() {
                 </div>
 
                 {/* Feedback de Rejeição */}
-                {submission.status === 'rejected' && submission.admin_feedback && (
+                {submission.status === 'rejected' && submission.rejection_reason && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
                     <div className="flex items-start gap-2">
                       <AlertTriangle size={16} className="text-red-500 mt-0.5" />
-                      <p className="text-xs text-red-700">{submission.admin_feedback}</p>
+                      <p className="text-xs text-red-700">{submission.rejection_reason}</p>
                     </div>
                   </div>
                 )}
