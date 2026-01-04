@@ -448,6 +448,30 @@ export default function PersonalizacaoRevendedoraPage() {
           <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Cores da Loja</h1>
         </div>
+
+        {/* 🎨 BANNER FIXO */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-800 text-sm truncate">Banner da Loja</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBannerEditor(true)}
+                className="py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 flex items-center gap-1 flex-shrink-0 text-sm"
+              >
+                <Sparkles size={14} />
+                {bannerUrl ? 'Editar' : 'Criar'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="p-6 text-white text-center" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
           <p className="text-white/80 text-sm mb-2">PREVIEW</p>
           <h2 className="text-2xl font-bold">{storeName || "Sua Loja"}</h2>
@@ -490,6 +514,30 @@ export default function PersonalizacaoRevendedoraPage() {
           <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Estilos</h1>
         </div>
+
+        {/* 🎨 BANNER FIXO */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-800 text-sm truncate">Banner da Loja</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBannerEditor(true)}
+                className="py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 flex items-center gap-1 flex-shrink-0 text-sm"
+              >
+                <Sparkles size={14} />
+                {bannerUrl ? 'Editar' : 'Criar'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="p-4 space-y-6">
           
           {/* BARRA DE ANÚNCIO */}
@@ -894,6 +942,30 @@ export default function PersonalizacaoRevendedoraPage() {
           <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Logo da Loja</h1>
         </div>
+
+        {/* 🎨 BANNER FIXO */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-800 text-sm truncate">Banner da Loja</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBannerEditor(true)}
+                className="py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 flex items-center gap-1 flex-shrink-0 text-sm"
+              >
+                <Sparkles size={14} />
+                {bannerUrl ? 'Editar' : 'Criar'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="p-4 space-y-6">
           <div className="bg-white rounded-2xl p-6 text-center border border-gray-200">
             <div className="flex justify-center mb-4">
@@ -1172,6 +1244,30 @@ export default function PersonalizacaoRevendedoraPage() {
           <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Redes Sociais</h1>
         </div>
+
+        {/* 🎨 BANNER FIXO */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-800 text-sm truncate">Banner da Loja</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBannerEditor(true)}
+                className="py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 flex items-center gap-1 flex-shrink-0 text-sm"
+              >
+                <Sparkles size={14} />
+                {bannerUrl ? 'Editar' : 'Criar'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="p-4 space-y-4">
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center"><Heart className="w-5 h-5 text-white" /></div><div><p className="font-semibold text-gray-800">WhatsApp</p><p className="text-xs text-gray-500">Para receber pedidos</p></div></div>
