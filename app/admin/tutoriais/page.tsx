@@ -75,21 +75,41 @@ export default function TutoriaisPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    console.log('📝 Submetendo formulário...');
+    console.log('📋 Form Data:', formData);
+    console.log('✏️ Editando?', editingVideo ? 'Sim' : 'Não');
+
     const method = editingVideo ? 'PATCH' : 'POST';
     const body = editingVideo
       ? { ...formData, id: editingVideo.id }
       : formData;
 
-    const res = await fetch('/api/tutoriais', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    console.log(`🚀 ${method} /api/tutoriais`, body);
 
-    if (res.ok) {
-      loadVideos();
-      setShowModal(false);
-      resetForm();
+    try {
+      const res = await fetch('/api/tutoriais', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      console.log('📡 Response status:', res.status);
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log('✅ Sucesso:', data);
+        alert('Vídeo salvo com sucesso!');
+        loadVideos();
+        setShowModal(false);
+        resetForm();
+      } else {
+        const error = await res.json();
+        console.error('❌ Erro na resposta:', error);
+        alert(`Erro ao salvar: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('❌ Erro na requisição:', error);
+      alert('Erro ao salvar vídeo. Verifique o console.');
     }
   }
 

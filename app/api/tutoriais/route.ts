@@ -33,31 +33,41 @@ export async function POST(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
   const body = await request.json();
 
+  console.log('📹 POST /api/tutoriais - Body recebido:', body);
+
   const { titulo, descricao, video_url, pagina, ativo, ordem } = body;
 
   if (!titulo || !video_url || !pagina) {
+    console.error('❌ Campos obrigatórios faltando:', { titulo, video_url, pagina });
     return NextResponse.json(
       { error: 'Campos obrigatórios: titulo, video_url, pagina' },
       { status: 400 }
     );
   }
 
+  const insertData = {
+    titulo,
+    descricao,
+    video_url,
+    pagina,
+    ativo: ativo ?? true,
+    ordem: ordem ?? 0,
+  };
+
+  console.log('📝 Dados para inserir:', insertData);
+
   const { data, error } = await supabase
     .from('tutorial_videos')
-    .insert({
-      titulo,
-      descricao,
-      video_url,
-      pagina,
-      ativo: ativo ?? true,
-      ordem: ordem ?? 0,
-    })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) {
+    console.error('❌ Erro ao inserir vídeo:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  console.log('✅ Vídeo criado com sucesso:', data);
 
   return NextResponse.json(data, { status: 201 });
 }
@@ -67,9 +77,12 @@ export async function PATCH(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
   const body = await request.json();
 
+  console.log('✏️ PATCH /api/tutoriais - Body recebido:', body);
+
   const { id, titulo, descricao, video_url, pagina, ativo, ordem } = body;
 
   if (!id) {
+    console.error('❌ ID é obrigatório');
     return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 });
   }
 
@@ -81,6 +94,8 @@ export async function PATCH(request: NextRequest) {
   if (ativo !== undefined) updates.ativo = ativo;
   if (ordem !== undefined) updates.ordem = ordem;
 
+  console.log('📝 Updates para aplicar:', updates);
+
   const { data, error } = await supabase
     .from('tutorial_videos')
     .update(updates)
@@ -89,8 +104,11 @@ export async function PATCH(request: NextRequest) {
     .single();
 
   if (error) {
+    console.error('❌ Erro ao atualizar vídeo:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  console.log('✅ Vídeo atualizado com sucesso:', data);
 
   return NextResponse.json(data);
 }
