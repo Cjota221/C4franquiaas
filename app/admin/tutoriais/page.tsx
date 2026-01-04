@@ -514,14 +514,24 @@ export default function TutoriaisPage() {
                     resetForm();
                   }}
                   className="flex-1 px-6 py-3 border rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  disabled={uploading}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors font-semibold"
+                  disabled={uploading || (uploadMode === 'upload' && !formData.video_url)}
+                  className={`flex-1 px-6 py-3 rounded-lg transition-colors font-semibold ${
+                    uploading || (uploadMode === 'upload' && !formData.video_url)
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-pink-500 text-white hover:bg-pink-600'
+                  }`}
                 >
-                  {editingVideo ? 'Salvar Alterações' : 'Criar Vídeo'}
+                  {uploading
+                    ? `Enviando... ${uploadProgress}%`
+                    : editingVideo
+                    ? 'Salvar Alterações'
+                    : 'Criar Vídeo'}
                 </button>
               </div>
             </form>
