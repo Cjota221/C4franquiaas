@@ -5,12 +5,14 @@
 ### **Situação Atual do Sistema:**
 
 ✅ **Quando um pedido é APROVADO (pago):**
+
 - Webhook do Mercado Pago recebe notificação
 - Sistema dá baixa automaticamente no estoque
 - Arquivo: `app/api/webhook/mercadopago/route.ts`
 - Função: `darBaixaNoEstoque()`
 
 ❌ **Quando um pedido é CANCELADO/REJEITADO:**
+
 - Sistema atualiza status para `'cancelled'` ou `'rejected'`
 - **MAS NÃO DEVOLVE O ESTOQUE AUTOMATICAMENTE** ⚠️
 - Produtos ficam "presos" em pedidos cancelados
@@ -50,6 +52,7 @@ curl -X POST http://localhost:3000/api/admin/vendas/cancelar \
 ```
 
 **O que faz:**
+
 1. ✅ Busca dados da venda
 2. ✅ Verifica se já está cancelada (evita dupla devolução)
 3. ✅ **Devolve estoque de TODOS os itens do pedido**
@@ -57,6 +60,7 @@ curl -X POST http://localhost:3000/api/admin/vendas/cancelar \
 5. ✅ Registra log do cancelamento
 
 **Resposta de sucesso:**
+
 ```json
 {
   "success": true,
@@ -86,12 +90,14 @@ node scripts/analisar-vendas-canceladas.mjs
 ```
 
 **O que faz:**
+
 - ✅ Lista todas as vendas com status `'cancelled'` ou `'rejected'`
 - ✅ Mostra quantos itens/unidades precisam ter estoque devolvido
 - ✅ Gera comandos `curl` prontos para corrigir cada venda
 - ✅ Modo somente leitura (não altera nada)
 
 **Output esperado:**
+
 ```
 📊 RESUMO:
    Vendas canceladas/rejeitadas: 5
@@ -135,6 +141,7 @@ curl -X POST http://localhost:3000/api/admin/vendas/cancelar \
 Se você cancelou vendas no passado e o estoque não voltou:
 
 1. Execute o script de análise:
+
 ```bash
 node scripts/analisar-vendas-canceladas.mjs
 ```
@@ -153,7 +160,7 @@ Se preferir rodar SQL diretamente no Supabase:
 
 ```sql
 -- 1. LISTAR vendas canceladas (para ver o que precisa corrigir)
-SELECT 
+SELECT
   id,
   cliente_nome,
   created_at,
@@ -190,6 +197,7 @@ WHERE id = 'ID_DO_PRODUTO';
 Modificar `app/admin/vendas/page.tsx` para adicionar botão "Cancelar Venda" em cada linha da tabela.
 
 **Código sugerido:**
+
 ```tsx
 <button
   onClick={() => cancelarVenda(venda.id)}
@@ -220,6 +228,7 @@ POST /api/admin/vendas/restaurar-estoque
 ### **3. Sincronização Bidirecional com FácilZap**
 
 Se você usa integração com FácilZap:
+
 - Quando cancela no C4 Admin → avisar FácilZap para devolver estoque lá também
 - Quando cancela no FácilZap → webhook avisa C4 Admin para devolver estoque aqui
 
@@ -228,15 +237,19 @@ Se você usa integração com FácilZap:
 ## ⚠️ AVISOS IMPORTANTES
 
 ### **Dupla Devolução de Estoque:**
+
 O endpoint verifica se venda já está cancelada e **bloqueia** se tentar cancelar novamente. Isso evita devolver estoque 2x.
 
 ### **Produtos Deletados:**
+
 Se o produto foi deletado do banco DEPOIS do pedido, o script vai avisar mas não vai conseguir devolver estoque (produto não existe mais).
 
 ### **Variações Não Encontradas:**
+
 Se a variação (tamanho/SKU) mudou ou foi removida, o script pula esse item com aviso.
 
 ### **Logs de Cancelamento:**
+
 Todos os cancelamentos são registrados na tabela `logs_cancelamento` (precisa criar migration):
 
 ```sql
@@ -268,14 +281,17 @@ CREATE TABLE IF NOT EXISTS logs_cancelamento (
 ## 🎯 RESUMO EXECUTIVO
 
 **Antes:**
+
 - Pedido aprovado → Estoque cai ✅
 - Pedido cancelado → Estoque **NÃO volta** ❌
 
 **Depois:**
+
 - Pedido aprovado → Estoque cai ✅
 - Pedido cancelado via endpoint → **Estoque volta automaticamente** ✅
 
 **Como usar agora:**
+
 ```bash
 # Ver vendas canceladas que precisam correção
 node scripts/analisar-vendas-canceladas.mjs

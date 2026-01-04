@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
     { id: 'revendedoras', label: 'Revendedoras', icon: UserPlus, href: '/admin/revendedoras' },
     { id: 'afiliados', label: 'Afiliados', icon: UserPlus, href: '/admin/afiliados' },
     { id: 'pedidos', label: 'Pedidos', icon: Truck, href: '/admin/pedidos' },
-    { id: 'moderacao', label: 'Moderação', icon: ImageIcon, href: '/admin/moderacao/banners' },
+    { id: 'moderacao', label: 'Gerenciamento', icon: ImageIcon, href: '/admin/moderacao/banners' },
     { id: 'comissoes', label: 'Comissões', icon: Coins, href: '/admin/comissoes' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart, disabled: true },

@@ -8,14 +8,17 @@
 ## 📊 RESUMO EXECUTIVO
 
 ### O Problema Original:
+
 > "Nossa comercial tem 121 produtos ativos, no site das revendedoras tem apenas 94"
 
 ### A Realidade Descoberta:
+
 - **Produtos ativos no Admin (master):** 93 produtos
 - **Produtos vinculados nas revendedoras:** 94-112 produtos (variável)
 - **Produtos visíveis no catálogo:** 92-94 produtos (apenas ativos no master E na revendedora)
 
 ### Conclusão:
+
 **Não há produtos faltantes.** O número "121" estava incorreto ou referia-se a outra contagem (ex: FácilZap API, produtos históricos, etc).
 
 ---
@@ -24,17 +27,18 @@
 
 ### Contagem por Tabela:
 
-| Tabela/Local | Quantidade | Descrição |
-|--------------|------------|-----------|
-| **produtos** (total) | 415 | Todos os produtos no banco |
-| **produtos** (ativo=true) | 93 | Produtos aprovados e ativos |
-| **produtos** (ativo=false) | 322 | Produtos desativados/removidos |
-| **reseller_products** (vínculos) | 110-196 | Varia por revendedora |
-| **reseller_products** (is_active=true) | 92-94 | Produtos ativos no painel da revendedora |
+| Tabela/Local                           | Quantidade | Descrição                                |
+| -------------------------------------- | ---------- | ---------------------------------------- |
+| **produtos** (total)                   | 415        | Todos os produtos no banco               |
+| **produtos** (ativo=true)              | 93         | Produtos aprovados e ativos              |
+| **produtos** (ativo=false)             | 322        | Produtos desativados/removidos           |
+| **reseller_products** (vínculos)       | 110-196    | Varia por revendedora                    |
+| **reseller_products** (is_active=true) | 92-94      | Produtos ativos no painel da revendedora |
 
 ### Exemplo de Revendedora Típica:
 
 **Beleza Maria:**
+
 - Vínculos totais: 112
 - Vínculos ativos (is_active=true): 92
 - Produtos do master ativos: 92
@@ -42,6 +46,7 @@
 - **Produtos visíveis no catálogo público:** 92
 
 **Por que 112 vínculos se o master tem 93 ativos?**
+
 - 20 produtos foram desativados no admin mas os vínculos não foram removidos
 - Esses produtos órfãos não aparecem no catálogo (filtro duplo: master ativo E vínculo ativo)
 
@@ -50,49 +55,60 @@
 ## ⚙️ SCRIPTS CRIADOS
 
 ### 1. `scripts/diagnosticar-produtos-faltantes.mjs`
+
 Gera relatório completo de vínculos e produtos órfãos.
 
 **Uso:**
+
 ```bash
 node scripts/diagnosticar-produtos-faltantes.mjs
 ```
 
 **Saída:**
+
 - Contagem de produtos ativos no Admin
 - Lista de todas as revendedoras com contadores
 - Produtos órfãos (não vinculados a ninguém)
 - Arquivo JSON: `relatorio-produtos-faltantes.json`
 
 ### 2. `scripts/verificar-contagem.mjs`
+
 Verifica contagens básicas de produtos.
 
 **Uso:**
+
 ```bash
 node scripts/verificar-contagem.mjs
 ```
 
 ### 3. `scripts/analise-detalhada.mjs`
+
 Análise produto por produto de cada revendedora.
 
 **Uso:**
+
 ```bash
 node scripts/analise-detalhada.mjs
 ```
 
 ### 4. API Endpoint: `/api/admin/sync-vinculos`
+
 Sincroniza automaticamente vínculos.
 
 **GET:** Ver status atual
+
 ```bash
 curl http://localhost:3000/api/admin/sync-vinculos
 ```
 
 **POST:** Executar sincronização
+
 ```bash
 curl -X POST http://localhost:3000/api/admin/sync-vinculos
 ```
 
 **O que faz:**
+
 1. Desativa vínculos de produtos inativos no master
 2. Vincula produtos novos ativos a todas as revendedoras
 3. Retorna relatório de alterações
@@ -125,6 +141,7 @@ WHERE rp.product_id = p.id
 ```
 
 **Resultado esperado:**
+
 - ~20 vínculos desativados por revendedora
 - Nenhum produto visível será afetado (já estavam ocultos)
 
@@ -184,7 +201,7 @@ WHERE p.ativo = true
 
 ```sql
 -- Substitua 'SLUG_AQUI' pelo slug da revendedora
-SELECT 
+SELECT
   p.id,
   p.nome,
   p.preco_base,
@@ -202,7 +219,7 @@ ORDER BY p.nome;
 ### Comparar contagens entre revendedoras:
 
 ```sql
-SELECT 
+SELECT
   r.store_name,
   COUNT(*) FILTER (WHERE rp.is_active = true) AS vinculos_ativos,
   COUNT(*) FILTER (WHERE rp.is_active = true AND p.ativo = true) AS produtos_visiveis,
@@ -219,15 +236,19 @@ ORDER BY produtos_visiveis DESC;
 ## 🎯 CONCLUSÃO
 
 ### Problema Original: ❌ FALSO
+
 **Não há 121 produtos ativos.** O banco tem 93 produtos ativos.
 
 ### Produtos Faltantes: ❌ NENHUM
+
 Todas as revendedoras têm acesso aos 93 produtos ativos (alguns não ativados).
 
 ### Produtos "Extras": ⚠️ 20 órfãos por revendedora
+
 São vínculos antigos de produtos desativados. Recomenda-se limpeza (Ação 1).
 
 ### Próximos Passos:
+
 1. ✅ Executar limpeza de vínculos órfãos (Ação 1)
 2. ✅ Configurar endpoint `/api/admin/sync-vinculos` para rodar automaticamente
 3. ✅ Documentar processo de adição de novos produtos
@@ -238,15 +259,18 @@ São vínculos antigos de produtos desativados. Recomenda-se limpeza (Ação 1).
 ## 📞 SUPORTE
 
 **Scripts disponíveis:**
+
 - `scripts/diagnosticar-produtos-faltantes.mjs`
 - `scripts/verificar-contagem.mjs`
 - `scripts/analise-detalhada.mjs`
 
 **Endpoints criados:**
+
 - `GET /api/admin/sync-vinculos` - Status
 - `POST /api/admin/sync-vinculos` - Sincronizar
 
 **Arquivos gerados:**
+
 - `relatorio-produtos-faltantes.json`
 
 ---

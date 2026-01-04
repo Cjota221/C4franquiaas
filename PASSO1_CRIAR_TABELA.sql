@@ -1,0 +1,30 @@
+-- PASSO 1: Apenas criar a tabela (SEM índices, SEM trigger)
+
+CREATE TABLE banner_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  template_id UUID NOT NULL,
+  titulo TEXT NOT NULL,
+  subtitulo TEXT,
+  texto_adicional TEXT,
+  font_family TEXT NOT NULL,
+  text_color TEXT NOT NULL DEFAULT '#FFFFFF',
+  desktop_position_x INTEGER NOT NULL,
+  desktop_position_y INTEGER NOT NULL,
+  desktop_alignment TEXT NOT NULL,
+  desktop_font_size INTEGER NOT NULL DEFAULT 100,
+  mobile_position_x INTEGER NOT NULL,
+  mobile_position_y INTEGER NOT NULL,
+  mobile_alignment TEXT NOT NULL,
+  mobile_font_size INTEGER NOT NULL DEFAULT 100,
+  line_spacing INTEGER NOT NULL DEFAULT 4,
+  letter_spacing INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending',
+  desktop_final_url TEXT,
+  mobile_final_url TEXT,
+  rejection_reason TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  approved_at TIMESTAMP WITH TIME ZONE,
+  approved_by UUID
+);

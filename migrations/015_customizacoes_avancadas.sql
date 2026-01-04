@@ -136,8 +136,22 @@ CREATE TABLE IF NOT EXISTS banners (
 );
 
 ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Público pode ver banners ativos" ON banners FOR SELECT USING (ativo = true);
-CREATE POLICY "Franqueada pode gerenciar banners" ON banners FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'banners' AND policyname = 'Público pode ver banners ativos'
+  ) THEN
+    CREATE POLICY "Público pode ver banners ativos" ON banners FOR SELECT USING (ativo = true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'banners' AND policyname = 'Franqueada pode gerenciar banners'
+  ) THEN
+    CREATE POLICY "Franqueada pode gerenciar banners" ON banners FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+  END IF;
+END $$;
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_banners_loja_tipo ON banners(loja_id, tipo);
@@ -159,8 +173,22 @@ CREATE TABLE IF NOT EXISTS icones_confianca (
 );
 
 ALTER TABLE icones_confianca ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Público pode ver ícones ativos" ON icones_confianca FOR SELECT USING (ativo = true);
-CREATE POLICY "Franqueada pode gerenciar ícones" ON icones_confianca FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'icones_confianca' AND policyname = 'Público pode ver ícones ativos'
+  ) THEN
+    CREATE POLICY "Público pode ver ícones ativos" ON icones_confianca FOR SELECT USING (ativo = true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'icones_confianca' AND policyname = 'Franqueada pode gerenciar ícones'
+  ) THEN
+    CREATE POLICY "Franqueada pode gerenciar ícones" ON icones_confianca FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PASSO 4: Criar tabela de Menu Links Personalizados
@@ -179,8 +207,22 @@ CREATE TABLE IF NOT EXISTS menu_links_personalizados (
 );
 
 ALTER TABLE menu_links_personalizados ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Público pode ver links ativos" ON menu_links_personalizados FOR SELECT USING (ativo = true);
-CREATE POLICY "Franqueada pode gerenciar links" ON menu_links_personalizados FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'menu_links_personalizados' AND policyname = 'Público pode ver links ativos'
+  ) THEN
+    CREATE POLICY "Público pode ver links ativos" ON menu_links_personalizados FOR SELECT USING (ativo = true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'menu_links_personalizados' AND policyname = 'Franqueada pode gerenciar links'
+  ) THEN
+    CREATE POLICY "Franqueada pode gerenciar links" ON menu_links_personalizados FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PASSO 5: Criar tabela de Notícias da Loja
@@ -203,8 +245,22 @@ CREATE TABLE IF NOT EXISTS noticias_loja (
 );
 
 ALTER TABLE noticias_loja ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Público pode ver notícias ativas" ON noticias_loja FOR SELECT USING (ativo = true);
-CREATE POLICY "Franqueada pode gerenciar notícias" ON noticias_loja FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'noticias_loja' AND policyname = 'Público pode ver notícias ativas'
+  ) THEN
+    CREATE POLICY "Público pode ver notícias ativas" ON noticias_loja FOR SELECT USING (ativo = true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'noticias_loja' AND policyname = 'Franqueada pode gerenciar notícias'
+  ) THEN
+    CREATE POLICY "Franqueada pode gerenciar notícias" ON noticias_loja FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+  END IF;
+END $$;
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_noticias_loja_slug ON noticias_loja(loja_id, slug);
@@ -226,8 +282,22 @@ CREATE TABLE IF NOT EXISTS marcas (
 );
 
 ALTER TABLE marcas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Público pode ver marcas ativas" ON marcas FOR SELECT USING (ativo = true);
-CREATE POLICY "Franqueada pode gerenciar marcas" ON marcas FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'marcas' AND policyname = 'Público pode ver marcas ativas'
+  ) THEN
+    CREATE POLICY "Público pode ver marcas ativas" ON marcas FOR SELECT USING (ativo = true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'marcas' AND policyname = 'Franqueada pode gerenciar marcas'
+  ) THEN
+    CREATE POLICY "Franqueada pode gerenciar marcas" ON marcas FOR ALL USING ((SELECT franqueada_id FROM lojas WHERE id = loja_id) = auth.uid());
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PASSO 7: Inserir dados de exemplo para testes

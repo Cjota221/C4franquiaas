@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'c4franquiaas.netlify.app', pathname: '/.netlify/functions/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'rprucmoavblepodvanga.supabase.co', pathname: '/storage/v1/object/public/logos/**' },
+      { protocol: 'https', hostname: 'rprucmoavblepodvanga.supabase.co', pathname: '/storage/v1/object/public/reseller-assets/**' },
       { protocol: 'https', hostname: 'www.melhorenvio.com.br', pathname: '/**' },
       { protocol: 'https', hostname: 'melhorenvio.com.br', pathname: '/**' },
       { protocol: 'https', hostname: 'i.ibb.co', pathname: '/**' },

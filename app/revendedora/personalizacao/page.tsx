@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
+import BannerEditorFinal from "@/components/revendedora/BannerEditorFinal";
 
 type ThemeSettings = {
   button_style: "rounded" | "square";
@@ -113,6 +114,9 @@ export default function PersonalizacaoRevendedoraPage() {
   
   // Estados para moderação de banners
   const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
+  
+  // Estados para o editor de banner
+  const [showBannerEditor, setShowBannerEditor] = useState(false);
 
   const supabase = createClient();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
@@ -250,6 +254,56 @@ export default function PersonalizacaoRevendedoraPage() {
         </div>
         <p className="text-gray-600 text-lg">Carregando sua loja...</p>
       </div>
+    );
+  }
+
+  // Renderizar o modal do editor de banner (ANTES de tudo)
+  if (showBannerEditor) {
+    return (
+      <BannerEditorFinal
+        onSave={async (bannerData) => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
+            // Salvar no banco de dados
+            const { data, error } = await supabase
+              .from("banner_submissions")
+              .insert({
+                user_id: user.id,
+                template_id: bannerData.templateId,
+                titulo: bannerData.titulo,
+                subtitulo: bannerData.subtitulo,
+                texto_adicional: bannerData.textoAdicional,
+                font_family: bannerData.fontFamily,
+                text_color: bannerData.textColor,
+                desktop_position_x: bannerData.desktopPosition.x,
+                desktop_position_y: bannerData.desktopPosition.y,
+                desktop_alignment: bannerData.desktopAlignment,
+                desktop_font_size: bannerData.desktopFontSize,
+                mobile_position_x: bannerData.mobilePosition.x,
+                mobile_position_y: bannerData.mobilePosition.y,
+                mobile_alignment: bannerData.mobileAlignment,
+                mobile_font_size: bannerData.mobileFontSize,
+                line_spacing: bannerData.lineSpacing,
+                letter_spacing: bannerData.letterSpacing,
+                status: "pending",
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+
+            console.log("✅ Banner salvo com sucesso:", data);
+            alert("🎉 Banner enviado para aprovação!\n\nVocê receberá uma notificação quando for aprovado.");
+            setShowBannerEditor(false);
+          } catch (error) {
+            console.error("❌ Erro ao salvar banner:", error);
+            alert("Erro ao enviar banner. Tente novamente.");
+          }
+        }}
+        onCancel={() => setShowBannerEditor(false)}
+      />
     );
   }
 
@@ -859,6 +913,23 @@ export default function PersonalizacaoRevendedoraPage() {
               </p>
             </div>
           </div>
+        </div>
+        
+        {/* 🆕 Botão Criar Banner Personalizado */}
+        <div className="mx-4 mt-4">
+          <button
+            onClick={() => {
+              console.log("🎨 Abrindo editor de banners...");
+              setShowBannerEditor(true);
+            }}
+            className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-lg"
+          >
+            <Sparkles className="w-6 h-6" />
+            ✨ Criar Banner Personalizado ✨
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            Escolha templates prontos e personalize os textos!
+          </p>
         </div>
         
         <div className="p-4 space-y-6">

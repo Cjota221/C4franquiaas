@@ -8,7 +8,7 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, serviceKey)
 }
 
-// GET - Buscar submissões de banners
+// GET - Buscar submissões de banners (TABELA ANTIGA: banners)
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin()
@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') // 'pending', 'approved', 'rejected', 'all'
     const forAdmin = searchParams.get('admin') === 'true'
     
+    // BUSCAR DA TABELA ANTIGA "banners"
     let query = supabase
-      .from('banner_submissions')
+      .from('banners')
       .select(`
         *,
         reseller:reseller_id (
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     
     // Verificar se já tem uma submissão pendente do mesmo tipo
     const { data: existingPending } = await supabase
-      .from('banner_submissions')
+      .from('banners')
       .select('id')
       .eq('reseller_id', reseller_id)
       .eq('banner_type', banner_type || 'desktop')
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // Criar nova submissão
     const { data: submission, error } = await supabase
-      .from('banner_submissions')
+      .from('banners')
       .insert({
         reseller_id,
         banner_type: banner_type || 'desktop',
@@ -151,7 +152,7 @@ export async function PATCH(request: NextRequest) {
     
     // Buscar a submissão
     const { data: submission, error: fetchError } = await supabase
-      .from('banner_submissions')
+      .from('banners')
       .select('*')
       .eq('id', submission_id)
       .single()
@@ -166,7 +167,7 @@ export async function PATCH(request: NextRequest) {
     if (action === 'approve') {
       // Aprovar: atualizar status e setar banner no reseller
       const { error: updateError } = await supabase
-        .from('banner_submissions')
+        .from('banners')
         .update({
           status: 'approved',
           reviewed_at: new Date().toISOString(),
@@ -224,7 +225,7 @@ export async function PATCH(request: NextRequest) {
         'Em caso de dúvidas, entre em contato pelo WhatsApp.'
       
       const { error: updateError } = await supabase
-        .from('banner_submissions')
+        .from('banners')
         .update({
           status: 'rejected',
           admin_feedback: feedback || defaultFeedback,

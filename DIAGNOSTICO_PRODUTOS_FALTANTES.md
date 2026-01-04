@@ -29,6 +29,7 @@
 **Revendedoras:** CACAU SHOES e vivaz
 
 **Produtos vinculados mas inativos no master:**
+
 - `Kit 6 peças Grade Sandália Josie Off White`
 - `Kit 6 peças Grade Sandália Bruna Prata`
 
@@ -49,6 +50,7 @@ GET http://localhost:3000/api/admin/sincronizar-vinculos
 ```
 
 **O que faz:**
+
 - ✅ Analisa todas as revendedoras
 - ✅ Mostra relatório detalhado de problemas
 - ❌ Não faz alterações no banco
@@ -66,12 +68,12 @@ POST http://localhost:3000/api/admin/sincronizar-vinculos?executar=true
 1. **Desativa vínculos órfãos:**
    - CACAU SHOES e vivaz: Remove 2 produtos inativos do catálogo
    - Define `is_active = false` para os vínculos
-   
 2. **Vincula produtos faltantes:**
    - Cria vínculo da "Rasteirinha Isís Basic" para todas as 22 revendedoras
    - Com `margin_percent = 0` e `is_active = false` (seguros até configurar)
 
 **Resultado esperado:**
+
 - ✅ Todas as 23 revendedoras terão exatamente 92 produtos sincronizados
 - ✅ CACAU SHOES e vivaz: 93 → 92 (produtos mortos removidos)
 - ✅ Outras 22: 91 → 92 (produto novo vinculado, mas inativo até configurar margem)
@@ -134,11 +136,11 @@ WHERE r.status = 'aprovada'
 
 ## 📈 CONTADORES ESPERADOS APÓS CORREÇÃO
 
-| Revendedora | Antes | Depois | Status |
-|-------------|-------|--------|--------|
-| CACAU SHOES | 93 (2 órfãos) | 92 | ✅ Corrigido |
-| vivaz | 93 (2 órfãos) | 92 | ✅ Corrigido |
-| Outras 21 | 91 (1 faltando) | 92 | ✅ Corrigido |
+| Revendedora | Antes           | Depois | Status       |
+| ----------- | --------------- | ------ | ------------ |
+| CACAU SHOES | 93 (2 órfãos)   | 92     | ✅ Corrigido |
+| vivaz       | 93 (2 órfãos)   | 92     | ✅ Corrigido |
+| Outras 21   | 91 (1 faltando) | 92     | ✅ Corrigido |
 
 **Total esperado:** Todas com **92 produtos ativos sincronizados**
 
@@ -149,10 +151,12 @@ WHERE r.status = 'aprovada'
 ### **Scripts:**
 
 1. `scripts/testar-sincronizacao.mjs`
+
    - Análise detalhada de vínculos
    - Execução: `node scripts/testar-sincronizacao.mjs`
 
 2. `scripts/analise-detalhada.mjs`
+
    - Análise básica de produtos
    - Execução: `node scripts/analise-detalhada.mjs`
 
@@ -163,6 +167,7 @@ WHERE r.status = 'aprovada'
 ### **Endpoints:**
 
 1. `GET /api/admin/sincronizar-vinculos`
+
    - Preview de sincronização
 
 2. `POST /api/admin/sincronizar-vinculos?executar=true`
@@ -173,11 +178,13 @@ WHERE r.status = 'aprovada'
 ## ⚠️ OBSERVAÇÕES IMPORTANTES
 
 1. **Produto "Rasteirinha Isís Basic":**
+
    - Será vinculado com `is_active = false` e `margin_percent = 0`
    - Revendedoras precisarão ATIVAR manualmente e definir margem
    - Isso evita que apareça no catálogo sem configuração de preço
 
 2. **Produtos Órfãos:**
+
    - Serão apenas DESATIVADOS (não deletados)
    - Histórico é preservado
    - Se reativar no master, reaparece automaticamente
@@ -193,6 +200,7 @@ WHERE r.status = 'aprovada'
 1. ✅ **Executar sincronização** (via endpoint ou SQL)
 2. ✅ **Verificar contadores** (todas revendedoras devem ter 92 produtos)
 3. ✅ **Ativar produto novo** em cada revendedora:
+
    - Acessar painel da revendedora
    - Ir em Produtos
    - Encontrar "Rasteirinha Isís Basic Prata Branco"
@@ -210,10 +218,12 @@ WHERE r.status = 'aprovada'
 **Você disse:** "121 produtos ativos no admin, mas revendedoras só têm 94"
 
 **Realidade encontrada:**
+
 - Admin: 92 produtos ativos (não 121)
 - Revendedoras: 91-93 produtos (variando)
 
 **Possível explicação do "121":**
+
 - Pode estar contando produtos inativos também (93 ativos + ~28 inativos = 121)
 - Ou contando variações/SKUs ao invés de produtos únicos
 - Ou contando produtos do FácilZap que não foram sincronizados
@@ -222,7 +232,7 @@ WHERE r.status = 'aprovada'
 
 ```sql
 -- Contar TODOS os produtos (ativos + inativos)
-SELECT 
+SELECT
   COUNT(*) FILTER (WHERE ativo = true) as ativos,
   COUNT(*) FILTER (WHERE ativo = false) as inativos,
   COUNT(*) as total

@@ -9,9 +9,16 @@ import {
   RefreshCw,
   Eye,
   AlertTriangle,
-  Filter
+  Filter,
+  ImagePlus
 } from 'lucide-react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
+
+// Lazy load da página de templates
+const AdminBannersPage = dynamic(() => import('../../banners/page'), {
+  loading: () => <div className="p-8 text-center">Carregando...</div>
+})
 
 interface BannerSubmission {
   id: string
@@ -38,6 +45,7 @@ export default function ModeracaoBannersPage() {
   const [rejectFeedback, setRejectFeedback] = useState('')
   const [processing, setProcessing] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'moderacao' | 'templates'>('moderacao')
 
   const loadSubmissions = async () => {
     try {
@@ -188,36 +196,71 @@ export default function ModeracaoBannersPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <ImageIcon className="w-7 h-7 text-pink-500" />
-          Moderação de Banners
+          Gerenciamento de Banners
         </h1>
         <p className="text-gray-600 mt-1">
-          Revise e aprove os banners enviados pelas revendedoras
+          Gerencie banners das revendedoras e templates pré-definidos
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Total</div>
-          <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg shadow p-4 border-l-4 border-yellow-500">
-          <div className="text-sm text-yellow-600">Pendentes</div>
-          <div className="text-2xl font-bold text-yellow-700">{stats.pending}</div>
-        </div>
-        <div className="bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-500">
-          <div className="text-sm text-green-600">Aprovados</div>
-          <div className="text-2xl font-bold text-green-700">{stats.approved}</div>
-        </div>
-        <div className="bg-red-50 rounded-lg shadow p-4 border-l-4 border-red-500">
-          <div className="text-sm text-red-600">Recusados</div>
-          <div className="text-2xl font-bold text-red-700">{stats.rejected}</div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('moderacao')}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === 'moderacao'
+              ? 'text-pink-600 border-b-2 border-pink-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Moderação de Banners
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === 'templates'
+              ? 'text-pink-600 border-b-2 border-pink-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <ImagePlus className="w-5 h-5" />
+            Templates Pré-definidos
+          </div>
+        </button>
       </div>
 
-      {/* Filtros */}
-      <div className="flex items-center gap-4 mb-6">
-        <Filter size={18} className="text-gray-400" />
+      {/* Conteúdo das Tabs */}
+      {activeTab === 'templates' ? (
+        <AdminBannersPage />
+      ) : (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Total</div>
+              <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg shadow p-4 border-l-4 border-yellow-500">
+              <div className="text-sm text-yellow-600">Pendentes</div>
+              <div className="text-2xl font-bold text-yellow-700">{stats.pending}</div>
+            </div>
+            <div className="bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-500">
+              <div className="text-sm text-green-600">Aprovados</div>
+              <div className="text-2xl font-bold text-green-700">{stats.approved}</div>
+            </div>
+            <div className="bg-red-50 rounded-lg shadow p-4 border-l-4 border-red-500">
+              <div className="text-sm text-red-600">Recusados</div>
+              <div className="text-2xl font-bold text-red-700">{stats.rejected}</div>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="flex items-center gap-4 mb-6">
+            <Filter size={18} className="text-gray-400" />
         <div className="flex gap-2">
           {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
             <button
@@ -366,6 +409,8 @@ export default function ModeracaoBannersPage() {
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
 
       {/* Modal de Rejeição */}
