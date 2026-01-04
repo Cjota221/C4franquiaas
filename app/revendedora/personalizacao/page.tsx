@@ -349,6 +349,49 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>
         )}
 
+        {/* 🎨 BANNER EDITOR FIXO - SEMPRE VISÍVEL */}
+        <div className="mx-4 mb-6">
+          <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Camera className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Banner da Loja</h3>
+                  <p className="text-xs text-gray-600">Escolha template e personalize</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  console.log("🎨 Abrindo editor de banners...");
+                  setShowBannerEditor(true);
+                }}
+                className="py-3 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg whitespace-nowrap"
+              >
+                <Sparkles size={18} />
+                {bannerUrl ? 'Editar' : 'Criar Banner'}
+              </button>
+            </div>
+            
+            {/* Preview do Banner se existir */}
+            {bannerUrl && (
+              <div className="mt-4 pt-4 border-t border-pink-200">
+                <div className="relative aspect-[1920/600] rounded-lg overflow-hidden border-2 border-pink-300">
+                  <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
+                </div>
+                <p className="text-xs text-gray-600 text-center mt-2 flex items-center justify-center gap-2">
+                  {pendingBanner ? (
+                    <><Clock size={14} className="text-amber-500" /> Aguardando aprovação</>
+                  ) : (
+                    <><CheckCircle size={14} className="text-green-500" /> Banner aprovado</>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="px-4 space-y-3">
           <h2 className="text-lg font-bold text-gray-800 mb-4 px-2">Personalize sua loja</h2>
 
@@ -368,10 +411,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <ChevronRight className="text-gray-400" />
           </button>
 
-          <button onClick={() => setActiveSection("banner")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><ImageIcon className="w-6 h-6 text-purple-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Banner</p><p className="text-sm text-gray-500">{bannerUrl ? "Banner configurado" : "Adicionar imagem de capa"}</p></div></div>
-            <ChevronRight className="text-gray-400" />
-          </button>
+          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÁ FIXO NO TOPO */}
 
           <button onClick={() => setActiveSection("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
