@@ -239,12 +239,20 @@ async function reativarProdutoNasFranquias(produtoId: string) {
 }
 
 /**
- * 🆕 Processa eventos de pedido - BAIXA ESTOQUE AUTOMATICAMENTE
+ * 🆕 Processa eventos de pedido - BAIXA OU DEVOLVE ESTOQUE AUTOMATICAMENTE
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleNovoPedido(data: any, eventType: string) {
   const pedidoId = data.id || data.pedido_id || data.numero || data.order_id;
-  console.log(`[Webhook] 💰 Pedido recebido: ${pedidoId} | Evento: ${eventType}`);
+  
+  // Detectar se é cancelamento
+  const isCancelamento = eventType.toLowerCase().includes('cancelado') || 
+                        eventType.toLowerCase().includes('cancel') ||
+                        data.status?.toLowerCase() === 'cancelado' ||
+                        data.status?.toLowerCase() === 'cancelled';
+  
+  const acao = isCancelamento ? 'DEVOLVENDO' : 'BAIXANDO';
+  console.log(`[Webhook] 💰 Pedido recebido: ${pedidoId} | Evento: ${eventType} | Ação: ${acao}`);
   
   // Extrair itens do pedido (diferentes formatos possíveis)
   const itens = data.itens || data.items || data.produtos || data.products || [];
@@ -261,7 +269,7 @@ async function handleNovoPedido(data: any, eventType: string) {
     return { pedido_id: pedidoId, itens_processados: 0 };
   }
 
-  console.log(`[Webhook] 📦 Processando ${itens.length} itens do pedido...`);
+  console.log(`[Webhook] 📦 ${acao} estoque de ${itens.length} itens do pedido...`);
   
   let itensProcessados = 0;
   const erros: string[] = [];
@@ -279,7 +287,8 @@ async function handleNovoPedido(data: any, eventType: string) {
         continue;
       }
 
-      console.log(`[Webhook] 📉 Baixando estoque: ${nomeProduto} (${produtoId}) x ${quantidade}`);
+      const operacao = isCancelamento ? '📈 DEVOLVENDO' : '📉 BAIXANDO';
+      console.log(`[Webhook] ${operacao} estoque: ${nomeProduto} (${produtoId}) x ${quantidade}`);
 
       // Buscar produto no banco
       const { data: produto, error: errBusca } = await supabaseAdmin
@@ -296,7 +305,9 @@ async function handleNovoPedido(data: any, eventType: string) {
 
       // Calcular novo estoque
       const estoqueAtual = produto.estoque || 0;
-      const novoEstoque = Math.max(0, estoqueAtual - quantidade);
+      const novoEstoque = isCancelamento 
+        ? estoqueAtual + quantidade  // DEVOLVE: soma a quantidade de volta
+        : Math.max(0, estoqueAtual - quantidade);  // BAIXA: subtrai quantidade
 
       // Atualizar estoque
       const { error: errUpdate } = await supabaseAdmin
@@ -313,13 +324,20 @@ async function handleNovoPedido(data: any, eventType: string) {
         continue;
       }
 
-      console.log(`[Webhook] ✅ Estoque atualizado: ${produto.nome} ${estoqueAtual} → ${novoEstoque}`);
+      const simbolo = isCancelamento ? '📈' : '📉';
+      console.log(`[Webhook] ✅ ${simbolo} Estoque atualizado: ${produto.nome} ${estoqueAtual} → ${novoEstoque}`);
       itensProcessados++;
 
-      // Se estoque zerou, desativar nas franquias
-      if (novoEstoque <= 0) {
+      // Se estoque zerou na baixa, desativar nas franquias
+      if (!isCancelamento && novoEstoque <= 0) {
         console.log(`[Webhook] 🚫 Estoque zerado! Desativando ${produto.nome}...`);
         await desativarProdutoNasFranquias(produto.id, produto.facilzap_id || produto.id_externo || '');
+      }
+      
+      // Se estoque voltou no cancelamento, reativar nas franquias
+      if (isCancelamento && novoEstoque > 0 && estoqueAtual <= 0) {
+        console.log(`[Webhook] ✅ Estoque restaurado! Reativando ${produto.nome}...`);
+        await reativarProdutoNasFranquias(produto.id);
       }
 
     } catch (itemError) {
@@ -329,12 +347,18 @@ async function handleNovoPedido(data: any, eventType: string) {
   }
 
   // Registrar log do pedido
+  const tipoLog = isCancelamento ? 'webhook_pedido_cancelado' : 'webhook_pedido_processado';
+  const descricaoLog = isCancelamento 
+    ? `Pedido ${pedidoId} CANCELADO: ${itensProcessados}/${itens.length} itens com estoque devolvido`
+    : `Pedido ${pedidoId}: ${itensProcessados}/${itens.length} itens com estoque baixado`;
+  
   await supabaseAdmin.from('logs_sincronizacao').insert({
-    tipo: eventType === 'pedido_cancelado' ? 'webhook_pedido_cancelado' : 'webhook_pedido_processado',
-    descricao: `Pedido ${pedidoId}: ${itensProcessados}/${itens.length} itens processados`,
+    tipo: tipoLog,
+    descricao: descricaoLog,
     payload: { 
       pedido_id: pedidoId, 
       evento: eventType,
+      acao: isCancelamento ? 'devolver_estoque' : 'baixar_estoque',
       itens_total: itens.length,
       itens_processados: itensProcessados,
       erros: erros.length > 0 ? erros : null
@@ -343,10 +367,12 @@ async function handleNovoPedido(data: any, eventType: string) {
     erro: erros.length > 0 ? erros.join('; ') : null,
   });
 
-  console.log(`[Webhook] ✅ Pedido ${pedidoId} processado: ${itensProcessados}/${itens.length} itens`);
+  const acaoFinal = isCancelamento ? 'CANCELADO (estoque devolvido)' : 'PROCESSADO (estoque baixado)';
+  console.log(`[Webhook] ✅ Pedido ${pedidoId} ${acaoFinal}: ${itensProcessados}/${itens.length} itens`);
   
   return { 
     pedido_id: pedidoId, 
+    acao: isCancelamento ? 'cancelamento' : 'criacao',
     itens_processados: itensProcessados,
     itens_total: itens.length,
     erros: erros.length > 0 ? erros : undefined
