@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // GET - Listar vídeos (com filtro opcional por página)
 export async function GET(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const searchParams = request.nextUrl.searchParams;
   const pagina = searchParams.get('pagina');
 
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar novo vídeo tutorial
 export async function POST(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const body = await request.json();
 
   console.log('📹 POST /api/tutoriais - Body recebido:', body);
@@ -74,7 +76,8 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Atualizar vídeo (ativar/desativar, editar)
 export async function PATCH(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const body = await request.json();
 
   console.log('✏️ PATCH /api/tutoriais - Body recebido:', body);
@@ -115,7 +118,8 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - Remover vídeo
 export async function DELETE(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies: async () => await cookies() });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 
