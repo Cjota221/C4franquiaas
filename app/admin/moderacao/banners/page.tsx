@@ -333,7 +333,7 @@ export default function ModeracaoBannersPage() {
               <div className="relative bg-gray-100">
                 {/* Preview Desktop */}
                 {submission.desktop_final_url && (
-                  <div className="mb-2">
+                  <div className="mb-2 relative">
                     <div className="relative w-full" style={{ aspectRatio: '16/5' }}>
                       <Image
                         src={submission.desktop_final_url}
@@ -341,6 +341,60 @@ export default function ModeracaoBannersPage() {
                         fill
                         className="object-cover"
                       />
+                      
+                      {/* TEXTO SOBREPOSTO - DESKTOP */}
+                      <div
+                        className="absolute"
+                        style={{
+                          left: `${submission.desktop_position_x}%`,
+                          top: `${submission.desktop_position_y}%`,
+                          transform: 'translate(-50%, 0)',
+                          textAlign: submission.desktop_alignment as 'left' | 'center' | 'right',
+                          maxWidth: '400px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: `${submission.line_spacing}px`,
+                        }}
+                      >
+                        {submission.titulo && (
+                          <h2
+                            className="font-bold drop-shadow-2xl text-2xl"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(2rem * ${submission.desktop_font_size / 100})`,
+                            }}
+                          >
+                            {submission.titulo}
+                          </h2>
+                        )}
+                        {submission.subtitulo && (
+                          <p
+                            className="drop-shadow-xl text-base"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(1rem * ${submission.desktop_font_size / 100})`,
+                              opacity: 0.95,
+                            }}
+                          >
+                            {submission.subtitulo}
+                          </p>
+                        )}
+                        {submission.texto_adicional && (
+                          <p
+                            className="drop-shadow-xl text-sm"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(0.875rem * ${submission.desktop_font_size / 100})`,
+                              opacity: 0.9,
+                            }}
+                          >
+                            {submission.texto_adicional}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="absolute top-2 right-2">
                       <span className="px-2 py-1 bg-black/50 text-white rounded text-xs">
@@ -352,7 +406,7 @@ export default function ModeracaoBannersPage() {
                 
                 {/* Preview Mobile */}
                 {submission.mobile_final_url && (
-                  <div>
+                  <div className="relative">
                     <div className="relative w-full max-w-[200px] mx-auto" style={{ aspectRatio: '1/1' }}>
                       <Image
                         src={submission.mobile_final_url}
@@ -360,6 +414,60 @@ export default function ModeracaoBannersPage() {
                         fill
                         className="object-cover"
                       />
+                      
+                      {/* TEXTO SOBREPOSTO - MOBILE */}
+                      <div
+                        className="absolute"
+                        style={{
+                          left: `${submission.mobile_position_x}%`,
+                          top: `${submission.mobile_position_y}%`,
+                          transform: 'translate(-50%, 0)',
+                          textAlign: submission.mobile_alignment as 'left' | 'center' | 'right',
+                          maxWidth: '85%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: `${submission.line_spacing}px`,
+                        }}
+                      >
+                        {submission.titulo && (
+                          <h2
+                            className="font-bold drop-shadow-2xl text-lg"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(1.5rem * ${submission.mobile_font_size / 100})`,
+                            }}
+                          >
+                            {submission.titulo}
+                          </h2>
+                        )}
+                        {submission.subtitulo && (
+                          <p
+                            className="drop-shadow-xl text-sm"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(0.875rem * ${submission.mobile_font_size / 100})`,
+                              opacity: 0.95,
+                            }}
+                          >
+                            {submission.subtitulo}
+                          </p>
+                        )}
+                        {submission.texto_adicional && (
+                          <p
+                            className="drop-shadow-xl text-xs"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(0.75rem * ${submission.mobile_font_size / 100})`,
+                              opacity: 0.9,
+                            }}
+                          >
+                            {submission.texto_adicional}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="absolute bottom-2 right-2">
                       <span className="px-2 py-1 bg-black/50 text-white rounded text-xs">
@@ -369,16 +477,70 @@ export default function ModeracaoBannersPage() {
                   </div>
                 )}
                 
-                {/* Se não tiver URLs finais, mostrar template */}
+                {/* Se não tiver URLs finais, mostrar template COM TEXTO */}
                 {!submission.desktop_final_url && !submission.mobile_final_url && submission.template && (
-                  <div>
+                  <div className="relative">
                     <div className="relative w-full" style={{ aspectRatio: '16/5' }}>
                       <Image
                         src={submission.template.desktop_url}
                         alt="Template"
                         fill
-                        className="object-cover opacity-50"
+                        className="object-cover"
                       />
+                      
+                      {/* TEXTO SOBREPOSTO - TEMPLATE */}
+                      <div
+                        className="absolute"
+                        style={{
+                          left: `${submission.desktop_position_x}%`,
+                          top: `${submission.desktop_position_y}%`,
+                          transform: 'translate(-50%, 0)',
+                          textAlign: submission.desktop_alignment as 'left' | 'center' | 'right',
+                          maxWidth: '400px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: `${submission.line_spacing}px`,
+                        }}
+                      >
+                        {submission.titulo && (
+                          <h2
+                            className="font-bold drop-shadow-2xl text-2xl"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(2rem * ${submission.desktop_font_size / 100})`,
+                            }}
+                          >
+                            {submission.titulo}
+                          </h2>
+                        )}
+                        {submission.subtitulo && (
+                          <p
+                            className="drop-shadow-xl text-base"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(1rem * ${submission.desktop_font_size / 100})`,
+                              opacity: 0.95,
+                            }}
+                          >
+                            {submission.subtitulo}
+                          </p>
+                        )}
+                        {submission.texto_adicional && (
+                          <p
+                            className="drop-shadow-xl text-sm"
+                            style={{
+                              color: submission.text_color,
+                              letterSpacing: `${submission.letter_spacing}px`,
+                              fontSize: `calc(0.875rem * ${submission.desktop_font_size / 100})`,
+                              opacity: 0.9,
+                            }}
+                          >
+                            {submission.texto_adicional}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="absolute top-2 right-2">
                       <span className="px-2 py-1 bg-amber-500 text-white rounded text-xs">

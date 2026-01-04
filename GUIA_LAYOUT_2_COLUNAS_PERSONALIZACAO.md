@@ -1,6 +1,7 @@
 # 🎨 REORGANIZAR PÁGINA DE PERSONALIZAÇÃO - LAYOUT 2 COLUNAS
 
 ## 🎯 OBJETIVO:
+
 Deixar o editor de banners **FIXO** à direita, sempre visível, enquanto as personalizações rolam à esquerda.
 
 ## 📐 LAYOUT NOVO:
@@ -31,9 +32,11 @@ Deixar o editor de banners **FIXO** à direita, sempre visível, enquanto as per
 ## 🔧 MUDANÇAS NECESSÁRIAS:
 
 ### 1. Remover Seção Separada de Banner
+
 **Arquivo:** `app/revendedora/personalizacao/page.tsx`
 
 **Remover:**
+
 - `activeSection === "banner"` (linha ~891)
 - Todo o código que mostra banner em tela cheia
 
@@ -42,10 +45,13 @@ Deixar o editor de banners **FIXO** à direita, sempre visível, enquanto as per
 ---
 
 ### 2. Criar Layout de 2 Colunas
+
 **Adicionar após o header principal:**
 
 ```tsx
-{/* Layout 2 Colunas */}
+{
+  /* Layout 2 Colunas */
+}
 <div className="flex gap-6 p-6">
   {/* COLUNA ESQUERDA - Personalizações (Rola) */}
   <div className="flex-1 space-y-6 overflow-y-auto max-h-[calc(100vh-120px)]">
@@ -83,12 +89,13 @@ Deixar o editor de banners **FIXO** à direita, sempre visível, enquanto as per
       )}
     </div>
   </div>
-</div>
+</div>;
 ```
 
 ---
 
 ### 3. Validação Antes de Enviar
+
 **Adicionar validação no BannerEditorFinal:**
 
 ```tsx
@@ -113,6 +120,7 @@ async function handleSave() {
 ### 4. Estilização Responsiva
 
 **Para Desktop (tela grande):**
+
 ```css
 @media (min-width: 1024px) {
   /* 2 colunas */
@@ -121,6 +129,7 @@ async function handleSave() {
 ```
 
 **Para Mobile (tela pequena):**
+
 ```css
 @media (max-width: 1023px) {
   /* 1 coluna, banner vai pro topo */
@@ -143,6 +152,7 @@ async function handleSave() {
 ## 🚀 IMPLEMENTAÇÃO RÁPIDA:
 
 Quer que eu implemente isso agora? Vou:
+
 1. Remover a seção separada de banner
 2. Criar layout de 2 colunas
 3. Adicionar validação de desktop/mobile

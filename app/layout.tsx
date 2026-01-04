@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Lato, Montserrat, Open_Sans, Lobster, Pacifico, Bebas_Neue, Raleway } from "next/font/google";
 import "./globals.css";
 import "./responsive.css";
 import ClientErrorLoggerWrapper from '@/components/ClientErrorLoggerWrapper';
@@ -17,6 +17,55 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Fontes para os banners customizados
+const playfairDisplay = Playfair_Display({ 
+  subsets: ["latin"], 
+  variable: "--font-playfair",
+  weight: ["400", "700"]
+});
+
+const lato = Lato({ 
+  subsets: ["latin"], 
+  variable: "--font-lato",
+  weight: ["300", "400", "700"]
+});
+
+const montserrat = Montserrat({ 
+  subsets: ["latin"], 
+  variable: "--font-montserrat",
+  weight: ["400", "600", "700"]
+});
+
+const openSans = Open_Sans({ 
+  subsets: ["latin"], 
+  variable: "--font-opensans",
+  weight: ["400", "600"]
+});
+
+const lobster = Lobster({ 
+  subsets: ["latin"], 
+  variable: "--font-lobster",
+  weight: ["400"]
+});
+
+const pacifico = Pacifico({ 
+  subsets: ["latin"], 
+  variable: "--font-pacifico",
+  weight: ["400"]
+});
+
+const bebasNeue = Bebas_Neue({ 
+  subsets: ["latin"], 
+  variable: "--font-bebas",
+  weight: ["400"]
+});
+
+const raleway = Raleway({ 
+  subsets: ["latin"], 
+  variable: "--font-raleway",
+  weight: ["300", "400", "600"]
 });
 
 export const metadata: Metadata = {
@@ -58,6 +107,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="C4 Franquias" />
         <link rel="manifest" href="/manifest.json" />
         
+        {/* Google Fonts para os banners customizados */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Oswald:wght@600&family=Poppins:wght@400&family=Merriweather:wght@700&family=Anton&display=swap" 
+          rel="stylesheet" 
+        />
+        
         {/* Google Analytics 4 - C4 Franquias */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Q1TM0EYRBN"
@@ -79,7 +136,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${lobster.variable} ${pacifico.variable} ${bebasNeue.variable} ${raleway.variable} antialiased`}
       >
         <ErrorBoundary>
           {children}

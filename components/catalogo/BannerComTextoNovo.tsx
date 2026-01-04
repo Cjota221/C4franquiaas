@@ -35,8 +35,6 @@ const FONT_COMBINATIONS = [
     body: "Lato",
     titleWeight: "700",
     bodyWeight: "400",
-    titleVar: "var(--font-playfair)",
-    bodyVar: "var(--font-lato)",
   },
   { 
     name: "Moderna Limpa", 
@@ -44,8 +42,6 @@ const FONT_COMBINATIONS = [
     body: "Open Sans",
     titleWeight: "600",
     bodyWeight: "400",
-    titleVar: "var(--font-montserrat)",
-    bodyVar: "var(--font-opensans)",
   },
   { 
     name: "Impacto Total", 
@@ -53,8 +49,6 @@ const FONT_COMBINATIONS = [
     body: "Roboto",
     titleWeight: "400",
     bodyWeight: "400",
-    titleVar: "var(--font-bebas)",
-    bodyVar: "system-ui, -apple-system, sans-serif",
   },
   { 
     name: "Manuscrita Elegante", 
@@ -62,8 +56,6 @@ const FONT_COMBINATIONS = [
     body: "Raleway",
     titleWeight: "700",
     bodyWeight: "400",
-    titleVar: "'Dancing Script', cursive",
-    bodyVar: "var(--font-raleway)",
   },
   { 
     name: "Retrô Divertida", 
@@ -71,8 +63,6 @@ const FONT_COMBINATIONS = [
     body: "Lato",
     titleWeight: "400",
     bodyWeight: "400",
-    titleVar: "var(--font-lobster)",
-    bodyVar: "var(--font-lato)",
   },
   { 
     name: "Ultra Moderna", 
@@ -80,8 +70,6 @@ const FONT_COMBINATIONS = [
     body: "Poppins",
     titleWeight: "600",
     bodyWeight: "400",
-    titleVar: "'Oswald', sans-serif",
-    bodyVar: "'Poppins', sans-serif",
   },
   { 
     name: "Clássica Séria", 
@@ -89,8 +77,6 @@ const FONT_COMBINATIONS = [
     body: "Open Sans",
     titleWeight: "700",
     bodyWeight: "400",
-    titleVar: "'Merriweather', serif",
-    bodyVar: "var(--font-opensans)",
   },
   { 
     name: "Super Forte", 
@@ -98,8 +84,6 @@ const FONT_COMBINATIONS = [
     body: "Roboto",
     titleWeight: "400",
     bodyWeight: "400",
-    titleVar: "'Anton', sans-serif",
-    bodyVar: "system-ui, -apple-system, sans-serif",
   },
 ];
 
@@ -190,7 +174,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <h2 
                 className="font-bold drop-shadow-2xl"
                 style={{
-                  fontFamily: fontCombo.titleVar,
+                  fontFamily: fontCombo.title,
                   fontWeight: fontCombo.titleWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(3rem * ${bannerData.desktop_font_size / 100})`,
@@ -204,7 +188,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <p 
                 className="drop-shadow-xl"
                 style={{
-                  fontFamily: fontCombo.bodyVar,
+                  fontFamily: fontCombo.body,
                   fontWeight: fontCombo.bodyWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(1.125rem * ${bannerData.desktop_font_size / 100})`,
@@ -219,7 +203,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <p 
                 className="drop-shadow-xl"
                 style={{
-                  fontFamily: fontCombo.bodyVar,
+                  fontFamily: fontCombo.body,
                   fontWeight: fontCombo.bodyWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(0.875rem * ${bannerData.desktop_font_size / 100})`,
@@ -257,7 +241,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <h2 
                 className="font-bold drop-shadow-2xl"
                 style={{
-                  fontFamily: fontCombo.titleVar,
+                  fontFamily: fontCombo.title,
                   fontWeight: fontCombo.titleWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(2rem * ${bannerData.mobile_font_size / 100})`,
@@ -271,7 +255,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <p 
                 className="drop-shadow-xl"
                 style={{
-                  fontFamily: fontCombo.bodyVar,
+                  fontFamily: fontCombo.body,
                   fontWeight: fontCombo.bodyWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(1rem * ${bannerData.mobile_font_size / 100})`,
@@ -286,7 +270,7 @@ export default function BannerComTexto({ userId, bannerUrl, bannerMobileUrl }: P
               <p 
                 className="drop-shadow-xl"
                 style={{
-                  fontFamily: fontCombo.bodyVar,
+                  fontFamily: fontCombo.body,
                   fontWeight: fontCombo.bodyWeight,
                   letterSpacing: `${bannerData.letter_spacing}px`,
                   fontSize: `calc(0.75rem * ${bannerData.mobile_font_size / 100})`,

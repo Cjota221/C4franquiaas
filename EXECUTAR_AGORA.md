@@ -7,7 +7,7 @@
 -- PASSO 1: Atualizar banner_submissions com URLs dos templates
 -- ============================================================================
 UPDATE banner_submissions bs
-SET 
+SET
   desktop_final_url = bt.desktop_url,
   mobile_final_url = bt.mobile_url,
   updated_at = NOW()
@@ -20,7 +20,7 @@ WHERE bs.template_id = bt.id
 -- PASSO 2: Sincronizar banners com resellers (Desktop)
 -- ============================================================================
 UPDATE resellers r
-SET 
+SET
   banner_url = bs.desktop_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -32,7 +32,7 @@ WHERE r.user_id = bs.user_id
 -- PASSO 3: Sincronizar banners com resellers (Mobile)
 -- ============================================================================
 UPDATE resellers r
-SET 
+SET
   banner_mobile_url = bs.mobile_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -43,7 +43,7 @@ WHERE r.user_id = bs.user_id
 -- ============================================================================
 -- PASSO 4: Verificar quais revendedoras têm banners agora
 -- ============================================================================
-SELECT 
+SELECT
   r.store_name,
   r.slug,
   CASE WHEN r.banner_url IS NOT NULL THEN '✅' ELSE '❌' END as desktop,
@@ -64,5 +64,5 @@ ORDER BY r.store_name;
 
 ---
 
-**Execute este SQL AGORA** e me avise quando terminar! 
+**Execute este SQL AGORA** e me avise quando terminar!
 Depois vou implementar a exibição dos textos personalizados.

@@ -45,10 +45,31 @@ export default function TutoriaisPage() {
   }, []);
 
   async function loadVideos() {
-    const res = await fetch('/api/tutoriais');
-    const data = await res.json();
-    setVideos(data);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/tutoriais');
+      
+      if (!res.ok) {
+        console.error('Erro ao carregar vídeos:', res.status);
+        setVideos([]);
+        setLoading(false);
+        return;
+      }
+      
+      const data = await res.json();
+      
+      // Garantir que data é um array
+      if (Array.isArray(data)) {
+        setVideos(data);
+      } else {
+        console.error('API retornou formato inválido:', data);
+        setVideos([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar vídeos:', error);
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -199,7 +220,9 @@ export default function TutoriaisPage() {
 
       {/* Lista de Vídeos por Página */}
       {PAGINAS.map(({ value, label }) => {
-        const videosPage = videos.filter((v) => v.pagina === value);
+        // Garantir que videos é um array antes de filtrar
+        const videosArray = Array.isArray(videos) ? videos : [];
+        const videosPage = videosArray.filter((v) => v.pagina === value);
         if (videosPage.length === 0) return null;
 
         return (
@@ -281,7 +304,7 @@ export default function TutoriaisPage() {
         );
       })}
 
-      {videos.length === 0 && (
+      {(!videos || videos.length === 0) && (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <Video className="mx-auto text-gray-300 mb-4" size={64} />
           <p className="text-gray-500 text-lg">

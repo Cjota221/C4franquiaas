@@ -21,7 +21,7 @@ Execute este SQL no **Supabase SQL Editor** para sincronizar os banners aprovado
 -- ============================================================================
 
 -- PASSO 1: Ver banners aprovados que existem
-SELECT 
+SELECT
   bs.id,
   bs.user_id,
   bs.titulo,
@@ -39,7 +39,7 @@ ORDER BY bs.approved_at DESC;
 
 -- PASSO 2: Sincronizar banners desktop aprovados
 UPDATE resellers r
-SET 
+SET
   banner_url = bs.desktop_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -50,7 +50,7 @@ WHERE r.user_id = bs.user_id
 
 -- PASSO 3: Sincronizar banners mobile aprovados
 UPDATE resellers r
-SET 
+SET
   banner_mobile_url = bs.mobile_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -60,7 +60,7 @@ WHERE r.user_id = bs.user_id
   AND bs.mobile_final_url != '';
 
 -- PASSO 4: Verificar resultado
-SELECT 
+SELECT
   r.id,
   r.store_name,
   r.banner_url as desktop,
@@ -76,6 +76,7 @@ ORDER BY r.store_name;
 ## 📊 Resultado Esperado
 
 Após executar o SQL:
+
 - ✅ Banners aprovados voltam a aparecer nos catálogos
 - ✅ Tabela `resellers` sincronizada com `banner_submissions`
 - ✅ Frontend já carrega os banners corretamente (API corrigida)
@@ -89,6 +90,7 @@ Após executar o SQL:
 ## ⚠️ Observação Importante
 
 Esta correção resolve o problema de forma definitiva. A partir de agora:
+
 - ✅ API busca de `banner_submissions` (tabela correta)
 - ✅ Quando admin aprovar banner, ele automaticamente atualiza a tabela `resellers`
 - ✅ Não haverá mais "sumiço" de banners

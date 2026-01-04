@@ -268,29 +268,38 @@ export default function PersonalizacaoRevendedoraPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
+            console.log("🔍 DADOS RECEBIDOS DO EDITOR:", bannerData);
+
+            // Preparar dados para salvar
+            const dataToInsert = {
+              user_id: user.id,
+              template_id: bannerData.templateId,
+              titulo: bannerData.titulo,
+              subtitulo: bannerData.subtitulo,
+              texto_adicional: bannerData.textoAdicional,
+              font_family: bannerData.fontFamily,
+              text_color: bannerData.textColor,
+              desktop_position_x: Math.round(bannerData.desktopPosition.x),
+              desktop_position_y: Math.round(bannerData.desktopPosition.y),
+              desktop_alignment: bannerData.desktopAlignment,
+              desktop_font_size: Math.round(bannerData.desktopFontSize),
+              mobile_position_x: Math.round(bannerData.mobilePosition.x),
+              mobile_position_y: Math.round(bannerData.mobilePosition.y),
+              mobile_alignment: bannerData.mobileAlignment,
+              mobile_font_size: Math.round(bannerData.mobileFontSize),
+              line_spacing: Math.round(bannerData.lineSpacing),
+              letter_spacing: Math.round(bannerData.letterSpacing),
+              desktop_final_url: bannerData.customDesktopUrl || null,
+              mobile_final_url: bannerData.customMobileUrl || null,
+              status: "pending",
+            };
+
+            console.log("💾 DADOS PARA INSERIR NO BANCO:", dataToInsert);
+
             // Salvar no banco de dados
             const { data, error } = await supabase
               .from("banner_submissions")
-              .insert([{
-                user_id: user.id,
-                template_id: bannerData.templateId,
-                titulo: bannerData.titulo,
-                subtitulo: bannerData.subtitulo,
-                texto_adicional: bannerData.textoAdicional,
-                font_family: bannerData.fontFamily,
-                text_color: bannerData.textColor,
-                desktop_position_x: Math.round(bannerData.desktopPosition.x),
-                desktop_position_y: Math.round(bannerData.desktopPosition.y),
-                desktop_alignment: bannerData.desktopAlignment,
-                desktop_font_size: Math.round(bannerData.desktopFontSize),
-                mobile_position_x: Math.round(bannerData.mobilePosition.x),
-                mobile_position_y: Math.round(bannerData.mobilePosition.y),
-                mobile_alignment: bannerData.mobileAlignment,
-                mobile_font_size: Math.round(bannerData.mobileFontSize),
-                line_spacing: Math.round(bannerData.lineSpacing),
-                letter_spacing: Math.round(bannerData.letterSpacing),
-                status: "pending",
-              }])
+              .insert([dataToInsert])
               .select()
               .single();
 

@@ -21,10 +21,12 @@ at page.tsx:333:40
 ## ✅ Correções JÁ Aplicadas (aguardando rebuild)
 
 ### 1. API `/api/banners/route.ts`
+
 - Busca de `banner_submissions` com JOIN para dados da revendedora
 - Retorna objeto `reseller` completo com `logo_url`, `store_name`, etc.
 
-### 2. Página `/admin/moderacao/banners/page.tsx`  
+### 2. Página `/admin/moderacao/banners/page.tsx`
+
 - Interface `BannerSubmission` atualizada
 - Preview usando `desktop_final_url` e `mobile_final_url`
 - Campos corretos: `rejection_reason`, `template`, etc.
@@ -32,12 +34,14 @@ at page.tsx:333:40
 ## 🎯 O Que Fazer AGORA
 
 ### Opção 1: Aguardar Netlify Rebuild (RECOMENDADO)
+
 1. Acesse https://app.netlify.com
 2. Verifique se o build está em progresso
 3. Aguarde conclusão (geralmente 2-3 minutos)
 4. Recarregue a página depois que o build terminar
 
 ### Opção 2: Forçar Novo Deploy
+
 Se o Netlify não iniciou o rebuild automaticamente:
 
 ```bash
@@ -47,6 +51,7 @@ git push
 ```
 
 ### Opção 3: Limpar Cache do Netlify
+
 1. Acesse Netlify Dashboard
 2. Site settings → Build & deploy
 3. Clique em "Clear cache and deploy site"
@@ -70,6 +75,7 @@ git push
 Verifique em: https://app.netlify.com/sites/[seu-site]/deploys
 
 Status possíveis:
+
 - 🟡 **Building** - Aguarde
 - 🟢 **Published** - Pode testar
 - 🔴 **Failed** - Veja os logs de erro

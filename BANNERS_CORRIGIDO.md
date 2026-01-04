@@ -3,6 +3,7 @@
 ## 🐛 O que estava acontecendo:
 
 Quando você aprovava um banner na moderação, ele **não aparecia no site** da revendedora porque:
+
 1. A API de aprovação não estava pegando as URLs do template
 2. Não atualizava `desktop_final_url` e `mobile_final_url` na submission
 3. Não atualizava `banner_url` e `banner_mobile_url` na tabela `resellers`
@@ -12,6 +13,7 @@ Quando você aprovava um banner na moderação, ele **não aparecia no site** da
 **Arquivo:** `app/api/banners/route.ts`
 
 Agora quando você aprovar um banner:
+
 1. ✅ API busca o template usado
 2. ✅ Pega as URLs desktop e mobile do template
 3. ✅ Atualiza a submission com `desktop_final_url` e `mobile_final_url`
@@ -25,7 +27,7 @@ Agora quando você aprovar um banner:
 ```sql
 -- PASSO 1: Atualizar URLs finais nas submissions aprovadas
 UPDATE banner_submissions bs
-SET 
+SET
   desktop_final_url = bt.desktop_url,
   mobile_final_url = bt.mobile_url,
   updated_at = NOW()
@@ -36,7 +38,7 @@ WHERE bs.template_id = bt.id
 
 -- PASSO 2: Sincronizar com resellers (Desktop)
 UPDATE resellers r
-SET 
+SET
   banner_url = bs.desktop_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -46,7 +48,7 @@ WHERE r.user_id = bs.user_id
 
 -- PASSO 3: Sincronizar com resellers (Mobile)
 UPDATE resellers r
-SET 
+SET
   banner_mobile_url = bs.mobile_final_url,
   updated_at = NOW()
 FROM banner_submissions bs
@@ -55,7 +57,7 @@ WHERE r.user_id = bs.user_id
   AND bs.mobile_final_url IS NOT NULL;
 
 -- PASSO 4: Verificar resultado
-SELECT 
+SELECT
   r.store_name,
   r.banner_url as desktop,
   r.banner_mobile_url as mobile,
@@ -69,11 +71,13 @@ ORDER BY bs.approved_at DESC;
 ## 📋 Teste o Fluxo Completo:
 
 ### 1. **Banners Antigos (já aprovados):**
+
 - Execute o SQL acima no Supabase
 - Recarregue o site da revendedora
 - Banner deve aparecer! ✅
 
 ### 2. **Novos Banners (a partir de agora):**
+
 - Revendedora envia banner para aprovação
 - Você aprova na moderação
 - Banner **aparece automaticamente** no site dela! ✅
