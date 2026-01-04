@@ -99,13 +99,26 @@ export default function VideoTutorialButton({ pagina }: Props) {
 
             {/* Vídeo */}
             <div className="relative" style={{ paddingBottom: '56.25%' }}>
-              <iframe
-                src={video.video_url}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={video.titulo}
-              />
+              {video.video_url.includes('youtube.com') || video.video_url.includes('vimeo.com') ? (
+                // YouTube/Vimeo embed
+                <iframe
+                  src={video.video_url}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={video.titulo}
+                />
+              ) : (
+                // Vídeo direto (Catbox, Supabase Storage, etc)
+                <video
+                  controls
+                  className="absolute inset-0 w-full h-full"
+                  src={video.video_url}
+                  title={video.titulo}
+                >
+                  Seu navegador não suporta vídeos HTML5.
+                </video>
+              )}
             </div>
 
             {/* Footer */}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Video, Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Video, Plus, Edit2, Trash2, Eye, EyeOff, Upload, Link2 } from 'lucide-react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type TutorialVideo = {
   id: string;
@@ -26,6 +27,10 @@ export default function TutoriaisPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingVideo, setEditingVideo] = useState<TutorialVideo | null>(null);
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const supabase = createClientComponentClient();
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -64,6 +69,59 @@ export default function TutoriaisPage() {
       loadVideos();
       setShowModal(false);
       resetForm();
+    }
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (!validTypes.includes(file.type)) {
+      alert('Formato de vídeo não suportado. Use MP4, WebM, OGG ou MOV');
+      return;
+    }
+
+    // Validar tamanho (máximo 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      alert('Vídeo muito grande! Máximo 100MB');
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Nome único para o arquivo
+      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = `${fileName}`;
+
+      // Upload para Supabase Storage
+      const { error } = await supabase.storage
+        .from('tutorial-videos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      // Pegar URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('tutorial-videos')
+        .getPublicUrl(filePath);
+
+      // Atualizar form com a URL
+      setFormData({ ...formData, video_url: publicUrl });
+      setUploadProgress(100);
+      alert('Vídeo enviado com sucesso!');
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro ao enviar vídeo. Tente novamente.');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -279,22 +337,90 @@ export default function TutoriaisPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  URL do Vídeo (YouTube/Vimeo Embed) *
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Vídeo *
                 </label>
-                <input
-                  type="url"
-                  value={formData.video_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, video_url: e.target.value })
-                  }
-                  className="w-full border rounded-lg px-4 py-2"
-                  placeholder="https://www.youtube.com/embed/VIDEO_ID"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Use o link de incorporação (embed) do vídeo
-                </p>
+                
+                {/* Tabs para escolher modo */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('url')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+                      uploadMode === 'url'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Link2 className="inline mr-2" size={16} />
+                    Link Externo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('upload')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+                      uploadMode === 'upload'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Upload className="inline mr-2" size={16} />
+                    Upload Direto
+                  </button>
+                </div>
+
+                {/* Modo URL */}
+                {uploadMode === 'url' && (
+                  <div>
+                    <input
+                      type="url"
+                      value={formData.video_url}
+                      onChange={(e) =>
+                        setFormData({ ...formData, video_url: e.target.value })
+                      }
+                      className="w-full border rounded-lg px-4 py-2"
+                      placeholder="https://files.catbox.moe/abc123.mp4"
+                      required={uploadMode === 'url'}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 Cole o link direto do vídeo (Catbox, YouTube embed, etc)
+                    </p>
+                  </div>
+                )}
+
+                {/* Modo Upload */}
+                {uploadMode === 'upload' && (
+                  <div>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      onChange={handleFileUpload}
+                      className="w-full border rounded-lg px-4 py-2"
+                      disabled={uploading}
+                    />
+                    {uploading && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-pink-500 h-2 rounded-full transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enviando... {uploadProgress}%
+                        </p>
+                      </div>
+                    )}
+                    {formData.video_url && !uploading && (
+                      <p className="text-xs text-green-600 mt-2">
+                        ✅ Vídeo enviado com sucesso!
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      📹 Formatos: MP4, WebM, OGG, MOV (máx 100MB)
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
