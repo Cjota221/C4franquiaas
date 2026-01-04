@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Check, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -20,6 +20,7 @@ interface BannerData {
   subtitulo: string;
   textoAdicional: string;
   fontFamily: string;
+  fontStyle: "classic" | "modern" | "elegant" | "bold";
   desktopPosition: { x: number; y: number };
   mobilePosition: { x: number; y: number };
 }
@@ -29,24 +30,85 @@ interface BannerEditorProps {
   onCancel: () => void;
 }
 
-// Google Fonts disponíveis (lista expandida)
-const GOOGLE_FONTS = [
-  { name: "Playfair Display", value: "Playfair Display", class: "font-serif", style: "Clássica e Elegante" },
-  { name: "Roboto", value: "Roboto", class: "font-sans", style: "Moderna e Limpa" },
-  { name: "Montserrat", value: "Montserrat", class: "font-sans", style: "Geométrica e Versátil" },
-  { name: "Open Sans", value: "Open Sans", class: "font-sans", style: "Amigável e Legível" },
-  { name: "Lato", value: "Lato", class: "font-sans", style: "Profissional" },
-  { name: "Oswald", value: "Oswald", class: "font-sans", style: "Condensada e Impactante" },
-  { name: "Raleway", value: "Raleway", class: "font-sans", style: "Elegante e Minimalista" },
-  { name: "Poppins", value: "Poppins", class: "font-sans", style: "Moderna e Arredondada" },
-  { name: "Merriweather", value: "Merriweather", class: "font-serif", style: "Clássica para Leitura" },
-  { name: "Bebas Neue", value: "Bebas Neue", class: "font-sans", style: "Maiúsculas e Forte" },
-  { name: "Dancing Script", value: "Dancing Script", class: "font-serif", style: "Manuscrita Elegante" },
-  { name: "Pacifico", value: "Pacifico", class: "font-serif", style: "Casual e Divertida" },
-  { name: "Lobster", value: "Lobster", class: "font-serif", style: "Retrô e Chamativa" },
-  { name: "Anton", value: "Anton", class: "font-sans", style: "Super Forte" },
-  { name: "Crimson Text", value: "Crimson Text", class: "font-serif", style: "Refinada" },
-];
+// Combinações de fontes pré-definidas para estilos diferentes
+const FONT_COMBINATIONS = {
+  classic: {
+    name: "Clássico Elegante",
+    description: "Elegância atemporal com serifas refinadas",
+    preview: {
+      title: "Seu Título Aqui",
+      subtitle: "Subtítulo Elegante",
+      text: "Texto adicional clássico"
+    },
+    desktop: {
+      title: "text-5xl font-bold font-serif tracking-tight",
+      subtitle: "text-2xl font-serif italic",
+      text: "text-lg font-sans"
+    },
+    mobile: {
+      title: "text-3xl font-bold font-serif tracking-tight",
+      subtitle: "text-xl font-serif italic",
+      text: "text-base font-sans"
+    }
+  },
+  modern: {
+    name: "Moderno Limpo",
+    description: "Design minimalista e contemporâneo",
+    preview: {
+      title: "Seu Título Aqui",
+      subtitle: "Subtítulo Moderno",
+      text: "Texto adicional clean"
+    },
+    desktop: {
+      title: "text-5xl font-extrabold font-sans tracking-wide",
+      subtitle: "text-2xl font-medium font-sans",
+      text: "text-lg font-sans"
+    },
+    mobile: {
+      title: "text-3xl font-extrabold font-sans tracking-wide",
+      subtitle: "text-xl font-medium font-sans",
+      text: "text-base font-sans"
+    }
+  },
+  elegant: {
+    name: "Elegante Sofisticado",
+    description: "Refinamento com toques delicados",
+    preview: {
+      title: "Seu Título Aqui",
+      subtitle: "Subtítulo Sofisticado",
+      text: "Texto adicional refinado"
+    },
+    desktop: {
+      title: "text-5xl font-light font-serif tracking-wider",
+      subtitle: "text-2xl font-light font-serif italic",
+      text: "text-lg font-serif"
+    },
+    mobile: {
+      title: "text-3xl font-light font-serif tracking-wider",
+      subtitle: "text-xl font-light font-serif italic",
+      text: "text-base font-serif"
+    }
+  },
+  bold: {
+    name: "Forte Impactante",
+    description: "Máximo impacto visual e presença",
+    preview: {
+      title: "SEU TÍTULO AQUI",
+      subtitle: "Subtítulo Forte",
+      text: "Texto adicional impactante"
+    },
+    desktop: {
+      title: "text-6xl font-black font-sans uppercase tracking-tighter",
+      subtitle: "text-2xl font-bold font-sans",
+      text: "text-lg font-sans font-semibold"
+    },
+    mobile: {
+      title: "text-4xl font-black font-sans uppercase tracking-tighter",
+      subtitle: "text-xl font-bold font-sans",
+      text: "text-base font-sans font-semibold"
+    }
+  }
+};
 
 export default function BannerEditorSimples({ onSave, onCancel }: BannerEditorProps) {
   const supabase = createClient();
@@ -60,7 +122,10 @@ export default function BannerEditorSimples({ onSave, onCancel }: BannerEditorPr
     titulo: "",
     subtitulo: "",
     textoAdicional: "",
+    fontFamily: "",
     fontStyle: "classic",
+    desktopPosition: { x: 50, y: 50 },
+    mobilePosition: { x: 50, y: 20 },
   });
 
   useEffect(() => {
