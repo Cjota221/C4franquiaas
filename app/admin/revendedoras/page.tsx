@@ -134,8 +134,9 @@ export default function AdminRevendedorasNova() {
       if (error) throw error;
 
       // Processar dados para adicionar indicadores
-      const processadas: RevendedoraCompleta[] = (data || []).map((r: Record<string, unknown>) => {
-        const personalizacao = (r.personalizacao as Array<Record<string, unknown>>)?.[0] || {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const processadas: RevendedoraCompleta[] = (data || []).map((r: any) => {
+        const personalizacao = r.personalizacao?.[0] || {};
         
         return {
           id: r.id,
