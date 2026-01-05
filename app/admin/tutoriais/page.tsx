@@ -18,7 +18,13 @@ const PAGINAS = [
   { value: 'produtos', label: 'Produtos' },
   { value: 'carrinhos', label: 'Carrinhos Abandonados' },
   { value: 'promocoes', label: 'Promoções' },
-  { value: 'personalizacao', label: 'Personalização' },
+  { value: 'personalizacao', label: 'Personalização - Visão Geral' },
+  { value: 'personalizacao-banner', label: 'Personalização - Banners' },
+  { value: 'personalizacao-logo', label: 'Personalização - Logo' },
+  { value: 'personalizacao-cores', label: 'Personalização - Cores' },
+  { value: 'personalizacao-estilos', label: 'Personalização - Estilos' },
+  { value: 'personalizacao-redes-sociais', label: 'Personalização - Redes Sociais' },
+  { value: 'personalizacao-analytics', label: 'Personalização - Analytics' },
   { value: 'configuracoes', label: 'Configurações' },
 ];
 
