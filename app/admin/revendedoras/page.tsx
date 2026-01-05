@@ -144,6 +144,11 @@ export default function AdminRevendedorasNova() {
         const primaryColor = colors.primary || null;
         const secondaryColor = colors.secondary || null;
         
+        // Verificar personalização (checar se não é null e não é string vazia)
+        const hasLogo = r.logo_url && r.logo_url.trim() !== '';
+        const hasBanner = (r.banner_url && r.banner_url.trim() !== '') || (r.banner_mobile_url && r.banner_mobile_url.trim() !== '');
+        const hasColors = primaryColor && secondaryColor;
+        
         return {
           id: r.id,
           name: r.name,
@@ -158,11 +163,11 @@ export default function AdminRevendedorasNova() {
           created_at: r.created_at,
           rejection_reason: r.rejection_reason,
           
-          // Indicadores de personalização (campos diretos da tabela resellers)
-          has_logo: !!r.logo_url,
-          has_banner: !!r.banner_url || !!r.banner_mobile_url,
-          has_colors: !!primaryColor && !!secondaryColor,
-          has_margin: totalProdutos && totalProdutos > 0, // Se tem produtos ativos, definiu margem
+          // Indicadores de personalização
+          has_logo: hasLogo,
+          has_banner: hasBanner,
+          has_colors: hasColors,
+          has_margin: totalProdutos && totalProdutos > 0,
           primary_color: primaryColor,
           logo_url: r.logo_url || null,
         };
