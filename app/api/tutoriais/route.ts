@@ -1,11 +1,12 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET - Listar vídeos (com filtro opcional por página)
 export async function GET(request: NextRequest) {
-  const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: async () => cookieStore });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const searchParams = request.nextUrl.searchParams;
   const pagina = searchParams.get('pagina');
 
@@ -31,8 +32,10 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar novo vídeo tutorial
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: async () => cookieStore });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const body = await request.json();
 
   console.log('📹 POST /api/tutoriais - Body recebido:', body);
@@ -76,8 +79,10 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Atualizar vídeo (ativar/desativar, editar)
 export async function PATCH(request: NextRequest) {
-  const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: async () => cookieStore });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const body = await request.json();
 
   console.log('✏️ PATCH /api/tutoriais - Body recebido:', body);
@@ -118,8 +123,10 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - Remover vídeo
 export async function DELETE(request: NextRequest) {
-  const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: async () => cookieStore });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
 
