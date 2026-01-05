@@ -1,6 +1,7 @@
-Ôªø"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import VideoTutorialButton from "@/components/VideoTutorialButton";
 import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -15,7 +16,7 @@ type ThemeSettings = {
   logo_position: "left" | "center" | "right";
   show_prices: boolean;
   show_whatsapp_float: boolean;
-  // Novas op√ß√µes
+  // Novas opÁıes
   border_radius: "none" | "small" | "medium" | "large";
   card_image_style: "square" | "rounded" | "circle";
   announcement_bar: {
@@ -26,15 +27,15 @@ type ThemeSettings = {
   };
   font_style: "modern" | "classic" | "elegant";
   product_name_size: "small" | "medium" | "large";
-  button_color?: string; // Cor espec√≠fica do bot√£o (usa primary se n√£o definido)
-  header_color?: string; // Cor espec√≠fica do cabe√ßalho (usa primary se n√£o definido)
-  // üÜï Sob Encomenda
+  button_color?: string; // Cor especÌfica do bot„o (usa primary se n„o definido)
+  header_color?: string; // Cor especÌfica do cabeÁalho (usa primary se n„o definido)
+  // ?? Sob Encomenda
   delivery_notice?: {
     enabled: boolean;
     days: number; // Prazo em dias
     message?: string; // Mensagem customizada
   };
-  // üÜï Produtos Relacionados
+  // ?? Produtos Relacionados
   show_related_products?: boolean;
   show_related_in_cart?: boolean;
 };
@@ -67,26 +68,26 @@ const DEFAULT_THEME: ThemeSettings = {
   logo_position: "center",
   show_prices: true,
   show_whatsapp_float: true,
-  // Novas op√ß√µes
+  // Novas opÁıes
   border_radius: "medium",
   card_image_style: "rounded",
   announcement_bar: {
     enabled: false,
-    text: "üî• Frete gr√°tis acima de R$ 150!",
+    text: "?? Frete gr·tis acima de R$ 150!",
     bg_color: "#000000",
     text_color: "#ffffff",
   },
   font_style: "modern",
   product_name_size: "medium",
-  button_color: undefined, // Usa cor prim√°ria por padr√£o
-  header_color: undefined, // Usa cor prim√°ria por padr√£o
-  // üÜï Sob Encomenda
+  button_color: undefined, // Usa cor prim·ria por padr„o
+  header_color: undefined, // Usa cor prim·ria por padr„o
+  // ?? Sob Encomenda
   delivery_notice: {
     enabled: false,
     days: 15,
     message: "Produzido sob encomenda"
   },
-  // üÜï Produtos Relacionados
+  // ?? Produtos Relacionados
   show_related_products: true,
   show_related_in_cart: true,
 };
@@ -114,16 +115,40 @@ export default function PersonalizacaoRevendedoraPage() {
   const [copied, setCopied] = useState(false);
   const [showCustomColor, setShowCustomColor] = useState(false);
   
-  // Estados para modera√ß√£o de banners
+  // Estados para moderaÁ„o de banners
   const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
   
   // Estados para o editor de banner
   const [showBannerEditor, setShowBannerEditor] = useState(false);
 
   const supabase = createClient();
+  const router = useRouter();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
 
-  // Carregar submiss√µes de banner
+  // FunÁ„o para mudar seÁ„o e atualizar URL
+  const handleSectionChange = (section: "main" | "colors" | "logo" | "banner" | "social" | "styles") => {
+    setActiveSection(section);
+    
+    // Mapear seÁ„o para query param
+    const sectionMap: Record<string, string> = {
+      main: "",
+      colors: "cores",
+      logo: "logo",
+      banner: "banner",
+      social: "redes-sociais",
+      styles: "estilos"
+    };
+    
+    const secao = sectionMap[section];
+    
+    if (secao) {
+      router.push(`/revendedora/personalizacao?secao=${secao}`);
+    } else {
+      router.push(`/revendedora/personalizacao`);
+    }
+  };
+
+  // Carregar submissıes de banner
   const loadBannerSubmissions = async (resellerId: string) => {
     try {
       const response = await fetch(`/api/banners?reseller_id=${resellerId}`);
@@ -132,7 +157,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setBannerSubmissions(data.submissions);
       }
     } catch (error) {
-      console.error("Erro ao carregar submiss√µes:", error);
+      console.error("Erro ao carregar submissıes:", error);
     }
   };
 
@@ -147,8 +172,8 @@ export default function PersonalizacaoRevendedoraPage() {
         setCurrentSlug(data.slug || "");
         setStoreName(data.store_name || "");
         
-        // üÜï Atualizar t√≠tulo da p√°gina para Google Analytics
-        document.title = `Personaliza√ß√£o - ${data.store_name} | C4 Franquias`;
+        // ?? Atualizar tÌtulo da p·gina para Google Analytics
+        document.title = `PersonalizaÁ„o - ${data.store_name} | C4 Franquias`;
         
         setBio(data.bio || "");
         setPhone(data.phone || "");
@@ -161,7 +186,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setSecondaryColor(data.colors?.secondary || "#8b5cf6");
         setThemeSettings(data.theme_settings || DEFAULT_THEME);
         
-        // Carregar submiss√µes de banner
+        // Carregar submissıes de banner
         loadBannerSubmissions(data.id);
       } catch (error) {
         console.error("Erro:", error);
@@ -207,10 +232,10 @@ export default function PersonalizacaoRevendedoraPage() {
       const { data: { publicUrl } } = supabase.storage.from("reseller-assets").getPublicUrl(fileName);
       
       if (type === "logo") {
-        // Logo vai direto, sem modera√ß√£o
+        // Logo vai direto, sem moderaÁ„o
         setLogoUrl(publicUrl);
       } else {
-        // Banners v√£o para modera√ß√£o
+        // Banners v„o para moderaÁ„o
         const bannerType = type === "banner" ? "desktop" : "mobile";
         
         const response = await fetch("/api/banners", {
@@ -226,10 +251,10 @@ export default function PersonalizacaoRevendedoraPage() {
         const data = await response.json();
         
         if (response.ok) {
-          alert("‚úÖ " + data.message);
+          alert("? " + data.message);
           loadBannerSubmissions(reseller.id);
         } else {
-          alert("‚ö†Ô∏è " + data.error);
+          alert("?? " + data.error);
         }
       }
     } catch (error) {
@@ -266,9 +291,9 @@ export default function PersonalizacaoRevendedoraPage() {
         onSave={async (bannerData) => {
           try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Usu√°rio n√£o autenticado");
+            if (!user) throw new Error("Usu·rio n„o autenticado");
 
-            console.log("üîç DADOS RECEBIDOS DO EDITOR:", bannerData);
+            console.log("?? DADOS RECEBIDOS DO EDITOR:", bannerData);
 
             // Preparar dados para salvar
             const dataToInsert = {
@@ -294,7 +319,7 @@ export default function PersonalizacaoRevendedoraPage() {
               status: "pending",
             };
 
-            console.log("üíæ DADOS PARA INSERIR NO BANCO:", dataToInsert);
+            console.log("?? DADOS PARA INSERIR NO BANCO:", dataToInsert);
 
             // Salvar no banco de dados
             const { data, error } = await supabase
@@ -305,11 +330,11 @@ export default function PersonalizacaoRevendedoraPage() {
 
             if (error) throw error;
 
-            console.log("‚úÖ Banner salvo com sucesso:", data);
-            alert("üéâ Banner enviado para aprova√ß√£o!\n\nVoc√™ receber√° uma notifica√ß√£o quando for aprovado.");
+            console.log("? Banner salvo com sucesso:", data);
+            alert("?? Banner enviado para aprovaÁ„o!\n\nVocÍ receber· uma notificaÁ„o quando for aprovado.");
             setShowBannerEditor(false);
           } catch (error) {
-            console.error("‚ùå Erro ao salvar banner:", error);
+            console.error("? Erro ao salvar banner:", error);
             alert("Erro ao enviar banner. Tente novamente.");
           }
         }}
@@ -318,7 +343,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SE√á√ÉO PRINCIPAL
+  // SE«√O PRINCIPAL
   if (activeSection === "main") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">
@@ -326,7 +351,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="fixed top-4 left-4 right-4 z-50">
             <div className="bg-green-500 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"><Check className="w-6 h-6" /></div>
-              <div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas altera√ß√µes foram aplicadas</p></div>
+              <div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas alteraÁıes foram aplicadas</p></div>
             </div>
           </div>
         )}
@@ -348,7 +373,7 @@ export default function PersonalizacaoRevendedoraPage() {
         {currentSlug ? (
           <div className="mx-4 -mt-4 mb-6">
             <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-              <p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CAT√ÅLOGO</p>
+              <p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CAT¡LOGO</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2 overflow-hidden"><p className="text-pink-600 font-mono text-sm truncate">{catalogUrl}</p></div>
                 <button onClick={copyLink} className={`p-3 rounded-xl transition-all ${copied ? "bg-green-500 text-white" : "bg-pink-500 text-white"}`}>{copied ? <Check size={20} /> : <Copy size={20} />}</button>
@@ -360,7 +385,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>
         )}
 
-        {/* üé® BANNER EDITOR FIXO - SEMPRE VIS√çVEL */}
+        {/* ?? BANNER EDITOR FIXO - SEMPRE VISÕVEL */}
         <div className="mx-4 mb-6">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -375,7 +400,7 @@ export default function PersonalizacaoRevendedoraPage() {
               </div>
               <button
                 onClick={() => {
-                  console.log("üé® Abrindo editor de banners...");
+                  console.log("?? Abrindo editor de banners...");
                   setShowBannerEditor(true);
                 }}
                 className="py-3 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg whitespace-nowrap"
@@ -393,7 +418,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </div>
                 <p className="text-xs text-gray-600 text-center mt-2 flex items-center justify-center gap-2">
                   {pendingBanner ? (
-                    <><Clock size={14} className="text-amber-500" /> Aguardando aprova√ß√£o</>
+                    <><Clock size={14} className="text-amber-500" /> Aguardando aprovaÁ„o</>
                   ) : (
                     <><CheckCircle size={14} className="text-green-500" /> Banner aprovado</>
                   )}
@@ -412,29 +437,29 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <label className="block text-sm font-medium text-gray-500 mb-2">DESCRI√á√ÉO (OPCIONAL)</label>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para voc√™!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" />
+            <label className="block text-sm font-medium text-gray-500 mb-2">DESCRI«√O (OPCIONAL)</label>
+            <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para vocÍ!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" />
             <p className="text-xs text-gray-400 text-right">{bio.length}/100</p>
           </div>
 
-          <button onClick={() => setActiveSection("logo")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+          <button onClick={() => handleSectionChange("logo")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center"><Camera className="w-6 h-6 text-pink-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Logo da Loja</p><p className="text-sm text-gray-500">{logoUrl ? "Logo configurada" : "Adicionar sua logo"}</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
-          {/* BANNER REMOVIDO DA LISTA - AGORA EST√Å FIXO NO TOPO */}
+          {/* BANNER REMOVIDO DA LISTA - AGORA EST¡ FIXO NO TOPO */}
 
-          <button onClick={() => setActiveSection("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+          <button onClick={() => handleSectionChange("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
             <div className="flex gap-1"><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: primaryColor }} /><div className="w-6 h-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: secondaryColor }} /></div>
           </button>
 
-          <button onClick={() => setActiveSection("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Bot√µes, cards e visual</p></div></div>
+          <button onClick={() => handleSectionChange("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Botıes, cards e visual</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
-          <button onClick={() => setActiveSection("social")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+          <button onClick={() => handleSectionChange("social")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><Share2 className="w-6 h-6 text-blue-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Redes Sociais</p><p className="text-sm text-gray-500">{instagram || facebook || phone ? "Configurado" : "Instagram, Facebook, WhatsApp"}</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
@@ -442,23 +467,23 @@ export default function PersonalizacaoRevendedoraPage() {
 
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:left-64">
           <button onClick={handleSave} disabled={saving || !storeName} className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${saved ? "bg-green-500 text-white" : saving ? "bg-pink-300 text-white" : !storeName ? "bg-gray-200 text-gray-400" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white"}`}>
-            {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Altera√ß√µes</>)}
+            {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar AlteraÁıes</>)}
           </button>
         </div>
       </div>
     );
   }
 
-  // SE√á√ÉO CORES
+  // SE«√O CORES
   if (activeSection === "colors") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
-          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Cores da Loja</h1>
         </div>
 
-        {/* üé® BANNER FIXO */}
+        {/* ?? BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -505,26 +530,26 @@ export default function PersonalizacaoRevendedoraPage() {
             {showCustomColor && (
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
                 <div><label className="block text-sm text-gray-500 mb-2">Cor Principal</label><div className="flex items-center gap-3"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
-                <div><label className="block text-sm text-gray-500 mb-2">Cor Secund√°ria</label><div className="flex items-center gap-3"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
+                <div><label className="block text-sm text-gray-500 mb-2">Cor Secund·ria</label><div className="flex items-center gap-3"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
               </div>
             )}
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar Cor</button></div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar Cor</button></div>
       </div>
     );
   }
 
-  // SE√á√ÉO ESTILOS
+  // SE«√O ESTILOS
   if (activeSection === "styles") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
-          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Estilos</h1>
         </div>
 
-        {/* üé® BANNER FIXO */}
+        {/* ?? BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -549,12 +574,12 @@ export default function PersonalizacaoRevendedoraPage() {
 
         <div className="p-4 space-y-6">
           
-          {/* BARRA DE AN√öNCIO */}
+          {/* BARRA DE AN⁄NCIO */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-800">üì¢ Barra de An√∫ncio</h3>
-                <p className="text-sm text-gray-500">Exibe mensagem no topo do cat√°logo</p>
+                <h3 className="font-semibold text-gray-800">?? Barra de An˙ncio</h3>
+                <p className="text-sm text-gray-500">Exibe mensagem no topo do cat·logo</p>
               </div>
               <button 
                 onClick={() => setThemeSettings({ 
@@ -574,7 +599,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 {/* Preview Melhorado */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-2 font-medium">Pr√©via da Barra</label>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">PrÈvia da Barra</label>
                   <div 
                     className="p-4 text-center text-sm font-medium rounded-xl border-2 border-gray-200"
                     style={{ 
@@ -587,7 +612,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-500 mb-2 font-medium">Texto do An√∫ncio</label>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">Texto do An˙ncio</label>
                   <input 
                     type="text" 
                     value={themeSettings.announcement_bar?.text || ""} 
@@ -595,7 +620,7 @@ export default function PersonalizacaoRevendedoraPage() {
                       ...themeSettings, 
                       announcement_bar: { ...themeSettings.announcement_bar, text: e.target.value } 
                     })} 
-                    placeholder="Ex: üî• Frete gr√°tis acima de R$ 150!"
+                    placeholder="Ex: ?? Frete gr·tis acima de R$ 150!"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
                     maxLength={60}
                   />
@@ -657,12 +682,12 @@ export default function PersonalizacaoRevendedoraPage() {
           {/* BORDAS ARREDONDADAS */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-2">Bordas Arredondadas</h3>
-            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e bot√µes</p>
+            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e botıes</p>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { id: "none", label: "Sem", radius: "0px" },
                 { id: "small", label: "Pouco", radius: "4px" },
-                { id: "medium", label: "M√©dio", radius: "12px" },
+                { id: "medium", label: "MÈdio", radius: "12px" },
                 { id: "large", label: "Muito", radius: "24px" },
               ].map((opt) => (
                 <button 
@@ -678,26 +703,26 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
 
-          {/* Estilo do Cabe√ßalho */}
+          {/* Estilo do CabeÁalho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabe√ßalho</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do CabeÁalho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
-                <p className="text-sm font-medium text-gray-700">Degrad√™</p>
+                <p className="text-sm font-medium text-gray-700">DegradÍ</p>
               </button>
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "solid" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "solid" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ backgroundColor: themeSettings.header_color || primaryColor }} />
-                <p className="text-sm font-medium text-gray-700">Cor S√≥lida</p>
+                <p className="text-sm font-medium text-gray-700">Cor SÛlida</p>
               </button>
             </div>
             
-            {/* Cor Personalizada do Cabe√ßalho */}
+            {/* Cor Personalizada do CabeÁalho */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-medium text-gray-800">Cor do Cabe√ßalho</p>
-                  <p className="text-xs text-gray-500">Diferente da cor prim√°ria</p>
+                  <p className="font-medium text-gray-800">Cor do CabeÁalho</p>
+                  <p className="text-xs text-gray-500">Diferente da cor prim·ria</p>
                 </div>
                 <button 
                   onClick={() => setThemeSettings({ ...themeSettings, header_color: themeSettings.header_color ? undefined : primaryColor })}
@@ -724,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">üí° <strong>Dica:</strong> √ötil quando sua logo √© escura e a cor prim√°ria tamb√©m. Use uma cor clara para o cabe√ßalho para destacar a logo.</p>
+                    <p className="text-xs text-blue-800">?? <strong>Dica:</strong> ⁄til quando sua logo È escura e a cor prim·ria tambÈm. Use uma cor clara para o cabeÁalho para destacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -732,7 +757,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Bot√£o de Compra</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Bot„o de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
@@ -744,12 +769,12 @@ export default function PersonalizacaoRevendedoraPage() {
               </button>
             </div>
             
-            {/* Cor do Bot√£o */}
+            {/* Cor do Bot„o */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-medium text-gray-800">Cor do Bot√£o</p>
-                  <p className="text-xs text-gray-500">Diferente da cor prim√°ria</p>
+                  <p className="font-medium text-gray-800">Cor do Bot„o</p>
+                  <p className="text-xs text-gray-500">Diferente da cor prim·ria</p>
                 </div>
                 <button 
                   onClick={() => setThemeSettings({ ...themeSettings, button_color: themeSettings.button_color ? undefined : primaryColor })}
@@ -803,7 +828,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 className={`p-3 rounded-xl border-2 transition-all ${themeSettings.product_name_size === "medium" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
               >
                 <p className="text-sm font-medium text-gray-800 mb-2">Rasteirinha</p>
-                <p className="text-xs text-gray-500">M√©dio</p>
+                <p className="text-xs text-gray-500">MÈdio</p>
               </button>
               <button 
                 onClick={() => setThemeSettings({ ...themeSettings, product_name_size: "large" })} 
@@ -816,11 +841,11 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200 space-y-4">
-            <h3 className="font-semibold text-gray-800">Op√ß√µes do Site</h3>
+            <h3 className="font-semibold text-gray-800">OpÁıes do Site</h3>
             <div className="flex items-center justify-between py-2">
               <div>
-                <p className="font-medium text-gray-800">Mostrar Pre√ßos</p>
-                <p className="text-sm text-gray-500">Exibe o pre√ßo nos produtos</p>
+                <p className="font-medium text-gray-800">Mostrar PreÁos</p>
+                <p className="text-sm text-gray-500">Exibe o preÁo nos produtos</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_prices: !themeSettings.show_prices })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_prices ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} />
@@ -831,7 +856,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Produtos Relacionados</p>
-                <p className="text-sm text-gray-500">Mostra sugest√µes na p√°gina do produto</p>
+                <p className="text-sm text-gray-500">Mostra sugestıes na p·gina do produto</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_products: !themeSettings.show_related_products })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_products ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_products ? "translate-x-7" : "translate-x-1"}`} />
@@ -841,7 +866,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Relacionados no Carrinho</p>
-                <p className="text-sm text-gray-500">Sugest√µes no carrinho de compras</p>
+                <p className="text-sm text-gray-500">Sugestıes no carrinho de compras</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_in_cart: !themeSettings.show_related_in_cart })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_in_cart ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
@@ -850,7 +875,7 @@ export default function PersonalizacaoRevendedoraPage() {
             */}
           </div>
           
-          {/* üÜï Aviso de Sob Encomenda */}
+          {/* ?? Aviso de Sob Encomenda */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -878,10 +903,10 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 {/* Preview */}
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm font-medium text-amber-900 mb-1">üì¶ Preview:</p>
+                  <p className="text-sm font-medium text-amber-900 mb-1">?? Preview:</p>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                     <Clock className="w-4 h-4" />
-                    {themeSettings.delivery_notice?.message || "Produzido sob encomenda"} ‚Ä¢ {themeSettings.delivery_notice?.days || 15} dias
+                    {themeSettings.delivery_notice?.message || "Produzido sob encomenda"} ï {themeSettings.delivery_notice?.days || 15} dias
                   </div>
                 </div>
                 
@@ -904,7 +929,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     })} 
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 text-lg font-semibold text-center"
                   />
-                  <p className="text-xs text-gray-500 mt-1 text-center">Prazo de produ√ß√£o e entrega</p>
+                  <p className="text-xs text-gray-500 mt-1 text-center">Prazo de produÁ„o e entrega</p>
                 </div>
                 
                 {/* Mensagem customizada */}
@@ -931,28 +956,28 @@ export default function PersonalizacaoRevendedoraPage() {
                 
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800">
-                    üí° <strong>Dica:</strong> Esse aviso aparecer√° em todos os produtos do seu cat√°logo, ideal para lojas que trabalham com produ√ß√£o sob encomenda.
+                    ?? <strong>Dica:</strong> Esse aviso aparecer· em todos os produtos do seu cat·logo, ideal para lojas que trabalham com produÁ„o sob encomenda.
                   </p>
                 </div>
               </div>
             )}
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
       </div>
     );
   }
 
-  // SE√á√ÉO LOGO
+  // SE«√O LOGO
   if (activeSection === "logo") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
-          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Logo da Loja</h1>
         </div>
 
-        {/* üé® BANNER FIXO */}
+        {/* ?? BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -996,21 +1021,21 @@ export default function PersonalizacaoRevendedoraPage() {
               ))}
             </div>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <p className="text-xs text-blue-800 font-medium">üí° Dicas importantes:</p>
+              <p className="text-xs text-blue-800 font-medium">?? Dicas importantes:</p>
               <ul className="text-xs text-blue-700 mt-2 space-y-1">
-                <li>‚Ä¢ Use imagem com <strong>fundo transparente (PNG)</strong></li>
-                <li>‚Ä¢ <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
-                <li>‚Ä¢ <strong>Horizontal:</strong> ideal para logos retangulares (400x100px)</li>
+                <li>ï Use imagem com <strong>fundo transparente (PNG)</strong></li>
+                <li>ï <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
+                <li>ï <strong>Horizontal:</strong> ideal para logos retangulares (400x100px)</li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
       </div>
     );
   }
 
-  // SE√á√ÉO BANNER
+  // SE«√O BANNER
   if (activeSection === "banner") {
     const pendingMobile = bannerSubmissions.find(s => s.banner_type === "mobile" && s.status === "pending");
     const pendingDesktop = bannerSubmissions.find(s => s.banner_type === "desktop" && s.status === "pending");
@@ -1020,35 +1045,35 @@ export default function PersonalizacaoRevendedoraPage() {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
-          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Banner da Loja</h1>
         </div>
         
-        {/* Aviso de Modera√ß√£o */}
+        {/* Aviso de ModeraÁ„o */}
         <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-800">Banners passam por aprova√ß√£o</p>
+              <p className="font-medium text-amber-800">Banners passam por aprovaÁ„o</p>
               <p className="text-sm text-amber-700 mt-1">
-                Para garantir a qualidade do cat√°logo, todos os banners s√£o revisados antes de aparecer na sua loja. 
+                Para garantir a qualidade do cat·logo, todos os banners s„o revisados antes de aparecer na sua loja. 
                 Use apenas imagens de produtos C4.
               </p>
             </div>
           </div>
         </div>
         
-        {/* üÜï Bot√£o Criar Banner Personalizado */}
+        {/* ?? Bot„o Criar Banner Personalizado */}
         <div className="mx-4 mt-4">
           <button
             onClick={() => {
-              console.log("üé® Abrindo editor de banners...");
+              console.log("?? Abrindo editor de banners...");
               setShowBannerEditor(true);
             }}
             className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-lg"
           >
             <Sparkles className="w-6 h-6" />
-            ‚ú® Criar Banner Personalizado ‚ú®
+            ? Criar Banner Personalizado ?
           </button>
           <p className="text-xs text-gray-500 text-center mt-2">
             Escolha templates prontos e personalize os textos!
@@ -1069,7 +1094,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-center gap-2 text-yellow-700">
                   <Clock className="w-4 h-4" />
-                  <span className="font-medium text-sm">Banner aguardando aprova√ß√£o</span>
+                  <span className="font-medium text-sm">Banner aguardando aprovaÁ„o</span>
                 </div>
                 <div className="mt-2 aspect-square max-w-[150px] mx-auto bg-gray-100 rounded-lg overflow-hidden relative">
                   <Image src={pendingMobile.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
@@ -1110,7 +1135,7 @@ export default function PersonalizacaoRevendedoraPage() {
               ) : (
                 <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
                   <Upload className="w-8 h-8 mb-2" />
-                  <span className="text-sm">Enviar para aprova√ß√£o</span>
+                  <span className="text-sm">Enviar para aprovaÁ„o</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
                 </label>
               )}
@@ -1120,7 +1145,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-2">
                 <label className="block">
                   <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                    Enviar novo banner para aprova√ß√£o
+                    Enviar novo banner para aprovaÁ„o
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
                 </label>
@@ -1152,7 +1177,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-center gap-2 text-yellow-700">
                   <Clock className="w-4 h-4" />
-                  <span className="font-medium text-sm">Banner aguardando aprova√ß√£o</span>
+                  <span className="font-medium text-sm">Banner aguardando aprovaÁ„o</span>
                 </div>
                 <div className="mt-2 w-full bg-gray-100 rounded-lg overflow-hidden relative" style={{ aspectRatio: "16/5" }}>
                   <Image src={pendingDesktop.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
@@ -1193,7 +1218,7 @@ export default function PersonalizacaoRevendedoraPage() {
               ) : (
                 <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
                   <Upload className="w-8 h-8 mb-2" />
-                  <span className="text-sm">Enviar para aprova√ß√£o</span>
+                  <span className="text-sm">Enviar para aprovaÁ„o</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
                 </label>
               )}
@@ -1203,7 +1228,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-2">
                 <label className="block">
                   <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                    Enviar novo banner para aprova√ß√£o
+                    Enviar novo banner para aprovaÁ„o
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
                 </label>
@@ -1225,19 +1250,19 @@ export default function PersonalizacaoRevendedoraPage() {
           
           {/* Diretrizes */}
           <div className="bg-gray-100 rounded-xl p-4">
-            <h4 className="font-medium text-gray-800 mb-2">üìã Diretrizes para Banners</h4>
+            <h4 className="font-medium text-gray-800 mb-2">?? Diretrizes para Banners</h4>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>‚úì Use apenas produtos do cat√°logo C4</li>
-              <li>‚úì Imagens de alta qualidade</li>
-              <li>‚úì Evite texto excessivo na imagem</li>
-              <li>‚úó N√£o use produtos de outras marcas</li>
-              <li>‚úó N√£o use conte√∫do impr√≥prio</li>
+              <li>? Use apenas produtos do cat·logo C4</li>
+              <li>? Imagens de alta qualidade</li>
+              <li>? Evite texto excessivo na imagem</li>
+              <li>? N„o use produtos de outras marcas</li>
+              <li>? N„o use conte˙do imprÛprio</li>
             </ul>
           </div>
         </div>
         
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64">
-          <button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+          <button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white">
             <Check className="inline w-6 h-6 mr-2" />Voltar
           </button>
         </div>
@@ -1245,16 +1270,16 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SE√á√ÉO REDES SOCIAIS
+  // SE«√O REDES SOCIAIS
   if (activeSection === "social") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
-          <button onClick={() => setActiveSection("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
           <h1 className="text-xl font-bold">Redes Sociais</h1>
         </div>
 
-        {/* üé® BANNER FIXO */}
+        {/* ?? BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -1288,13 +1313,13 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><span className="text-white font-bold">f</span></div><div><p className="font-semibold text-gray-800">Facebook</p><p className="text-xs text-gray-500">Opcional</p></div></div>
-            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da p√°gina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da p·gina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Bot√£o WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+            <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Bot„o WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => setActiveSection("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
       </div>
     );
   }
@@ -1306,3 +1331,4 @@ export default function PersonalizacaoRevendedoraPage() {
     </>
   );
 }
+
