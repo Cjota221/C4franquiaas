@@ -115,10 +115,10 @@ export default function PersonalizacaoRevendedoraPage() {
   const [copied, setCopied] = useState(false);
   const [showCustomColor, setShowCustomColor] = useState(false);
   
-  // ESTÃados para moderao de banners
+  // Estados para moderação de banners
   const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
   
-  // ESTÃados para o editor de banner
+  // Estados para o editor de banner
   const [showBannerEditor, setShowBannerEditor] = useState(false);
 
   const supabase = createClient();
@@ -172,7 +172,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setCurrentSlug(data.slug || "");
         setStoreName(data.store_name || "");
         
-        //  Atualizar ttulo da pgina para Google Analytics
+        //  Atualizar ttulo da página para Google Analytics
         document.title = `Personalizacao - ${data.store_name} | C4 Franquias`;
         
         setBio(data.bio || "");
@@ -447,7 +447,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <ChevronRight className="text-gray-400" />
           </button>
 
-          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÃ FIXO NO TOPO */}
+          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÁ FIXO NO TOPO */}
 
           <button onClick={() => handleSectionChange("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
@@ -455,7 +455,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
 
           <button onClick={() => handleSectionChange("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Botãoes, cards e visual</p></div></div>
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Botões, cards e visual</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
@@ -540,7 +540,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEO ESTÃILOS
+  // SEO ESTILOS
   if (activeSection === "styles") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
@@ -703,9 +703,9 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
 
-          {/* ESTÃilo do Cabeçalho */}
+          {/* Estilo do Cabeçalho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Cabeçalho</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabeçalho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
@@ -749,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800"> <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o Cabeçalho para dESTÃacar a logo.</p>
+                    <p className="text-xs text-blue-800"> <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria também. Use uma cor clara para o Cabeçalho para destacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -757,7 +757,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Botão de Compra</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Botão de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
@@ -804,7 +804,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Card de Produto</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Card de Produto</h3>
             <div className="grid grid-cols-3 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "shadow" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "shadow" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg shadow-lg h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Sombra</p></button>
               <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "bordered" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "bordered" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg border-2 border-gray-300 h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Borda</p></button>
@@ -856,7 +856,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Produtos Relacionados</p>
-                <p className="text-sm text-gray-500">Mostra sugESTÃes na pgina do produto</p>
+                <p className="text-sm text-gray-500">Mostra sugestões na página do produto</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_products: !themeSettings.show_related_products })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_products ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_products ? "translate-x-7" : "translate-x-1"}`} />
@@ -866,7 +866,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Relacionados no Carrinho</p>
-                <p className="text-sm text-gray-500">SugESTÃes no carrinho de compras</p>
+                <p className="text-sm text-gray-500">Sugestões no carrinho de compras</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_in_cart: !themeSettings.show_related_in_cart })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_in_cart ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
@@ -1151,7 +1151,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </label>
                 <button
                   onClick={() => {
-                    if (confirm('Tem certeza que deseja remover ESTÃe banner?')) {
+                    if (confirm('Tem certeza que deseja remover este banner?')) {
                       setBannerMobileUrl("");
                     }
                   }}
@@ -1234,7 +1234,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </label>
                 <button
                   onClick={() => {
-                    if (confirm('Tem certeza que deseja remover ESTÃe banner?')) {
+                    if (confirm('Tem certeza que deseja remover este banner?')) {
                       setBannerUrl("");
                     }
                   }}
@@ -1313,7 +1313,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><span className="text-white font-bold">f</span></div><div><p className="font-semibold text-gray-800">Facebook</p><p className="text-xs text-gray-500">Opcional</p></div></div>
-            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da pgina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da página" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Botao WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
