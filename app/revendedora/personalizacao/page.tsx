@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import VideoTutorialButton from "@/components/VideoTutorialButton";
-import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import BannerEditorFinal from "@/components/revendedora/BannerEditorFinal";
 
@@ -110,7 +110,7 @@ export default function PersonalizacaoRevendedoraPage() {
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
   const [currentSlug, setCurrentSlug] = useState("");
-  const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social" | "styles">("main");
+  const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social" | "styles" | "analytics">("main");
   const [uploading, setUploading] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showCustomColor, setShowCustomColor] = useState(false);
@@ -125,18 +125,19 @@ export default function PersonalizacaoRevendedoraPage() {
   const router = useRouter();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
 
-  // Fun��o para mudar se��o e atualizar URL
-  const handleSectionChange = (section: "main" | "colors" | "logo" | "banner" | "social" | "styles") => {
+  // Função para mudar seção e atualizar URL
+  const handleSectionChange = (section: "main" | "colors" | "logo" | "banner" | "social" | "styles" | "analytics") => {
     setActiveSection(section);
     
-    // Mapear se��o para query param
+    // Mapear seção para query param
     const sectionMap: Record<string, string> = {
       main: "",
       colors: "cores",
       logo: "logo",
       banner: "banner",
       social: "redes-sociais",
-      styles: "estilos"
+      styles: "estilos",
+      analytics: "analytics"
     };
     
     const secao = sectionMap[section];
@@ -148,7 +149,7 @@ export default function PersonalizacaoRevendedoraPage() {
     }
   };
 
-  // Carregar submiss�es de banner
+  // Carregar submissões de banner
   const loadBannerSubmissions = async (resellerId: string) => {
     try {
       const response = await fetch(`/api/banners?reseller_id=${resellerId}`);
@@ -461,6 +462,11 @@ export default function PersonalizacaoRevendedoraPage() {
 
           <button onClick={() => handleSectionChange("social")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><Share2 className="w-6 h-6 text-blue-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Redes Sociais</p><p className="text-sm text-gray-500">{instagram || facebook || phone ? "Configurado" : "Instagram, Facebook, WhatsApp"}</p></div></div>
+            <ChevronRight className="text-gray-400" />
+          </button>
+
+          <button onClick={() => handleSectionChange("analytics")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center"><BarChart3 className="w-6 h-6 text-emerald-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Google Analytics</p><p className="text-sm text-gray-500">Métricas e rastreamento</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
         </div>
@@ -1320,6 +1326,63 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+      </div>
+    );
+  }
+
+  // SEÇÃO ANALYTICS
+  if (activeSection === "analytics") {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
+          <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
+          <div className="flex-1"><h2 className="text-xl font-bold text-gray-800">Google Analytics</h2><p className="text-sm text-gray-500">Configure métricas e rastreamento</p></div>
+        </div>
+
+        <div className="px-4 py-6 space-y-4">
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-lg">Rastreamento Avançado</p>
+                <p className="text-sm text-white/80">Monitore suas vendas e visitantes</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800">Google Analytics ID</p>
+                <p className="text-xs text-gray-500">Tracking ID (ex: G-XXXXXXXXXX)</p>
+              </div>
+            </div>
+            <input 
+              type="text" 
+              placeholder="G-XXXXXXXXXX" 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg font-mono"
+              disabled
+            />
+            <p className="text-xs text-gray-500 mt-2">🚧 Em breve: Integração com Google Analytics</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Dica:</strong> Com Google Analytics você pode ver quantas pessoas visitam sua loja, quais produtos mais visualizados e muito mais!
+            </p>
+          </div>
+        </div>
+        
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64">
+          <button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+            <Check className="inline w-6 h-6 mr-2" />Confirmar
+          </button>
+        </div>
       </div>
     );
   }
