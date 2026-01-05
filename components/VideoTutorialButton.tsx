@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSearchParams } from 'next/navigation';
 import { PlayCircle, X, Volume2, VolumeX } from 'lucide-react';
 
 type TutorialVideo = {
@@ -23,22 +24,49 @@ type Props = {
     | 'personalizacao-redes-sociais'
     | 'personalizacao-analytics'
     | 'configuracoes';
+  autoDetectSection?: boolean; // Se true, detecta a seção da URL
 };
 
-export default function VideoTutorialButton({ pagina }: Props) {
+export default function VideoTutorialButton({ pagina, autoDetectSection = false }: Props) {
   const [video, setVideo] = useState<TutorialVideo | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasAudio, setHasAudio] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClientComponentClient();
+  const searchParams = useSearchParams();
+
+  // Detectar página dinamicamente baseada na URL
+  const getEffectivePagina = (): Props['pagina'] => {
+    if (!autoDetectSection) return pagina;
+    
+    const secao = searchParams.get('secao');
+    if (pagina === 'personalizacao' && secao) {
+      const mappedPagina = `personalizacao-${secao}` as Props['pagina'];
+      // Validar se é uma página válida
+      const validPages = [
+        'personalizacao-banner',
+        'personalizacao-logo',
+        'personalizacao-cores',
+        'personalizacao-estilos',
+        'personalizacao-redes-sociais',
+        'personalizacao-analytics'
+      ];
+      if (validPages.includes(mappedPagina)) {
+        return mappedPagina;
+      }
+    }
+    return pagina;
+  };
+
+  const effectivePagina = getEffectivePagina();
 
   useEffect(() => {
     async function loadVideo() {
       const { data } = await supabase
         .from('tutorial_videos')
         .select('id, titulo, descricao, video_url')
-        .eq('pagina', pagina)
+        .eq('pagina', effectivePagina)
         .eq('ativo', true)
         .order('ordem', { ascending: true })
         .limit(1)
@@ -51,7 +79,7 @@ export default function VideoTutorialButton({ pagina }: Props) {
     }
 
     loadVideo();
-  }, [pagina, supabase]);
+  }, [effectivePagina, supabase]); // Usar effectivePagina ao invés de pagina
 
   if (loading || !video) {
     return null;

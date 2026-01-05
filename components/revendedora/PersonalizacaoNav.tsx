@@ -1,93 +1,60 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Image as ImageIcon, 
-  Upload, 
-  Palette, 
-  Type, 
-  Share2,
-  BarChart3
-} from "lucide-react";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Home, ImageIcon, Upload, Palette, Type, Share2, BarChart3 } from 'lucide-react';
 
 const sections = [
-  {
-    id: "overview",
-    name: "Visão Geral",
-    href: "/revendedora/personalizacao",
-    icon: LayoutDashboard,
-  },
-  {
-    id: "banner",
-    name: "Banners",
-    href: "/revendedora/personalizacao/banner",
-    icon: ImageIcon,
-  },
-  {
-    id: "logo",
-    name: "Logo",
-    href: "/revendedora/personalizacao/logo",
-    icon: Upload,
-  },
-  {
-    id: "cores",
-    name: "Cores",
-    href: "/revendedora/personalizacao/cores",
-    icon: Palette,
-  },
-  {
-    id: "estilos",
-    name: "Estilos",
-    href: "/revendedora/personalizacao/estilos",
-    icon: Type,
-  },
-  {
-    id: "redes-sociais",
-    name: "Redes Sociais",
-    href: "/revendedora/personalizacao/redes-sociais",
-    icon: Share2,
-  },
-  {
-    id: "analytics",
-    name: "Analytics",
-    href: "/revendedora/personalizacao/analytics",
-    icon: BarChart3,
-  },
+  { id: '', label: 'Visão Geral', icon: Home },
+  { id: 'banner', label: 'Banners', icon: ImageIcon },
+  { id: 'logo', label: 'Logo', icon: Upload },
+  { id: 'cores', label: 'Cores', icon: Palette },
+  { id: 'estilos', label: 'Estilos', icon: Type },
+  { id: 'redes-sociais', label: 'Redes Sociais', icon: Share2 },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 export default function PersonalizacaoNav() {
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const currentSection = searchParams.get('secao') || '';
+
+  const handleSectionChange = (sectionId: string) => {
+    if (sectionId === '') {
+      router.push('/revendedora/personalizacao');
+    } else {
+      router.push(`/revendedora/personalizacao?secao=${sectionId}`);
+    }
+    
+    // Scroll suave para o topo
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
 
   return (
-    <div className="bg-white border-b border-gray-200 mb-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            const isActive = pathname === section.href;
-
-            return (
-              <Link
-                key={section.id}
-                href={section.href}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
-                  ${
-                    isActive
-                      ? "border-pink-500 text-pink-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }
-                `}
-              >
-                <Icon size={18} />
-                {section.name}
-              </Link>
-            );
-          })}
-        </nav>
+    <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+      <div className="flex overflow-x-auto scrollbar-hide">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          const isActive = currentSection === section.id;
+          
+          return (
+            <button
+              key={section.id}
+              onClick={() => handleSectionChange(section.id)}
+              className={`
+                flex items-center gap-2 px-6 py-4 whitespace-nowrap transition-all
+                ${isActive 
+                  ? 'border-b-2 border-pink-500 text-pink-600 font-semibold' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }
+              `}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{section.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -17,8 +17,8 @@ Execute no **SQL Editor do Supabase**:
 ```sql
 -- Verificar se a tabela existe
 SELECT EXISTS (
-  SELECT FROM pg_tables 
-  WHERE schemaname = 'public' 
+  SELECT FROM pg_tables
+  WHERE schemaname = 'public'
   AND tablename = 'tutorial_videos'
 );
 
@@ -35,7 +35,7 @@ Execute no Supabase:
 
 ```sql
 -- Verificar se você está como admin
-SELECT 
+SELECT
   id,
   email,
   raw_user_meta_data->>'role' as role
@@ -84,18 +84,22 @@ WHERE email = 'YOUR_EMAIL';
 ## ❌ Erros Comuns
 
 ### **Erro: "relation tutorial_videos does not exist"**
+
 **Causa**: Tabela não foi criada  
 **Solução**: Execute `MIGRATION_TUTORIAL_VIDEOS_SAFE.sql` no Supabase
 
 ### **Erro: "new row violates row-level security policy"**
+
 **Causa**: Seu usuário não tem role "admin"  
 **Solução**: Execute o UPDATE acima para definir role como admin
 
 ### **Erro: "Campos obrigatórios: titulo, video_url, pagina"**
+
 **Causa**: Algum campo está vazio  
 **Solução**: Preencha todos os campos obrigatórios
 
 ### **Erro: Network Error ou CORS**
+
 **Causa**: Servidor Next.js não está rodando  
 **Solução**: Execute `npm run dev`
 
@@ -113,8 +117,8 @@ SELECT * FROM tutorial_videos ORDER BY created_at DESC;
 SELECT COUNT(*) as total FROM tutorial_videos;
 
 -- Ver vídeos por página
-SELECT pagina, COUNT(*) as total 
-FROM tutorial_videos 
+SELECT pagina, COUNT(*) as total
+FROM tutorial_videos
 GROUP BY pagina;
 ```
 

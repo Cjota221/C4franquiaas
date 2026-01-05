@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import VideoTutorialButton from "@/components/VideoTutorialButton";
+import PersonalizacaoNav from "@/components/revendedora/PersonalizacaoNav";
 import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 import BannerEditorFinal from "@/components/revendedora/BannerEditorFinal";
@@ -321,7 +322,9 @@ export default function PersonalizacaoRevendedoraPage() {
   // SEÇÃO PRINCIPAL
   if (activeSection === "main") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">
+      <>
+        <PersonalizacaoNav />
+        <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">
         {saved && (
           <div className="fixed top-4 left-4 right-4 z-50">
             <div className="bg-green-500 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
@@ -446,6 +449,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
@@ -1301,7 +1305,8 @@ export default function PersonalizacaoRevendedoraPage() {
 
   return (
     <>
-      <VideoTutorialButton pagina="personalizacao" />
+      <PersonalizacaoNav />
+      <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       {null}
     </>
   );

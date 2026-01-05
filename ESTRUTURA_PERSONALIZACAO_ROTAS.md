@@ -16,21 +16,25 @@
 Agora você pode criar vídeos diferentes para cada seção:
 
 1. **Banner** (`pagina: 'personalizacao-banner'`)
+
    - Como usar o editor de banners
    - Upload de imagem vs criação com blocos
    - Desktop vs Mobile
 
 2. **Logo** (`pagina: 'personalizacao-logo'`)
+
    - Como fazer upload do logo
    - Formatos aceitos (PNG, JPG)
    - Posicionamento e formato
 
 3. **Cores** (`pagina: 'personalizacao-cores'`)
+
    - Como escolher cores do tema
    - Significado de cada cor
    - Preview das mudanças
 
 4. **Estilos** (`pagina: 'personalizacao-estilos'`)
+
    - Escolher fonte do título
    - Escolher fonte do corpo
    - Combinações recomendadas
@@ -43,11 +47,13 @@ Agora você pode criar vídeos diferentes para cada seção:
 ## 🚀 COMO USAR:
 
 ### 1. Criar vídeos no Admin:
+
 - Acesse: `/admin/tutoriais`
 - Clique em "Novo Vídeo"
 - Escolha a página no dropdown (agora tem as novas opções!)
 
 ### 2. Vídeos aparecem automaticamente:
+
 - Cada subpágina carrega APENAS o vídeo dela
 - Botão flutuante com preview
 - Click → Modal com vídeo completo
@@ -61,7 +67,7 @@ Execute no Supabase SQL Editor:
 ALTER TABLE tutorial_videos DROP CONSTRAINT IF EXISTS tutorial_videos_pagina_check;
 
 -- Adicionar check constraint com novas páginas
-ALTER TABLE tutorial_videos ADD CONSTRAINT tutorial_videos_pagina_check 
+ALTER TABLE tutorial_videos ADD CONSTRAINT tutorial_videos_pagina_check
 CHECK (pagina IN (
   'produtos',
   'carrinhos',
