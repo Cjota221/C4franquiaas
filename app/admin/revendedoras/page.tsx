@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Check, X, Eye, Search, Store, Mail, Phone, Calendar, TrendingUp, Clock, MessageCircle, ExternalLink, Info } from 'lucide-react';
+import { Check, X, Search, Store, MessageCircle, ExternalLink, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-interface Revendedora {
+interface RevendedoraCompleta {
   id: string;
   name: string;
   email: string;
@@ -18,27 +18,87 @@ interface Revendedora {
   catalog_views: number;
   created_at: string;
   rejection_reason?: string;
+  
+  // Novos campos para indicadores
+  has_logo: boolean;
+  has_banner: boolean;
+  has_colors: boolean;
+  has_margin: boolean;
+  primary_color: string | null;
+  logo_url: string | null;
 }
 
-export default function AdminRevendedoras() {
+type FiltroStatus = 'todas' | 'pendente' | 'aprovada' | 'rejeitada';
+type FiltroAtivacao = 'todos' | 'ativas' | 'inativas' | 'personalizadas' | 'sem_personalizacao' | 'sem_margem' | 'completas';
+
+export default function AdminRevendedorasNova() {
   const router = useRouter();
-  const [revendedoras, setRevendedoras] = useState<Revendedora[]>([]);
-  const [filtradas, setFiltradas] = useState<Revendedora[]>([]);
+  const [revendedoras, setRevendedoras] = useState<RevendedoraCompleta[]>([]);
+  const [filtradas, setFiltradas] = useState<RevendedoraCompleta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState<'todas' | 'pendente' | 'aprovada' | 'rejeitada'>('todas');
+  
+  // Estados dos filtros (salvos no localStorage)
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todas');
+  const [filtroAtivacao, setFiltroAtivacao] = useState<FiltroAtivacao>('todos');
   const [busca, setBusca] = useState('');
+  const [expandido, setExpandido] = useState<string | null>(null);
+
+  // Carregar filtros salvos do localStorage
+  useEffect(() => {
+    const savedFiltroStatus = localStorage.getItem('admin_filtro_status') as FiltroStatus;
+    const savedFiltroAtivacao = localStorage.getItem('admin_filtro_ativacao') as FiltroAtivacao;
+    
+    if (savedFiltroStatus) setFiltroStatus(savedFiltroStatus);
+    if (savedFiltroAtivacao) setFiltroAtivacao(savedFiltroAtivacao);
+  }, []);
+
+  // Salvar filtros no localStorage quando mudarem
+  useEffect(() => {
+    localStorage.setItem('admin_filtro_status', filtroStatus);
+    localStorage.setItem('admin_filtro_ativacao', filtroAtivacao);
+  }, [filtroStatus, filtroAtivacao]);
 
   useEffect(() => {
     carregarRevendedoras();
   }, []);
 
   useEffect(() => {
+    aplicarFiltros();
+  }, [revendedoras, filtroStatus, filtroAtivacao, busca]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function aplicarFiltros() {
     let resultado = [...revendedoras];
 
-    if (filtro !== 'todas') {
-      resultado = resultado.filter(r => r.status === filtro);
+    // Filtro por status
+    if (filtroStatus !== 'todas') {
+      resultado = resultado.filter(r => r.status === filtroStatus);
     }
 
+    // Filtro por ativação e personalização
+    switch (filtroAtivacao) {
+      case 'ativas':
+        resultado = resultado.filter(r => r.is_active);
+        break;
+      case 'inativas':
+        resultado = resultado.filter(r => !r.is_active);
+        break;
+      case 'personalizadas':
+        resultado = resultado.filter(r => r.has_logo || r.has_banner || r.has_colors);
+        break;
+      case 'sem_personalizacao':
+        resultado = resultado.filter(r => !r.has_logo && !r.has_banner && !r.has_colors);
+        break;
+      case 'sem_margem':
+        resultado = resultado.filter(r => !r.has_margin);
+        break;
+      case 'completas':
+        resultado = resultado.filter(r => 
+          r.has_logo && r.has_banner && r.has_colors && r.has_margin && r.total_products > 0
+        );
+        break;
+    }
+
+    // Busca por texto
     if (busca) {
       const termo = busca.toLowerCase();
       resultado = resultado.filter(r =>
@@ -49,35 +109,69 @@ export default function AdminRevendedoras() {
     }
 
     setFiltradas(resultado);
-  }, [revendedoras, filtro, busca]);
+  }
 
   async function carregarRevendedoras() {
     setLoading(true);
     try {
       const supabase = createClient();
       
+      // Buscar revendedoras com personalização
       const { data, error } = await supabase
         .from('resellers')
-        .select('*')
+        .select(`
+          *,
+          personalizacao:store_customizations(
+            logo_url,
+            banner_url,
+            primary_color,
+            secondary_color
+          ),
+          produtos:products(count)
+        `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao carregar revendedoras:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(' Revendedoras carregadas:', data);
-      setRevendedoras(data || []);
+      // Processar dados para adicionar indicadores
+      const processadas: RevendedoraCompleta[] = (data || []).map((r: Record<string, unknown>) => {
+        const personalizacao = (r.personalizacao as Array<Record<string, unknown>>)?.[0] || {};
+        
+        return {
+          id: r.id,
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          store_name: r.store_name,
+          slug: r.slug,
+          status: r.status,
+          is_active: r.is_active,
+          total_products: r.total_products || 0,
+          catalog_views: r.catalog_views || 0,
+          created_at: r.created_at,
+          rejection_reason: r.rejection_reason,
+          
+          // Indicadores de personalização
+          has_logo: !!personalizacao.logo_url,
+          has_banner: !!personalizacao.banner_url,
+          has_colors: !!personalizacao.primary_color && !!personalizacao.secondary_color,
+          has_margin: r.margem_lucro != null && r.margem_lucro > 0,
+          primary_color: personalizacao.primary_color,
+          logo_url: personalizacao.logo_url,
+        };
+      });
+
+      setRevendedoras(processadas);
     } catch (err) {
-      console.error(' Erro ao carregar revendedoras:', err);
-      alert('Erro ao carregar revendedoras. Verifique se a migration 033 foi aplicada.');
+      console.error('Erro ao carregar revendedoras:', err);
+      alert('Erro ao carregar revendedoras');
     } finally {
       setLoading(false);
     }
   }
 
   async function aprovar(id: string) {
-    if (!confirm('Deseja aprovar esta revendedora? Ela receberá um email de notificação.')) return;
+    if (!confirm('Deseja aprovar esta revendedora?')) return;
 
     try {
       const res = await fetch('/api/admin/revendedoras/aprovar', {
@@ -87,19 +181,18 @@ export default function AdminRevendedoras() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error);
 
-      alert(`✅ Revendedora aprovada com sucesso!${data.emailSent ? '\n📧 Email de notificação enviado!' : ''}`);
+      alert(`✅ Revendedora aprovada!${data.emailSent ? '\n📧 Email enviado!' : ''}`);
       carregarRevendedoras();
-    } catch (err) {
-      console.error('Erro ao aprovar:', err);
-      alert('Erro ao aprovar revendedora');
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao aprovar');
     }
   }
 
   async function rejeitar(id: string) {
-    const motivo = prompt('Motivo da rejeição (opcional):');
+    const motivo = prompt('Motivo da rejeição:');
     if (motivo === null) return;
 
     try {
@@ -110,21 +203,19 @@ export default function AdminRevendedoras() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error);
 
-      alert(`❌ Revendedora rejeitada${data.emailSent ? '\n📧 Email de notificação enviado!' : ''}`);
+      alert(`❌ Revendedora rejeitada${data.emailSent ? '\n📧 Email enviado!' : ''}`);
       carregarRevendedoras();
-    } catch (err) {
-      console.error('Erro ao rejeitar:', err);
-      alert('Erro ao rejeitar revendedora');
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao rejeitar');
     }
   }
 
   async function toggleAtivo(id: string, ativoAtual: boolean) {
     try {
       const supabase = createClient();
-      
       const { error } = await supabase
         .from('resellers')
         .update({ is_active: !ativoAtual })
@@ -132,74 +223,53 @@ export default function AdminRevendedoras() {
 
       if (error) throw error;
 
-      alert(`Revendedora ${!ativoAtual ? 'ativada' : 'desativada'} com sucesso!`);
+      alert(`Revendedora ${!ativoAtual ? 'ativada' : 'desativada'}!`);
       carregarRevendedoras();
     } catch (err) {
-      console.error('Erro ao alterar status:', err);
       alert('Erro ao alterar status');
     }
   }
 
-  const stats = {
-    total: revendedoras.length,
-    pendentes: revendedoras.filter(r => r.status === 'pendente').length,
-    aprovadas: revendedoras.filter(r => r.status === 'aprovada').length,
-    rejeitadas: revendedoras.filter(r => r.status === 'rejeitada').length
-  };
-
-  // Função para enviar WhatsApp de boas-vindas
-  function enviarWhatsAppBoasVindas(revendedora: Revendedora) {
+  function enviarWhatsAppBoasVindas(revendedora: RevendedoraCompleta) {
     const telefone = revendedora.phone.replace(/\D/g, '');
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
     const loginUrl = `${baseUrl}/login/revendedora`;
     
     const mensagem = `*PARABENS ${revendedora.name.toUpperCase()}!*
 
-Temos uma otima noticia! Seu cadastro como franqueada foi *APROVADO*!
+Seu cadastro foi *APROVADO*!
 
-Sua loja *"${revendedora.store_name}"* ja esta pronta para voce comecar a vender!
+Sua loja *"${revendedora.store_name}"* esta pronta!
 
-*ACESSE SUA CONTA:*
+*ACESSE:*
 ${loginUrl}
 
-Use o e-mail cadastrado: ${revendedora.email}
+Email: ${revendedora.email}
 
-━━━━━━━━━━━━━━━━━━━━
-
-*JUNTE-SE A NOSSA COMUNIDADE!*
-
-Entre no *Grupo das Franqueadas C4* para trocar experiencias, tirar duvidas e receber dicas exclusivas!
-
-*LINK DO GRUPO:*
+*GRUPO DAS FRANQUEADAS:*
 https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
 
-*REGRAS DO GRUPO:*
-• Falar apenas sobre o projeto C4 Franquias
-• Proibido venda de outros produtos ou spam
-• Imagens/conversas inadequadas = remocao imediata
-• Violacao das regras = desativacao da conta
+Bem-vinda a equipe C4!`;
 
-_Ao entrar no grupo, voce concorda com as regras._
-
-━━━━━━━━━━━━━━━━━━━━
-
-Qualquer duvida, estamos a disposicao!
-
-*Bem-vinda a equipe C4 Franquias!*`;
-
-    const urlWhatsApp = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
-    window.open(urlWhatsApp, '_blank');
+    window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
   }
 
-  // Função para abrir catálogo em nova aba
   function verCatalogo(slug: string | null) {
     if (!slug) {
-      alert('Esta revendedora ainda não configurou o catálogo');
+      alert('Catálogo não configurado ainda');
       return;
     }
-    const catalogUrl = `${window.location.origin}/catalogo/${slug}`;
-    window.open(catalogUrl, '_blank');
+    window.open(`${window.location.origin}/catalogo/${slug}`, '_blank');
   }
+
+  const stats = {
+    total: revendedoras.length,
+    pendentes: revendedoras.filter(r => r.status === 'pendente').length,
+    aprovadas: revendedoras.filter(r => r.status === 'aprovada').length,
+    ativas: revendedoras.filter(r => r.is_active).length,
+    semPersonalizacao: revendedoras.filter(r => !r.has_logo && !r.has_banner && !r.has_colors).length,
+    semMargem: revendedoras.filter(r => !r.has_margin).length,
+  };
 
   if (loading) {
     return (
@@ -213,255 +283,347 @@ Qualquer duvida, estamos a disposicao!
   }
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50 p-4 md:p-6">
+      <div className="max-w-[1800px] mx-auto">
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-             Gerenciar Revendedoras
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            🏪 Gerenciar Revendedoras
           </h1>
-          <p className="text-gray-600">
-            Aprove, rejeite ou gerencie as revendedoras cadastradas
+          <p className="text-gray-600 text-sm md:text-base">
+            Visão completa e eficiente para gerenciar suas franqueadas
           </p>
         </div>
 
-      {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
+        {/* Cards de Estatísticas - Mais compactos */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
+            <p className="text-xs text-gray-600 mb-1">Total</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          </div>
+
+          <div className="bg-yellow-50 rounded-lg shadow-sm p-3 border-l-4 border-yellow-500">
+            <p className="text-xs text-yellow-700 mb-1">Pendentes</p>
+            <p className="text-2xl font-bold text-yellow-900">{stats.pendentes}</p>
+          </div>
+
+          <div className="bg-green-50 rounded-lg shadow-sm p-3 border-l-4 border-green-500">
+            <p className="text-xs text-green-700 mb-1">Aprovadas</p>
+            <p className="text-2xl font-bold text-green-900">{stats.aprovadas}</p>
+          </div>
+
+          <div className="bg-purple-50 rounded-lg shadow-sm p-3 border-l-4 border-purple-500">
+            <p className="text-xs text-purple-700 mb-1">Ativas</p>
+            <p className="text-2xl font-bold text-purple-900">{stats.ativas}</p>
+          </div>
+
+          <div className="bg-orange-50 rounded-lg shadow-sm p-3 border-l-4 border-orange-500">
+            <p className="text-xs text-orange-700 mb-1">Sem Personaliz.</p>
+            <p className="text-2xl font-bold text-orange-900">{stats.semPersonalizacao}</p>
+          </div>
+
+          <div className="bg-red-50 rounded-lg shadow-sm p-3 border-l-4 border-red-500">
+            <p className="text-xs text-red-700 mb-1">Sem Margem</p>
+            <p className="text-2xl font-bold text-red-900">{stats.semMargem}</p>
+          </div>
+        </div>
+
+        {/* Filtros - Mais compactos */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+          <div className="space-y-3">
+            {/* Linha 1: Status */}
             <div>
-              <p className="text-gray-600 text-sm">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <Store className="w-8 h-8 text-gray-400" />
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-yellow-700 text-sm">Pendentes</p>
-              <p className="text-2xl font-bold text-yellow-900">{stats.pendentes}</p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg shadow p-4 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-700 text-sm">Aprovadas</p>
-              <p className="text-2xl font-bold text-green-900">{stats.aprovadas}</p>
-            </div>
-            <Check className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-700 text-sm">Rejeitadas</p>
-              <p className="text-2xl font-bold text-red-900">{stats.rejeitadas}</p>
-            </div>
-            <X className="w-8 h-8 text-red-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros e Busca */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex gap-2 flex-wrap">
-            {(['todas', 'pendente', 'aprovada', 'rejeitada'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFiltro(status)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  filtro === status
-                    ? 'bg-[#DB1472] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por nome, email ou loja..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB1472] focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Lista de Revendedoras */}
-      {filtradas.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg mb-2">Nenhuma revendedora encontrada</p>
-          <p className="text-gray-400 text-sm">
-            {revendedoras.length === 0 
-              ? 'Ainda não há revendedoras cadastradas. Aguarde os primeiros cadastros!' 
-              : 'Tente ajustar os filtros ou a busca.'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {filtradas.map(revendedora => (
-            <div
-              key={revendedora.id}
-              className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex flex-col lg:flex-row items-start gap-6">
-                {/* Conteúdo Principal - Esquerda */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-3 flex-wrap">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {revendedora.name.split(' ')[0]} {/* Mostra só o primeiro nome */}
-                      <span className="blur-sm ml-2">{revendedora.name.split(' ').slice(1).join(' ')}</span>
-                    </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      revendedora.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                      revendedora.status === 'aprovada' ? 'bg-green-100 text-green-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {revendedora.status.toUpperCase()}
-                    </span>
-                    {!revendedora.is_active && (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                        INATIVA
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate"><strong>Loja:</strong> {revendedora.store_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate blur-sm">{revendedora.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 flex-shrink-0" />
-                      <span className="blur-sm">{revendedora.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span>Cadastro: {new Date(revendedora.created_at).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 text-sm flex-wrap">
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4 text-purple-500" />
-                      <span className="text-gray-600">
-                        <strong>{revendedora.total_products}</strong> produtos
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4 text-blue-500" />
-                      <span className="text-gray-600">
-                        <strong>{revendedora.catalog_views}</strong> visualizações
-                      </span>
-                    </div>
-                  </div>
-
-                  {revendedora.status === 'rejeitada' && revendedora.rejection_reason && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm text-red-800">
-                        <strong>Motivo da rejeição:</strong> {revendedora.rejection_reason}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Botões de Ação - Direita */}
-                <div className="flex lg:flex-col gap-2 flex-wrap lg:flex-nowrap w-full lg:w-auto">
-                  {/* Botões de detalhes e catálogo - disponíveis para todos */}
+              <p className="text-xs font-semibold text-gray-700 mb-2">Status do Cadastro:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'todas', label: 'Todas', color: 'gray' },
+                  { value: 'pendente', label: 'Pendentes', color: 'yellow' },
+                  { value: 'aprovada', label: 'Aprovadas', color: 'green' },
+                  { value: 'rejeitada', label: 'Rejeitadas', color: 'red' },
+                ].map(({ value, label, color }) => (
                   <button
-                    onClick={() => router.push(`/admin/revendedoras/${revendedora.id}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                    title="Ver detalhes completos"
+                    key={value}
+                    onClick={() => setFiltroStatus(value as FiltroStatus)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      filtroStatus === value
+                        ? `bg-${color}-500 text-white shadow-md`
+                        : `bg-${color}-50 text-${color}-700 hover:bg-${color}-100`
+                    }`}
+                    style={filtroStatus === value ? {
+                      backgroundColor: color === 'yellow' ? '#eab308' : 
+                                      color === 'green' ? '#22c55e' : 
+                                      color === 'red' ? '#ef4444' : '#6b7280'
+                    } : {}}
                   >
-                    <Info className="w-4 h-4" />
-                    Detalhes
+                    {label}
                   </button>
-                  
-                  {revendedora.slug && (
-                    <button
-                      onClick={() => verCatalogo(revendedora.slug)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                      title="Abrir catálogo em nova aba"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Catálogo
-                    </button>
-                  )}
-
-                  {revendedora.status === 'pendente' && (
-                    <>
-                      <button
-                        onClick={() => aprovar(revendedora.id)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                      >
-                        <Check className="w-4 h-4" />
-                        Aprovar
-                      </button>
-                      <button
-                        onClick={() => rejeitar(revendedora.id)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                      >
-                        <X className="w-4 h-4" />
-                        Rejeitar
-                      </button>
-                    </>
-                  )}
-
-                  {revendedora.status === 'aprovada' && (
-                    <>
-                      <button
-                        onClick={() => enviarWhatsAppBoasVindas(revendedora)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                        title="Enviar mensagem de boas-vindas via WhatsApp"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp
-                      </button>
-                      <button
-                        onClick={() => toggleAtivo(revendedora.id, revendedora.is_active)}
-                        className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px] ${
-                          revendedora.is_active
-                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                        }`}
-                      >
-                        {revendedora.is_active ? 'Desativar' : 'Ativar'}
-                      </button>
-                    </>
-                  )}
-
-                  {revendedora.status === 'rejeitada' && (
-                    <button
-                      onClick={() => aprovar(revendedora.id)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors whitespace-nowrap flex-1 lg:flex-none lg:min-w-[140px]"
-                    >
-                      <Check className="w-4 h-4" />
-                      Aprovar Agora
-                    </button>
-                  )}
-                </div>
+                ))}
               </div>
             </div>
-          ))}
+
+            {/* Linha 2: Ativação e Personalização */}
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-2">Filtros Rápidos:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'todos', label: 'Todos', icon: '📋' },
+                  { value: 'ativas', label: 'Ativas', icon: '✅' },
+                  { value: 'inativas', label: 'Inativas', icon: '❌' },
+                  { value: 'completas', label: 'Completas', icon: '🎯' },
+                  { value: 'personalizadas', label: 'Personalizadas', icon: '🎨' },
+                  { value: 'sem_personalizacao', label: 'Sem Personalização', icon: '⚠️' },
+                  { value: 'sem_margem', label: 'Sem Margem', icon: '💰' },
+                ].map(({ value, label, icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setFiltroAtivacao(value as FiltroAtivacao)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      filtroAtivacao === value
+                        ? 'bg-[#DB1472] text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {icon} {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar por nome, email ou loja..."
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB1472] focus:border-transparent"
+              />
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Tabela Compacta */}
+        {filtradas.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg mb-2">Nenhuma revendedora encontrada</p>
+            <p className="text-gray-400 text-sm">Ajuste os filtros ou a busca.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Nome / Loja</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Personalização</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Produtos</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Views</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filtradas.map((rev) => (
+                    <React.Fragment key={rev.id}>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        {/* Nome / Loja */}
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">{rev.name}</p>
+                            <p className="text-xs text-gray-500">{rev.store_name}</p>
+                            <p className="text-xs text-gray-400">{new Date(rev.created_at).toLocaleDateString('pt-BR')}</p>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              rev.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
+                              rev.status === 'aprovada' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {rev.status}
+                            </span>
+                            {rev.is_active ? (
+                              <span className="text-xs text-green-600 font-medium">✅ Ativa</span>
+                            ) : (
+                              <span className="text-xs text-gray-500">❌ Inativa</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Indicadores de Personalização */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="flex flex-col items-center gap-0.5" title="Logo">
+                              {rev.has_logo ? (
+                                <span className="text-green-500 text-lg">✓</span>
+                              ) : (
+                                <span className="text-red-500 text-lg">✕</span>
+                              )}
+                              <span className="text-[10px] text-gray-500">Logo</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-0.5" title="Banner">
+                              {rev.has_banner ? (
+                                <span className="text-green-500 text-lg">✓</span>
+                              ) : (
+                                <span className="text-red-500 text-lg">✕</span>
+                              )}
+                              <span className="text-[10px] text-gray-500">Banner</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-0.5" title="Cores">
+                              {rev.has_colors ? (
+                                <span className="text-green-500 text-lg">✓</span>
+                              ) : (
+                                <span className="text-red-500 text-lg">✕</span>
+                              )}
+                              <span className="text-[10px] text-gray-500">Cores</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-0.5" title="Margem">
+                              {rev.has_margin ? (
+                                <span className="text-green-500 text-lg">✓</span>
+                              ) : (
+                                <span className="text-red-500 text-lg">✕</span>
+                              )}
+                              <span className="text-[10px] text-gray-500">Margem</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Produtos */}
+                        <td className="px-4 py-3 text-center">
+                          <span className={`font-semibold ${rev.total_products > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+                            {rev.total_products}
+                          </span>
+                        </td>
+
+                        {/* Views */}
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-gray-600">{rev.catalog_views}</span>
+                        </td>
+
+                        {/* Ações */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => setExpandido(expandido === rev.id ? null : rev.id)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Ver mais"
+                            >
+                              {expandido === rev.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                            
+                            <button
+                              onClick={() => router.push(`/admin/revendedoras/${rev.id}`)}
+                              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              title="Detalhes"
+                            >
+                              <Info className="w-4 h-4" />
+                            </button>
+
+                            {rev.slug && (
+                              <button
+                                onClick={() => verCatalogo(rev.slug)}
+                                className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                                title="Ver catálogo"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {rev.status === 'aprovada' && (
+                              <button
+                                onClick={() => enviarWhatsAppBoasVindas(rev)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                                title="WhatsApp"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Linha Expandida - Ações */}
+                      {expandido === rev.id && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={6} className="px-4 py-3">
+                            <div className="flex flex-wrap gap-2 items-center justify-center">
+                              {rev.status === 'pendente' && (
+                                <>
+                                  <button
+                                    onClick={() => aprovar(rev.id)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Aprovar
+                                  </button>
+                                  <button
+                                    onClick={() => rejeitar(rev.id)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors"
+                                  >
+                                    <X className="w-4 h-4" />
+                                    Rejeitar
+                                  </button>
+                                </>
+                              )}
+
+                              {rev.status === 'aprovada' && (
+                                <button
+                                  onClick={() => toggleAtivo(rev.id, rev.is_active)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                                    rev.is_active
+                                      ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                      : 'bg-green-500 text-white hover:bg-green-600'
+                                  }`}
+                                >
+                                  {rev.is_active ? 'Desativar' : 'Ativar'}
+                                </button>
+                              )}
+
+                              {rev.status === 'rejeitada' && (
+                                <button
+                                  onClick={() => aprovar(rev.id)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  Aprovar Agora
+                                </button>
+                              )}
+
+                              {/* Email e Telefone quando expandido */}
+                              <div className="flex items-center gap-4 text-xs text-gray-600 ml-4">
+                                <span>📧 {rev.email}</span>
+                                <span>📱 {rev.phone}</span>
+                              </div>
+                            </div>
+
+                            {rev.rejection_reason && (
+                              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+                                <strong>Motivo da rejeição:</strong> {rev.rejection_reason}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Rodapé com total */}
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600 text-center">
+              Mostrando <strong>{filtradas.length}</strong> de <strong>{revendedoras.length}</strong> revendedoras
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
