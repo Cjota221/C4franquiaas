@@ -11,7 +11,18 @@ type TutorialVideo = {
 };
 
 type Props = {
-  pagina: 'produtos' | 'carrinhos' | 'promocoes' | 'personalizacao' | 'configuracoes';
+  pagina: 
+    | 'produtos' 
+    | 'carrinhos' 
+    | 'promocoes' 
+    | 'personalizacao'
+    | 'personalizacao-banner'
+    | 'personalizacao-logo'
+    | 'personalizacao-cores'
+    | 'personalizacao-estilos'
+    | 'personalizacao-redes-sociais'
+    | 'personalizacao-analytics'
+    | 'configuracoes';
 };
 
 export default function VideoTutorialButton({ pagina }: Props) {
