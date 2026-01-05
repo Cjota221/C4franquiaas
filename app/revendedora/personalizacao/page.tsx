@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -125,18 +125,18 @@ export default function PersonalizacaoRevendedoraPage() {
   const router = useRouter();
   const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
 
-  // FunÃ§Ã£o para mudar seÃ§Ã£o e atualizar URL
+  // Função para mudar seção e atualizar URL
   const handleSectionChange = (section: "main" | "colors" | "logo" | "banner" | "social" | "styles") => {
     setActiveSection(section);
     
-    // Mapear seÃ§Ã£o para query param
+    // Mapear seção para query param
     const sectionMap: Record<string, string> = {
       main: "",
       colors: "cores",
       logo: "logo",
       banner: "banner",
       social: "redes-sociais",
-      styles: "ESTÃilos"
+      styles: "Estilos"
     };
     
     const secao = sectionMap[section];
@@ -148,7 +148,7 @@ export default function PersonalizacaoRevendedoraPage() {
     }
   };
 
-  // Carregar submissÃµes de banner
+  // Carregar submissões de banner
   const loadBannerSubmissions = async (resellerId: string) => {
     try {
       const response = await fetch(`/api/banners?reseller_id=${resellerId}`);
@@ -455,7 +455,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
 
           <button onClick={() => handleSectionChange("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">ESTÃilos</p><p className="text-sm text-gray-500">Botoes, cards e visual</p></div></div>
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Botãoes, cards e visual</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
@@ -546,7 +546,7 @@ export default function PersonalizacaoRevendedoraPage() {
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
           <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
-          <h1 className="text-xl font-bold">ESTÃilos</h1>
+          <h1 className="text-xl font-bold">Estilos</h1>
         </div>
 
         {/*  BANNER FIXO */}
@@ -682,7 +682,7 @@ export default function PersonalizacaoRevendedoraPage() {
           {/* BORDAS ARREDONDADAS */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-2">Bordas Arredondadas</h3>
-            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e botoes</p>
+            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e Botões</p>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { id: "none", label: "Sem", radius: "0px" },
@@ -703,9 +703,9 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
 
-          {/* ESTÃilo do Cabealho */}
+          {/* ESTÃilo do Cabeçalho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Cabealho</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Cabeçalho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
@@ -749,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800"> <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o cabealho para dESTÃacar a logo.</p>
+                    <p className="text-xs text-blue-800"> <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o Cabeçalho para dESTÃacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -757,7 +757,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Boto de Compra</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Botão de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
@@ -1063,7 +1063,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         
-        {/*  Boto Criar Banner Personalizado */}
+        {/*  Botão Criar Banner Personalizado */}
         <div className="mx-4 mt-4">
           <button
             onClick={() => {
