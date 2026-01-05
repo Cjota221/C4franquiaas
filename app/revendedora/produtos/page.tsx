@@ -473,7 +473,7 @@ export default function ProdutosRevendedoraPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
               >
                 {categorias.map((cat, index) => (
-                  <option key={cat || `cat-${index}`} value={cat}>{cat || 'Sem categoria'}</option>
+                  <option key={`cat-${index}-${cat || 'empty'}`} value={cat}>{cat || 'Sem categoria'}</option>
                 ))}
               </select>
             </div>
