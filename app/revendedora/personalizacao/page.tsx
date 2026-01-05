@@ -27,8 +27,8 @@ type ThemeSettings = {
   };
   font_style: "modern" | "classic" | "elegant";
   product_name_size: "small" | "medium" | "large";
-  button_color?: string; // Cor especï¿½fica do botï¿½o (usa primary se nï¿½o definido)
-  header_color?: string; // Cor especï¿½fica do cabeï¿½alho (usa primary se nï¿½o definido)
+  button_color?: string; // Cor do botao
+  header_color?: string; // Cor do cabecalho
   // Ã°Å¸âÂ Sob Encomenda
   delivery_notice?: {
     enabled: boolean;
@@ -68,19 +68,19 @@ const DEFAULT_THEME: ThemeSettings = {
   logo_position: "center",
   show_prices: true,
   show_whatsapp_float: true,
-  // Novas opï¿½ï¿½es
+  // Novas opcoes
   border_radius: "medium",
   card_image_style: "rounded",
   announcement_bar: {
     enabled: false,
-    text: "Ã°Å¸âÂ Frete grï¿½tis acima de R$ 150!",
+    text: "Ã°Å¸âÂ Frete gratis acima de R$ 150!",
     bg_color: "#000000",
     text_color: "#ffffff",
   },
   font_style: "modern",
   product_name_size: "medium",
-  button_color: undefined, // Usa cor primï¿½ria por padrï¿½o
-  header_color: undefined, // Usa cor primï¿½ria por padrï¿½o
+  button_color: undefined, // Usa cor primaria por padrao
+  header_color: undefined, // Usa cor primaria por padrao
   // Ã°Å¸âÂ Sob Encomenda
   delivery_notice: {
     enabled: false,
@@ -115,7 +115,7 @@ export default function PersonalizacaoRevendedoraPage() {
   const [copied, setCopied] = useState(false);
   const [showCustomColor, setShowCustomColor] = useState(false);
   
-  // ESTÃados para moderaï¿½ï¿½o de banners
+  // ESTÃados para moderao de banners
   const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
   
   // ESTÃados para o editor de banner
@@ -157,7 +157,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setBannerSubmissions(data.submissions);
       }
     } catch (error) {
-      console.error("Erro ao carregar submissï¿½es:", error);
+      console.error("Erro ao carregar submissoes:", error);
     }
   };
 
@@ -172,8 +172,8 @@ export default function PersonalizacaoRevendedoraPage() {
         setCurrentSlug(data.slug || "");
         setStoreName(data.store_name || "");
         
-        // Ã°Å¸âÂ Atualizar tï¿½tulo da pï¿½gina para Google Analytics
-        document.title = `Personalizaï¿½ï¿½o - ${data.store_name} | C4 Franquias`;
+        // Ã°Å¸âÂ Atualizar ttulo da pgina para Google Analytics
+        document.title = `Personalizacao - ${data.store_name} | C4 Franquias`;
         
         setBio(data.bio || "");
         setPhone(data.phone || "");
@@ -186,7 +186,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setSecondaryColor(data.colors?.secondary || "#8b5cf6");
         setThemeSettings(data.theme_settings || DEFAULT_THEME);
         
-        // Carregar submissï¿½es de banner
+        // Carregar submissoes de banner
         loadBannerSubmissions(data.id);
       } catch (error) {
         console.error("Erro:", error);
@@ -232,10 +232,10 @@ export default function PersonalizacaoRevendedoraPage() {
       const { data: { publicUrl } } = supabase.storage.from("reseller-assets").getPublicUrl(fileName);
       
       if (type === "logo") {
-        // Logo vai direto, sem moderaï¿½ï¿½o
+        // Logo vai direto, sem moderacao
         setLogoUrl(publicUrl);
       } else {
-        // Banners vï¿½o para moderaï¿½ï¿½o
+        // Banners vao para moderacao
         const bannerType = type === "banner" ? "desktop" : "mobile";
         
         const response = await fetch("/api/banners", {
@@ -291,7 +291,7 @@ export default function PersonalizacaoRevendedoraPage() {
         onSave={async (bannerData) => {
           try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Usuï¿½rio nï¿½o autenticado");
+            if (!user) throw new Error("Usuario nao autenticado");
 
             console.log("Ã°Å¸âÂ DADOS RECEBIDOS DO EDITOR:", bannerData);
 
@@ -331,7 +331,7 @@ export default function PersonalizacaoRevendedoraPage() {
             if (error) throw error;
 
             console.log("? Banner salvo com sucesso:", data);
-            alert("Ã°Å¸âÂ Banner enviado para aprovaï¿½ï¿½o!\n\nVocï¿½ receberï¿½ uma notificaï¿½ï¿½o quando for aprovado.");
+            alert("Ã°Å¸âÂ Banner enviado para aprovao!\n\nVoc receber uma notificao quando for aprovado.");
             setShowBannerEditor(false);
           } catch (error) {
             console.error("? Erro ao salvar banner:", error);
@@ -343,7 +343,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEï¿½ï¿½O PRINCIPAL
+  // SEO PRINCIPAL
   if (activeSection === "main") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-32">
@@ -351,7 +351,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="fixed top-4 left-4 right-4 z-50">
             <div className="bg-green-500 text-white px-4 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"><Check className="w-6 h-6" /></div>
-              <div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas alteraï¿½ï¿½es foram aplicadas</p></div>
+              <div className="flex-1"><p className="font-bold text-lg">Salvo!</p><p className="text-green-100 text-sm">Suas alteracoes foram aplicadas</p></div>
             </div>
           </div>
         )}
@@ -373,7 +373,7 @@ export default function PersonalizacaoRevendedoraPage() {
         {currentSlug ? (
           <div className="mx-4 -mt-4 mb-6">
             <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-              <p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CATï¿½LOGO</p>
+              <p className="text-xs text-gray-500 mb-2 text-center">SEU LINK DO CATLOGO</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2 overflow-hidden"><p className="text-pink-600 font-mono text-sm truncate">{catalogUrl}</p></div>
                 <button onClick={copyLink} className={`p-3 rounded-xl transition-all ${copied ? "bg-green-500 text-white" : "bg-pink-500 text-white"}`}>{copied ? <Check size={20} /> : <Copy size={20} />}</button>
@@ -385,7 +385,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>
         )}
 
-        {/* Ã°Å¸âÂ BANNER EDITOR FIXO - SEMPRE VISï¿½VEL */}
+        {/* Ã°Å¸âÂ BANNER EDITOR FIXO - SEMPRE VISVEL */}
         <div className="mx-4 mb-6">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -418,7 +418,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </div>
                 <p className="text-xs text-gray-600 text-center mt-2 flex items-center justify-center gap-2">
                   {pendingBanner ? (
-                    <><Clock size={14} className="text-amber-500" /> Aguardando aprovaï¿½ï¿½o</>
+                    <><Clock size={14} className="text-amber-500" /> Aguardando aprovacao</>
                   ) : (
                     <><CheckCircle size={14} className="text-green-500" /> Banner aprovado</>
                   )}
@@ -437,8 +437,8 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <label className="block text-sm font-medium text-gray-500 mb-2">DESCRIï¿½ï¿½O (OPCIONAL)</label>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para vocï¿½!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" />
+            <label className="block text-sm font-medium text-gray-500 mb-2">DESCRIO (OPCIONAL)</label>
+            <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 100))} placeholder="Ex: Os melhores produtos para voce!" rows={2} className="w-full text-gray-700 border-0 focus:ring-0 p-0 resize-none placeholder:text-gray-300" />
             <p className="text-xs text-gray-400 text-right">{bio.length}/100</p>
           </div>
 
@@ -447,7 +447,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <ChevronRight className="text-gray-400" />
           </button>
 
-          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÃï¿½ FIXO NO TOPO */}
+          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÃ FIXO NO TOPO */}
 
           <button onClick={() => handleSectionChange("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
@@ -455,7 +455,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
 
           <button onClick={() => handleSectionChange("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">ESTÃilos</p><p className="text-sm text-gray-500">Botï¿½es, cards e visual</p></div></div>
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">ESTÃilos</p><p className="text-sm text-gray-500">Botoes, cards e visual</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
@@ -467,14 +467,14 @@ export default function PersonalizacaoRevendedoraPage() {
 
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:left-64">
           <button onClick={handleSave} disabled={saving || !storeName} className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${saved ? "bg-green-500 text-white" : saving ? "bg-pink-300 text-white" : !storeName ? "bg-gray-200 text-gray-400" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white"}`}>
-            {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alteraï¿½ï¿½es</>)}
+            {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alteracoes</>)}
           </button>
         </div>
       </div>
     );
   }
 
-  // SEï¿½ï¿½O CORES
+  // SEO CORES
   if (activeSection === "colors") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
@@ -530,7 +530,7 @@ export default function PersonalizacaoRevendedoraPage() {
             {showCustomColor && (
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
                 <div><label className="block text-sm text-gray-500 mb-2">Cor Principal</label><div className="flex items-center gap-3"><input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
-                <div><label className="block text-sm text-gray-500 mb-2">Cor Secundï¿½ria</label><div className="flex items-center gap-3"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
+                <div><label className="block text-sm text-gray-500 mb-2">Cor Secundria</label><div className="flex items-center gap-3"><input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-16 h-12 rounded-xl cursor-pointer border-2 border-gray-200" /><input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-mono text-sm" /></div></div>
               </div>
             )}
           </div>
@@ -540,7 +540,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEï¿½ï¿½O ESTÃILOS
+  // SEO ESTÃILOS
   if (activeSection === "styles") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
@@ -574,12 +574,12 @@ export default function PersonalizacaoRevendedoraPage() {
 
         <div className="p-4 space-y-6">
           
-          {/* BARRA DE ANï¿½NCIO */}
+          {/* BARRA DE ANNCIO */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-800">Ã°Å¸âÂ Barra de Anï¿½ncio</h3>
-                <p className="text-sm text-gray-500">Exibe mensagem no topo do catï¿½logo</p>
+                <h3 className="font-semibold text-gray-800">Ã°Å¸âÂ Barra de Anncio</h3>
+                <p className="text-sm text-gray-500">Exibe mensagem no topo do catlogo</p>
               </div>
               <button 
                 onClick={() => setThemeSettings({ 
@@ -599,7 +599,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 {/* Preview Melhorado */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-2 font-medium">Prï¿½via da Barra</label>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">Prvia da Barra</label>
                   <div 
                     className="p-4 text-center text-sm font-medium rounded-xl border-2 border-gray-200"
                     style={{ 
@@ -612,7 +612,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-500 mb-2 font-medium">Texto do Anï¿½ncio</label>
+                  <label className="block text-sm text-gray-500 mb-2 font-medium">Texto do Anncio</label>
                   <input 
                     type="text" 
                     value={themeSettings.announcement_bar?.text || ""} 
@@ -620,7 +620,7 @@ export default function PersonalizacaoRevendedoraPage() {
                       ...themeSettings, 
                       announcement_bar: { ...themeSettings.announcement_bar, text: e.target.value } 
                     })} 
-                    placeholder="Ex: Ã°Å¸âÂ Frete grï¿½tis acima de R$ 150!"
+                    placeholder="Ex: Ã°Å¸âÂ Frete gratis acima de R$ 150!"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
                     maxLength={60}
                   />
@@ -682,12 +682,12 @@ export default function PersonalizacaoRevendedoraPage() {
           {/* BORDAS ARREDONDADAS */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-2">Bordas Arredondadas</h3>
-            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e botï¿½es</p>
+            <p className="text-sm text-gray-500 mb-4">Define o arredondamento de cards, imagens e botoes</p>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { id: "none", label: "Sem", radius: "0px" },
                 { id: "small", label: "Pouco", radius: "4px" },
-                { id: "medium", label: "Mï¿½dio", radius: "12px" },
+                { id: "medium", label: "Mdio", radius: "12px" },
                 { id: "large", label: "Muito", radius: "24px" },
               ].map((opt) => (
                 <button 
@@ -703,26 +703,26 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
 
-          {/* ESTÃilo do Cabeï¿½alho */}
+          {/* ESTÃilo do Cabealho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Cabeï¿½alho</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Cabealho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
-                <p className="text-sm font-medium text-gray-700">Degradï¿½</p>
+                <p className="text-sm font-medium text-gray-700">Degrad</p>
               </button>
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "solid" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "solid" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ backgroundColor: themeSettings.header_color || primaryColor }} />
-                <p className="text-sm font-medium text-gray-700">Cor Sï¿½lida</p>
+                <p className="text-sm font-medium text-gray-700">Cor Slida</p>
               </button>
             </div>
             
-            {/* Cor Personalizada do Cabeï¿½alho */}
+            {/* Cor Personalizada do Cabecalho */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-medium text-gray-800">Cor do Cabeï¿½alho</p>
-                  <p className="text-xs text-gray-500">Diferente da cor primï¿½ria</p>
+                  <p className="font-medium text-gray-800">Cor do Cabecalho</p>
+                  <p className="text-xs text-gray-500">Diferente da cor primaria</p>
                 </div>
                 <button 
                   onClick={() => setThemeSettings({ ...themeSettings, header_color: themeSettings.header_color ? undefined : primaryColor })}
@@ -749,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">Ã°Å¸âÂ <strong>Dica:</strong> ï¿½til quando sua logo ï¿½ escura e a cor primï¿½ria tambï¿½m. Use uma cor clara para o cabeï¿½alho para dESTÃacar a logo.</p>
+                    <p className="text-xs text-blue-800">Ã°Å¸âÂ <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o cabealho para dESTÃacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -757,7 +757,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Botï¿½o de Compra</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÃilo do Boto de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
@@ -769,12 +769,12 @@ export default function PersonalizacaoRevendedoraPage() {
               </button>
             </div>
             
-            {/* Cor do Botï¿½o */}
+            {/* Cor do Botao */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-medium text-gray-800">Cor do Botï¿½o</p>
-                  <p className="text-xs text-gray-500">Diferente da cor primï¿½ria</p>
+                  <p className="font-medium text-gray-800">Cor do Botao</p>
+                  <p className="text-xs text-gray-500">Diferente da cor primaria</p>
                 </div>
                 <button 
                   onClick={() => setThemeSettings({ ...themeSettings, button_color: themeSettings.button_color ? undefined : primaryColor })}
@@ -828,7 +828,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 className={`p-3 rounded-xl border-2 transition-all ${themeSettings.product_name_size === "medium" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}
               >
                 <p className="text-sm font-medium text-gray-800 mb-2">Rasteirinha</p>
-                <p className="text-xs text-gray-500">Mï¿½dio</p>
+                <p className="text-xs text-gray-500">Mdio</p>
               </button>
               <button 
                 onClick={() => setThemeSettings({ ...themeSettings, product_name_size: "large" })} 
@@ -841,11 +841,11 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200 space-y-4">
-            <h3 className="font-semibold text-gray-800">Opï¿½ï¿½es do Site</h3>
+            <h3 className="font-semibold text-gray-800">Opcoes do Site</h3>
             <div className="flex items-center justify-between py-2">
               <div>
-                <p className="font-medium text-gray-800">Mostrar Preï¿½os</p>
-                <p className="text-sm text-gray-500">Exibe o preï¿½o nos produtos</p>
+                <p className="font-medium text-gray-800">Mostrar Preos</p>
+                <p className="text-sm text-gray-500">Exibe o preo nos produtos</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_prices: !themeSettings.show_prices })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_prices ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_prices ? "translate-x-7" : "translate-x-1"}`} />
@@ -856,7 +856,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Produtos Relacionados</p>
-                <p className="text-sm text-gray-500">Mostra sugESTÃï¿½es na pï¿½gina do produto</p>
+                <p className="text-sm text-gray-500">Mostra sugESTÃes na pgina do produto</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_products: !themeSettings.show_related_products })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_products ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_products ? "translate-x-7" : "translate-x-1"}`} />
@@ -866,7 +866,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Relacionados no Carrinho</p>
-                <p className="text-sm text-gray-500">SugESTÃï¿½es no carrinho de compras</p>
+                <p className="text-sm text-gray-500">SugESTÃes no carrinho de compras</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_in_cart: !themeSettings.show_related_in_cart })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_in_cart ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
@@ -906,7 +906,7 @@ export default function PersonalizacaoRevendedoraPage() {
                   <p className="text-sm font-medium text-amber-900 mb-1">Ã°Å¸âÂ Preview:</p>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                     <Clock className="w-4 h-4" />
-                    {themeSettings.delivery_notice?.message || "Produzido sob encomenda"} ï¿½ {themeSettings.delivery_notice?.days || 15} dias
+                    {themeSettings.delivery_notice?.message || "Produzido sob encomenda"}  {themeSettings.delivery_notice?.days || 15} dias
                   </div>
                 </div>
                 
@@ -929,7 +929,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     })} 
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 text-lg font-semibold text-center"
                   />
-                  <p className="text-xs text-gray-500 mt-1 text-center">Prazo de produï¿½ï¿½o e entrega</p>
+                  <p className="text-xs text-gray-500 mt-1 text-center">Prazo de produo e entrega</p>
                 </div>
                 
                 {/* Mensagem customizada */}
@@ -956,7 +956,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800">
-                    Ã°Å¸âÂ <strong>Dica:</strong> Esse aviso aparecerï¿½ em todos os produtos do seu catï¿½logo, ideal para lojas que trabalham com produï¿½ï¿½o sob encomenda.
+                    Ã°Å¸âÂ <strong>Dica:</strong> Esse aviso aparecer em todos os produtos do seu catlogo, ideal para lojas que trabalham com produo sob encomenda.
                   </p>
                 </div>
               </div>
@@ -968,7 +968,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEï¿½ï¿½O LOGO
+  // SEO LOGO
   if (activeSection === "logo") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
@@ -1023,9 +1023,9 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
               <p className="text-xs text-blue-800 font-medium">Ã°Å¸âÂ Dicas importantes:</p>
               <ul className="text-xs text-blue-700 mt-2 space-y-1">
-                <li>ï¿½ Use imagem com <strong>fundo transparente (PNG)</strong></li>
-                <li>ï¿½ <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
-                <li>ï¿½ <strong>Horizontal:</strong> ideal para logos retangulares (400x100px)</li>
+                <li> Use imagem com <strong>fundo transparente (PNG)</strong></li>
+                <li> <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
+                <li> <strong>Horizontal:</strong> ideal para logos retangulares (400x100px)</li>
               </ul>
             </div>
           </div>
@@ -1035,7 +1035,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEï¿½ï¿½O BANNER
+  // SEO BANNER
   if (activeSection === "banner") {
     const pendingMobile = bannerSubmissions.find(s => s.banner_type === "mobile" && s.status === "pending");
     const pendingDesktop = bannerSubmissions.find(s => s.banner_type === "desktop" && s.status === "pending");
@@ -1049,21 +1049,21 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Banner da Loja</h1>
         </div>
         
-        {/* Aviso de Moderaï¿½ï¿½o */}
+        {/* Aviso de Moderacao */}
         <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-800">Banners passam por aprovaï¿½ï¿½o</p>
+              <p className="font-medium text-amber-800">Banners passam por aprovacao</p>
               <p className="text-sm text-amber-700 mt-1">
-                Para garantir a qualidade do catï¿½logo, todos os banners sï¿½o revisados antes de aparecer na sua loja. 
+                Para garantir a qualidade do catlogo, todos os banners so revisados antes de aparecer na sua loja. 
                 Use apenas imagens de produtos C4.
               </p>
             </div>
           </div>
         </div>
         
-        {/* Ã°Å¸âÂ Botï¿½o Criar Banner Personalizado */}
+        {/* Ã°Å¸âÂ Boto Criar Banner Personalizado */}
         <div className="mx-4 mt-4">
           <button
             onClick={() => {
@@ -1094,7 +1094,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-center gap-2 text-yellow-700">
                   <Clock className="w-4 h-4" />
-                  <span className="font-medium text-sm">Banner aguardando aprovaï¿½ï¿½o</span>
+                  <span className="font-medium text-sm">Banner aguardando aprovacao</span>
                 </div>
                 <div className="mt-2 aspect-square max-w-[150px] mx-auto bg-gray-100 rounded-lg overflow-hidden relative">
                   <Image src={pendingMobile.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
@@ -1135,7 +1135,7 @@ export default function PersonalizacaoRevendedoraPage() {
               ) : (
                 <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
                   <Upload className="w-8 h-8 mb-2" />
-                  <span className="text-sm">Enviar para aprovaï¿½ï¿½o</span>
+                  <span className="text-sm">Enviar para aprovacao</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
                 </label>
               )}
@@ -1145,7 +1145,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-2">
                 <label className="block">
                   <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                    Enviar novo banner para aprovaï¿½ï¿½o
+                    Enviar novo banner para aprovacao
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner_mobile"); }} />
                 </label>
@@ -1177,7 +1177,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-center gap-2 text-yellow-700">
                   <Clock className="w-4 h-4" />
-                  <span className="font-medium text-sm">Banner aguardando aprovaï¿½ï¿½o</span>
+                  <span className="font-medium text-sm">Banner aguardando aprovacao</span>
                 </div>
                 <div className="mt-2 w-full bg-gray-100 rounded-lg overflow-hidden relative" style={{ aspectRatio: "16/5" }}>
                   <Image src={pendingDesktop.image_url} alt="Banner pendente" fill className="object-cover opacity-60" />
@@ -1218,7 +1218,7 @@ export default function PersonalizacaoRevendedoraPage() {
               ) : (
                 <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400">
                   <Upload className="w-8 h-8 mb-2" />
-                  <span className="text-sm">Enviar para aprovaï¿½ï¿½o</span>
+                  <span className="text-sm">Enviar para aprovacao</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
                 </label>
               )}
@@ -1228,7 +1228,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-2">
                 <label className="block">
                   <div className="text-center cursor-pointer text-pink-600 text-sm font-medium hover:text-pink-700">
-                    Enviar novo banner para aprovaï¿½ï¿½o
+                    Enviar novo banner para aprovacao
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, "banner"); }} />
                 </label>
@@ -1252,11 +1252,11 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="bg-gray-100 rounded-xl p-4">
             <h4 className="font-medium text-gray-800 mb-2">Ã°Å¸âÂ Diretrizes para Banners</h4>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>? Use apenas produtos do catï¿½logo C4</li>
+              <li>? Use apenas produtos do catlogo C4</li>
               <li>? Imagens de alta qualidade</li>
               <li>? Evite texto excessivo na imagem</li>
-              <li>? Nï¿½o use produtos de outras marcas</li>
-              <li>? Nï¿½o use conteï¿½do imprï¿½prio</li>
+              <li>? No use produtos de outras marcas</li>
+              <li>? No use contedo imprprio</li>
             </ul>
           </div>
         </div>
@@ -1270,7 +1270,7 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SEï¿½ï¿½O REDES SOCIAIS
+  // SEO REDES SOCIAIS
   if (activeSection === "social") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
@@ -1313,10 +1313,10 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><span className="text-white font-bold">f</span></div><div><p className="font-semibold text-gray-800">Facebook</p><p className="text-xs text-gray-500">Opcional</p></div></div>
-            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da pï¿½gina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+            <input type="text" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="Link ou nome da pgina" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
           </div>
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Botï¿½o WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
+            <div className="flex items-center justify-between"><div><p className="font-semibold text-gray-800">Botao WhatsApp Flutuante</p><p className="text-sm text-gray-500">Aparece no canto da tela</p></div><button onClick={() => setThemeSettings({ ...themeSettings, show_whatsapp_float: !themeSettings.show_whatsapp_float })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_whatsapp_float ? "bg-green-500" : "bg-gray-300"}`}><div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_whatsapp_float ? "translate-x-7" : "translate-x-1"}`} /></button></div>
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
