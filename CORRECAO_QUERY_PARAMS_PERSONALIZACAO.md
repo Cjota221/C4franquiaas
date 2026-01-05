@@ -1,20 +1,24 @@
 # ✅ CORREÇÃO APLICADA - Query Params ao invés de Páginas Separadas
 
 ## 🎯 PROBLEMA ORIGINAL:
+
 Você queria apenas **mudar a URL** para identificar qual seção está ativa, sem criar páginas separadas.
 
 ## ❌ O QUE FOI FEITO ERRADO (ANTES):
+
 ```
 /revendedora/personalizacao → Visão geral
 /revendedora/personalizacao/banner → PÁGINA NOVA ❌
 /revendedora/personalizacao/cores → PÁGINA NOVA ❌
 /revendedora/personalizacao/logo → PÁGINA NOVA ❌
 ```
+
 - Criou 6 páginas físicas separadas
 - Conteúdo duplicado
 - Difícil de manter
 
 ## ✅ O QUE FOI FEITO CERTO (AGORA):
+
 ```
 /revendedora/personalizacao → Página única, mostra tudo
 /revendedora/personalizacao?secao=banner → Mesma página, vídeo tutorial de banner
@@ -25,6 +29,7 @@ Você queria apenas **mudar a URL** para identificar qual seção está ativa, s
 ## 🚀 COMO FUNCIONA:
 
 ### 1. **PersonalizacaoNav** (Tabs):
+
 ```tsx
 // Componente: components/revendedora/PersonalizacaoNav.tsx
 // Tabs clicáveis que mudam a URL com ?secao=
@@ -32,26 +37,27 @@ Você queria apenas **mudar a URL** para identificar qual seção está ativa, s
 ```
 
 Quando user clica em "Cores":
+
 - URL vira: `/personalizacao?secao=cores`
 - Scroll suave para o topo
 - VideoTutorialButton detecta mudança
 
 ### 2. **VideoTutorialButton** (Auto-detecção):
+
 ```tsx
 // Uso na página:
-<VideoTutorialButton 
-  pagina="personalizacao" 
-  autoDetectSection 
-/>
+<VideoTutorialButton pagina="personalizacao" autoDetectSection />
 ```
 
 Lógica interna:
+
 1. Lê `?secao=` da URL
 2. Se `?secao=cores`, busca vídeo `personalizacao-cores`
 3. Se `?secao=banner`, busca vídeo `personalizacao-banner`
 4. Se sem `?secao=`, busca vídeo `personalizacao` (visão geral)
 
 ### 3. **Admin pode criar vídeos específicos:**
+
 ```
 /admin/tutoriais → Criar novo vídeo
 Página: "Personalização - Cores" → personalizacao-cores
@@ -60,15 +66,15 @@ Página: "Personalização - Banners" → personalizacao-banner
 
 ## 📋 MAPEAMENTO DE SEÇÕES:
 
-| Tab Clicada | URL | Busca Vídeo |
-|-------------|-----|-------------|
-| Visão Geral | `/personalizacao` | `personalizacao` |
-| Banners | `/personalizacao?secao=banner` | `personalizacao-banner` |
-| Logo | `/personalizacao?secao=logo` | `personalizacao-logo` |
-| Cores | `/personalizacao?secao=cores` | `personalizacao-cores` |
-| Estilos | `/personalizacao?secao=estilos` | `personalizacao-estilos` |
+| Tab Clicada   | URL                                   | Busca Vídeo                    |
+| ------------- | ------------------------------------- | ------------------------------ |
+| Visão Geral   | `/personalizacao`                     | `personalizacao`               |
+| Banners       | `/personalizacao?secao=banner`        | `personalizacao-banner`        |
+| Logo          | `/personalizacao?secao=logo`          | `personalizacao-logo`          |
+| Cores         | `/personalizacao?secao=cores`         | `personalizacao-cores`         |
+| Estilos       | `/personalizacao?secao=estilos`       | `personalizacao-estilos`       |
 | Redes Sociais | `/personalizacao?secao=redes-sociais` | `personalizacao-redes-sociais` |
-| Analytics | `/personalizacao?secao=analytics` | `personalizacao-analytics` |
+| Analytics     | `/personalizacao?secao=analytics`     | `personalizacao-analytics`     |
 
 ## ✨ BENEFÍCIOS:
 
@@ -82,14 +88,17 @@ Página: "Personalização - Banners" → personalizacao-banner
 ## 🔧 ARQUIVOS MODIFICADOS:
 
 ### ✅ Criado:
+
 - `components/revendedora/PersonalizacaoNav.tsx` - Navegação com tabs
 
 ### ✅ Atualizado:
+
 - `components/VideoTutorialButton.tsx` - Prop `autoDetectSection`
 - `app/revendedora/personalizacao/page.tsx` - Usa navegação + detecção automática
 - `app/admin/tutoriais/page.tsx` - Dropdown com novas opções
 
 ### ❌ Deletado:
+
 - `/personalizacao/banner/page.tsx`
 - `/personalizacao/cores/page.tsx`
 - `/personalizacao/logo/page.tsx`
@@ -101,6 +110,7 @@ Página: "Personalização - Banners" → personalizacao-banner
 ## 🎬 EXEMPLO DE USO:
 
 ### User abre `/personalizacao`:
+
 1. Vê navegação com 7 tabs
 2. Vê botão rosa flutuante (tutorial geral)
 3. Clica em "Cores"
@@ -109,6 +119,7 @@ Página: "Personalização - Banners" → personalizacao-banner
 6. Pode assistir tutorial sobre como escolher cores
 
 ### Admin cria vídeo:
+
 1. Acessa `/admin/tutoriais`
 2. Clica "Novo Vídeo"
 3. Página: "Personalização - Cores"
@@ -119,6 +130,7 @@ Página: "Personalização - Banners" → personalizacao-banner
 ## 🚀 STATUS:
 
 ✅ **IMPLEMENTADO E FUNCIONANDO**
+
 - Navegação com tabs
 - Query params na URL
 - Detecção automática de seção
