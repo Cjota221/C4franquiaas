@@ -47,21 +47,30 @@ export default function LoginRevendedoraPage() {
         throw new Error('Acesso negado. Esta área é exclusiva para revendedoras.');
       }
 
-      // 🆕 VERIFICAR SE ESTÁ DESATIVADA (is_active=false)
+      // ✅ VERIFICAR STATUS DA CONTA
+      
+      // 1️⃣ PENDENTE DE APROVAÇÃO (Cadastro novo, aguardando análise)
+      if (revendedora.status === 'pendente') {
+        await supabase.auth.signOut();
+        throw new Error('⏳ Seu cadastro está em análise! Em breve você receberá uma mensagem no WhatsApp confirmando a aprovação da sua conta. Aguarde o contato do nosso time! 💬');
+      }
+      
+      // 2️⃣ REJEITADA (Cadastro foi recusado)
+      if (revendedora.status === 'rejeitada') {
+        await supabase.auth.signOut();
+        throw new Error('❌ Seu cadastro foi rejeitado. Entre em contato com o administrador pelo WhatsApp para mais informações.');
+      }
+      
+      // 3️⃣ DESATIVADA (Conta aprovada mas temporariamente desativada)
       if (!revendedora.is_active) {
         await supabase.auth.signOut();
-        throw new Error('🚫 Revendedora desativada. Sua conta foi temporariamente desativada. Entre em contato com o administrador para mais informações.');
+        throw new Error('🚫 Sua loja está temporariamente desativada. Entre em contato com o administrador para reativação.');
       }
-
+      
+      // 4️⃣ Verificar se está aprovada
       if (revendedora.status !== 'aprovada') {
         await supabase.auth.signOut();
-        if (revendedora.status === 'pendente') {
-          throw new Error('Sua conta ainda está aguardando aprovação. Aguarde o contato do administrador.');
-        } else if (revendedora.status === 'rejeitada') {
-          throw new Error('Sua solicitação foi recusada. Entre em contato para mais informações.');
-        } else {
-          throw new Error('Sua conta de revendedora não está ativa.');
-        }
+        throw new Error('Sua conta não está ativa. Entre em contato com o administrador.');
       }
 
       console.log('✅ Login OK! Redirecionando para dashboard...');
