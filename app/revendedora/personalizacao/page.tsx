@@ -29,13 +29,13 @@ type ThemeSettings = {
   product_name_size: "small" | "medium" | "large";
   button_color?: string; // Cor do botao
   header_color?: string; // Cor do cabecalho
-  // Ã°Å¸âÂ Sob Encomenda
+  //  Sob Encomenda
   delivery_notice?: {
     enabled: boolean;
     days: number; // Prazo em dias
     message?: string; // Mensagem customizada
   };
-  // Ã°Å¸âÂ Produtos Relacionados
+  //  Produtos Relacionados
   show_related_products?: boolean;
   show_related_in_cart?: boolean;
 };
@@ -73,7 +73,7 @@ const DEFAULT_THEME: ThemeSettings = {
   card_image_style: "rounded",
   announcement_bar: {
     enabled: false,
-    text: "Ã°Å¸âÂ Frete gratis acima de R$ 150!",
+    text: " Frete gratis acima de R$ 150!",
     bg_color: "#000000",
     text_color: "#ffffff",
   },
@@ -81,13 +81,13 @@ const DEFAULT_THEME: ThemeSettings = {
   product_name_size: "medium",
   button_color: undefined, // Usa cor primaria por padrao
   header_color: undefined, // Usa cor primaria por padrao
-  // Ã°Å¸âÂ Sob Encomenda
+  //  Sob Encomenda
   delivery_notice: {
     enabled: false,
     days: 15,
     message: "Produzido sob encomenda"
   },
-  // Ã°Å¸âÂ Produtos Relacionados
+  //  Produtos Relacionados
   show_related_products: true,
   show_related_in_cart: true,
 };
@@ -172,7 +172,7 @@ export default function PersonalizacaoRevendedoraPage() {
         setCurrentSlug(data.slug || "");
         setStoreName(data.store_name || "");
         
-        // Ã°Å¸âÂ Atualizar ttulo da pgina para Google Analytics
+        //  Atualizar ttulo da pgina para Google Analytics
         document.title = `Personalizacao - ${data.store_name} | C4 Franquias`;
         
         setBio(data.bio || "");
@@ -254,7 +254,7 @@ export default function PersonalizacaoRevendedoraPage() {
           alert("? " + data.message);
           loadBannerSubmissions(reseller.id);
         } else {
-          alert("Ã°Å¸âÂ " + data.error);
+          alert(" " + data.error);
         }
       }
     } catch (error) {
@@ -293,7 +293,7 @@ export default function PersonalizacaoRevendedoraPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuario nao autenticado");
 
-            console.log("Ã°Å¸âÂ DADOS RECEBIDOS DO EDITOR:", bannerData);
+            console.log(" DADOS RECEBIDOS DO EDITOR:", bannerData);
 
             // Preparar dados para salvar
             const dataToInsert = {
@@ -319,7 +319,7 @@ export default function PersonalizacaoRevendedoraPage() {
               status: "pending",
             };
 
-            console.log("Ã°Å¸âÂ DADOS PARA INSERIR NO BANCO:", dataToInsert);
+            console.log(" DADOS PARA INSERIR NO BANCO:", dataToInsert);
 
             // Salvar no banco de dados
             const { data, error } = await supabase
@@ -331,7 +331,7 @@ export default function PersonalizacaoRevendedoraPage() {
             if (error) throw error;
 
             console.log("? Banner salvo com sucesso:", data);
-            alert("Ã°Å¸âÂ Banner enviado para aprovao!\n\nVoc receber uma notificao quando for aprovado.");
+            alert(" Banner enviado para aprovao!\n\nVoc receber uma notificao quando for aprovado.");
             setShowBannerEditor(false);
           } catch (error) {
             console.error("? Erro ao salvar banner:", error);
@@ -385,7 +385,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="mx-4 -mt-4 mb-6"><div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><p className="text-amber-800 font-medium text-center">Configure o nome da sua loja para criar seu link</p></div></div>
         )}
 
-        {/* Ã°Å¸âÂ BANNER EDITOR FIXO - SEMPRE VISVEL */}
+        {/*  BANNER EDITOR FIXO - SEMPRE VISVEL */}
         <div className="mx-4 mb-6">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -400,7 +400,7 @@ export default function PersonalizacaoRevendedoraPage() {
               </div>
               <button
                 onClick={() => {
-                  console.log("Ã°Å¸âÂ Abrindo editor de banners...");
+                  console.log(" Abrindo editor de banners...");
                   setShowBannerEditor(true);
                 }}
                 className="py-3 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg whitespace-nowrap"
@@ -483,7 +483,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Cores da Loja</h1>
         </div>
 
-        {/* Ã°Å¸âÂ BANNER FIXO */}
+        {/*  BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -549,7 +549,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">ESTÃilos</h1>
         </div>
 
-        {/* Ã°Å¸âÂ BANNER FIXO */}
+        {/*  BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -578,7 +578,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-800">Ã°Å¸âÂ Barra de Anncio</h3>
+                <h3 className="font-semibold text-gray-800">Barra de Anncio</h3>
                 <p className="text-sm text-gray-500">Exibe mensagem no topo do catlogo</p>
               </div>
               <button 
@@ -620,7 +620,7 @@ export default function PersonalizacaoRevendedoraPage() {
                       ...themeSettings, 
                       announcement_bar: { ...themeSettings.announcement_bar, text: e.target.value } 
                     })} 
-                    placeholder="Ex: Ã°Å¸âÂ Frete gratis acima de R$ 150!"
+                    placeholder="Ex:  Frete gratis acima de R$ 150!"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
                     maxLength={60}
                   />
@@ -749,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">Ã°Å¸âÂ <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o cabealho para dESTÃacar a logo.</p>
+                    <p className="text-xs text-blue-800"> <strong>Dica:</strong> Util quando sua logo e escura e a cor primaria tambem. Use uma cor clara para o cabealho para dESTÃacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -875,7 +875,7 @@ export default function PersonalizacaoRevendedoraPage() {
             */}
           </div>
           
-          {/* Ã°Å¸âÂ Aviso de Sob Encomenda */}
+          {/*  Aviso de Sob Encomenda */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -903,7 +903,7 @@ export default function PersonalizacaoRevendedoraPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 {/* Preview */}
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm font-medium text-amber-900 mb-1">Ã°Å¸âÂ Preview:</p>
+                  <p className="text-sm font-medium text-amber-900 mb-1"> Preview:</p>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                     <Clock className="w-4 h-4" />
                     {themeSettings.delivery_notice?.message || "Produzido sob encomenda"}  {themeSettings.delivery_notice?.days || 15} dias
@@ -956,7 +956,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800">
-                    Ã°Å¸âÂ <strong>Dica:</strong> Esse aviso aparecer em todos os produtos do seu catlogo, ideal para lojas que trabalham com produo sob encomenda.
+                     <strong>Dica:</strong> Esse aviso aparecer em todos os produtos do seu catlogo, ideal para lojas que trabalham com produo sob encomenda.
                   </p>
                 </div>
               </div>
@@ -977,7 +977,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Logo da Loja</h1>
         </div>
 
-        {/* Ã°Å¸âÂ BANNER FIXO */}
+        {/*  BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
@@ -1021,7 +1021,7 @@ export default function PersonalizacaoRevendedoraPage() {
               ))}
             </div>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <p className="text-xs text-blue-800 font-medium">Ã°Å¸âÂ Dicas importantes:</p>
+              <p className="text-xs text-blue-800 font-medium"> Dicas importantes:</p>
               <ul className="text-xs text-blue-700 mt-2 space-y-1">
                 <li> Use imagem com <strong>fundo transparente (PNG)</strong></li>
                 <li> <strong>Redonda:</strong> ideal para logos circulares (200x200px)</li>
@@ -1063,11 +1063,11 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         
-        {/* Ã°Å¸âÂ Boto Criar Banner Personalizado */}
+        {/*  Boto Criar Banner Personalizado */}
         <div className="mx-4 mt-4">
           <button
             onClick={() => {
-              console.log("Ã°Å¸âÂ Abrindo editor de banners...");
+              console.log(" Abrindo editor de banners...");
               setShowBannerEditor(true);
             }}
             className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-3 shadow-lg"
@@ -1250,7 +1250,7 @@ export default function PersonalizacaoRevendedoraPage() {
           
           {/* Diretrizes */}
           <div className="bg-gray-100 rounded-xl p-4">
-            <h4 className="font-medium text-gray-800 mb-2">Ã°Å¸âÂ Diretrizes para Banners</h4>
+            <h4 className="font-medium text-gray-800 mb-2"> Diretrizes para Banners</h4>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>? Use apenas produtos do catlogo C4</li>
               <li>? Imagens de alta qualidade</li>
@@ -1279,7 +1279,7 @@ export default function PersonalizacaoRevendedoraPage() {
           <h1 className="text-xl font-bold">Redes Sociais</h1>
         </div>
 
-        {/* Ã°Å¸âÂ BANNER FIXO */}
+        {/*  BANNER FIXO */}
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl p-3">
             <div className="flex items-center justify-between gap-2">
