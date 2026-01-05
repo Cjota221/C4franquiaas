@@ -46,19 +46,35 @@ export default function VideoTutorialButton({ pagina }: Props) {
 
   return (
     <>
-      {/* Botão Flutuante */}
+      {/* Botão Flutuante com Preview */}
       <button
         onClick={() => setShowModal(true)}
         className="fixed bottom-6 right-6 z-40 group"
         title={video.titulo}
       >
         <div className="relative">
-          {/* Bolinha com animação de pulso */}
+          {/* Animação de pulso ao redor */}
           <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-75" />
           
-          {/* Botão principal */}
-          <div className="relative bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-full p-4 shadow-2xl hover:scale-110 transition-transform duration-300">
-            <PlayCircle size={32} className="drop-shadow-lg" />
+          {/* Container do botão */}
+          <div className="relative w-16 h-16 rounded-full overflow-hidden shadow-2xl hover:scale-110 transition-transform duration-300 border-4 border-white">
+            {/* Preview do vídeo rodando (sem áudio, loop) */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+              src={video.video_url}
+            />
+            
+            {/* Overlay escuro para dar contraste */}
+            <div className="absolute inset-0 bg-black/20" />
+            
+            {/* Ícone de Play centralizado */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <PlayCircle size={28} className="text-white drop-shadow-2xl" strokeWidth={2.5} />
+            </div>
           </div>
           
           {/* Tooltip ao passar o mouse */}
@@ -109,10 +125,11 @@ export default function VideoTutorialButton({ pagina }: Props) {
                   title={video.titulo}
                 />
               ) : (
-                // Vídeo direto (Catbox, Supabase Storage, etc)
+                // Vídeo direto (Catbox, Supabase Storage, etc) - COM ÁUDIO
                 <video
                   controls
-                  className="absolute inset-0 w-full h-full"
+                  autoPlay
+                  className="absolute inset-0 w-full h-full bg-black"
                   src={video.video_url}
                   title={video.titulo}
                 >
