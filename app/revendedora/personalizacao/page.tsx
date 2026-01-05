@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { usESTÁate, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import VideoTutorialButton from "@/components/VideoTutorialButton";
@@ -93,33 +93,33 @@ const DEFAULT_THEME: ThemeSettings = {
 };
 
 export default function PersonalizacaoRevendedoraPage() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [reseller, setReseller] = useState<{ id: string; user_id: string } | null>(null);
-  const [storeName, setStoreName] = useState("");
-  const [bio, setBio] = useState("");
-  const [phone, setPhone] = useState("");
-  const [instagram, setInstagram] = useState("");
-  const [facebook, setFacebook] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
-  const [bannerUrl, setBannerUrl] = useState("");
-  const [bannerMobileUrl, setBannerMobileUrl] = useState("");
-  const [pendingBanner, setPendingBanner] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState("#ec4899");
-  const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
-  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
-  const [currentSlug, setCurrentSlug] = useState("");
-  const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social" | "styles">("main");
-  const [uploading, setUploading] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [showCustomColor, setShowCustomColor] = useState(false);
+  const [loading, setLoading] = usESTÁate(true);
+  const [saving, setSaving] = usESTÁate(false);
+  const [saved, setSaved] = usESTÁate(false);
+  const [reseller, setReseller] = usESTÁate<{ id: string; user_id: string } | null>(null);
+  const [storeName, setStoreName] = usESTÁate("");
+  const [bio, setBio] = usESTÁate("");
+  const [phone, setPhone] = usESTÁate("");
+  const [instagram, setInstagram] = usESTÁate("");
+  const [facebook, setFacebook] = usESTÁate("");
+  const [logoUrl, setLogoUrl] = usESTÁate("");
+  const [bannerUrl, setBannerUrl] = usESTÁate("");
+  const [bannerMobileUrl, setBannerMobileUrl] = usESTÁate("");
+  const [pendingBanner, setPendingBanner] = usESTÁate(false);
+  const [primaryColor, setPrimaryColor] = usESTÁate("#ec4899");
+  const [secondaryColor, setSecondaryColor] = usESTÁate("#8b5cf6");
+  const [themeSettings, setThemeSettings] = usESTÁate<ThemeSettings>(DEFAULT_THEME);
+  const [currentSlug, setCurrentSlug] = usESTÁate("");
+  const [activeSection, setActiveSection] = usESTÁate<"main" | "colors" | "logo" | "banner" | "social" | "styles">("main");
+  const [uploading, setUploading] = usESTÁate<string | null>(null);
+  const [copied, setCopied] = usESTÁate(false);
+  const [showCustomColor, setShowCustomColor] = usESTÁate(false);
   
-  // Estados para modera��o de banners
-  const [bannerSubmissions, setBannerSubmissions] = useState<BannerSubmission[]>([]);
+  // ESTÁados para modera��o de banners
+  const [bannerSubmissions, setBannerSubmissions] = usESTÁate<BannerSubmission[]>([]);
   
-  // Estados para o editor de banner
-  const [showBannerEditor, setShowBannerEditor] = useState(false);
+  // ESTÁados para o editor de banner
+  const [showBannerEditor, setShowBannerEditor] = usESTÁate(false);
 
   const supabase = createClient();
   const router = useRouter();
@@ -136,7 +136,7 @@ export default function PersonalizacaoRevendedoraPage() {
       logo: "logo",
       banner: "banner",
       social: "redes-sociais",
-      styles: "estilos"
+      styles: "ESTÁilos"
     };
     
     const secao = sectionMap[section];
@@ -447,7 +447,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <ChevronRight className="text-gray-400" />
           </button>
 
-          {/* BANNER REMOVIDO DA LISTA - AGORA EST� FIXO NO TOPO */}
+          {/* BANNER REMOVIDO DA LISTA - AGORA ESTÁ� FIXO NO TOPO */}
 
           <button onClick={() => handleSectionChange("colors")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
             <div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center"><Brush className="w-6 h-6 text-white" /></div><div className="text-left"><p className="font-semibold text-gray-800">Cores</p><p className="text-sm text-gray-500">Escolha as cores da sua loja</p></div></div>
@@ -455,7 +455,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
 
           <button onClick={() => handleSectionChange("styles")} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between active:bg-gray-50">
-            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">Estilos</p><p className="text-sm text-gray-500">Bot�es, cards e visual</p></div></div>
+            <div className="flex items-center gap-4"><div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center"><Palette className="w-6 h-6 text-indigo-600" /></div><div className="text-left"><p className="font-semibold text-gray-800">ESTÁilos</p><p className="text-sm text-gray-500">Bot�es, cards e visual</p></div></div>
             <ChevronRight className="text-gray-400" />
           </button>
 
@@ -540,13 +540,13 @@ export default function PersonalizacaoRevendedoraPage() {
     );
   }
 
-  // SE��O ESTILOS
+  // SE��O ESTÁILOS
   if (activeSection === "styles") {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-4 z-10">
           <button onClick={() => handleSectionChange("main")} className="p-2 -ml-2 rounded-xl hover:bg-gray-100"><X size={24} /></button>
-          <h1 className="text-xl font-bold">Estilos</h1>
+          <h1 className="text-xl font-bold">ESTÁilos</h1>
         </div>
 
         {/* ?? BANNER FIXO */}
@@ -703,9 +703,9 @@ export default function PersonalizacaoRevendedoraPage() {
             </div>
           </div>
 
-          {/* Estilo do Cabe�alho */}
+          {/* ESTÁilo do Cabe�alho */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Cabe�alho</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÁilo do Cabe�alho</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, header_style: "gradient" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.header_style === "gradient" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="h-12 rounded-lg mb-3" style={{ background: `linear-gradient(135deg, ${themeSettings.header_color || primaryColor}, ${secondaryColor})` }} />
@@ -749,7 +749,7 @@ export default function PersonalizacaoRevendedoraPage() {
                     />
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">?? <strong>Dica:</strong> �til quando sua logo � escura e a cor prim�ria tamb�m. Use uma cor clara para o cabe�alho para destacar a logo.</p>
+                    <p className="text-xs text-blue-800">?? <strong>Dica:</strong> �til quando sua logo � escura e a cor prim�ria tamb�m. Use uma cor clara para o cabe�alho para dESTÁacar a logo.</p>
                   </div>
                 </div>
               )}
@@ -757,7 +757,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Bot�o de Compra</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÁilo do Bot�o de Compra</h3>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, button_style: "rounded" })} className={`p-4 rounded-xl border-2 transition-all ${themeSettings.button_style === "rounded" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}>
                 <div className="flex justify-center mb-3"><div className="px-6 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: themeSettings.button_color || primaryColor }}>Comprar</div></div>
@@ -804,7 +804,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-4">Estilo do Card de Produto</h3>
+            <h3 className="font-semibold text-gray-800 mb-4">ESTÁilo do Card de Produto</h3>
             <div className="grid grid-cols-3 gap-3">
               <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "shadow" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "shadow" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg shadow-lg h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Sombra</p></button>
               <button onClick={() => setThemeSettings({ ...themeSettings, card_style: "bordered" })} className={`p-3 rounded-xl border-2 transition-all ${themeSettings.card_style === "bordered" ? "border-pink-500 bg-pink-50" : "border-gray-200"}`}><div className="bg-white rounded-lg border-2 border-gray-300 h-16 mb-2" /><p className="text-xs font-medium text-gray-700">Borda</p></button>
@@ -856,7 +856,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Produtos Relacionados</p>
-                <p className="text-sm text-gray-500">Mostra sugest�es na p�gina do produto</p>
+                <p className="text-sm text-gray-500">Mostra sugESTÁ�es na p�gina do produto</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_products: !themeSettings.show_related_products })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_products ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_products ? "translate-x-7" : "translate-x-1"}`} />
@@ -866,7 +866,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="font-medium text-gray-800">Relacionados no Carrinho</p>
-                <p className="text-sm text-gray-500">Sugest�es no carrinho de compras</p>
+                <p className="text-sm text-gray-500">SugESTÁ�es no carrinho de compras</p>
               </div>
               <button onClick={() => setThemeSettings({ ...themeSettings, show_related_in_cart: !themeSettings.show_related_in_cart })} className={`w-14 h-8 rounded-full transition-colors ${themeSettings.show_related_in_cart ? "bg-green-500" : "bg-gray-300"}`}>
                 <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${themeSettings.show_related_in_cart ? "translate-x-7" : "translate-x-1"}`} />
@@ -1151,7 +1151,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </label>
                 <button
                   onClick={() => {
-                    if (confirm('Tem certeza que deseja remover este banner?')) {
+                    if (confirm('Tem certeza que deseja remover ESTÁe banner?')) {
                       setBannerMobileUrl("");
                     }
                   }}
@@ -1234,7 +1234,7 @@ export default function PersonalizacaoRevendedoraPage() {
                 </label>
                 <button
                   onClick={() => {
-                    if (confirm('Tem certeza que deseja remover este banner?')) {
+                    if (confirm('Tem certeza que deseja remover ESTÁe banner?')) {
                       setBannerUrl("");
                     }
                   }}
