@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { PlayCircle, X } from 'lucide-react';
+import { PlayCircle, X, Volume2, VolumeX } from 'lucide-react';
 
 type TutorialVideo = {
   id: string;
@@ -18,6 +18,8 @@ export default function VideoTutorialButton({ pagina }: Props) {
   const [video, setVideo] = useState<TutorialVideo | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasAudio, setHasAudio] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -127,11 +129,34 @@ export default function VideoTutorialButton({ pagina }: Props) {
               ) : (
                 // Vídeo direto (Catbox, Supabase Storage, etc) - COM ÁUDIO
                 <video
+                  ref={videoRef}
                   controls
                   autoPlay
                   className="absolute inset-0 w-full h-full bg-black"
                   src={video.video_url}
                   title={video.titulo}
+                  onLoadedMetadata={(e) => {
+                    const vid = e.currentTarget as HTMLVideoElement & {
+                      mozHasAudio?: boolean;
+                      webkitAudioDecodedByteCount?: number;
+                      audioTracks?: { length: number };
+                    };
+                    
+                    // Detecta se o vídeo tem trilha de áudio
+                    const hasAudioTrack = vid.mozHasAudio || 
+                                         Boolean(vid.webkitAudioDecodedByteCount) || 
+                                         Boolean(vid.audioTracks && vid.audioTracks.length);
+                    setHasAudio(hasAudioTrack);
+                    
+                    // Garante que o volume está no máximo
+                    vid.volume = 1.0;
+                    vid.muted = false;
+                    
+                    // Força play com som (contorna bloqueios do navegador)
+                    vid.play().catch(() => {
+                      console.log('Autoplay bloqueado, usuário precisa clicar no vídeo');
+                    });
+                  }}
                 >
                   Seu navegador não suporta vídeos HTML5.
                 </video>
@@ -139,7 +164,19 @@ export default function VideoTutorialButton({ pagina }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-gray-50 text-center">
+            <div className="p-4 bg-gray-50 text-center space-y-2">
+              {!hasAudio && (
+                <div className="flex items-center justify-center gap-2 text-yellow-600 text-sm">
+                  <VolumeX size={16} />
+                  <span>⚠️ Este vídeo não possui áudio</span>
+                </div>
+              )}
+              {hasAudio && (
+                <div className="flex items-center justify-center gap-2 text-green-600 text-sm">
+                  <Volume2 size={16} />
+                  <span>🔊 Áudio disponível - ajuste o volume se necessário</span>
+                </div>
+              )}
               <p className="text-sm text-gray-600">
                 💡 Dica: Assista em tela cheia para melhor experiência
               </p>
