@@ -129,21 +129,20 @@ export default function AdminRevendedorasNova() {
 
       console.log('Revendedoras carregadas:', data?.length || 0);
 
-      // Buscar dados adicionais para cada revendedora
+      // Buscar contagem de produtos para cada revendedora
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const processadas: RevendedoraCompleta[] = await Promise.all((data || []).map(async (r: any) => {
-        // Buscar personalização
-        const { data: personalizacao } = await supabase
-          .from('store_customizations')
-          .select('logo_url, banner_url, primary_color, secondary_color')
-          .eq('reseller_id', r.id)
-          .single();
-        
-        // Buscar contagem de produtos
+        // Buscar contagem de produtos ativos vinculados
         const { count: totalProdutos } = await supabase
-          .from('products')
+          .from('reseller_products')
           .select('*', { count: 'exact', head: true })
-          .eq('reseller_id', r.id);
+          .eq('reseller_id', r.id)
+          .eq('is_active', true);
+        
+        // Extrair cores do campo colors (JSONB)
+        const colors = r.colors || {};
+        const primaryColor = colors.primary || null;
+        const secondaryColor = colors.secondary || null;
         
         return {
           id: r.id,
@@ -159,13 +158,13 @@ export default function AdminRevendedorasNova() {
           created_at: r.created_at,
           rejection_reason: r.rejection_reason,
           
-          // Indicadores de personalização
-          has_logo: !!personalizacao?.logo_url,
-          has_banner: !!personalizacao?.banner_url,
-          has_colors: !!personalizacao?.primary_color && !!personalizacao?.secondary_color,
-          has_margin: r.margem_lucro != null && r.margem_lucro > 0,
-          primary_color: personalizacao?.primary_color || null,
-          logo_url: personalizacao?.logo_url || null,
+          // Indicadores de personalização (campos diretos da tabela resellers)
+          has_logo: !!r.logo_url,
+          has_banner: !!r.banner_url || !!r.banner_mobile_url,
+          has_colors: !!primaryColor && !!secondaryColor,
+          has_margin: totalProdutos && totalProdutos > 0, // Se tem produtos ativos, definiu margem
+          primary_color: primaryColor,
+          logo_url: r.logo_url || null,
         };
       }));
 
