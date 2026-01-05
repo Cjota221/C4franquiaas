@@ -116,27 +116,34 @@ export default function AdminRevendedorasNova() {
     try {
       const supabase = createClient();
       
-      // Buscar revendedoras com personalização
+      // Buscar revendedoras
       const { data, error } = await supabase
         .from('resellers')
-        .select(`
-          *,
-          personalizacao:store_customizations(
-            logo_url,
-            banner_url,
-            primary_color,
-            secondary_color
-          ),
-          produtos:products(count)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query:', error);
+        throw error;
+      }
 
-      // Processar dados para adicionar indicadores
+      console.log('Revendedoras carregadas:', data?.length || 0);
+
+      // Buscar dados adicionais para cada revendedora
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processadas: RevendedoraCompleta[] = (data || []).map((r: any) => {
-        const personalizacao = r.personalizacao?.[0] || {};
+      const processadas: RevendedoraCompleta[] = await Promise.all((data || []).map(async (r: any) => {
+        // Buscar personalização
+        const { data: personalizacao } = await supabase
+          .from('store_customizations')
+          .select('logo_url, banner_url, primary_color, secondary_color')
+          .eq('reseller_id', r.id)
+          .single();
+        
+        // Buscar contagem de produtos
+        const { count: totalProdutos } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('reseller_id', r.id);
         
         return {
           id: r.id,
@@ -147,20 +154,20 @@ export default function AdminRevendedorasNova() {
           slug: r.slug,
           status: r.status,
           is_active: r.is_active,
-          total_products: r.total_products || 0,
+          total_products: totalProdutos || 0,
           catalog_views: r.catalog_views || 0,
           created_at: r.created_at,
           rejection_reason: r.rejection_reason,
           
           // Indicadores de personalização
-          has_logo: !!personalizacao.logo_url,
-          has_banner: !!personalizacao.banner_url,
-          has_colors: !!personalizacao.primary_color && !!personalizacao.secondary_color,
+          has_logo: !!personalizacao?.logo_url,
+          has_banner: !!personalizacao?.banner_url,
+          has_colors: !!personalizacao?.primary_color && !!personalizacao?.secondary_color,
           has_margin: r.margem_lucro != null && r.margem_lucro > 0,
-          primary_color: personalizacao.primary_color,
-          logo_url: personalizacao.logo_url,
+          primary_color: personalizacao?.primary_color || null,
+          logo_url: personalizacao?.logo_url || null,
         };
-      });
+      }));
 
       setRevendedoras(processadas);
     } catch (err) {
