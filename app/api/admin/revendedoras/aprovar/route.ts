@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
-import { sendWhatsAppMessage, WhatsAppTemplates, isEvolutionConfigured } from '@/lib/whatsapp/evolution';
+import { sendWhatsAppMessage, WhatsAppTemplates } from '@/lib/zapi-whatsapp';
 
 // Template de email de aprovação
 function getApprovalEmailHTML(nome: string, nomeLoja: string, loginUrl: string) {
@@ -317,34 +317,49 @@ export async function POST(req: NextRequest) {
     }
 
     // ========================================
-    // ENVIAR WHATSAPP (Evolution API)
+    // 📱 ENVIAR WHATSAPP (Z-API)
     // ========================================
     let whatsappSent = false;
+    const hasZapiConfig = process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN;
     
-    if (isEvolutionConfigured() && reseller.phone) {
+    if (hasZapiConfig && reseller.phone) {
       try {
+        const linkLoja = `${baseUrl}/${reseller.store_name}`;
+        
         if (action === 'aprovar') {
-          const whatsappMessage = WhatsAppTemplates.resellerApproved(
+          const whatsappMessage = WhatsAppTemplates.aprovacaoCadastro(
             reseller.name,
-            reseller.store_name,
-            loginUrl
+            linkLoja
           );
-          const result = await sendWhatsAppMessage({ phone: reseller.phone, message: whatsappMessage });
-          whatsappSent = result.success;
-          
-          if (result.success) {
-            console.log('[aprovar-revendedora] ✅ WhatsApp de aprovação enviado');
-          }
+          await sendWhatsAppMessage({ 
+            phone: reseller.phone, 
+            message: whatsappMessage 
+          });
+          whatsappSent = true;
+          console.log('[aprovar-revendedora] ✅ WhatsApp de aprovação enviado via Z-API');
         } else {
-          const whatsappMessage = WhatsAppTemplates.resellerRejected(reseller.name, motivo);
-          const result = await sendWhatsAppMessage({ phone: reseller.phone, message: whatsappMessage });
-          whatsappSent = result.success;
+          const whatsappMessage = WhatsAppTemplates.rejeicaoCadastro(
+            reseller.name, 
+            motivo
+          );
+          await sendWhatsAppMessage({ 
+            phone: reseller.phone, 
+            message: whatsappMessage 
+          });
+          whatsappSent = true;
+          console.log('[aprovar-revendedora] ✅ WhatsApp de rejeição enviado via Z-API');
         }
       } catch (whatsappErr) {
-        console.error('[aprovar-revendedora] Erro ao enviar WhatsApp:', whatsappErr);
+        console.error('[aprovar-revendedora] ❌ Erro ao enviar WhatsApp:', whatsappErr);
+        whatsappSent = false;
       }
     } else {
-      console.log('[aprovar-revendedora] WhatsApp não configurado ou telefone ausente');
+      if (!hasZapiConfig) {
+        console.log('[aprovar-revendedora] ⚠️ Z-API não configurado (faltam ZAPI_INSTANCE_ID ou ZAPI_TOKEN)');
+      }
+      if (!reseller.phone) {
+        console.log('[aprovar-revendedora] ⚠️ Telefone da revendedora não cadastrado');
+      }
     }
 
     return NextResponse.json({ 

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Check, X, Search, Store, MessageCircle, ExternalLink, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface RevendedoraCompleta {
   id: string;
@@ -26,6 +27,8 @@ interface RevendedoraCompleta {
   has_margin: boolean;
   primary_color: string | null;
   logo_url: string | null;
+  banner_url: string | null;
+  banner_mobile_url: string | null;
 }
 
 type FiltroStatus = 'todas' | 'pendente' | 'aprovada' | 'rejeitada';
@@ -123,60 +126,121 @@ export default function AdminRevendedorasNova() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro na query:', error);
+        console.error('❌ Erro na query:', error);
+        alert(`Erro ao carregar: ${error.message}`);
         throw error;
       }
 
-      console.log('Revendedoras carregadas:', data?.length || 0);
+      if (!data || data.length === 0) {
+        console.log('⚠️ Nenhuma revendedora encontrada');
+        setRevendedoras([]);
+        return;
+      }
+
+      console.log(`✅ ${data.length} revendedoras carregadas`);
 
       // Buscar contagem de produtos para cada revendedora
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processadas: RevendedoraCompleta[] = await Promise.all((data || []).map(async (r: any) => {
-        // Buscar contagem de produtos ativos vinculados
-        const { count: totalProdutos } = await supabase
-          .from('reseller_products')
-          .select('*', { count: 'exact', head: true })
-          .eq('reseller_id', r.id)
-          .eq('is_active', true);
-        
-        // Extrair cores do campo colors (JSONB)
-        const colors = r.colors || {};
-        const primaryColor = colors.primary || null;
-        const secondaryColor = colors.secondary || null;
-        
-        // Verificar personalização (checar se não é null e não é string vazia)
-        const hasLogo = r.logo_url && r.logo_url.trim() !== '';
-        const hasBanner = (r.banner_url && r.banner_url.trim() !== '') || (r.banner_mobile_url && r.banner_mobile_url.trim() !== '');
-        const hasColors = primaryColor && secondaryColor;
-        
-        return {
-          id: r.id,
-          name: r.name,
-          email: r.email,
-          phone: r.phone,
-          store_name: r.store_name,
-          slug: r.slug,
-          status: r.status,
-          is_active: r.is_active,
-          total_products: totalProdutos || 0,
-          catalog_views: r.catalog_views || 0,
-          created_at: r.created_at,
-          rejection_reason: r.rejection_reason,
+      const processadas: RevendedoraCompleta[] = await Promise.all(data.map(async (r: any) => {
+        try {
+          // Buscar contagem de produtos ativos vinculados
+          const { count: totalProdutos, error: prodError } = await supabase
+            .from('reseller_products')
+            .select('*', { count: 'exact', head: true })
+            .eq('reseller_id', r.id)
+            .eq('is_active', true);
           
-          // Indicadores de personalização
-          has_logo: hasLogo,
-          has_banner: hasBanner,
-          has_colors: hasColors,
-          has_margin: totalProdutos && totalProdutos > 0,
-          primary_color: primaryColor,
-          logo_url: r.logo_url || null,
-        };
+          if (prodError) {
+            console.error(`⚠️ Erro ao contar produtos da ${r.name}:`, prodError);
+          }
+          
+          // Extrair cores do campo colors (JSONB) com segurança
+          let primaryColor = null;
+          let secondaryColor = null;
+          
+          try {
+            const colors = typeof r.colors === 'string' ? JSON.parse(r.colors) : (r.colors || {});
+            primaryColor = colors.primary || null;
+            secondaryColor = colors.secondary || null;
+          } catch (colorErr) {
+            console.error(`⚠️ Erro ao parse colors da ${r.name}:`, colorErr);
+          }
+          
+          // Verificar personalização (checar se não é null e não é string vazia)
+          const hasLogo = !!(r.logo_url && typeof r.logo_url === 'string' && r.logo_url.trim() !== '');
+          const hasBanner = !!(
+            (r.banner_url && typeof r.banner_url === 'string' && r.banner_url.trim() !== '') || 
+            (r.banner_mobile_url && typeof r.banner_mobile_url === 'string' && r.banner_mobile_url.trim() !== '')
+          );
+          const hasColors = !!(primaryColor && secondaryColor);
+          
+          return {
+            id: r.id || '',
+            name: r.name || 'Sem nome',
+            email: r.email || '',
+            phone: r.phone || '',
+            store_name: r.store_name || '',
+            slug: r.slug || '',
+            status: r.status || 'pendente',
+            is_active: !!r.is_active,
+            total_products: totalProdutos || 0,
+            catalog_views: r.catalog_views || 0,
+            created_at: r.created_at || '',
+            rejection_reason: r.rejection_reason || undefined,
+            
+            // Indicadores de personalização
+            has_logo: hasLogo,
+            has_banner: hasBanner,
+            has_colors: hasColors,
+            has_margin: totalProdutos ? totalProdutos > 0 : false,
+            primary_color: primaryColor,
+            logo_url: r.logo_url || null,
+            banner_url: r.banner_url || null,
+            banner_mobile_url: r.banner_mobile_url || null,
+          };
+        } catch (itemErr) {
+          console.error(`❌ Erro ao processar revendedora ${r.name}:`, itemErr);
+          // Retornar dados mínimos para não quebrar a lista
+          return {
+            id: r.id || '',
+            name: r.name || 'Sem nome',
+            email: r.email || '',
+            phone: r.phone || '',
+            store_name: r.store_name || '',
+            slug: r.slug || '',
+            status: r.status || 'pendente',
+            is_active: !!r.is_active,
+            total_products: 0,
+            catalog_views: 0,
+            created_at: r.created_at || '',
+            has_logo: false,
+            has_banner: false,
+            has_colors: false,
+            has_margin: false,
+            primary_color: null,
+            logo_url: null,
+            banner_url: null,
+            banner_mobile_url: null,
+          };
+        }
       }));
 
+      console.log(`✅ ${processadas.length} revendedoras processadas`);
+      
+      // DEBUG: Mostrar revendedoras com banners
+      const comBanners = processadas.filter(r => r.has_banner || r.banner_url || r.banner_mobile_url);
+      console.log(`📸 ${comBanners.length} revendedoras COM banners:`, comBanners.map(r => ({
+        nome: r.name,
+        has_banner: r.has_banner,
+        banner_url: r.banner_url ? '✅' : '❌',
+        banner_mobile_url: r.banner_mobile_url ? '✅' : '❌'
+      })));
+      
       setRevendedoras(processadas);
     } catch (err) {
-      console.error('Erro ao carregar revendedoras:', err);
-      alert('Erro ao carregar revendedoras');
+      console.error('❌ Erro fatal ao carregar revendedoras:', err);
+      alert(`Erro ao carregar revendedoras: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      setRevendedoras([]);
     } finally {
       setLoading(false);
     }
@@ -237,7 +301,7 @@ export default function AdminRevendedorasNova() {
 
       alert(`Revendedora ${!ativoAtual ? 'ativada' : 'desativada'}!`);
       carregarRevendedoras();
-    } catch (err) {
+    } catch {
       alert('Erro ao alterar status');
     }
   }
@@ -587,16 +651,28 @@ Bem-vinda a equipe C4!`;
                               )}
 
                               {rev.status === 'aprovada' && (
-                                <button
-                                  onClick={() => toggleAtivo(rev.id, rev.is_active)}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                                    rev.is_active
-                                      ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                                      : 'bg-green-500 text-white hover:bg-green-600'
-                                  }`}
-                                >
-                                  {rev.is_active ? 'Desativar' : 'Ativar'}
-                                </button>
+                                <>
+                                  {/* Botão WhatsApp - Destaque */}
+                                  <button
+                                    onClick={() => enviarWhatsAppBoasVindas(rev)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                                  >
+                                    <MessageCircle className="w-5 h-5" />
+                                    Enviar WhatsApp Boas-Vindas
+                                  </button>
+
+                                  {/* Botão Ativar/Desativar */}
+                                  <button
+                                    onClick={() => toggleAtivo(rev.id, rev.is_active)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                                      rev.is_active
+                                        ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                        : 'bg-gray-500 text-white hover:bg-gray-600'
+                                    }`}
+                                  >
+                                    {rev.is_active ? 'Desativar' : 'Ativar'}
+                                  </button>
+                                </>
                               )}
 
                               {rev.status === 'rejeitada' && (
@@ -615,6 +691,64 @@ Bem-vinda a equipe C4!`;
                                 <span>📱 {rev.phone}</span>
                               </div>
                             </div>
+
+                            {/* Seção de Personalização - Banners e Logo */}
+                            {(rev.has_logo || rev.has_banner) && (
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">📸 Personalização Enviada:</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  
+                                  {/* Logo */}
+                                  {rev.has_logo && rev.logo_url && (
+                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                      <p className="text-xs font-medium text-gray-600 mb-2">Logo da Loja</p>
+                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
+                                        <Image
+                                          src={rev.logo_url}
+                                          alt="Logo"
+                                          fill
+                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                          className="object-contain p-2"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Banner Desktop */}
+                                  {rev.has_banner && rev.banner_url && (
+                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                      <p className="text-xs font-medium text-gray-600 mb-2">Banner Desktop</p>
+                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
+                                        <Image
+                                          src={rev.banner_url}
+                                          alt="Banner Desktop"
+                                          fill
+                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Banner Mobile */}
+                                  {rev.has_banner && rev.banner_mobile_url && (
+                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                      <p className="text-xs font-medium text-gray-600 mb-2">Banner Mobile</p>
+                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
+                                        <Image
+                                          src={rev.banner_mobile_url}
+                                          alt="Banner Mobile"
+                                          fill
+                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                </div>
+                              </div>
+                            )}
 
                             {rev.rejection_reason && (
                               <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">

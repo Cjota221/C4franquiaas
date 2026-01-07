@@ -71,6 +71,17 @@ export default function ProdutosPage(): React.JSX.Element {
   // State para Modal de Edição em Massa
   const [modalMassaOpen, setModalMassaOpen] = useState(false);
 
+  // State para filtro de produtos não vinculados
+  const [filtroNaoVinculados, setFiltroNaoVinculados] = useState(false);
+  const [produtosNaoVinculadosIds, setProdutosNaoVinculadosIds] = useState<Set<number | string>>(new Set());
+  const [statsVinculacao, setStatsVinculacao] = useState<{
+    total_produtos_ativos: number;
+    produtos_vinculados: number;
+    produtos_nao_vinculados: number;
+    total_revendedoras: number;
+  } | null>(null);
+  const [loadingNaoVinculados, setLoadingNaoVinculados] = useState(false);
+
   // Outros states
   const [categorias, setCategorias] = useState<{ id: number; nome: string }[]>([]);
 
@@ -85,7 +96,27 @@ export default function ProdutosPage(): React.JSX.Element {
     filtroNovos,
     precoMin.trim().length > 0,
     precoMax.trim().length > 0,
+    filtroNaoVinculados,
   ].filter(Boolean).length;
+
+  // Carregar produtos não vinculados às revendedoras
+  const carregarProdutosNaoVinculados = useCallback(async () => {
+    try {
+      setLoadingNaoVinculados(true);
+      const res = await fetch('/api/admin/produtos/nao-vinculados');
+      const data = await res.json();
+      
+      if (data.success) {
+        const ids = new Set<number | string>(data.produtos.map((p: { id: number | string }) => p.id));
+        setProdutosNaoVinculadosIds(ids);
+        setStatsVinculacao(data.stats);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar produtos não vinculados:', err);
+    } finally {
+      setLoadingNaoVinculados(false);
+    }
+  }, []);
 
   // Carregar categorias disponíveis
   const carregarCategorias = useCallback(async () => {
@@ -287,7 +318,8 @@ export default function ProdutosPage(): React.JSX.Element {
   // Carregar na montagem
   useEffect(() => {
     carregarCategorias();
-  }, [carregarCategorias]);
+    carregarProdutosNaoVinculados();
+  }, [carregarCategorias, carregarProdutosNaoVinculados]);
 
   useEffect(() => {
     carregarProdutos(pagina, debouncedSearchTerm);
@@ -340,10 +372,22 @@ export default function ProdutosPage(): React.JSX.Element {
     setFiltroStatus('todos');
     setFiltroEstoque('todos');
     setFiltroNovos(false);
+    setFiltroNaoVinculados(false);
     setPrecoMin('');
     setPrecoMax('');
     setPagina(1);
   };
+
+  // Produtos filtrados com filtro de não vinculados aplicado
+  const produtosExibidos = filtroNaoVinculados 
+    ? produtosFiltrados.filter(p => produtosNaoVinculadosIds.has(p.id))
+    : produtosFiltrados;
+
+  // Adicionar marcador de não vinculado nos produtos
+  const produtosComMarcador = produtosExibidos.map(p => ({
+    ...p,
+    naoVinculado: produtosNaoVinculadosIds.has(p.id),
+  }));
 
   // Ver detalhes do produto
   const handleVerDetalhes = async (produto: ProdutoType) => {
@@ -745,6 +789,107 @@ export default function ProdutosPage(): React.JSX.Element {
         )}
       </div>
 
+      {/* Alerta de Produtos Não Vinculados */}
+      {statsVinculacao && statsVinculacao.produtos_nao_vinculados > 0 && (
+        <div className="mb-6 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 p-2 bg-orange-100 rounded-full">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-orange-800">
+                  ⚠️ {statsVinculacao.produtos_nao_vinculados} produto(s) não vinculado(s) às revendedoras
+                </h3>
+                <p className="text-sm text-orange-700">
+                  Esses produtos estão ativos mas não aparecem para nenhuma revendedora. 
+                  {statsVinculacao.total_revendedoras > 0 && ` (${statsVinculacao.total_revendedoras} revendedora(s) ativa(s))`}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFiltroNaoVinculados(!filtroNaoVinculados)}
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                  filtroNaoVinculados 
+                    ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                    : 'bg-white text-orange-700 border-2 border-orange-300 hover:bg-orange-100'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {filtroNaoVinculados ? 'Mostrando Não Vinculados' : 'Ver Não Vinculados'}
+              </button>
+              <button
+                onClick={async () => {
+                  // Selecionar todos os não vinculados visíveis
+                  produtosExibidos.forEach(p => {
+                    if (produtosNaoVinculadosIds.has(p.id)) {
+                      setSelectedId(p.id, true);
+                    }
+                  });
+                  setFiltroNaoVinculados(true);
+                }}
+                className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 font-medium flex items-center gap-2 transition-all border border-orange-300"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Selecionar Todos
+              </button>
+              <button
+                onClick={async () => {
+                  // Vincular diretamente os não vinculados
+                  setVinculandoRevendedoras(true);
+                  setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos não vinculados às revendedoras...' });
+                  try {
+                    const idsNaoVinculados = Array.from(produtosNaoVinculadosIds);
+                    const response = await fetch('/api/admin/produtos/vincular-revendedoras', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ produto_ids: idsNaoVinculados }),
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                      setStatusMsg({ type: 'success', text: `✅ ${data.detalhes.vinculacoes} vinculações criadas!` });
+                      // Recarregar lista de não vinculados
+                      carregarProdutosNaoVinculados();
+                    } else {
+                      throw new Error(data.error);
+                    }
+                  } catch (err) {
+                    setStatusMsg({ type: 'error', text: `❌ Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}` });
+                  } finally {
+                    setVinculandoRevendedoras(false);
+                    setTimeout(() => setStatusMsg(null), 5000);
+                  }
+                }}
+                disabled={vinculandoRevendedoras || loadingNaoVinculados}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center gap-2 transition-all"
+              >
+                {vinculandoRevendedoras ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Vinculando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Vincular Todos
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status Message */}
       {statusMsg && (
         <div className={`p-4 mb-6 rounded-lg font-medium ${
@@ -786,10 +931,17 @@ export default function ProdutosPage(): React.JSX.Element {
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#DB1472] border-t-transparent"></div>
               Carregando...
             </span>
+          ) : filtroNaoVinculados ? (
+            <span className="flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold">
+                Filtro: Não Vinculados
+              </span>
+              {`${produtosExibidos.length} produto(s) não vinculado(s)`}
+            </span>
           ) : temBusca ? (
-            `${produtosFiltrados.length} resultado(s) encontrado(s)`
+            `${produtosExibidos.length} resultado(s) encontrado(s)`
           ) : (
-            `Mostrando ${produtosFiltrados.length} de ${totalProdutos} produto(s)`
+            `Mostrando ${produtosExibidos.length} de ${totalProdutos} produto(s)`
           )}
         </span>
         {selectedCount > 0 && (
@@ -801,7 +953,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       {/* Tabela de Produtos */}
       <TabelaProdutos
-        produtos={produtosFiltrados}
+        produtos={produtosComMarcador}
         loading={loading}
         selectedIds={selectedIds}
         onSelectOne={setSelectedId}
@@ -817,6 +969,7 @@ export default function ProdutosPage(): React.JSX.Element {
           setProdutoParaEditar(produto as ProdutoType);
           setModalDescricaoGuiaOpen(true);
         }}
+        produtosNaoVinculadosIds={produtosNaoVinculadosIds}
       />
 
       {/* Paginação */}
