@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -9,7 +9,39 @@ export default function AdminSecretLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
+
+  // Verificar se já está logado como admin
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Verificar se é admin
+          const { data: perfil } = await supabase
+            .from('perfis')
+            .select('papel')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (perfil?.papel === 'admin') {
+            // Já está logado como admin, redirecionar direto
+            router.push('/admin/dashboard');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao verificar sessão:', err);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkExistingSession();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,9 +79,21 @@ export default function AdminSecretLoginPage() {
     }
   };
 
+  // Mostrar loading enquanto verifica sessão
+  if (checkingSession) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto mb-4"></div>
+          <p className="text-white">Verificando sessão...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-sans">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl mx-4">
         {/* Logo e Título */}
         <div className="text-center space-y-2">
           <div className="w-20 h-20 mx-auto bg-gray-900 rounded-full flex items-center justify-center">
@@ -58,7 +102,7 @@ export default function AdminSecretLoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-          <p className="text-sm text-gray-500">Acesso Restrito</p>
+          <p className="text-sm text-gray-500">C4 Franquias - Acesso Restrito</p>
         </div>
 
         {/* Formulário */}
@@ -121,6 +165,13 @@ export default function AdminSecretLoginPage() {
             )}
           </button>
         </form>
+
+        {/* Dica para salvar como app */}
+        <div className="pt-4 border-t border-gray-200">
+          <p className="text-xs text-center text-gray-400">
+            💡 Salve esta página na tela inicial para acesso rápido
+          </p>
+        </div>
       </div>
     </div>
   );

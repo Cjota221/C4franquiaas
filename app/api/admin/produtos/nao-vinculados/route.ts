@@ -30,7 +30,7 @@ export async function GET() {
     // 2. Buscar todos os IDs de produtos que estão vinculados a pelo menos uma revendedora
     const { data: produtosVinculados, error: errorVinculados } = await supabaseAdmin
       .from('reseller_products')
-      .select('produto_id');
+      .select('product_id');
 
     if (errorVinculados) {
       console.error('Erro ao buscar produtos vinculados:', errorVinculados);
@@ -38,7 +38,7 @@ export async function GET() {
     }
 
     // Criar Set de IDs vinculados (unique)
-    const idsVinculados = new Set(produtosVinculados?.map(p => p.produto_id) || []);
+    const idsVinculados = new Set(produtosVinculados?.map(p => p.product_id) || []);
 
     // 3. Filtrar produtos que NÃO estão no Set de vinculados
     const produtosNaoVinculados = (produtosAtivos || []).filter(
