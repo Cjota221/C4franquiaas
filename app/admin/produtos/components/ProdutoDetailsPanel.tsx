@@ -51,11 +51,15 @@ interface ProdutoCompleto {
 }
 
 // Função para extrair o valor numérico do estoque
-function getEstoqueNumero(estoque: number | { estoque?: number; estoque_minimo?: number; localizacao?: string } | null | undefined): number {
+function getEstoqueNumero(estoque: unknown): number {
   if (estoque === null || estoque === undefined) return 0;
   if (typeof estoque === 'number') return estoque;
-  if (typeof estoque === 'object' && 'estoque' in estoque && typeof estoque.estoque === 'number') {
-    return estoque.estoque;
+  if (typeof estoque === 'string') return parseInt(estoque, 10) || 0;
+  if (typeof estoque === 'object') {
+    const obj = estoque as Record<string, unknown>;
+    if ('estoque' in obj) return getEstoqueNumero(obj.estoque);
+    if ('quantidade' in obj) return getEstoqueNumero(obj.quantidade);
+    if ('qty' in obj) return getEstoqueNumero(obj.qty);
   }
   return 0;
 }
@@ -512,7 +516,9 @@ export default function ProdutoDetailsPanel({
               <div className="p-4 max-h-60 overflow-y-auto">
                 <div className="grid gap-2">
                   {detalhesExtras.variacoes.slice(0, 20).map((variacao, idx: number) => {
-                    const v = variacao as { cor?: string; tamanho?: string; estoque?: number; preco?: number };
+                    const v = variacao as { cor?: string; tamanho?: string; estoque?: unknown; preco?: number };
+                    // Extrair estoque se for objeto
+                    const estoqueVal = getEstoqueNumero(v.estoque);
                     return (
                     <div 
                       key={idx}
@@ -521,19 +527,19 @@ export default function ProdutoDetailsPanel({
                       <div className="flex items-center gap-3">
                         {v.cor && (
                           <span className="px-2 py-1 bg-white border border-gray-200 rounded text-sm">
-                            🎨 {v.cor}
+                            Cor: {String(v.cor)}
                           </span>
                         )}
                         {v.tamanho && (
                           <span className="px-2 py-1 bg-white border border-gray-200 rounded text-sm">
-                            📏 {v.tamanho}
+                            Tam: {String(v.tamanho)}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-4 text-sm">
                         {v.estoque !== undefined && (
-                          <span className={v.estoque > 0 ? 'text-green-600' : 'text-red-600'}>
-                            {v.estoque} un.
+                          <span className={estoqueVal > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {estoqueVal} un.
                           </span>
                         )}
                         {v.preco && (
