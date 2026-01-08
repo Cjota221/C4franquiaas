@@ -193,34 +193,31 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
                   <div className="flex justify-between">
                     <span className="text-gray-600 font-medium">Estoque total:</span>
                     <span className="text-blue-600 font-bold">{(() => {
-                // Tratar estoque_display
-                if (typeof product.estoque_display === 'number') {
-                  return String(product.estoque_display);
-                }
-                if (typeof product.estoque_display === 'string') {
-                  return product.estoque_display;
-                }
-                if (typeof product.estoque_display === 'object' && product.estoque_display !== null) {
-                  // Se for objeto, extrair o valor numérico
-                  const estoqueObj = product.estoque_display as Record<string, unknown>;
-                  if ('estoque' in estoqueObj) {
-                    return String(estoqueObj.estoque ?? '—');
+                // Função auxiliar para extrair estoque de qualquer formato
+                const extrairEstoque = (valor: unknown): string => {
+                  if (valor === null || valor === undefined) return '—';
+                  if (typeof valor === 'number') return String(valor);
+                  if (typeof valor === 'string') return valor;
+                  if (typeof valor === 'object') {
+                    const obj = valor as Record<string, unknown>;
+                    // Tentar extrair 'estoque' do objeto
+                    if ('estoque' in obj && obj.estoque !== undefined) {
+                      return extrairEstoque(obj.estoque);
+                    }
+                    // Tentar outras chaves comuns
+                    if ('quantidade' in obj) return extrairEstoque(obj.quantidade);
+                    if ('qty' in obj) return extrairEstoque(obj.qty);
+                    if ('total' in obj) return extrairEstoque(obj.total);
                   }
-                }
+                  return '—';
+                };
+                
+                // Tentar estoque_display primeiro
+                const estoqueDisplay = extrairEstoque(product.estoque_display);
+                if (estoqueDisplay !== '—') return estoqueDisplay;
                 
                 // Fallback para product.estoque
-                if (typeof product.estoque === 'number') {
-                  return String(product.estoque);
-                }
-                if (typeof product.estoque === 'object' && product.estoque !== null) {
-                  // Se for objeto, extrair o valor numérico
-                  const estoqueObj = product.estoque as Record<string, unknown>;
-                  if ('estoque' in estoqueObj) {
-                    return String(estoqueObj.estoque ?? '—');
-                  }
-                }
-                
-                return '—';
+                return extrairEstoque(product.estoque);
               })()}</span>
                   </div>
                 </div>
@@ -243,18 +240,23 @@ export default function ProductDetailsModal(): React.JSX.Element | null {
                 {!modalLoading && modalVariacoes && modalVariacoes.length > 0 && (
                   <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {modalVariacoes.map((v: Variacao, idx: number) => {
-                      // Normalizar estoque da variação
-                      let estoqueVariacao = '—';
-                      if (v.estoque !== null && v.estoque !== undefined) {
-                        if (typeof v.estoque === 'number') {
-                          estoqueVariacao = String(v.estoque);
-                        } else if (typeof v.estoque === 'object') {
-                          const estoqueObj = v.estoque as Record<string, unknown>;
-                          if ('estoque' in estoqueObj) {
-                            estoqueVariacao = String(estoqueObj.estoque ?? '—');
+                      // Função auxiliar para extrair estoque de qualquer formato
+                      const extrairEstoque = (valor: unknown): string => {
+                        if (valor === null || valor === undefined) return '—';
+                        if (typeof valor === 'number') return String(valor);
+                        if (typeof valor === 'string') return valor;
+                        if (typeof valor === 'object') {
+                          const obj = valor as Record<string, unknown>;
+                          if ('estoque' in obj && obj.estoque !== undefined) {
+                            return extrairEstoque(obj.estoque);
                           }
+                          if ('quantidade' in obj) return extrairEstoque(obj.quantidade);
+                          if ('qty' in obj) return extrairEstoque(obj.qty);
                         }
-                      }
+                        return '—';
+                      };
+                      
+                      const estoqueVariacao = extrairEstoque(v.estoque);
                       
                       return (
                         <div 
