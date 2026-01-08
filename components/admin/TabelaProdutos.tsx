@@ -4,11 +4,25 @@ import React from 'react';
 import Image from 'next/image';
 import { ArrowUpDown, ArrowUp, ArrowDown, FileText, Eye } from 'lucide-react';
 
+// Função para extrair o valor numérico do estoque (pode vir como number ou objeto)
+function getEstoqueNumero(estoque: unknown): number {
+  if (estoque === null || estoque === undefined) return 0;
+  if (typeof estoque === 'number') return estoque;
+  if (typeof estoque === 'string') return parseInt(estoque, 10) || 0;
+  if (typeof estoque === 'object') {
+    const obj = estoque as Record<string, unknown>;
+    if ('estoque' in obj) return getEstoqueNumero(obj.estoque);
+    if ('quantidade' in obj) return getEstoqueNumero(obj.quantidade);
+    if ('qty' in obj) return getEstoqueNumero(obj.qty);
+  }
+  return 0;
+}
+
 export type Produto = {
   id: number | string;
   id_externo?: string;
   nome: string;
-  estoque: number;
+  estoque: number | Record<string, unknown>;
   preco_base: number | null;
   ativo: boolean;
   imagem?: string | null;
@@ -286,13 +300,13 @@ export default function TabelaProdutos({
 
                     {/* Estoque */}
                     <td className="px-4 py-3">
-                      {produto.estoque === 0 ? (
+                      {getEstoqueNumero(produto.estoque) === 0 ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           Esgotado
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Disponível
+                          Disponível ({getEstoqueNumero(produto.estoque)})
                         </span>
                       )}
                     </td>
