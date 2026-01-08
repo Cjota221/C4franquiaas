@@ -516,35 +516,35 @@ export default function ProdutoDetailsPanel({
               <div className="p-4 max-h-60 overflow-y-auto">
                 <div className="grid gap-2">
                   {detalhesExtras.variacoes.slice(0, 20).map((variacao, idx: number) => {
-                    const v = variacao as { cor?: string; tamanho?: string; estoque?: unknown; preco?: number };
+                    const v = variacao as Record<string, unknown>;
                     // Extrair estoque se for objeto
                     const estoqueVal = getEstoqueNumero(v.estoque);
+                    // Extrair nome da variação (pode vir de vários campos)
+                    const nomeVariacao = String(v.nome || v.name || v.sku || v.cor || v.tamanho || v.variacao || `Variação ${idx + 1}`);
+                    const sku = v.sku ? String(v.sku) : null;
+                    
                     return (
                     <div 
                       key={idx}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
-                        {v.cor && (
-                          <span className="px-2 py-1 bg-white border border-gray-200 rounded text-sm">
-                            Cor: {String(v.cor)}
-                          </span>
-                        )}
-                        {v.tamanho && (
-                          <span className="px-2 py-1 bg-white border border-gray-200 rounded text-sm">
-                            Tam: {String(v.tamanho)}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-gray-800 truncate block">
+                          {nomeVariacao}
+                        </span>
+                        {sku && sku !== nomeVariacao && (
+                          <span className="text-xs text-gray-500">
+                            SKU: {sku}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        {v.estoque !== undefined && (
-                          <span className={estoqueVal > 0 ? 'text-green-600' : 'text-red-600'}>
-                            {estoqueVal} un.
-                          </span>
-                        )}
+                      <div className="flex items-center gap-4 text-sm flex-shrink-0 ml-3">
+                        <span className={estoqueVal > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                          {estoqueVal} un.
+                        </span>
                         {v.preco && (
-                          <span className="font-medium">
-                            {formatarPreco(v.preco)}
+                          <span className="font-medium text-gray-700">
+                            {formatarPreco(Number(v.preco))}
                           </span>
                         )}
                       </div>
