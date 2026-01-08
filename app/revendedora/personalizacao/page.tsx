@@ -632,16 +632,22 @@ export default function PersonalizacaoRevendedoraPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-500 mb-2 font-medium">Cor de Fundo</label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="color" 
-                        value={themeSettings.announcement_bar?.bg_color || "#000000"} 
-                        onChange={(e) => setThemeSettings({ 
-                          ...themeSettings, 
-                          announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
-                        })} 
-                        className="w-16 h-12 rounded-lg cursor-pointer border-2 border-gray-300" 
-                      />
+                    <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-xl bg-gray-50">
+                      <div className="relative">
+                        <div 
+                          className="w-10 h-10 rounded-lg shadow-inner border-2 border-white ring-1 ring-gray-200 cursor-pointer"
+                          style={{ backgroundColor: themeSettings.announcement_bar?.bg_color || "#000000" }}
+                        />
+                        <input 
+                          type="color" 
+                          value={themeSettings.announcement_bar?.bg_color || "#000000"} 
+                          onChange={(e) => setThemeSettings({ 
+                            ...themeSettings, 
+                            announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
+                          })} 
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        />
+                      </div>
                       <input 
                         type="text" 
                         value={themeSettings.announcement_bar?.bg_color || "#000000"} 
@@ -649,22 +655,28 @@ export default function PersonalizacaoRevendedoraPage() {
                           ...themeSettings, 
                           announcement_bar: { ...themeSettings.announcement_bar, bg_color: e.target.value } 
                         })} 
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                        className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg font-mono text-xs bg-white uppercase" 
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm text-gray-500 mb-2 font-medium">Cor do Texto</label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="color" 
-                        value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
-                        onChange={(e) => setThemeSettings({ 
-                          ...themeSettings, 
-                          announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
-                        })} 
-                        className="w-16 h-12 rounded-lg cursor-pointer border-2 border-gray-300" 
-                      />
+                    <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-xl bg-gray-50">
+                      <div className="relative">
+                        <div 
+                          className="w-10 h-10 rounded-lg shadow-inner border-2 border-white ring-1 ring-gray-200 cursor-pointer"
+                          style={{ backgroundColor: themeSettings.announcement_bar?.text_color || "#ffffff" }}
+                        />
+                        <input 
+                          type="color" 
+                          value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
+                          onChange={(e) => setThemeSettings({ 
+                            ...themeSettings, 
+                            announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
+                          })} 
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        />
+                      </div>
                       <input 
                         type="text" 
                         value={themeSettings.announcement_bar?.text_color || "#ffffff"} 
@@ -672,7 +684,7 @@ export default function PersonalizacaoRevendedoraPage() {
                           ...themeSettings, 
                           announcement_bar: { ...themeSettings.announcement_bar, text_color: e.target.value } 
                         })} 
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-sm" 
+                        className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg font-mono text-xs bg-white uppercase" 
                       />
                     </div>
                   </div>
