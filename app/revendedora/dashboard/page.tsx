@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Share2, ExternalLink, Package, Eye, TrendingUp, Loader2, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import VideoTutorialButton from '@/components/VideoTutorialButton';
 
 interface Reseller {
   id: string;
@@ -313,6 +314,9 @@ export default function DashboardRevendedora() {
           </li>
         </ul>
       </div>
+      
+      {/* Botão de Tutorial */}
+      <VideoTutorialButton pagina="dashboard" />
     </div>
   );
 }

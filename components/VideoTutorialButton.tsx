@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useSearchParams } from 'next/navigation';
-import { PlayCircle, X, Volume2, VolumeX } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { PlayCircle, X, Volume2, VolumeX, BookOpen } from 'lucide-react';
 
 type TutorialVideo = {
   id: string;
@@ -23,7 +23,9 @@ type Props = {
     | 'personalizacao-estilos'
     | 'personalizacao-redes-sociais'
     | 'personalizacao-analytics'
-    | 'configuracoes';
+    | 'configuracoes'
+    | 'dashboard'
+    | 'tutoriais';
   autoDetectSection?: boolean; // Se true, detecta a seção da URL
 };
 
@@ -35,6 +37,7 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClientComponentClient();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Detectar página dinamicamente baseada na URL
   const getEffectivePagina = (): Props['pagina'] => {
@@ -82,7 +85,31 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
   }, [effectivePagina, supabase]); // Usar effectivePagina ao invés de pagina
 
   if (loading || !video) {
-    return null;
+    // Se não tem vídeo específico, mostrar botão que leva para página de tutoriais
+    return (
+      <button
+        onClick={() => router.push('/revendedora/tutoriais')}
+        className="fixed bottom-6 right-6 z-40 group"
+        title="Ver Tutoriais"
+      >
+        <div className="relative">
+          {/* Label "Tutorial" em cima */}
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
+              Tutorial
+            </span>
+          </div>
+          
+          {/* Animação de pulso ao redor */}
+          <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-50" />
+          
+          {/* Container do botão - Rosa */}
+          <div className="relative w-14 h-14 rounded-full overflow-hidden shadow-2xl hover:scale-110 transition-transform duration-300 border-4 border-white bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center">
+            <BookOpen size={24} className="text-white" />
+          </div>
+        </div>
+      </button>
+    );
   }
 
   return (
@@ -94,8 +121,15 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
         title={video.titulo}
       >
         <div className="relative">
+          {/* Label "Tutorial" em cima */}
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
+              Tutorial
+            </span>
+          </div>
+          
           {/* Animação de pulso ao redor */}
-          <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-75" />
+          <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-50" />
           
           {/* Container do botão */}
           <div className="relative w-16 h-16 rounded-full overflow-hidden shadow-2xl hover:scale-110 transition-transform duration-300 border-4 border-white">
