@@ -84,8 +84,9 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
     loadVideo();
   }, [effectivePagina, supabase]); // Usar effectivePagina ao invés de pagina
 
+  // Sempre mostrar a bolinha (mesmo carregando ou sem vídeo específico)
+  // Apenas muda o comportamento ao clicar
   if (loading || !video) {
-    // Se não tem vídeo específico, mostrar botão que leva para página de tutoriais
     return (
       <button
         onClick={() => router.push('/revendedora/tutoriais')}

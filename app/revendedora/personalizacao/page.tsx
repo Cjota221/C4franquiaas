@@ -470,6 +470,7 @@ export default function PersonalizacaoRevendedoraPage() {
             {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alteracoes</>)}
           </button>
         </div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -536,6 +537,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar Cor</button></div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -964,6 +966,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -1031,6 +1034,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -1266,6 +1270,7 @@ export default function PersonalizacaoRevendedoraPage() {
             <Check className="inline w-6 h-6 mr-2" />Voltar
           </button>
         </div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -1320,6 +1325,7 @@ export default function PersonalizacaoRevendedoraPage() {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-64"><button onClick={() => handleSectionChange("main")} className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white"><Check className="inline w-6 h-6 mr-2" />Confirmar</button></div>
+        <VideoTutorialButton pagina="personalizacao" autoDetectSection />
       </div>
     );
   }
@@ -1327,7 +1333,7 @@ export default function PersonalizacaoRevendedoraPage() {
   return (
     <>
       <VideoTutorialButton pagina="personalizacao" autoDetectSection />
-      {null}
+      {/* Conteúdo vazio - todas as seções são renderizadas nos ifs anteriores */}
     </>
   );
 }
