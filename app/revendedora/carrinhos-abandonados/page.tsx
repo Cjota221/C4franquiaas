@@ -66,6 +66,7 @@ export default function CarrinhosAbandonadosPage() {
   const [loading, setLoading] = useState(true)
   const [resellerId, setResellerId] = useState<string | null>(null)
   const [resellerSlug, setResellerSlug] = useState<string | null>(null)
+  const [lojaDominio, setLojaDominio] = useState<string | null>(null)
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null)
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
@@ -117,11 +118,20 @@ export default function CarrinhosAbandonadosPage() {
           return
         }
 
+        // Buscar domínio da loja vinculada
+        const { data: loja } = await supabase
+          .from('lojas')
+          .select('dominio')
+          .eq('reseller_id', reseller.id)
+          .eq('ativo', true)
+          .single()
+
         // 🆕 Atualizar título da página para Google Analytics
         document.title = `Carrinhos Abandonados - ${reseller.store_name} | C4 Franquias`;
 
         setResellerId(reseller.id)
         setResellerSlug(reseller.slug)
+        setLojaDominio(loja?.dominio || reseller.slug) // Fallback para slug se não tiver loja
         await loadCarts(reseller.id)
       } catch (err) {
         console.error('Erro ao carregar:', err)
@@ -263,13 +273,15 @@ export default function CarrinhosAbandonadosPage() {
 
   // Gera link de recuperação do carrinho usando o token único
   const generateRecoveryLink = (cart: AbandonedCart) => {
-    if (!resellerSlug) return ''
+    // Usar domínio da loja para a URL (não o slug da revendedora)
+    const dominio = lojaDominio || resellerSlug
+    if (!dominio) return ''
     
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquiaas.netlify.app'
     
     // Se tem recovery_token, usa o link de recuperação real
     if (cart.recovery_token) {
-      return `${baseUrl}/loja/${resellerSlug}/recuperar/${cart.recovery_token}`
+      return `${baseUrl}/loja/${dominio}/recuperar/${cart.recovery_token}`
     }
     
     // Fallback: link para o catálogo com produtos (compatibilidade)
