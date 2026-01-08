@@ -28,7 +28,7 @@ interface ProdutoCompleto {
   id: number | string;
   id_externo?: string;
   nome: string;
-  estoque: number;
+  estoque: number | { estoque?: number; estoque_minimo?: number; localizacao?: string } | null;
   preco_base: number | null;
   ativo: boolean;
   imagem?: string | null;
@@ -48,6 +48,16 @@ interface ProdutoCompleto {
     estoque?: number;
     preco?: number;
   }[] | null;
+}
+
+// Função para extrair o valor numérico do estoque
+function getEstoqueNumero(estoque: number | { estoque?: number; estoque_minimo?: number; localizacao?: string } | null | undefined): number {
+  if (estoque === null || estoque === undefined) return 0;
+  if (typeof estoque === 'number') return estoque;
+  if (typeof estoque === 'object' && 'estoque' in estoque && typeof estoque.estoque === 'number') {
+    return estoque.estoque;
+  }
+  return 0;
 }
 
 interface ProdutoDetailsPanelProps {
@@ -356,13 +366,13 @@ export default function ProdutoDetailsPanel({
                 <span className="text-sm font-medium">Estoque</span>
               </div>
               <p className={`text-2xl font-bold ${
-                produto.estoque > 10 ? 'text-green-600' : 
-                produto.estoque > 0 ? 'text-orange-600' : 
+                getEstoqueNumero(produto.estoque) > 10 ? 'text-green-600' : 
+                getEstoqueNumero(produto.estoque) > 0 ? 'text-orange-600' : 
                 'text-red-600'
               }`}>
-                {produto.estoque} un.
+                {getEstoqueNumero(produto.estoque)} un.
               </p>
-              {produto.estoque === 0 && (
+              {getEstoqueNumero(produto.estoque) === 0 && (
                 <p className="text-xs text-red-500 mt-1">Produto esgotado</p>
               )}
             </div>
