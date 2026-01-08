@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { QRCodeSVG } from 'qrcode.react'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
+import { toast } from 'sonner'
 import { 
   Settings, 
   Smartphone, 
@@ -14,7 +15,11 @@ import {
   WifiOff,
   Bell,
   Clock,
-  Construction
+  Construction,
+  KeyRound,
+  Eye,
+  EyeOff,
+  ShieldCheck
 } from 'lucide-react'
 
 interface ResellerData {
@@ -38,6 +43,14 @@ export default function ConfiguracoesRevendedora() {
   const [whatsappStatus, setWhatsappStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [loadingQR, setLoadingQR] = useState(false)
+  
+  // Estados para redefinição de senha
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [mostrarSenhaAtual, setMostrarSenhaAtual] = useState(false)
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
+  const [alterandoSenha, setAlterandoSenha] = useState(false)
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     novoPedido: true,
@@ -190,6 +203,71 @@ export default function ConfiguracoesRevendedora() {
     }
   }
 
+  // Função para alterar senha
+  async function handleAlterarSenha(e: React.FormEvent) {
+    e.preventDefault()
+    
+    // Validações
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
+      toast.error('Preencha todos os campos')
+      return
+    }
+    
+    if (novaSenha.length < 6) {
+      toast.error('A nova senha deve ter pelo menos 6 caracteres')
+      return
+    }
+    
+    if (novaSenha !== confirmarSenha) {
+      toast.error('As senhas não coincidem')
+      return
+    }
+    
+    setAlterandoSenha(true)
+    
+    try {
+      // Primeiro, verificar se a senha atual está correta fazendo login novamente
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) {
+        toast.error('Usuário não encontrado')
+        return
+      }
+      
+      // Tentar fazer login com a senha atual para verificar
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: senhaAtual
+      })
+      
+      if (signInError) {
+        toast.error('Senha atual incorreta')
+        return
+      }
+      
+      // Atualizar para a nova senha
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: novaSenha
+      })
+      
+      if (updateError) {
+        throw updateError
+      }
+      
+      toast.success('Senha alterada com sucesso!')
+      
+      // Limpar campos
+      setSenhaAtual('')
+      setNovaSenha('')
+      setConfirmarSenha('')
+      
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error)
+      toast.error('Erro ao alterar senha. Tente novamente.')
+    } finally {
+      setAlterandoSenha(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -204,6 +282,130 @@ export default function ConfiguracoesRevendedora() {
         <Settings className="w-6 h-6" />
         Configurações
       </h1>
+
+      {/* Card de Redefinir Senha */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-purple-500">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <KeyRound className="w-5 h-5 text-purple-600" />
+          Redefinir Senha
+        </h2>
+        
+        <p className="text-gray-600 mb-4">
+          Para sua segurança, recomendamos alterar sua senha periodicamente.
+          {/* Mensagem especial se veio do reset */}
+          <span className="block mt-2 text-sm text-amber-600 font-medium">
+            💡 Se você recebeu uma senha temporária, altere-a agora para uma senha de sua preferência.
+          </span>
+        </p>
+
+        <form onSubmit={handleAlterarSenha} className="space-y-4">
+          {/* Senha Atual */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Senha Atual (ou Temporária)
+            </label>
+            <div className="relative">
+              <input
+                type={mostrarSenhaAtual ? 'text' : 'password'}
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
+                placeholder="Digite sua senha atual"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenhaAtual(!mostrarSenhaAtual)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {mostrarSenhaAtual ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Nova Senha */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nova Senha
+            </label>
+            <div className="relative">
+              <input
+                type={mostrarNovaSenha ? 'text' : 'password'}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarNovaSenha(!mostrarNovaSenha)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {mostrarNovaSenha ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirmar Nova Senha */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar Nova Senha
+            </label>
+            <input
+              type="password"
+              value={confirmarSenha}
+              onChange={(e) => setConfirmarSenha(e.target.value)}
+              placeholder="Digite novamente a nova senha"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Indicador de força da senha */}
+          {novaSenha && (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all ${
+                    novaSenha.length < 6 ? 'w-1/4 bg-red-500' :
+                    novaSenha.length < 8 ? 'w-2/4 bg-yellow-500' :
+                    novaSenha.length < 10 ? 'w-3/4 bg-blue-500' :
+                    'w-full bg-green-500'
+                  }`}
+                />
+              </div>
+              <span className={`text-xs font-medium ${
+                novaSenha.length < 6 ? 'text-red-600' :
+                novaSenha.length < 8 ? 'text-yellow-600' :
+                novaSenha.length < 10 ? 'text-blue-600' :
+                'text-green-600'
+              }`}>
+                {novaSenha.length < 6 ? 'Muito fraca' :
+                 novaSenha.length < 8 ? 'Fraca' :
+                 novaSenha.length < 10 ? 'Boa' :
+                 'Forte'}
+              </span>
+            </div>
+          )}
+
+          {/* Botão Salvar */}
+          <button
+            type="submit"
+            disabled={alterandoSenha || !senhaAtual || !novaSenha || !confirmarSenha}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {alterandoSenha ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Alterando...
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-5 h-5" />
+                Alterar Senha
+              </>
+            )}
+          </button>
+        </form>
+      </div>
 
       {/* Card de Em Construção */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-lg shadow-md p-6 mb-6">
