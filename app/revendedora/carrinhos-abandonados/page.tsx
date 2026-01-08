@@ -230,30 +230,23 @@ export default function CarrinhosAbandonadosPage() {
       return `https://wa.me/55${cleaned}`
     }
     
-    // Monta mensagem personalizada
-    // Usando Unicode escapes para garantir compatibilidade
-    const WAVE = '\u{1F44B}'      // 👋
-    const SPEECH = '\u{1F4AC}'    // 💬
-    const CART = '\u{1F6D2}'      // 🛒
-    const MONEY = '\u{1F4B0}'     // 💰
-    const SMILE = '\u{1F60A}'     // 😊
-    
+    // Monta mensagem personalizada (sem emojis para evitar problemas de encoding)
     const firstName = cart.customer_name?.split(' ')[0] || 'Cliente'
     
-    let message = `Ola ${firstName}! ${WAVE}\n\n`
-    message += `Vi que voce deixou algumas pecas no carrinho. Ficou alguma duvida? ${SPEECH}\n\n`
+    let message = `Ola ${firstName}!\n\n`
+    message += `Vi que voce deixou alguns itens no carrinho. Posso te ajudar?\n\n`
     
     // Lista os produtos
     if (cart.items && cart.items.length > 0) {
-      message += `${CART} *Seu carrinho:*\n`
+      message += `*Seu carrinho:*\n`
       cart.items.forEach((item) => {
         const variation = item.variation_name ? ` (${item.variation_name})` : ''
         message += `- ${item.product_name}${variation} - R$ ${item.product_price.toFixed(2)}\n`
       })
-      message += `\n${MONEY} *Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
+      message += `\n*Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
     }
     
-    message += `Estou aqui para te ajudar! ${SMILE}`
+    message += `Qualquer duvida estou a disposicao!`
     
     return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
   }
