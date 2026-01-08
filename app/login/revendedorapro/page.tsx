@@ -51,7 +51,7 @@ export default function LoginRevendedoraProPage() {
         }
       }
 
-      router.push('/franqueada/dashboard');
+      router.push('/revendedora-pro/dashboard');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado.';
       setError(errorMessage);

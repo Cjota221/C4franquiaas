@@ -194,7 +194,7 @@ export default function CadastroFranqueadaPage() {
 
         <p className="text-sm text-gray-600 text-center mt-6">
           Já tem cadastro?{' '}
-          <a href="/franqueada/login" className="text-pink-600 hover:underline font-medium">
+          <a href="/login/revendedorapro" className="text-pink-600 hover:underline font-medium">
             Fazer login
           </a>
         </p>

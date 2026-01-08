@@ -6,7 +6,7 @@ import SidebarFranqueada from '@/components/SidebarFranqueada';
 import { Toaster } from 'sonner';
 
 // OTIMIZAÇÃO: Cache de autenticação (5 minutos)
-const AUTH_CACHE_KEY = 'franqueada_auth_cache';
+const AUTH_CACHE_KEY = 'revendedora_pro_auth_cache';
 const CACHE_DURATION = 5 * 60 * 1000;
 
 type CachedAuth = {
@@ -15,14 +15,14 @@ type CachedAuth = {
   timestamp: number;
 };
 
-export default function FranqueadaLayout({ children }: { children: React.ReactNode }) {
+export default function RevendedoraProLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [franqueadaNome, setFranqueadaNome] = useState('');
 
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/franqueada/login'];
+  const publicRoutes = ['/login/revendedorapro'];
   const isPublicRoute = publicRoutes.includes(pathname || '');
 
   const checkAuth = useCallback(async () => {
@@ -56,11 +56,11 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
       const { data: { user } } = await createClient().auth.getUser();
 
       if (!user) {
-        router.push('/franqueada/login');
+        router.push('/login/revendedorapro');
         return;
       }
 
-      // Verificar se usuário está vinculado a franqueada aprovada
+      // Verificar se usuário está vinculado a Revendedora Pro aprovada
       const { data: franqueada, error } = await createClient()
         .from('franqueadas')
         .select('id, nome, status')
@@ -68,16 +68,16 @@ export default function FranqueadaLayout({ children }: { children: React.ReactNo
         .single();
 
       if (error || !franqueada) {
-        console.error('[franqueada/layout] Usuário não vinculado a franqueada');
+        console.error('[revendedora-pro/layout] Usuário não vinculado');
         await createClient().auth.signOut();
-        router.push('/franqueada/login');
+        router.push('/login/revendedorapro');
         return;
       }
 
       if (franqueada.status !== 'aprovada') {
-        console.error('[franqueada/layout] Franqueada não aprovada');
+        console.error('[revendedora-pro/layout] Conta não aprovada');
         await createClient().auth.signOut();
-        router.push('/franqueada/login');
+        router.push('/login/revendedorapro');
         return;
       }
 

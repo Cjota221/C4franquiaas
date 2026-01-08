@@ -34,33 +34,33 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
     {
       title: 'Visao Geral',
       items: [
-        { href: '/franqueada/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/revendedora-pro/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       ]
     },
     {
       title: 'Catalogo',
       items: [
-        { href: '/franqueada/produtos', label: 'Produtos', icon: Package },
+        { href: '/revendedora-pro/produtos', label: 'Produtos', icon: Package },
       ]
     },
     {
       title: 'Vendas',
       items: [
-        { href: '/franqueada/vendas', label: 'Minhas Vendas', icon: ShoppingBag },
-        { href: '/franqueada/comissoes', label: 'Comissoes', icon: Wallet },
+        { href: '/revendedora-pro/vendas', label: 'Minhas Vendas', icon: ShoppingBag },
+        { href: '/revendedora-pro/comissoes', label: 'Comissoes', icon: Wallet },
       ]
     },
     {
       title: 'Loja',
       items: [
-        { href: '/franqueada/loja', label: 'Configuracoes', icon: Store },
-        { href: '/franqueada/customizacoes', label: 'Personalizacao', icon: Palette },
+        { href: '/revendedora-pro/loja', label: 'Configuracoes', icon: Store },
+        { href: '/revendedora-pro/customizacoes', label: 'Personalizacao', icon: Palette },
       ]
     },
     {
       title: 'Conta',
       items: [
-        { href: '/franqueada/perfil', label: 'Meu Perfil', icon: User },
+        { href: '/revendedora-pro/perfil', label: 'Meu Perfil', icon: User },
       ]
     }
   ];
@@ -84,7 +84,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push('/franqueada/login');
+    router.push('/login/revendedorapro');
   }
 
   return (
