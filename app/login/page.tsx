@@ -174,11 +174,17 @@ export default function LoginPage() {
           </div>
 
           {/* Link para cadastro */}
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 space-y-3">
             <p className="text-gray-600">
-              Ainda não é franqueada?{' '}
+              Ainda não tem conta?{' '}
               <Link href="/cadastro/revendedora" className="text-pink-600 font-semibold hover:underline">
                 Cadastre-se grátis
+              </Link>
+            </p>
+            <p className="text-gray-500 text-sm">
+              É Revendedora Pro?{' '}
+              <Link href="/login/revendedorapro" className="text-pink-600 font-semibold hover:underline">
+                Acesse aqui
               </Link>
             </p>
           </div>
