@@ -3,18 +3,21 @@
  * Garante compatibilidade UTF-8 em todos os ambientes
  */
 
+// Configuração: defina como false se os emojis não funcionarem no dispositivo
+const USE_EMOJIS = false
+
 // Emojis como constantes - gerados em runtime para garantir compatibilidade
 export const EMOJIS = {
-  WAVE: String.fromCodePoint(0x1F44B),      // 👋
-  SPEECH: String.fromCodePoint(0x1F4AC),    // 💬
-  CART: String.fromCodePoint(0x1F6D2),      // 🛒
-  MONEY: String.fromCodePoint(0x1F4B0),     // 💰
-  SMILE: String.fromCodePoint(0x1F60A),     // 😊
-  GIFT: String.fromCodePoint(0x1F381),      // 🎁
-  STAR: String.fromCodePoint(0x2B50),       // ⭐
-  CHECK: String.fromCodePoint(0x2705),      // ✅
-  HEART: String.fromCodePoint(0x2764),      // ❤
-  FIRE: String.fromCodePoint(0x1F525),      // 🔥
+  WAVE: USE_EMOJIS ? String.fromCodePoint(0x1F44B) : '',      // 👋
+  SPEECH: USE_EMOJIS ? String.fromCodePoint(0x1F4AC) : '',    // 💬
+  CART: USE_EMOJIS ? String.fromCodePoint(0x1F6D2) : '*',     // 🛒
+  MONEY: USE_EMOJIS ? String.fromCodePoint(0x1F4B0) : '$',    // 💰
+  SMILE: USE_EMOJIS ? String.fromCodePoint(0x1F60A) : '',     // 😊
+  GIFT: USE_EMOJIS ? String.fromCodePoint(0x1F381) : '',      // 🎁
+  STAR: USE_EMOJIS ? String.fromCodePoint(0x2B50) : '*',      // ⭐
+  CHECK: USE_EMOJIS ? String.fromCodePoint(0x2705) : '[OK]',  // ✅
+  HEART: USE_EMOJIS ? String.fromCodePoint(0x2764) : '<3',    // ❤
+  FIRE: USE_EMOJIS ? String.fromCodePoint(0x1F525) : '',      // 🔥
 } as const
 
 export interface CartItem {
@@ -63,11 +66,11 @@ export function generateAbandonedCartMessage(options: WhatsAppMessageOptions): s
   const { customerName, items, totalValue, couponCode } = options
   const firstName = customerName?.split(' ')[0] || 'Cliente'
   
-  let message = `Ola ${firstName}! ${EMOJIS.WAVE}\n\n`
-  message += `${EMOJIS.SPEECH} Vi que voce deixou alguns itens no carrinho. Posso te ajudar?\n\n`
+  let message = `Ola ${firstName}!${EMOJIS.WAVE ? ' ' + EMOJIS.WAVE : ''}\n\n`
+  message += `${EMOJIS.SPEECH ? EMOJIS.SPEECH + ' ' : ''}Vi que voce deixou alguns itens no carrinho. Posso te ajudar?\n\n`
   
   if (items && items.length > 0) {
-    message += `${EMOJIS.CART} *Seu carrinho:*\n`
+    message += `${EMOJIS.CART ? EMOJIS.CART + ' ' : ''}*Seu carrinho:*\n`
     items.forEach((item) => {
       const variation = item.variation_name ? ` (${item.variation_name})` : ''
       const price = typeof item.product_price === 'number' ? item.product_price.toFixed(2) : '0.00'
@@ -75,14 +78,14 @@ export function generateAbandonedCartMessage(options: WhatsAppMessageOptions): s
     })
     
     const total = typeof totalValue === 'number' ? totalValue.toFixed(2) : '0.00'
-    message += `\n${EMOJIS.MONEY} *Total: R$ ${total}*\n\n`
+    message += `\n${EMOJIS.MONEY ? EMOJIS.MONEY + ' ' : ''}*Total: R$ ${total}*\n\n`
   }
   
   if (couponCode) {
-    message += `${EMOJIS.GIFT} Use o cupom *${couponCode}* para desconto!\n\n`
+    message += `${EMOJIS.GIFT ? EMOJIS.GIFT + ' ' : ''}Use o cupom *${couponCode}* para desconto!\n\n`
   }
   
-  message += `Estou aqui pra te ajudar! ${EMOJIS.SMILE}`
+  message += `Estou aqui pra te ajudar!${EMOJIS.SMILE ? ' ' + EMOJIS.SMILE : ''}`
   
   return sanitizeMessage(message)
 }
