@@ -31,7 +31,7 @@ export default function LoginRevendedoraProPage() {
       // Verificar se é Revendedora Pro (franqueada)
       const { data: franqueada } = await supabase
         .from('franqueadas')
-        .select('id, ativo, nome_fantasia')
+        .select('id, status, nome, nome_fantasia')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -40,9 +40,15 @@ export default function LoginRevendedoraProPage() {
         throw new Error('Acesso negado. Esta área é exclusiva para Revendedoras Pro.');
       }
 
-      if (!franqueada.ativo) {
+      if (franqueada.status !== 'aprovada') {
         await supabase.auth.signOut();
-        throw new Error('Sua conta está inativa. Entre em contato com o administrador.');
+        if (franqueada.status === 'pendente') {
+          throw new Error('Seu cadastro ainda está em análise. Aguarde a aprovação!');
+        } else if (franqueada.status === 'rejeitada') {
+          throw new Error('Seu cadastro foi rejeitado. Entre em contato conosco.');
+        } else {
+          throw new Error('Sua conta não está ativa. Entre em contato com o administrador.');
+        }
       }
 
       router.push('/franqueada/dashboard');
