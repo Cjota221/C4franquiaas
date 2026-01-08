@@ -14,8 +14,13 @@ import {
   Trash2,
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  Copy,
+  TrendingUp,
+  Package,
+  ExternalLink
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface CartItem {
   id: string
@@ -45,14 +50,25 @@ interface AbandonedCart {
   items: CartItem[]
 }
 
+// Interface para produtos mais abandonados
+interface ProdutoAbandonado {
+  product_id: string
+  product_name: string
+  product_image: string | null
+  count: number
+  total_quantity: number
+}
+
 export default function CarrinhosAbandonadosPage() {
   const [carts, setCarts] = useState<AbandonedCart[]>([])
   const [loading, setLoading] = useState(true)
   const [resellerId, setResellerId] = useState<string | null>(null)
+  const [resellerSlug, setResellerSlug] = useState<string | null>(null)
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null)
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [showTopProducts, setShowTopProducts] = useState(true)
 
   const loadCarts = async (rId: string) => {
     try {
@@ -86,7 +102,7 @@ export default function CarrinhosAbandonadosPage() {
 
         const { data: reseller, error: resellerError } = await supabase
           .from('resellers')
-          .select('id, store_name')
+          .select('id, store_name, slug')
           .eq('user_id', user.id)
           .single()
 
@@ -100,6 +116,7 @@ export default function CarrinhosAbandonadosPage() {
         document.title = `Carrinhos Abandonados - ${reseller.store_name} | C4 Franquias`;
 
         setResellerId(reseller.id)
+        setResellerSlug(reseller.slug)
         await loadCarts(reseller.id)
       } catch (err) {
         console.error('Erro ao carregar:', err)
@@ -228,9 +245,72 @@ export default function CarrinhosAbandonadosPage() {
       message += `\n💰 *Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
     }
     
+    // Adiciona link de recuperação se tiver slug
+    if (resellerSlug) {
+      const recoveryLink = generateRecoveryLink(cart)
+      message += `🔗 *Clique para continuar sua compra:*\n${recoveryLink}\n\n`
+    }
+    
     message += `Estou aqui para te ajudar! 😊`
     
     return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
+  }
+
+  // Gera link de recuperação do carrinho com produtos pré-selecionados
+  const generateRecoveryLink = (cart: AbandonedCart) => {
+    if (!resellerSlug || !cart.items || cart.items.length === 0) return ''
+    
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquiaas.netlify.app'
+    
+    // Cria parâmetros com IDs dos produtos
+    const productIds = cart.items.map(item => item.product_id).join(',')
+    
+    return `${baseUrl}/catalogo/${resellerSlug}?cart=${encodeURIComponent(productIds)}`
+  }
+
+  // Copiar link de recuperação
+  const copyRecoveryLink = async (cart: AbandonedCart) => {
+    const link = generateRecoveryLink(cart)
+    if (!link) {
+      toast.error('Não foi possível gerar o link')
+      return
+    }
+    
+    try {
+      await navigator.clipboard.writeText(link)
+      toast.success('Link copiado! 📋')
+    } catch {
+      toast.error('Erro ao copiar link')
+    }
+  }
+
+  // Calcular produtos mais abandonados
+  const topAbandonedProducts = (): ProdutoAbandonado[] => {
+    const productMap = new Map<string, ProdutoAbandonado>()
+    
+    carts
+      .filter(c => c.status === 'abandoned')
+      .forEach(cart => {
+        cart.items?.forEach(item => {
+          const existing = productMap.get(item.product_id)
+          if (existing) {
+            existing.count += 1
+            existing.total_quantity += item.quantity
+          } else {
+            productMap.set(item.product_id, {
+              product_id: item.product_id,
+              product_name: item.product_name,
+              product_image: item.product_image,
+              count: 1,
+              total_quantity: item.quantity
+            })
+          }
+        })
+      })
+    
+    return Array.from(productMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
   }
 
   const stats = {
@@ -293,6 +373,68 @@ export default function CarrinhosAbandonadosPage() {
             </div>
           </div>
         </div>
+
+        {/* Produtos Mais Abandonados */}
+        {showTopProducts && topAbandonedProducts().length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-orange-500" />
+                Produtos Mais Abandonados
+              </h3>
+              <button 
+                onClick={() => setShowTopProducts(false)}
+                className="text-gray-400 hover:text-gray-600 text-sm"
+              >
+                Ocultar
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {topAbandonedProducts().map((produto, idx) => (
+                <div 
+                  key={produto.product_id}
+                  className="relative bg-gray-50 rounded-lg p-3 text-center"
+                >
+                  <div className="absolute -top-2 -left-2 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {idx + 1}
+                  </div>
+                  {produto.product_image ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img 
+                      src={produto.product_image} 
+                      alt={produto.product_name}
+                      className="w-16 h-16 object-cover rounded-lg mx-auto mb-2"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                      <Package className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                  <p className="text-xs font-medium text-gray-700 line-clamp-2 mb-1">
+                    {produto.product_name}
+                  </p>
+                  <p className="text-xs text-orange-600 font-semibold">
+                    {produto.count}x abandonado
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              💡 Considere criar promoções ou destacar esses produtos!
+            </p>
+          </div>
+        )}
+
+        {/* Botão para mostrar produtos abandonados se estiver oculto */}
+        {!showTopProducts && topAbandonedProducts().length > 0 && (
+          <button
+            onClick={() => setShowTopProducts(true)}
+            className="mb-4 text-sm text-pink-600 hover:text-pink-700 flex items-center gap-1"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Ver produtos mais abandonados
+          </button>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center">
@@ -419,6 +561,18 @@ export default function CarrinhosAbandonadosPage() {
                         <CheckCircle className="w-4 h-4" />
                       </button>
                     )}
+
+                    {/* Botão Copiar Link */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        copyRecoveryLink(cart)
+                      }}
+                      className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm hover:bg-blue-200"
+                      title="Copiar link de recuperação"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
                     
                     <button
                       onClick={(e) => {
@@ -520,6 +674,38 @@ export default function CarrinhosAbandonadosPage() {
                     R$ {(selectedCart.total_value || 0).toFixed(2)}
                   </span>
                 </div>
+
+                {/* Link de Recuperação */}
+                {resellerSlug && selectedCart.items && selectedCart.items.length > 0 && (
+                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-xs text-blue-600 font-medium mb-1">🔗 Link para recuperar carrinho:</p>
+                        <p className="text-xs text-blue-800 truncate font-mono">
+                          {generateRecoveryLink(selectedCart)}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => copyRecoveryLink(selectedCart)}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                          title="Copiar link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <a
+                          href={generateRecoveryLink(selectedCart)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                          title="Abrir catálogo"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Status Actions */}
                 <div className="flex flex-wrap gap-2">
