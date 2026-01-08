@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings } from 'lucide-react';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
@@ -20,6 +20,7 @@ export default function SidebarRevendedora() {
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
     { label: 'Configurações', href: '/revendedora/configuracoes', icon: Settings },
+    { label: 'Tutoriais', href: '/revendedora/tutoriais', icon: BookOpen, highlight: true },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -70,6 +71,7 @@ export default function SidebarRevendedora() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const showBadge = item.badge && item.badge > 0;
+            const isHighlight = 'highlight' in item && item.highlight;
             return (
               <Link 
                 key={item.href} 
@@ -79,15 +81,22 @@ export default function SidebarRevendedora() {
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative
                   ${isActive(item.href) 
                     ? 'bg-pink-50 text-pink-600 font-medium shadow-sm' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    : isHighlight
+                      ? 'text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
               >
-                <Icon size={20} />
+                <Icon size={20} className={isHighlight && !isActive(item.href) ? 'text-purple-500' : ''} />
                 <span className="flex-1">{item.label}</span>
                 {showBadge && (
                   <span className="ml-auto bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
                     {item.badge}
+                  </span>
+                )}
+                {isHighlight && !isActive(item.href) && (
+                  <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full">
+                    Novo
                   </span>
                 )}
               </Link>

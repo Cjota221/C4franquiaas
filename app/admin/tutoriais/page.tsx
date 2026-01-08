@@ -15,16 +15,19 @@ type TutorialVideo = {
 };
 
 const PAGINAS = [
-  { value: 'produtos', label: 'Produtos' },
-  { value: 'carrinhos', label: 'Carrinhos Abandonados' },
-  { value: 'promocoes', label: 'Promoções' },
-  { value: 'personalizacao', label: 'Personalização - Visão Geral' },
-  { value: 'personalizacao-banner', label: 'Personalização - Banners' },
-  { value: 'personalizacao-logo', label: 'Personalização - Logo' },
-  { value: 'personalizacao-cores', label: 'Personalização - Cores' },
-  { value: 'personalizacao-estilos', label: 'Personalização - Estilos' },
-  { value: 'personalizacao-redes-sociais', label: 'Personalização - Redes Sociais' },
-  { value: 'configuracoes', label: 'Configurações' },
+  { value: 'primeiros-passos', label: '🚀 Primeiros Passos', group: 'Início' },
+  { value: 'dashboard', label: '📊 Dashboard', group: 'Início' },
+  { value: 'produtos', label: '🛍️ Produtos', group: 'Funcionalidades' },
+  { value: 'carrinhos', label: '🛒 Carrinhos Abandonados', group: 'Funcionalidades' },
+  { value: 'promocoes', label: '🏷️ Promoções', group: 'Funcionalidades' },
+  { value: 'personalizacao', label: '🎨 Personalização - Visão Geral', group: 'Personalização' },
+  { value: 'personalizacao-banner', label: '🖼️ Personalização - Banners', group: 'Personalização' },
+  { value: 'personalizacao-logo', label: '✨ Personalização - Logo', group: 'Personalização' },
+  { value: 'personalizacao-cores', label: '🌈 Personalização - Cores', group: 'Personalização' },
+  { value: 'personalizacao-estilos', label: '🎯 Personalização - Estilos', group: 'Personalização' },
+  { value: 'personalizacao-redes-sociais', label: '📱 Personalização - Redes Sociais', group: 'Personalização' },
+  { value: 'configuracoes', label: '⚙️ Configurações', group: 'Outros' },
+  { value: 'dicas-vendas', label: '💡 Dicas de Vendas', group: 'Outros' },
 ];
 
 export default function TutoriaisPage() {
@@ -439,34 +442,75 @@ export default function TutoriaisPage() {
                 {/* Modo Upload */}
                 {uploadMode === 'upload' && (
                   <div>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                      onChange={handleFileUpload}
-                      className="w-full border rounded-lg px-4 py-2"
-                      disabled={uploading}
-                    />
-                    {uploading && (
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-pink-500 h-2 rounded-full transition-all"
-                            style={{ width: `${uploadProgress}%` }}
-                          />
+                    {/* Área de Drop/Select melhorada para mobile */}
+                    <label 
+                      htmlFor="video-upload"
+                      className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                        uploading 
+                          ? 'border-pink-400 bg-pink-50' 
+                          : formData.video_url 
+                            ? 'border-green-400 bg-green-50'
+                            : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-pink-400'
+                      }`}
+                    >
+                      {uploading ? (
+                        <div className="text-center">
+                          <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                          <p className="text-sm text-gray-600 font-medium">Enviando vídeo...</p>
+                          <div className="w-48 bg-gray-200 rounded-full h-2 mt-2 mx-auto">
+                            <div
+                              className="bg-pink-500 h-2 rounded-full transition-all"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{uploadProgress}%</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Enviando... {uploadProgress}%
-                        </p>
+                      ) : formData.video_url ? (
+                        <div className="text-center">
+                          <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-2">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-green-600 font-medium">Vídeo enviado!</p>
+                          <p className="text-xs text-gray-500 mt-1">Clique para trocar</p>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600 font-medium">
+                            <span className="text-pink-500">Toque aqui</span> para selecionar
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            ou arraste um vídeo
+                          </p>
+                        </div>
+                      )}
+                    </label>
+                    <input
+                      id="video-upload"
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      disabled={uploading}
+                      capture="environment"
+                    />
+                    <p className="text-xs text-gray-500 mt-3 text-center">
+                      📹 MP4, WebM, OGG ou MOV • Máximo 100MB
+                    </p>
+                    
+                    {/* Preview do vídeo se houver URL */}
+                    {formData.video_url && !uploading && (
+                      <div className="mt-4 rounded-lg overflow-hidden bg-black">
+                        <video 
+                          src={formData.video_url} 
+                          controls 
+                          className="w-full max-h-48"
+                          preload="metadata"
+                        />
                       </div>
                     )}
-                    {formData.video_url && !uploading && (
-                      <p className="text-xs text-green-600 mt-2">
-                        ✅ Vídeo enviado com sucesso!
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-2">
-                      📹 Formatos: MP4, WebM, OGG, MOV (máx 100MB)
-                    </p>
                   </div>
                 )}
               </div>
