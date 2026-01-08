@@ -74,7 +74,7 @@ export default function FranqueadasPage() {
   }, [loadFranqueadas]);
 
   async function aprovarFranqueada(id: string) {
-    if (!confirm('Deseja aprovar esta franqueada? Todos os produtos ativos serão vinculados automaticamente.')) return;
+    if (!confirm('Deseja aprovar esta Revendedora Pro? Todos os produtos ativos serão vinculados automaticamente.')) return;
     try {
       const res = await fetch('/api/admin/franqueadas/action', {
         method: 'POST',
@@ -92,8 +92,8 @@ export default function FranqueadasPage() {
       setTimeout(() => setStatusMsg(null), 5000);
     } catch (err) {
       console.error('Erro ao aprovar:', err);
-      toast.error('Erro ao aprovar franqueada');
-      setStatusMsg({ type: 'error', text: 'Erro ao aprovar franqueada' });
+      toast.error('Erro ao aprovar Revendedora Pro');
+      setStatusMsg({ type: 'error', text: 'Erro ao aprovar Revendedora Pro' });
     }
   }
 
@@ -108,18 +108,18 @@ export default function FranqueadasPage() {
       });
       if (!res.ok) throw new Error('Erro ao rejeitar');
       await loadFranqueadas();
-      toast.success('Franqueada rejeitada');
-      setStatusMsg({ type: 'success', text: 'Franqueada rejeitada' });
+      toast.success('Revendedora Pro rejeitada');
+      setStatusMsg({ type: 'success', text: 'Revendedora Pro rejeitada' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (err) {
       console.error('Erro ao rejeitar:', err);
-      toast.error('Erro ao rejeitar franqueada');
-      setStatusMsg({ type: 'error', text: 'Erro ao rejeitar franqueada' });
+      toast.error('Erro ao rejeitar Revendedora Pro');
+      setStatusMsg({ type: 'error', text: 'Erro ao rejeitar Revendedora Pro' });
     }
   }
 
   async function toggleLojaAtiva(id: string, ativo: boolean) {
-    if (!confirm(`Deseja ${ativo ? 'ativar' : 'desativar'} a loja desta franqueada?`)) return;
+    if (!confirm(`Deseja ${ativo ? 'ativar' : 'desativar'} a loja desta Revendedora Pro?`)) return;
     try {
       const res = await fetch('/api/admin/franqueadas/action', {
         method: 'POST',
@@ -139,7 +139,7 @@ export default function FranqueadasPage() {
   }
 
   async function revincularProdutos(id: string) {
-    if (!confirm('Deseja revincular os produtos ativos a esta franqueada? Isso vai recriar todas as vinculacoes.')) return;
+    if (!confirm('Deseja revincular os produtos ativos a esta Revendedora Pro? Isso vai recriar todas as vinculacoes.')) return;
     try {
       toast.info('Revinculando produtos...');
       setStatusMsg({ type: 'success', text: 'Revinculando produtos...' });
@@ -182,11 +182,11 @@ export default function FranqueadasPage() {
   };
 
   return (
-    <PageWrapper title="Franqueadas">
+    <PageWrapper title="Revendedoras Pro">
       <div className="p-6">
         <PageHeader
-          title="Gerenciar Franqueadas"
-          subtitle="Gerencie as franqueadas da plataforma"
+          title="Gerenciar Revendedoras Pro"
+          subtitle="Gerencie as revendedoras pro da plataforma"
           icon={Users}
         />
 
@@ -266,7 +266,7 @@ export default function FranqueadasPage() {
           <LoadingState message="Carregando franqueadas..." />
         ) : franqueadasFiltradas.length === 0 ? (
           <EmptyState
-            title="Nenhuma franqueada encontrada"
+            title="Nenhuma Revendedora Pro encontrada"
             description="Nao ha franqueadas que correspondam aos filtros selecionados."
             icon={Users}
           />

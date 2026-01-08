@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
     { id: 'produtos', label: 'Produtos', icon: Package, href: '/admin/produtos' },
-    { id: 'franqueadas', label: 'Franqueadas', icon: Store, href: '/admin/franqueadas' },
+    { id: 'revendedoras-pro', label: 'Revendedoras Pro', icon: Store, href: '/admin/franqueadas' },
     { id: 'revendedoras', label: 'Revendedoras', icon: UserPlus, href: '/admin/revendedoras' },
     { id: 'afiliados', label: 'Afiliados', icon: UserPlus, href: '/admin/afiliados' },
     { id: 'pedidos', label: 'Pedidos', icon: Truck, href: '/admin/pedidos' },

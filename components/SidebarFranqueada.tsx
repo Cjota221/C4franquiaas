@@ -92,7 +92,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
       {/* Header Mobile - Visivel apenas em telas pequenas */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-gray-900">Painel Franqueada</p>
+          <p className="text-sm font-semibold text-gray-900">Revendedora Pro</p>
           <p className="text-xs text-gray-500 truncate max-w-[200px]">{franqueadaNome}</p>
         </div>
         <button
@@ -126,7 +126,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-lg font-semibold text-gray-900">C4 Franquias</p>
+              <p className="text-lg font-semibold text-gray-900">Revendedora Pro</p>
               <p className="text-sm text-gray-500 truncate mt-0.5">{franqueadaNome}</p>
             </div>
             {/* Botao fechar (apenas mobile) */}

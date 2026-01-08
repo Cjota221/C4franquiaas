@@ -37,7 +37,7 @@ export default function LoginFranqueadaPage() {
 
       if (franqueadaError || !franqueada) {
         await createClient().auth.signOut();
-        throw new Error('Usuário não está vinculado a nenhuma franqueada');
+        throw new Error('Usuário não está vinculado a nenhuma conta Pro');
       }
 
       // Verificar se está aprovada
@@ -70,7 +70,7 @@ export default function LoginFranqueadaPage() {
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-pink-600 mb-2">
-            Login - Franqueada
+            Login - Revendedora Pro
           </h1>
           <p className="text-gray-600 text-sm">
             Acesse seu painel de gerenciamento

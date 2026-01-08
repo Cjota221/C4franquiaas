@@ -57,10 +57,10 @@ export default function CadastroFranqueadaPage() {
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-pink-600 mb-2">
-            Cadastro de Franqueada
+            Cadastro Revendedora Pro
           </h1>
           <p className="text-gray-600 text-sm">
-            Preencha seus dados para se tornar uma revendedora C4 Franquias
+            Tenha sua própria loja virtual com preços personalizados
           </p>
         </div>
 

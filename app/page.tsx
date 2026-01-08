@@ -141,14 +141,14 @@ export default function LandingPage() {
                 href="/cadastro/revendedora"
                 className="group relative inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pink-700 hover:-translate-y-1 transition-all"
               >
-                <span>Quero ser franqueada</span>
+                <span>Quero ser revendedora</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-full font-bold text-lg border border-gray-200 hover:border-pink-300 hover:text-pink-600 hover:-translate-y-1 transition-all shadow-sm"
               >
-                Já sou franqueada
+                Já sou revendedora
               </Link>
             </div>
 
@@ -333,7 +333,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-1.5 bg-pink-100 text-pink-700 rounded-full text-sm font-semibold mb-4">Vantagens</span>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
-              Por que ser<span className="text-pink-600"> franqueada C4?</span>
+              Por que ser<span className="text-pink-600"> Revendedora Pro?</span>
             </h2>
           </div>
           </AnimatedSection>
@@ -375,7 +375,7 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-pink-600 rounded-full flex items-center justify-center text-white font-bold text-xl">A</div>
               <div className="text-left">
                 <div className="font-bold text-gray-900">Ana Paula</div>
-                <div className="text-gray-500">Franqueada C4</div>
+                <div className="text-gray-500">Revendedora Pro</div>
               </div>
             </div>
           </div>
@@ -393,11 +393,11 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               { q: 'Preciso comprar estoque antes de vender?', a: 'Não! Esse é o diferencial do C4 Franquias. Você divulga, vende para sua cliente, e só então faz o pedido conosco.' },
-              { q: 'O site já vem com os produtos?', a: 'Sim! Ao se tornar franqueada, seu site já vem com todo o catálogo da Cjota Rasteirinhas cadastrado.' },
-              { q: 'Como eu defino minha margem de lucro?', a: 'No painel da franqueada você configura o percentual de lucro que quer em cada venda. Simples assim!' },
+              { q: 'O site já vem com os produtos?', a: 'Sim! Ao se tornar Revendedora Pro, seu site já vem com todo o catálogo da Cjota Rasteirinhas cadastrado.' },
+              { q: 'Como eu defino minha margem de lucro?', a: 'No painel da Revendedora Pro você configura o percentual de lucro que quer em cada venda. Simples assim!' },
               { q: 'Posso personalizar o site com minha marca?', a: 'Claro! Você escolhe suas cores, adiciona sua logo e tem seu próprio link para divulgar.' },
               { q: 'Como funciona o envio?', a: 'Você faz o pedido conosco e nós enviamos para você. Aí você entrega para sua cliente e fica com o lucro!' },
-              { q: 'Quanto custa para ser franqueada?', a: 'O cadastro é gratuito! Você não paga nada para ter seu site. Só paga quando fizer pedidos.' }
+              { q: 'Quanto custa para ser Revendedora Pro?', a: 'O cadastro é gratuito! Você não paga nada para ter seu site. Só paga quando fizer pedidos.' }
             ].map((item, index) => (
               <div key={index} className="group bg-gray-50 hover:bg-pink-50 p-6 rounded-2xl transition-colors">
                 <h4 className="font-bold text-gray-900 mb-2 flex items-start gap-3">
@@ -429,7 +429,7 @@ export default function LandingPage() {
             href="/cadastro/revendedora"
             className="group relative inline-flex items-center justify-center gap-3 bg-pink-600 text-white px-10 py-5 rounded-full font-bold text-xl shadow-lg hover:bg-pink-700 hover:-translate-y-1 transition-all"
           >
-            <span>Quero ser franqueada</span>
+            <span>Quero ser revendedora</span>
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
           </Link>
 
@@ -472,8 +472,8 @@ export default function LandingPage() {
             <div>
               <h4 className="text-white font-bold mb-6 text-lg">Links</h4>
               <ul className="space-y-3">
-                <li><Link href="/login" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Área da Franqueada</Link></li>
-                <li><Link href="/cadastro/revendedora" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Quero ser Franqueada</Link></li>
+                <li><Link href="/login" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Área da Revendedora</Link></li>
+                <li><Link href="/cadastro/revendedora" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Quero ser Revendedora</Link></li>
                 <li><Link href="/termos" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Termos de Uso</Link></li>
                 <li><Link href="/privacidade" className="hover:text-pink-400 transition flex items-center gap-2"><ArrowRight className="w-4 h-4" />Política de Privacidade</Link></li>
               </ul>
