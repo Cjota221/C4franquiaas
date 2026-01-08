@@ -96,11 +96,11 @@ export default function RevendedoraProLayout({ children }: { children: React.Rea
       
       setLoading(false);
     } catch (err) {
-      console.error('[franqueada/layout] Erro ao verificar autenticação:', err);
+      console.error('[revendedora-pro/layout] Erro ao verificar autenticação:', err);
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem(AUTH_CACHE_KEY);
       }
-      router.push('/franqueada/login');
+      router.push('/login/revendedorapro');
     }
   }, [router, isPublicRoute]);
 

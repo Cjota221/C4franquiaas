@@ -109,7 +109,7 @@ export default function MinhasComissoesPage() {
               <p className="text-sm text-amber-800 mb-3">
                 Para receber suas comissoes, voce precisa cadastrar sua chave PIX.
               </p>
-              <Link href="/franqueada/perfil">
+              <Link href="/revendedora-pro/perfil">
                 <Button variant="outline" size="sm" className="border-amber-600 text-amber-700 hover:bg-amber-100">
                   Cadastrar Chave PIX
                   <ArrowRight className="w-4 h-4 ml-2" />

@@ -156,7 +156,7 @@ export default function FranqueadaDashboardPage() {
             </div>
           </div>
           <Link
-            href="/franqueada/loja"
+            href="/revendedora-pro/loja"
             className="text-sm text-pink-600 hover:text-pink-700 font-medium flex items-center gap-1"
           >
             Configurar
@@ -173,7 +173,7 @@ export default function FranqueadaDashboardPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
-          href="/franqueada/produtos"
+          href="/revendedora-pro/produtos"
           className="group flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all"
         >
           <div className="w-12 h-12 rounded-lg bg-pink-50 flex items-center justify-center group-hover:bg-pink-100 transition-colors">
@@ -187,7 +187,7 @@ export default function FranqueadaDashboardPage() {
         </Link>
 
         <Link
-          href="/franqueada/customizacoes"
+          href="/revendedora-pro/customizacoes"
           className="group flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all"
         >
           <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -201,7 +201,7 @@ export default function FranqueadaDashboardPage() {
         </Link>
 
         <Link
-          href="/franqueada/comissoes"
+          href="/revendedora-pro/comissoes"
           className="group flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all"
         >
           <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
