@@ -23,6 +23,11 @@ export interface RevendedoraCompleta {
   logo_url: string | null;
   banner_url: string | null;
   banner_mobile_url: string | null;
+  
+  // Redes sociais
+  instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
 }
 
 export type FiltroStatus = 'todas' | 'pendente' | 'aprovada' | 'rejeitada';

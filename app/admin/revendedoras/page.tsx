@@ -205,6 +205,10 @@ export default function AdminRevendedorasPage() {
             logo_url: r.logo_url || null,
             banner_url: r.banner_url || null,
             banner_mobile_url: r.banner_mobile_url || null,
+            // Redes sociais
+            instagram: r.instagram || null,
+            facebook: r.facebook || null,
+            tiktok: r.tiktok || null,
           };
         } catch (itemErr) {
           console.error(`Erro ao processar revendedora ${r.name}:`, itemErr);
@@ -228,6 +232,9 @@ export default function AdminRevendedorasPage() {
             logo_url: null,
             banner_url: null,
             banner_mobile_url: null,
+            instagram: null,
+            facebook: null,
+            tiktok: null,
           };
         }
       }));
