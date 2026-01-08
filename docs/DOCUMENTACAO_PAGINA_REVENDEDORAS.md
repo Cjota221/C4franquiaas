@@ -1,6 +1,7 @@
 # 📋 Documentação Completa: Página de Revendedoras (Admin)
 
 ## 📍 Localização
+
 **Arquivo:** `app/admin/revendedoras/page.tsx`  
 **Rota:** `/admin/revendedoras`  
 **Linhas de código:** 777 linhas
@@ -21,22 +22,22 @@ interface RevendedoraCompleta {
   store_name: string;
   slug: string;
   created_at: string;
-  
+
   // Status
   status: 'pendente' | 'aprovada' | 'rejeitada';
   is_active: boolean;
   rejection_reason?: string;
-  
+
   // Métricas
-  total_products: number;      // Produtos vinculados ativos
-  catalog_views: number;       // Visualizações do catálogo
-  
+  total_products: number; // Produtos vinculados ativos
+  catalog_views: number; // Visualizações do catálogo
+
   // Indicadores de Personalização
   has_logo: boolean;
   has_banner: boolean;
   has_colors: boolean;
-  has_margin: boolean;         // Se tem produtos com margem
-  
+  has_margin: boolean; // Se tem produtos com margem
+
   // URLs de mídia
   primary_color: string | null;
   logo_url: string | null;
@@ -49,27 +50,29 @@ interface RevendedoraCompleta {
 
 ### 2. Estados (useState)
 
-| Estado | Tipo | Descrição |
-|--------|------|-----------|
-| `revendedoras` | `RevendedoraCompleta[]` | Lista completa de revendedoras |
-| `filtradas` | `RevendedoraCompleta[]` | Lista após aplicar filtros |
-| `loading` | `boolean` | Status de carregamento |
-| `filtroStatus` | `FiltroStatus` | Filtro por status do cadastro |
-| `filtroAtivacao` | `FiltroAtivacao` | Filtro por ativação/personalização |
-| `busca` | `string` | Termo de busca |
-| `expandido` | `string \| null` | ID da revendedora com ações expandidas |
+| Estado           | Tipo                    | Descrição                              |
+| ---------------- | ----------------------- | -------------------------------------- |
+| `revendedoras`   | `RevendedoraCompleta[]` | Lista completa de revendedoras         |
+| `filtradas`      | `RevendedoraCompleta[]` | Lista após aplicar filtros             |
+| `loading`        | `boolean`               | Status de carregamento                 |
+| `filtroStatus`   | `FiltroStatus`          | Filtro por status do cadastro          |
+| `filtroAtivacao` | `FiltroAtivacao`        | Filtro por ativação/personalização     |
+| `busca`          | `string`                | Termo de busca                         |
+| `expandido`      | `string \| null`        | ID da revendedora com ações expandidas |
 
 ---
 
 ### 3. Filtros Disponíveis
 
 #### Status do Cadastro (`FiltroStatus`)
+
 - `todas` - Mostrar todas
 - `pendente` - Aguardando aprovação
 - `aprovada` - Já aprovadas
 - `rejeitada` - Foram rejeitadas
 
 #### Filtros Rápidos (`FiltroAtivacao`)
+
 - `todos` - Sem filtro adicional
 - `ativas` - Contas ativas (`is_active = true`)
 - `inativas` - Contas desativadas
@@ -83,34 +86,41 @@ interface RevendedoraCompleta {
 ### 4. Funções Principais
 
 #### `carregarRevendedoras()`
+
 - Busca todas revendedoras da tabela `resellers`
 - Para cada uma, conta produtos vinculados em `reseller_products`
 - Processa campos de personalização (logo, banner, cores)
 - Ordena por data de criação (mais recente primeiro)
 
 #### `aplicarFiltros()`
+
 - Filtra por status
 - Filtra por ativação/personalização
 - Aplica busca por texto (nome, email, loja)
 
 #### `aprovar(id)`
+
 - Chama API `/api/admin/revendedoras/aprovar`
 - Envia email de aprovação
 - Atualiza lista
 
 #### `rejeitar(id)`
+
 - Pede motivo via `prompt()`
 - Chama API com ação de rejeição
 - Atualiza lista
 
 #### `toggleAtivo(id, ativoAtual)`
+
 - Alterna `is_active` diretamente no Supabase
 
 #### `enviarWhatsAppBoasVindas(revendedora)`
+
 - Abre WhatsApp Web com mensagem pré-formatada
 - Inclui link do grupo das franqueadas
 
 #### `verCatalogo(slug)`
+
 - Abre o catálogo da revendedora em nova aba
 
 ---
@@ -151,27 +161,27 @@ interface RevendedoraCompleta {
 
 ### 6. Colunas da Tabela
 
-| Coluna | Descrição |
-|--------|-----------|
-| **Nome/Loja** | Nome da pessoa + nome da loja + data cadastro |
-| **Status** | Badge de status (pendente/aprovada/rejeitada) + ativa/inativa |
-| **Personalização** | 4 ícones: Logo, Banner, Cores, Margem (✓ ou ✕) |
-| **Produtos** | Quantidade de produtos vinculados ativos |
-| **Views** | Visualizações do catálogo |
-| **Ações** | Botões: Expandir, Detalhes, Ver Catálogo, WhatsApp |
+| Coluna             | Descrição                                                     |
+| ------------------ | ------------------------------------------------------------- |
+| **Nome/Loja**      | Nome da pessoa + nome da loja + data cadastro                 |
+| **Status**         | Badge de status (pendente/aprovada/rejeitada) + ativa/inativa |
+| **Personalização** | 4 ícones: Logo, Banner, Cores, Margem (✓ ou ✕)                |
+| **Produtos**       | Quantidade de produtos vinculados ativos                      |
+| **Views**          | Visualizações do catálogo                                     |
+| **Ações**          | Botões: Expandir, Detalhes, Ver Catálogo, WhatsApp            |
 
 ---
 
 ### 7. Ações Disponíveis
 
-| Ação | Quando Aparece | O que Faz |
-|------|----------------|-----------|
-| **Aprovar** | Status = pendente | Aprova + envia email |
-| **Rejeitar** | Status = pendente | Rejeita com motivo + email |
-| **WhatsApp Boas-Vindas** | Status = aprovada | Abre WhatsApp com mensagem |
-| **Ativar/Desativar** | Status = aprovada | Alterna is_active |
-| **Ver Catálogo** | Tem slug | Abre catálogo em nova aba |
-| **Ver Detalhes** | Sempre | Vai para `/admin/revendedoras/[id]` |
+| Ação                     | Quando Aparece    | O que Faz                           |
+| ------------------------ | ----------------- | ----------------------------------- |
+| **Aprovar**              | Status = pendente | Aprova + envia email                |
+| **Rejeitar**             | Status = pendente | Rejeita com motivo + email          |
+| **WhatsApp Boas-Vindas** | Status = aprovada | Abre WhatsApp com mensagem          |
+| **Ativar/Desativar**     | Status = aprovada | Alterna is_active                   |
+| **Ver Catálogo**         | Tem slug          | Abre catálogo em nova aba           |
+| **Ver Detalhes**         | Sempre            | Vai para `/admin/revendedoras/[id]` |
 
 ---
 
@@ -197,6 +207,7 @@ interface RevendedoraCompleta {
 ```
 
 **O que a API faz:**
+
 1. Atualiza status no banco
 2. Envia email (aprovação ou rejeição)
 3. Tenta enviar WhatsApp (se Z-API configurado)
@@ -207,17 +218,20 @@ interface RevendedoraCompleta {
 ## 🔴 Problemas/Limitações Atuais
 
 ### Performance
+
 1. **N+1 Queries** - Para cada revendedora, faz query separada para contar produtos
 2. **Sem paginação** - Carrega TODAS as revendedoras de uma vez
 3. **Recarrega tudo** - Após qualquer ação, recarrega a lista inteira
 
 ### UX
+
 1. **Prompt nativo** - Usa `prompt()` para motivo de rejeição (feio)
 2. **Alert nativo** - Usa `alert()` para feedbacks (não profissional)
 3. **Sem loading por item** - Ao aprovar/rejeitar, não mostra loading no botão
 4. **Tabela não responsiva** - Em mobile fica apertada
 
 ### Funcionalidades Faltantes
+
 1. ❌ Edição de dados da revendedora
 2. ❌ Exportar lista (CSV/Excel)
 3. ❌ Ordenação por colunas
@@ -238,12 +252,14 @@ interface RevendedoraCompleta {
 // Usar uma única query com JOIN/COUNT
 const { data } = await supabase
   .from('resellers')
-  .select(`
+  .select(
+    `
     *,
     reseller_products(count)
-  `)
+  `,
+  )
   .order('created_at', { ascending: false })
-  .range(0, 49);  // Paginação
+  .range(0, 49); // Paginação
 ```
 
 ### 2. **Paginação**
@@ -300,10 +316,10 @@ async function aprovarSelecionadas() {
 
 ```typescript
 function exportarCSV() {
-  const csv = filtradas.map(r => 
-    `${r.name},${r.email},${r.phone},${r.store_name},${r.status}`
-  ).join('\n');
-  
+  const csv = filtradas
+    .map((r) => `${r.name},${r.email},${r.phone},${r.store_name},${r.status}`)
+    .join('\n');
+
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   // Download...
@@ -313,13 +329,13 @@ function exportarCSV() {
 ### 8. **Filtro por Data**
 
 ```tsx
-<input 
-  type="date" 
-  onChange={(e) => setDataInicio(e.target.value)} 
+<input
+  type="date"
+  onChange={(e) => setDataInicio(e.target.value)}
 />
-<input 
-  type="date" 
-  onChange={(e) => setDataFim(e.target.value)} 
+<input
+  type="date"
+  onChange={(e) => setDataFim(e.target.value)}
 />
 ```
 
@@ -336,30 +352,33 @@ ultimo_pedido: string | null;
 
 ## 📁 Arquivos Relacionados
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `app/admin/revendedoras/page.tsx` | Página principal (esta) |
-| `app/admin/revendedoras/[id]/page.tsx` | Detalhes de uma revendedora |
-| `app/api/admin/revendedoras/aprovar/route.ts` | API de aprovação/rejeição |
-| `lib/zapi-whatsapp.ts` | Cliente WhatsApp Z-API |
+| Arquivo                                       | Descrição                   |
+| --------------------------------------------- | --------------------------- |
+| `app/admin/revendedoras/page.tsx`             | Página principal (esta)     |
+| `app/admin/revendedoras/[id]/page.tsx`        | Detalhes de uma revendedora |
+| `app/api/admin/revendedoras/aprovar/route.ts` | API de aprovação/rejeição   |
+| `lib/zapi-whatsapp.ts`                        | Cliente WhatsApp Z-API      |
 
 ---
 
 ## 🎯 Prioridade de Melhorias
 
 ### Alta Prioridade (Impacto imediato)
+
 1. ⭐ Paginação (performance)
 2. ⭐ Toast notifications (UX)
 3. ⭐ Modal de rejeição (UX)
 4. ⭐ Loading nos botões (UX)
 
 ### Média Prioridade (Nice to have)
+
 5. Ordenação por colunas
 6. Exportar CSV
 7. Bulk actions
 8. Filtro por data
 
 ### Baixa Prioridade (Futuro)
+
 9. Métricas de vendas
 10. Histórico de ações
 11. Notificações em tempo real

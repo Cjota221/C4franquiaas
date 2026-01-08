@@ -17,6 +17,7 @@ import FiltrosProdutos from '@/components/admin/FiltrosProdutos';
 import { createClient } from '@/lib/supabase/client';
 import PageWrapper from '@/components/PageWrapper';
 import { useDebounce } from '@/hooks/useDebounce';
+import { ProdutoDetailsPanel } from './components';
 
 const PAGE_SIZE = 30;
 
@@ -70,6 +71,10 @@ export default function ProdutosPage(): React.JSX.Element {
   
   // State para Modal de Edição em Massa
   const [modalMassaOpen, setModalMassaOpen] = useState(false);
+
+  // State para Drawer de Detalhes do Produto
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<ProdutoType | null>(null);
 
   // State para filtro de produtos não vinculados
   const [filtroNaoVinculados, setFiltroNaoVinculados] = useState(false);
@@ -963,6 +968,10 @@ export default function ProdutosPage(): React.JSX.Element {
         sortDirection={sortDirection}
         onSort={handleSort}
         onVerDetalhes={handleVerDetalhes}
+        onOpenDrawer={(produto) => {
+          setProdutoSelecionado(produto as ProdutoType);
+          setDrawerOpen(true);
+        }}
         onToggleStatus={handleToggleStatus}
         toggling={toggling}
         onEditDescricaoGuia={(produto) => {
@@ -1044,6 +1053,28 @@ export default function ProdutosPage(): React.JSX.Element {
         onSave={() => {
           carregarProdutos(pagina, debouncedSearchTerm);
         }}
+      />
+
+      {/* Drawer de Detalhes do Produto */}
+      <ProdutoDetailsPanel
+        isOpen={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setProdutoSelecionado(null);
+        }}
+        produto={produtoSelecionado}
+        onToggleStatus={async (id, novoStatus) => {
+          await handleToggleStatus(id, novoStatus);
+          // Atualizar o produto selecionado no drawer
+          if (produtoSelecionado && produtoSelecionado.id === id) {
+            setProdutoSelecionado({ ...produtoSelecionado, ativo: novoStatus });
+          }
+        }}
+        onEditDescricaoGuia={(produto) => {
+          setProdutoParaEditar(produto as ProdutoType);
+          setModalDescricaoGuiaOpen(true);
+        }}
+        loadingToggle={produtoSelecionado ? toggling[produtoSelecionado.id] : false}
       />
     </PageWrapper>
   );

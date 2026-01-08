@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ArrowUpDown, ArrowUp, ArrowDown, FileText } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FileText, Eye } from 'lucide-react';
 
 export type Produto = {
   id: number | string;
@@ -30,6 +30,7 @@ interface TabelaProdutosProps {
   sortDirection: 'asc' | 'desc';
   onSort: (campo: string) => void;
   onVerDetalhes: (produto: Produto) => void;
+  onOpenDrawer?: (produto: Produto) => void;
   onToggleStatus: (id: number | string, ativo: boolean) => void;
   toggling: Record<number | string, boolean>;
   onEditDescricaoGuia?: (produto: Produto) => void;
@@ -47,6 +48,7 @@ export default function TabelaProdutos({
   sortDirection,
   onSort,
   onVerDetalhes,
+  onOpenDrawer,
   onToggleStatus,
   toggling,
   onEditDescricaoGuia,
@@ -316,12 +318,22 @@ export default function TabelaProdutos({
                     {/* Ações */}
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => onVerDetalhes(produto)}
-                          className="px-3 py-1.5 text-xs font-medium text-white bg-[#DB1472] rounded hover:bg-[#DB1472]/90 transition-colors"
-                        >
-                          Ver Detalhes
-                        </button>
+                        {onOpenDrawer ? (
+                          <button
+                            onClick={() => onOpenDrawer(produto)}
+                            className="px-3 py-1.5 text-xs font-medium text-white bg-[#DB1472] rounded hover:bg-[#DB1472]/90 transition-colors flex items-center gap-1.5"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            Detalhes
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onVerDetalhes(produto)}
+                            className="px-3 py-1.5 text-xs font-medium text-white bg-[#DB1472] rounded hover:bg-[#DB1472]/90 transition-colors"
+                          >
+                            Ver Detalhes
+                          </button>
+                        )}
                         {onEditDescricaoGuia && (
                           <button
                             onClick={() => onEditDescricaoGuia(produto)}
