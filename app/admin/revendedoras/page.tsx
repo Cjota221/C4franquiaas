@@ -1,52 +1,63 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Check, X, Search, Store, MessageCircle, ExternalLink, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-
-interface RevendedoraCompleta {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  store_name: string;
-  slug: string;
-  status: 'pendente' | 'aprovada' | 'rejeitada';
-  is_active: boolean;
-  total_products: number;
-  catalog_views: number;
-  created_at: string;
-  rejection_reason?: string;
-  
-  // Novos campos para indicadores
-  has_logo: boolean;
-  has_banner: boolean;
-  has_colors: boolean;
-  has_margin: boolean;
-  primary_color: string | null;
-  logo_url: string | null;
-  banner_url: string | null;
-  banner_mobile_url: string | null;
-}
+import { Search, Users, Clock, CheckCircle, XCircle, ToggleRight, Palette, Target, Percent, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  RevendedoraCompleta,
+  RejectModal,
+  RevendedoraDetailsPanel,
+  RevendedorasTable,
+} from './components';
 
 type FiltroStatus = 'todas' | 'pendente' | 'aprovada' | 'rejeitada';
 type FiltroAtivacao = 'todos' | 'ativas' | 'inativas' | 'personalizadas' | 'sem_personalizacao' | 'sem_margem' | 'completas';
 
-export default function AdminRevendedorasNova() {
-  const router = useRouter();
+const ITEMS_PER_PAGE = 15;
+
+export default function AdminRevendedorasPage() {
+  // Estados principais
   const [revendedoras, setRevendedoras] = useState<RevendedoraCompleta[]>([]);
-  const [filtradas, setFiltradas] = useState<RevendedoraCompleta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   
-  // Estados dos filtros (salvos no localStorage)
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  
+  // Filtros
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todas');
   const [filtroAtivacao, setFiltroAtivacao] = useState<FiltroAtivacao>('todos');
   const [busca, setBusca] = useState('');
-  const [expandido, setExpandido] = useState<string | null>(null);
+  const [buscaDebounced, setBuscaDebounced] = useState('');
+  
+  // Drawer e Modal
+  const [selectedRevendedora, setSelectedRevendedora] = useState<RevendedoraCompleta | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  
+  // Estatísticas (carregadas separadamente para não depender da paginação)
+  const [stats, setStats] = useState({
+    total: 0,
+    pendentes: 0,
+    aprovadas: 0,
+    ativas: 0,
+    semPersonalizacao: 0,
+    semMargem: 0,
+  });
 
-  // Carregar filtros salvos do localStorage
+  // Debounce da busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBuscaDebounced(busca);
+      setCurrentPage(1); // Reset para primeira página ao buscar
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [busca]);
+
+  // Carregar filtros do localStorage
   useEffect(() => {
     const savedFiltroStatus = localStorage.getItem('admin_filtro_status') as FiltroStatus;
     const savedFiltroAtivacao = localStorage.getItem('admin_filtro_ativacao') as FiltroAtivacao;
@@ -55,118 +66,117 @@ export default function AdminRevendedorasNova() {
     if (savedFiltroAtivacao) setFiltroAtivacao(savedFiltroAtivacao);
   }, []);
 
-  // Salvar filtros no localStorage quando mudarem
+  // Salvar filtros no localStorage
   useEffect(() => {
     localStorage.setItem('admin_filtro_status', filtroStatus);
     localStorage.setItem('admin_filtro_ativacao', filtroAtivacao);
+    setCurrentPage(1); // Reset para primeira página ao mudar filtro
   }, [filtroStatus, filtroAtivacao]);
 
-  useEffect(() => {
-    carregarRevendedoras();
+  // Carregar estatísticas (separado da paginação)
+  const carregarEstatisticas = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      
+      const { data, error } = await supabase
+        .from('resellers')
+        .select('id, status, is_active, logo_url, banner_url, banner_mobile_url, colors');
+      
+      if (error) throw error;
+      
+      const total = data?.length || 0;
+      const pendentes = data?.filter(r => r.status === 'pendente').length || 0;
+      const aprovadas = data?.filter(r => r.status === 'aprovada').length || 0;
+      const ativas = data?.filter(r => r.is_active).length || 0;
+      
+      const semPersonalizacao = data?.filter(r => {
+        const hasLogo = !!(r.logo_url && r.logo_url.trim());
+        const hasBanner = !!(r.banner_url && r.banner_url.trim()) || !!(r.banner_mobile_url && r.banner_mobile_url.trim());
+        let hasColors = false;
+        try {
+          const colors = typeof r.colors === 'string' ? JSON.parse(r.colors) : (r.colors || {});
+          hasColors = !!(colors.primary && colors.secondary);
+        } catch { /* ignore */ }
+        return !hasLogo && !hasBanner && !hasColors;
+      }).length || 0;
+      
+      setStats({
+        total,
+        pendentes,
+        aprovadas,
+        ativas,
+        semPersonalizacao,
+        semMargem: 0, // Será calculado depois se necessário
+      });
+    } catch (err) {
+      console.error('Erro ao carregar estatísticas:', err);
+    }
   }, []);
 
-  useEffect(() => {
-    aplicarFiltros();
-  }, [revendedoras, filtroStatus, filtroAtivacao, busca]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function aplicarFiltros() {
-    let resultado = [...revendedoras];
-
-    // Filtro por status
-    if (filtroStatus !== 'todas') {
-      resultado = resultado.filter(r => r.status === filtroStatus);
-    }
-
-    // Filtro por ativação e personalização
-    switch (filtroAtivacao) {
-      case 'ativas':
-        resultado = resultado.filter(r => r.is_active);
-        break;
-      case 'inativas':
-        resultado = resultado.filter(r => !r.is_active);
-        break;
-      case 'personalizadas':
-        resultado = resultado.filter(r => r.has_logo || r.has_banner || r.has_colors);
-        break;
-      case 'sem_personalizacao':
-        resultado = resultado.filter(r => !r.has_logo && !r.has_banner && !r.has_colors);
-        break;
-      case 'sem_margem':
-        resultado = resultado.filter(r => !r.has_margin);
-        break;
-      case 'completas':
-        resultado = resultado.filter(r => 
-          r.has_logo && r.has_banner && r.has_colors && r.has_margin && r.total_products > 0
-        );
-        break;
-    }
-
-    // Busca por texto
-    if (busca) {
-      const termo = busca.toLowerCase();
-      resultado = resultado.filter(r =>
-        r.name.toLowerCase().includes(termo) ||
-        r.email.toLowerCase().includes(termo) ||
-        r.store_name.toLowerCase().includes(termo)
-      );
-    }
-
-    setFiltradas(resultado);
-  }
-
-  async function carregarRevendedoras() {
+  // Carregar revendedoras com paginação
+  const carregarRevendedoras = useCallback(async () => {
     setLoading(true);
     try {
       const supabase = createClient();
       
-      // Buscar revendedoras
-      const { data, error } = await supabase
+      // Construir a query base
+      let query = supabase
         .from('resellers')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      // Aplicar filtro de status
+      if (filtroStatus !== 'todas') {
+        query = query.eq('status', filtroStatus);
+      }
+
+      // Aplicar busca
+      if (buscaDebounced) {
+        query = query.or(`name.ilike.%${buscaDebounced}%,email.ilike.%${buscaDebounced}%,store_name.ilike.%${buscaDebounced}%`);
+      }
+
+      // Ordenação
+      query = query.order('created_at', { ascending: false });
+
+      // Paginação
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
 
       if (error) {
-        console.error('❌ Erro na query:', error);
-        alert(`Erro ao carregar: ${error.message}`);
+        console.error('Erro na query:', error);
+        toast.error(`Erro ao carregar: ${error.message}`);
         throw error;
       }
 
       if (!data || data.length === 0) {
-        console.log('⚠️ Nenhuma revendedora encontrada');
         setRevendedoras([]);
+        setTotalCount(count || 0);
         return;
       }
 
-      console.log(`✅ ${data.length} revendedoras carregadas`);
-
-      // Buscar contagem de produtos para cada revendedora
+      // Processar cada revendedora
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const processadas: RevendedoraCompleta[] = await Promise.all(data.map(async (r: any) => {
         try {
-          // Buscar contagem de produtos ativos vinculados
-          const { count: totalProdutos, error: prodError } = await supabase
+          // Buscar contagem de produtos
+          const { count: totalProdutos } = await supabase
             .from('reseller_products')
             .select('*', { count: 'exact', head: true })
             .eq('reseller_id', r.id)
             .eq('is_active', true);
           
-          if (prodError) {
-            console.error(`⚠️ Erro ao contar produtos da ${r.name}:`, prodError);
-          }
-          
-          // Extrair cores do campo colors (JSONB) com segurança
+          // Extrair cores
           let primaryColor = null;
           let secondaryColor = null;
-          
           try {
             const colors = typeof r.colors === 'string' ? JSON.parse(r.colors) : (r.colors || {});
             primaryColor = colors.primary || null;
             secondaryColor = colors.secondary || null;
-          } catch (colorErr) {
-            console.error(`⚠️ Erro ao parse colors da ${r.name}:`, colorErr);
-          }
+          } catch { /* ignore */ }
           
-          // Verificar personalização (checar se não é null e não é string vazia)
+          // Verificar personalização
           const hasLogo = !!(r.logo_url && typeof r.logo_url === 'string' && r.logo_url.trim() !== '');
           const hasBanner = !!(
             (r.banner_url && typeof r.banner_url === 'string' && r.banner_url.trim() !== '') || 
@@ -187,8 +197,6 @@ export default function AdminRevendedorasNova() {
             catalog_views: r.catalog_views || 0,
             created_at: r.created_at || '',
             rejection_reason: r.rejection_reason || undefined,
-            
-            // Indicadores de personalização
             has_logo: hasLogo,
             has_banner: hasBanner,
             has_colors: hasColors,
@@ -199,8 +207,7 @@ export default function AdminRevendedorasNova() {
             banner_mobile_url: r.banner_mobile_url || null,
           };
         } catch (itemErr) {
-          console.error(`❌ Erro ao processar revendedora ${r.name}:`, itemErr);
-          // Retornar dados mínimos para não quebrar a lista
+          console.error(`Erro ao processar revendedora ${r.name}:`, itemErr);
           return {
             id: r.id || '',
             name: r.name || 'Sem nome',
@@ -225,30 +232,55 @@ export default function AdminRevendedorasNova() {
         }
       }));
 
-      console.log(`✅ ${processadas.length} revendedoras processadas`);
-      
-      // DEBUG: Mostrar revendedoras com banners
-      const comBanners = processadas.filter(r => r.has_banner || r.banner_url || r.banner_mobile_url);
-      console.log(`📸 ${comBanners.length} revendedoras COM banners:`, comBanners.map(r => ({
-        nome: r.name,
-        has_banner: r.has_banner,
-        banner_url: r.banner_url ? '✅' : '❌',
-        banner_mobile_url: r.banner_mobile_url ? '✅' : '❌'
-      })));
-      
-      setRevendedoras(processadas);
+      // Aplicar filtros client-side que não podem ser feitos no Supabase
+      let filtered = processadas;
+      switch (filtroAtivacao) {
+        case 'ativas':
+          filtered = processadas.filter(r => r.is_active);
+          break;
+        case 'inativas':
+          filtered = processadas.filter(r => !r.is_active);
+          break;
+        case 'personalizadas':
+          filtered = processadas.filter(r => r.has_logo || r.has_banner || r.has_colors);
+          break;
+        case 'sem_personalizacao':
+          filtered = processadas.filter(r => !r.has_logo && !r.has_banner && !r.has_colors);
+          break;
+        case 'sem_margem':
+          filtered = processadas.filter(r => !r.has_margin);
+          break;
+        case 'completas':
+          filtered = processadas.filter(r => 
+            r.has_logo && r.has_banner && r.has_colors && r.has_margin && r.total_products > 0
+          );
+          break;
+      }
+
+      setRevendedoras(filtered);
+      setTotalCount(count || 0);
     } catch (err) {
-      console.error('❌ Erro fatal ao carregar revendedoras:', err);
-      alert(`Erro ao carregar revendedoras: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      console.error('Erro fatal ao carregar revendedoras:', err);
+      toast.error(`Erro ao carregar revendedoras`);
       setRevendedoras([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [currentPage, filtroStatus, filtroAtivacao, buscaDebounced]);
 
-  async function aprovar(id: string) {
-    if (!confirm('Deseja aprovar esta revendedora?')) return;
+  // Efeitos de carregamento
+  useEffect(() => {
+    carregarEstatisticas();
+  }, [carregarEstatisticas]);
 
+  useEffect(() => {
+    carregarRevendedoras();
+  }, [carregarRevendedoras]);
+
+  // Ações
+  const handleAprovar = async (id: string) => {
+    setLoadingActions(prev => ({ ...prev, [`${id}-aprovar`]: true }));
+    
     try {
       const res = await fetch('/api/admin/revendedoras/aprovar', {
         method: 'POST',
@@ -259,37 +291,74 @@ export default function AdminRevendedorasNova() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      alert(`✅ Revendedora aprovada!${data.emailSent ? '\n📧 Email enviado!' : ''}`);
-      carregarRevendedoras();
+      toast.success(`Revendedora aprovada com sucesso!${data.emailSent ? ' Email enviado!' : ''}`);
+      
+      // Atualizar dados localmente
+      setRevendedoras(prev => prev.map(r => 
+        r.id === id ? { ...r, status: 'aprovada' as const, is_active: true } : r
+      ));
+      
+      // Atualizar a selecionada se for ela
+      if (selectedRevendedora?.id === id) {
+        setSelectedRevendedora(prev => prev ? { ...prev, status: 'aprovada', is_active: true } : null);
+      }
+      
+      carregarEstatisticas();
     } catch (error) {
       console.error('Erro:', error);
-      alert('Erro ao aprovar');
+      toast.error('Erro ao aprovar revendedora');
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`${id}-aprovar`]: false }));
     }
-  }
+  };
 
-  async function rejeitar(id: string) {
-    const motivo = prompt('Motivo da rejeição:');
-    if (motivo === null) return;
+  const handleOpenRejectModal = (id: string) => {
+    setRejectingId(id);
+    setIsRejectModalOpen(true);
+  };
 
+  const handleRejeitar = async (motivo: string) => {
+    if (!rejectingId) return;
+    
+    setLoadingActions(prev => ({ ...prev, [`${rejectingId}-rejeitar`]: true }));
+    
     try {
       const res = await fetch('/api/admin/revendedoras/aprovar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resellerId: id, action: 'rejeitar', motivo })
+        body: JSON.stringify({ resellerId: rejectingId, action: 'rejeitar', motivo })
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      alert(`❌ Revendedora rejeitada${data.emailSent ? '\n📧 Email enviado!' : ''}`);
-      carregarRevendedoras();
+      toast.success(`Revendedora rejeitada${data.emailSent ? '. Email enviado!' : ''}`);
+      
+      // Atualizar dados localmente
+      setRevendedoras(prev => prev.map(r => 
+        r.id === rejectingId ? { ...r, status: 'rejeitada' as const, rejection_reason: motivo } : r
+      ));
+      
+      // Fechar drawer se for a selecionada
+      if (selectedRevendedora?.id === rejectingId) {
+        setIsDrawerOpen(false);
+        setSelectedRevendedora(null);
+      }
+      
+      carregarEstatisticas();
+      setIsRejectModalOpen(false);
+      setRejectingId(null);
     } catch (error) {
       console.error('Erro:', error);
-      alert('Erro ao rejeitar');
+      toast.error('Erro ao rejeitar revendedora');
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`${rejectingId}-rejeitar`]: false }));
     }
-  }
+  };
 
-  async function toggleAtivo(id: string, ativoAtual: boolean) {
+  const handleToggleAtivo = async (id: string, ativoAtual: boolean) => {
+    setLoadingActions(prev => ({ ...prev, [`${id}-toggle`]: true }));
+    
     try {
       const supabase = createClient();
       const { error } = await supabase
@@ -299,477 +368,256 @@ export default function AdminRevendedorasNova() {
 
       if (error) throw error;
 
-      alert(`Revendedora ${!ativoAtual ? 'ativada' : 'desativada'}!`);
-      carregarRevendedoras();
+      toast.success(`Revendedora ${!ativoAtual ? 'ativada' : 'desativada'} com sucesso!`);
+      
+      // Atualizar dados localmente
+      setRevendedoras(prev => prev.map(r => 
+        r.id === id ? { ...r, is_active: !ativoAtual } : r
+      ));
+      
+      // Atualizar a selecionada se for ela
+      if (selectedRevendedora?.id === id) {
+        setSelectedRevendedora(prev => prev ? { ...prev, is_active: !ativoAtual } : null);
+      }
+      
+      carregarEstatisticas();
     } catch {
-      alert('Erro ao alterar status');
+      toast.error('Erro ao alterar status');
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`${id}-toggle`]: false }));
     }
-  }
-
-  function enviarWhatsAppBoasVindas(revendedora: RevendedoraCompleta) {
-    const telefone = revendedora.phone.replace(/\D/g, '');
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com';
-    const loginUrl = `${baseUrl}/login/revendedora`;
-    
-    const mensagem = `*PARABENS ${revendedora.name.toUpperCase()}!*
-
-Seu cadastro foi *APROVADO*!
-
-Sua loja *"${revendedora.store_name}"* esta pronta!
-
-*ACESSE:*
-${loginUrl}
-
-Email: ${revendedora.email}
-
-*GRUPO DAS FRANQUEADAS:*
-https://chat.whatsapp.com/HXxGCfGyj6y8R6Cev785os
-
-Bem-vinda a equipe C4!`;
-
-    window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
-  }
-
-  function verCatalogo(slug: string | null) {
-    if (!slug) {
-      alert('Catálogo não configurado ainda');
-      return;
-    }
-    window.open(`${window.location.origin}/catalogo/${slug}`, '_blank');
-  }
-
-  const stats = {
-    total: revendedoras.length,
-    pendentes: revendedoras.filter(r => r.status === 'pendente').length,
-    aprovadas: revendedoras.filter(r => r.status === 'aprovada').length,
-    ativas: revendedoras.filter(r => r.is_active).length,
-    semPersonalizacao: revendedoras.filter(r => !r.has_logo && !r.has_banner && !r.has_colors).length,
-    semMargem: revendedoras.filter(r => !r.has_margin).length,
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-[#DB1472] border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando revendedoras...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleSelectRevendedora = (revendedora: RevendedoraCompleta) => {
+    setSelectedRevendedora(revendedora);
+    setIsDrawerOpen(true);
+  };
+
+  const handleRefresh = () => {
+    carregarRevendedoras();
+    carregarEstatisticas();
+    toast.info('Atualizando dados...');
+  };
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 p-4 md:p-6">
-      <div className="max-w-[1800px] mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            🏪 Gerenciar Revendedoras
-          </h1>
-          <p className="text-gray-600 text-sm md:text-base">
-            Visão completa e eficiente para gerenciar suas franqueadas
-          </p>
-        </div>
-
-        {/* Cards de Estatísticas - Mais compactos */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
-            <p className="text-xs text-gray-600 mb-1">Total</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-          </div>
-
-          <div className="bg-yellow-50 rounded-lg shadow-sm p-3 border-l-4 border-yellow-500">
-            <p className="text-xs text-yellow-700 mb-1">Pendentes</p>
-            <p className="text-2xl font-bold text-yellow-900">{stats.pendentes}</p>
-          </div>
-
-          <div className="bg-green-50 rounded-lg shadow-sm p-3 border-l-4 border-green-500">
-            <p className="text-xs text-green-700 mb-1">Aprovadas</p>
-            <p className="text-2xl font-bold text-green-900">{stats.aprovadas}</p>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg shadow-sm p-3 border-l-4 border-purple-500">
-            <p className="text-xs text-purple-700 mb-1">Ativas</p>
-            <p className="text-2xl font-bold text-purple-900">{stats.ativas}</p>
-          </div>
-
-          <div className="bg-orange-50 rounded-lg shadow-sm p-3 border-l-4 border-orange-500">
-            <p className="text-xs text-orange-700 mb-1">Sem Personaliz.</p>
-            <p className="text-2xl font-bold text-orange-900">{stats.semPersonalizacao}</p>
-          </div>
-
-          <div className="bg-red-50 rounded-lg shadow-sm p-3 border-l-4 border-red-500">
-            <p className="text-xs text-red-700 mb-1">Sem Margem</p>
-            <p className="text-2xl font-bold text-red-900">{stats.semMargem}</p>
-          </div>
-        </div>
-
-        {/* Filtros - Mais compactos */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-          <div className="space-y-3">
-            {/* Linha 1: Status */}
+    <div className="min-h-screen w-full bg-gray-100">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-[1800px] mx-auto px-4 md:px-6 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold text-gray-700 mb-2">Status do Cadastro:</p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'todas', label: 'Todas', color: 'gray' },
-                  { value: 'pendente', label: 'Pendentes', color: 'yellow' },
-                  { value: 'aprovada', label: 'Aprovadas', color: 'green' },
-                  { value: 'rejeitada', label: 'Rejeitadas', color: 'red' },
-                ].map(({ value, label, color }) => (
-                  <button
-                    key={value}
-                    onClick={() => setFiltroStatus(value as FiltroStatus)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      filtroStatus === value
-                        ? `bg-${color}-500 text-white shadow-md`
-                        : `bg-${color}-50 text-${color}-700 hover:bg-${color}-100`
-                    }`}
-                    style={filtroStatus === value ? {
-                      backgroundColor: color === 'yellow' ? '#eab308' : 
-                                      color === 'green' ? '#22c55e' : 
-                                      color === 'red' ? '#ef4444' : '#6b7280'
-                    } : {}}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Users className="w-7 h-7 text-[#DB1472]" />
+                Gerenciar Revendedoras
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Gerencie suas franqueadas de forma eficiente
+              </p>
             </div>
+            
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Linha 2: Ativação e Personalização */}
-            <div>
-              <p className="text-xs font-semibold text-gray-700 mb-2">Filtros Rápidos:</p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'todos', label: 'Todos', icon: '📋' },
-                  { value: 'ativas', label: 'Ativas', icon: '✅' },
-                  { value: 'inativas', label: 'Inativas', icon: '❌' },
-                  { value: 'completas', label: 'Completas', icon: '🎯' },
-                  { value: 'personalizadas', label: 'Personalizadas', icon: '🎨' },
-                  { value: 'sem_personalizacao', label: 'Sem Personalização', icon: '⚠️' },
-                  { value: 'sem_margem', label: 'Sem Margem', icon: '💰' },
-                ].map(({ value, label, icon }) => (
-                  <button
-                    key={value}
-                    onClick={() => setFiltroAtivacao(value as FiltroAtivacao)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      filtroAtivacao === value
-                        ? 'bg-[#DB1472] text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {icon} {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+      <div className="max-w-[1800px] mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* Cards de Estatísticas */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <StatCard 
+            label="Total" 
+            value={stats.total} 
+            icon={<Users className="w-5 h-5" />}
+            color="blue"
+          />
+          <StatCard 
+            label="Pendentes" 
+            value={stats.pendentes} 
+            icon={<Clock className="w-5 h-5" />}
+            color="yellow"
+            highlight={stats.pendentes > 0}
+          />
+          <StatCard 
+            label="Aprovadas" 
+            value={stats.aprovadas} 
+            icon={<CheckCircle className="w-5 h-5" />}
+            color="green"
+          />
+          <StatCard 
+            label="Ativas" 
+            value={stats.ativas} 
+            icon={<ToggleRight className="w-5 h-5" />}
+            color="purple"
+          />
+          <StatCard 
+            label="Sem Personaliz." 
+            value={stats.semPersonalizacao} 
+            icon={<Palette className="w-5 h-5" />}
+            color="orange"
+            highlight={stats.semPersonalizacao > 0}
+          />
+          <StatCard 
+            label="Completas" 
+            value={stats.total - stats.semPersonalizacao} 
+            icon={<Target className="w-5 h-5" />}
+            color="emerald"
+          />
+        </div>
 
-            {/* Busca */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar por nome, email ou loja..."
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB1472] focus:border-transparent"
-              />
+        {/* Filtros */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+          {/* Filtros de Status */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Status do Cadastro</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'todas', label: 'Todas', icon: <Users className="w-4 h-4" /> },
+                { value: 'pendente', label: 'Pendentes', icon: <Clock className="w-4 h-4" /> },
+                { value: 'aprovada', label: 'Aprovadas', icon: <CheckCircle className="w-4 h-4" /> },
+                { value: 'rejeitada', label: 'Rejeitadas', icon: <XCircle className="w-4 h-4" /> },
+              ].map(({ value, label, icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setFiltroStatus(value as FiltroStatus)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    filtroStatus === value
+                      ? 'bg-[#DB1472] text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </button>
+              ))}
             </div>
+          </div>
+
+          {/* Filtros de Ativação */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Filtros Rápidos</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'todos', label: 'Todos', icon: '📋' },
+                { value: 'ativas', label: 'Ativas', icon: '✅' },
+                { value: 'inativas', label: 'Inativas', icon: '⏸️' },
+                { value: 'completas', label: 'Completas', icon: '🎯' },
+                { value: 'personalizadas', label: 'Personalizadas', icon: '🎨' },
+                { value: 'sem_personalizacao', label: 'Sem Personalização', icon: '⚠️' },
+                { value: 'sem_margem', label: 'Sem Margem', icon: <Percent className="w-4 h-4" /> },
+              ].map(({ value, label, icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setFiltroAtivacao(value as FiltroAtivacao)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    filtroAtivacao === value
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {typeof icon === 'string' ? <span>{icon}</span> : icon}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Campo de Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por nome, email ou loja..."
+              className="w-full pl-11 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB1472] focus:border-transparent transition-all"
+            />
           </div>
         </div>
 
-        {/* Tabela Compacta */}
-        {filtradas.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg mb-2">Nenhuma revendedora encontrada</p>
-            <p className="text-gray-400 text-sm">Ajuste os filtros ou a busca.</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Nome / Loja</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Personalização</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Produtos</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Views</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filtradas.map((rev) => (
-                    <React.Fragment key={rev.id}>
-                      <tr className="hover:bg-gray-50 transition-colors">
-                        {/* Nome / Loja */}
-                        <td className="px-4 py-3">
-                          <div>
-                            <p className="font-semibold text-gray-900">{rev.name}</p>
-                            <p className="text-xs text-gray-500">{rev.store_name}</p>
-                            <p className="text-xs text-gray-400">{new Date(rev.created_at).toLocaleDateString('pt-BR')}</p>
-                          </div>
-                        </td>
+        {/* Tabela */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <RevendedorasTable
+            revendedoras={revendedoras}
+            isLoading={loading}
+            onSelectRevendedora={handleSelectRevendedora}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
-                        {/* Status */}
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              rev.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                              rev.status === 'aprovada' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {rev.status}
-                            </span>
-                            {rev.is_active ? (
-                              <span className="text-xs text-green-600 font-medium">✅ Ativa</span>
-                            ) : (
-                              <span className="text-xs text-gray-500">❌ Inativa</span>
-                            )}
-                          </div>
-                        </td>
+      {/* Drawer de Detalhes */}
+      <RevendedoraDetailsPanel
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedRevendedora(null);
+        }}
+        revendedora={selectedRevendedora}
+        onAprovar={handleAprovar}
+        onRejeitar={handleOpenRejectModal}
+        onToggleAtivo={handleToggleAtivo}
+        loadingActions={loadingActions}
+      />
 
-                        {/* Indicadores de Personalização */}
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="flex flex-col items-center gap-0.5" title="Logo">
-                              {rev.has_logo ? (
-                                <span className="text-green-500 text-lg">✓</span>
-                              ) : (
-                                <span className="text-red-500 text-lg">✕</span>
-                              )}
-                              <span className="text-[10px] text-gray-500">Logo</span>
-                            </div>
-                            
-                            <div className="flex flex-col items-center gap-0.5" title="Banner">
-                              {rev.has_banner ? (
-                                <span className="text-green-500 text-lg">✓</span>
-                              ) : (
-                                <span className="text-red-500 text-lg">✕</span>
-                              )}
-                              <span className="text-[10px] text-gray-500">Banner</span>
-                            </div>
-                            
-                            <div className="flex flex-col items-center gap-0.5" title="Cores">
-                              {rev.has_colors ? (
-                                <span className="text-green-500 text-lg">✓</span>
-                              ) : (
-                                <span className="text-red-500 text-lg">✕</span>
-                              )}
-                              <span className="text-[10px] text-gray-500">Cores</span>
-                            </div>
-                            
-                            <div className="flex flex-col items-center gap-0.5" title="Margem">
-                              {rev.has_margin ? (
-                                <span className="text-green-500 text-lg">✓</span>
-                              ) : (
-                                <span className="text-red-500 text-lg">✕</span>
-                              )}
-                              <span className="text-[10px] text-gray-500">Margem</span>
-                            </div>
-                          </div>
-                        </td>
+      {/* Modal de Rejeição */}
+      <RejectModal
+        isOpen={isRejectModalOpen}
+        onClose={() => {
+          setIsRejectModalOpen(false);
+          setRejectingId(null);
+        }}
+        onConfirm={handleRejeitar}
+        isLoading={rejectingId ? loadingActions[`${rejectingId}-rejeitar`] : false}
+      />
+    </div>
+  );
+}
 
-                        {/* Produtos */}
-                        <td className="px-4 py-3 text-center">
-                          <span className={`font-semibold ${rev.total_products > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
-                            {rev.total_products}
-                          </span>
-                        </td>
+// Componente de Card de Estatística
+function StatCard({ 
+  label, 
+  value, 
+  icon, 
+  color, 
+  highlight = false 
+}: { 
+  label: string; 
+  value: number; 
+  icon: React.ReactNode; 
+  color: 'blue' | 'yellow' | 'green' | 'purple' | 'orange' | 'emerald'; 
+  highlight?: boolean;
+}) {
+  const colorClasses = {
+    blue: 'border-blue-500 bg-blue-50 text-blue-700',
+    yellow: 'border-yellow-500 bg-yellow-50 text-yellow-700',
+    green: 'border-green-500 bg-green-50 text-green-700',
+    purple: 'border-purple-500 bg-purple-50 text-purple-700',
+    orange: 'border-orange-500 bg-orange-50 text-orange-700',
+    emerald: 'border-emerald-500 bg-emerald-50 text-emerald-700',
+  };
 
-                        {/* Views */}
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-gray-600">{rev.catalog_views}</span>
-                        </td>
-
-                        {/* Ações */}
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => setExpandido(expandido === rev.id ? null : rev.id)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                              title="Ver mais"
-                            >
-                              {expandido === rev.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                            
-                            <button
-                              onClick={() => router.push(`/admin/revendedoras/${rev.id}`)}
-                              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              title="Detalhes"
-                            >
-                              <Info className="w-4 h-4" />
-                            </button>
-
-                            {rev.slug && (
-                              <button
-                                onClick={() => verCatalogo(rev.slug)}
-                                className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                                title="Ver catálogo"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                              </button>
-                            )}
-
-                            {rev.status === 'aprovada' && (
-                              <button
-                                onClick={() => enviarWhatsAppBoasVindas(rev)}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
-                                title="WhatsApp"
-                              >
-                                <MessageCircle className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* Linha Expandida - Ações */}
-                      {expandido === rev.id && (
-                        <tr className="bg-gray-50">
-                          <td colSpan={6} className="px-4 py-3">
-                            <div className="flex flex-wrap gap-2 items-center justify-center">
-                              {rev.status === 'pendente' && (
-                                <>
-                                  <button
-                                    onClick={() => aprovar(rev.id)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                    Aprovar
-                                  </button>
-                                  <button
-                                    onClick={() => rejeitar(rev.id)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors"
-                                  >
-                                    <X className="w-4 h-4" />
-                                    Rejeitar
-                                  </button>
-                                </>
-                              )}
-
-                              {rev.status === 'aprovada' && (
-                                <>
-                                  {/* Botão WhatsApp - Destaque */}
-                                  <button
-                                    onClick={() => enviarWhatsAppBoasVindas(rev)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                                  >
-                                    <MessageCircle className="w-5 h-5" />
-                                    Enviar WhatsApp Boas-Vindas
-                                  </button>
-
-                                  {/* Botão Ativar/Desativar */}
-                                  <button
-                                    onClick={() => toggleAtivo(rev.id, rev.is_active)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                                      rev.is_active
-                                        ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                                        : 'bg-gray-500 text-white hover:bg-gray-600'
-                                    }`}
-                                  >
-                                    {rev.is_active ? 'Desativar' : 'Ativar'}
-                                  </button>
-                                </>
-                              )}
-
-                              {rev.status === 'rejeitada' && (
-                                <button
-                                  onClick={() => aprovar(rev.id)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
-                                >
-                                  <Check className="w-4 h-4" />
-                                  Aprovar Agora
-                                </button>
-                              )}
-
-                              {/* Email e Telefone quando expandido */}
-                              <div className="flex items-center gap-4 text-xs text-gray-600 ml-4">
-                                <span>📧 {rev.email}</span>
-                                <span>📱 {rev.phone}</span>
-                              </div>
-                            </div>
-
-                            {/* Seção de Personalização - Banners e Logo */}
-                            {(rev.has_logo || rev.has_banner) && (
-                              <div className="mt-4 pt-4 border-t border-gray-200">
-                                <h4 className="text-sm font-semibold text-gray-700 mb-3">📸 Personalização Enviada:</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  
-                                  {/* Logo */}
-                                  {rev.has_logo && rev.logo_url && (
-                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                                      <p className="text-xs font-medium text-gray-600 mb-2">Logo da Loja</p>
-                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
-                                        <Image
-                                          src={rev.logo_url}
-                                          alt="Logo"
-                                          fill
-                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                          className="object-contain p-2"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Banner Desktop */}
-                                  {rev.has_banner && rev.banner_url && (
-                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                                      <p className="text-xs font-medium text-gray-600 mb-2">Banner Desktop</p>
-                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
-                                        <Image
-                                          src={rev.banner_url}
-                                          alt="Banner Desktop"
-                                          fill
-                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                          className="object-cover"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Banner Mobile */}
-                                  {rev.has_banner && rev.banner_mobile_url && (
-                                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                                      <p className="text-xs font-medium text-gray-600 mb-2">Banner Mobile</p>
-                                      <div className="relative w-full h-32 bg-gray-50 rounded overflow-hidden">
-                                        <Image
-                                          src={rev.banner_mobile_url}
-                                          alt="Banner Mobile"
-                                          fill
-                                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                          className="object-cover"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-
-                                </div>
-                              </div>
-                            )}
-
-                            {rev.rejection_reason && (
-                              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">
-                                <strong>Motivo da rejeição:</strong> {rev.rejection_reason}
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Rodapé com total */}
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600 text-center">
-              Mostrando <strong>{filtradas.length}</strong> de <strong>{revendedoras.length}</strong> revendedoras
-            </div>
-          </div>
-        )}
+  return (
+    <div className={`rounded-lg border-l-4 p-4 ${colorClasses[color]} ${highlight ? 'ring-2 ring-offset-1 ring-yellow-400' : ''}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-medium opacity-80">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        <div className="opacity-60">
+          {icon}
+        </div>
       </div>
     </div>
   );

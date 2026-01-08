@@ -71,7 +71,17 @@ export default function ModeracaoBannersPage() {
   const [processing, setProcessing] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'moderacao' | 'templates' | 'todos'>('moderacao')
-  const [todasRevendedoras, setTodasRevendedoras] = useState<{ id: string; store_name?: string; slug?: string }[]>([])
+  const [todasRevendedoras, setTodasRevendedoras] = useState<{ 
+    id: string; 
+    store_name?: string; 
+    slug?: string;
+    name?: string;
+    logo_url?: string | null;
+    banner_url?: string | null;
+    banner_mobile_url?: string | null;
+    is_active?: boolean;
+    status?: string;
+  }[]>([])
 
   const loadSubmissions = async () => {
     try {

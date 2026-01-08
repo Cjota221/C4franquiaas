@@ -7,12 +7,22 @@
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import EstoqueNotifications from '@/components/EstoqueNotifications';
+import { Toaster } from 'sonner';
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right" 
+        richColors 
+        closeButton
+        toastOptions={{
+          duration: 4000,
+        }}
+      />
       {/* Mobile top bar */}
       <header className="md:hidden flex items-center justify-between p-3 bg-white shadow-sm">
         <button aria-label="Abrir menu" onClick={() => setDrawerOpen(true)} className="p-2">
