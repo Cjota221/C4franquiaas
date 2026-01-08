@@ -2,7 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import PageWrapper from '@/components/PageWrapper';
 import Image from 'next/image';
-import { Upload, Plus, Trash2, Save, Image as ImageIcon, Type, Palette } from 'lucide-react';
+import { Upload, Plus, Trash2, Save, Image as ImageIcon, Type, Palette, Settings } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 type LojaCustomizacao = {
   id: string;
@@ -87,11 +91,13 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
 
       if (!res.ok) throw new Error('Erro ao salvar');
 
-      setStatusMsg({ type: 'success', text: '✅ Customização salva com sucesso!' });
+      toast.success('Customizacao salva com sucesso');
+      setStatusMsg({ type: 'success', text: 'Customizacao salva com sucesso' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (err) {
       console.error('Erro:', err);
-      setStatusMsg({ type: 'error', text: '❌ Erro ao salvar customização' });
+      toast.error('Erro ao salvar customizacao');
+      setStatusMsg({ type: 'error', text: 'Erro ao salvar customizacao' });
     } finally {
       setSaving(false);
     }
@@ -126,52 +132,51 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
 
   if (loading) {
     return (
-      <PageWrapper title="Customização da Loja">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-        </div>
+      <PageWrapper title="Customizacao da Loja">
+        <LoadingState message="Carregando configuracoes..." />
       </PageWrapper>
     );
   }
 
   if (!loja) {
     return (
-      <PageWrapper title="Customização da Loja">
+      <PageWrapper title="Customizacao da Loja">
         <div className="text-center py-12">
-          <p className="text-gray-600">Loja não encontrada</p>
+          <p className="text-gray-600">Loja nao encontrada</p>
         </div>
       </PageWrapper>
     );
   }
 
   return (
-    <PageWrapper title="Customização da Loja">
+    <PageWrapper title="Customizacao da Loja">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Customização da Loja</h1>
-            <p className="text-gray-600 mt-1">{loja.nome} - {loja.dominio}</p>
-          </div>
-          <button
-            onClick={salvarCustomizacao}
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50"
-          >
-            <Save size={20} />
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
-          </button>
-        </div>
+        <PageHeader
+          title="Customizacao da Loja"
+          subtitle={`${loja.nome} - ${loja.dominio}`}
+          icon={Settings}
+          actions={
+            <button
+              onClick={salvarCustomizacao}
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50 transition-colors"
+            >
+              <Save size={20} />
+              {saving ? 'Salvando...' : 'Salvar Alteracoes'}
+            </button>
+          }
+        />
 
         {/* Status Message */}
         {statusMsg && (
-          <div className={`p-4 rounded-lg ${statusMsg.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+          <div className={`p-4 rounded-lg border ${statusMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-red-50 text-red-800 border-red-200'}`}>
             {statusMsg.text}
           </div>
         )}
 
         {/* Cores da Loja */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <Palette size={24} className="text-pink-600" />
             <h2 className="text-xl font-bold">Cores da Loja</h2>
@@ -218,16 +223,16 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Régua de Anúncios */}
-        <div className="bg-white rounded-lg shadow p-6">
+        {/* Regua de Anuncios */}
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <Type size={24} className="text-pink-600" />
-            <h2 className="text-xl font-bold">Régua de Anúncios (Topo)</h2>
+            <h2 className="text-xl font-bold">Regua de Anuncios (Topo)</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Mensagens rotativas que aparecem no topo da loja. Rotação automática a cada 3 segundos.
+            Mensagens rotativas que aparecem no topo da loja. Rotacao automatica a cada 3 segundos.
           </p>
           
           <div className="space-y-3">
@@ -250,7 +255,7 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
               value={novaMensagem}
               onChange={(e) => setNovaMensagem(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && adicionarMensagem()}
-              placeholder="Ex: Frete grátis acima de R$ 99"
+              placeholder="Ex: Frete gratis acima de R$ 99"
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
             />
             <button
@@ -260,10 +265,10 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
               <Plus size={20} />
             </button>
           </div>
-        </div>
+        </Card>
 
         {/* Banners */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <ImageIcon size={24} className="text-pink-600" />
             <h2 className="text-xl font-bold">Banners da Homepage</h2>
@@ -308,7 +313,7 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
                 <div className="mt-3 relative h-32 rounded-lg overflow-hidden">
                   <Image 
                     src={loja.banner_secundario} 
-                    alt="Banner Secundário" 
+                    alt="Banner Secundario" 
                     fill
                     className="object-cover" 
                   />
@@ -316,10 +321,10 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Categorias em Destaque */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <ImageIcon size={24} className="text-pink-600" />
@@ -335,7 +340,7 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
           </div>
           
           <p className="text-sm text-gray-600 mb-4">
-            Categorias aparecerão em formato circular (stories) abaixo do banner. Recomendado: imagens quadradas 400x400px.
+            Categorias aparecerao em formato circular (stories) abaixo do banner. Recomendado: imagens quadradas 400x400px.
           </p>
 
           <div className="space-y-4">
@@ -385,17 +390,17 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        {/* Ícones de Confiança */}
-        <div className="bg-white rounded-lg shadow p-6">
+        {/* Icones de Confianca */}
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <ImageIcon size={24} className="text-pink-600" />
-            <h2 className="text-xl font-bold">Ícones de Confiança</h2>
+            <h2 className="text-xl font-bold">Icones de Confianca</h2>
           </div>
           
           <p className="text-sm text-gray-600 mb-4">
-            Ícones exibidos no rodapé da homepage para transmitir confiança.
+            Icones exibidos no rodape da homepage para transmitir confianca.
           </p>
 
           <div className="space-y-4">
@@ -410,7 +415,7 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
                       novosIcones[index].titulo = e.target.value;
                       setIconesConfianca(novosIcones);
                     }}
-                    placeholder="Título"
+                    placeholder="Titulo"
                     className="px-4 py-2 border border-gray-300 rounded-lg"
                   />
                   <input
@@ -433,19 +438,19 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-lg"
                   >
-                    <option value="ShieldCheck">🛡️ Compra Segura</option>
-                    <option value="Truck">🚚 Entrega</option>
-                    <option value="CreditCard">💳 Pagamento</option>
-                    <option value="Package">📦 Embalagem</option>
-                    <option value="Award">🏆 Qualidade</option>
+                    <option value="ShieldCheck">Compra Segura</option>
+                    <option value="Truck">Entrega</option>
+                    <option value="CreditCard">Pagamento</option>
+                    <option value="Package">Embalagem</option>
+                    <option value="Award">Qualidade</option>
                   </select>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        {/* Botão Salvar (rodapé) */}
+        {/* Botao Salvar (rodape) */}
         <div className="flex justify-end">
           <button
             onClick={salvarCustomizacao}
@@ -453,7 +458,7 @@ export default function CustomizacaoLojaPage({ params }: { params: Promise<{ id:
             className="flex items-center gap-2 px-8 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50 text-lg font-semibold"
           >
             <Save size={24} />
-            {saving ? 'Salvando...' : 'Salvar Todas as Alterações'}
+            {saving ? 'Salvando...' : 'Salvar Todas as Alteracoes'}
           </button>
         </div>
       </div>

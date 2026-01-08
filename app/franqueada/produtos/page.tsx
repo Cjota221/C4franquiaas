@@ -4,7 +4,11 @@ import { createClient } from '@/lib/supabase/client';
 import TabelaProdutosFranqueada, { type ProdutoFranqueada } from '@/components/franqueada/TabelaProdutosFranqueada';
 import FiltrosProdutosFranqueada, { type FiltrosProdutos } from '@/components/franqueada/FiltrosProdutosFranqueada';
 import { useDebounce } from '@/hooks/useDebounce';
-import { Package, DollarSign, CheckCircle, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { Package, DollarSign, CheckCircle, TrendingUp, Loader2, AlertCircle, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 type SortField = 'nome' | 'preco_final' | 'created_at';
 type SortDirection = 'asc' | 'desc';
@@ -327,23 +331,24 @@ export default function FranqueadaProdutosPage() {
   };
 
   const handleToggleStatus = async (produto: ProdutoFranqueada) => {
-    // Não permitir ativar se o produto estiver desativado ou sem estoque
+    // Nao permitir ativar se o produto estiver desativado ou sem estoque
     if (!produto.ativo_no_site && !produto.pode_ativar) {
-      alert('⚠️ Este produto não pode ser ativado.\n\nMotivo: ' + 
-        (!produto.produto_ativo ? 'Produto desativado pela C4' : 'Sem estoque disponível'));
+      toast.error('Este produto nao pode ser ativado', {
+        description: !produto.produto_ativo ? 'Produto desativado pela C4' : 'Sem estoque disponivel'
+      });
       return;
     }
 
     // Se for ativar, verificar se tem margem configurada
     if (!produto.ativo_no_site && (produto.margem_percentual === null || produto.margem_percentual === 0)) {
-      alert('⚠️ Configure a margem de lucro antes de ativar o produto!');
+      toast.warning('Configure a margem de lucro antes de ativar o produto');
       return;
     }
 
     try {
       const novoStatus = !produto.ativo_no_site;
 
-      // Atualizar ou criar registro de preço
+      // Atualizar ou criar registro de preco
       await createClient()
         .from('produtos_franqueadas_precos')
         .upsert({
@@ -358,9 +363,10 @@ export default function FranqueadaProdutosPage() {
 
       // Recarregar produtos
       await carregarProdutos();
+      toast.success(novoStatus ? 'Produto ativado' : 'Produto desativado');
     } catch (err) {
       console.error('Erro ao alterar status:', err);
-      alert('❌ Erro ao alterar status do produto');
+      toast.error('Erro ao alterar status do produto');
     }
   };
 
@@ -369,12 +375,12 @@ export default function FranqueadaProdutosPage() {
       const produto = produtos.find(p => p.id === produtoId);
       if (!produto) return;
 
-      // Calcular novo preço final
+      // Calcular novo preco final
       const novoPrecoFinal = margem 
         ? produto.preco_base * (1 + margem / 100)
         : produto.preco_base;
 
-      // Atualizar ou criar registro de preço
+      // Atualizar ou criar registro de preco
       await createClient()
         .from('produtos_franqueadas_precos')
         .upsert({
@@ -389,9 +395,10 @@ export default function FranqueadaProdutosPage() {
 
       // Recarregar produtos
       await carregarProdutos();
+      toast.success('Margem atualizada com sucesso');
     } catch (err) {
       console.error('Erro ao atualizar margem:', err);
-      alert('❌ Erro ao atualizar margem');
+      toast.error('Erro ao atualizar margem');
     }
   };
 
@@ -414,7 +421,7 @@ export default function FranqueadaProdutosPage() {
   // Ações em massa
   const handleAtivarSelecionados = async () => {
     if (selectedIds.size === 0) {
-      alert('Selecione pelo menos um produto');
+      toast.warning('Selecione pelo menos um produto');
       return;
     }
 
@@ -423,12 +430,12 @@ export default function FranqueadaProdutosPage() {
     const naoDisponiveis = produtosSelecionados.filter(p => !p.pode_ativar);
 
     if (semMargem.length > 0) {
-      alert(`⚠️ ${semMargem.length} produto(s) sem margem configurada.\nConfigure a margem antes de ativar.`);
+      toast.warning(`${semMargem.length} produto(s) sem margem configurada. Configure a margem antes de ativar.`);
       return;
     }
 
     if (naoDisponiveis.length > 0) {
-      alert(`⚠️ ${naoDisponiveis.length} produto(s) não podem ser ativados (desativados pela C4 ou sem estoque).`);
+      toast.warning(`${naoDisponiveis.length} produto(s) não podem ser ativados (desativados pela C4 ou sem estoque).`);
       return;
     }
 
@@ -448,12 +455,12 @@ export default function FranqueadaProdutosPage() {
           }, { onConflict: 'produto_franqueada_id' });
       }
 
-      alert(`✅ ${produtosSelecionados.length} produto(s) ativado(s) com sucesso!`);
+      toast.success(`${produtosSelecionados.length} produto(s) ativado(s) com sucesso`);
       setSelectedIds(new Set());
       await carregarProdutos();
     } catch (err) {
       console.error('Erro ao ativar produtos:', err);
-      alert('❌ Erro ao ativar produtos');
+      toast.error('Erro ao ativar produtos');
     } finally {
       setProcessando(false);
     }
@@ -461,7 +468,7 @@ export default function FranqueadaProdutosPage() {
 
   const handleDesativarSelecionados = async () => {
     if (selectedIds.size === 0) {
-      alert('Selecione pelo menos um produto');
+      toast.warning('Selecione pelo menos um produto');
       return;
     }
 
@@ -479,12 +486,12 @@ export default function FranqueadaProdutosPage() {
           .eq('produto_franqueada_id', produto.produto_franqueada_id);
       }
 
-      alert(`✅ ${produtosSelecionados.length} produto(s) desativado(s) com sucesso!`);
+      toast.success(`${produtosSelecionados.length} produto(s) desativado(s) com sucesso`);
       setSelectedIds(new Set());
       await carregarProdutos();
     } catch (err) {
       console.error('Erro ao desativar produtos:', err);
-      alert('❌ Erro ao desativar produtos');
+      toast.error('Erro ao desativar produtos');
     } finally {
       setProcessando(false);
     }
@@ -492,13 +499,13 @@ export default function FranqueadaProdutosPage() {
 
   const handleAplicarMargemMassa = async () => {
     if (selectedIds.size === 0) {
-      alert('Selecione pelo menos um produto');
+      toast.warning('Selecione pelo menos um produto');
       return;
     }
 
     const margem = parseFloat(margemMassa);
     if (isNaN(margem) || margem < 0 || margem > 1000) {
-      alert('Digite uma margem válida (0 a 1000%)');
+      toast.warning('Digite uma margem válida (0 a 1000%)');
       return;
     }
 
@@ -522,14 +529,14 @@ export default function FranqueadaProdutosPage() {
           }, { onConflict: 'produto_franqueada_id' });
       }
 
-      alert(`✅ Margem de ${margem}% aplicada a ${produtosSelecionados.length} produto(s)!`);
+      toast.success(`Margem de ${margem}% aplicada a ${produtosSelecionados.length} produto(s)`);
       setShowModalMargem(false);
       setMargemMassa('');
       setSelectedIds(new Set());
       await carregarProdutos();
     } catch (err) {
       console.error('Erro ao aplicar margem:', err);
-      alert('❌ Erro ao aplicar margem');
+      toast.error('Erro ao aplicar margem');
     } finally {
       setProcessando(false);
     }
@@ -544,58 +551,41 @@ export default function FranqueadaProdutosPage() {
   }), [produtos]);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      {/* Cabeçalho */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          💎 Meus Produtos
-        </h1>
-        <p className="text-gray-600">
-          Gerencie suas margens de lucro e disponibilidade dos produtos no seu site
-        </p>
-      </div>
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-6">
+      {/* Cabecalho */}
+      <PageHeader
+        title="Produtos"
+        subtitle="Gerencie margens de lucro e disponibilidade dos produtos na sua loja"
+        icon={Package}
+      />
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total de Produtos</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <Package className="w-10 h-10 text-blue-500 opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Sem Margem</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.semMargem}</p>
-            </div>
-            <AlertCircle className="w-10 h-10 text-yellow-500 opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Prontos p/ Ativar</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.prontosAtivar}</p>
-            </div>
-            <TrendingUp className="w-10 h-10 text-purple-500 opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Ativos no Site</p>
-              <p className="text-2xl font-bold text-green-600">{stats.ativos}</p>
-            </div>
-            <CheckCircle className="w-10 h-10 text-green-500 opacity-20" />
-          </div>
-        </div>
+      {/* Estatisticas */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total de Produtos"
+          value={stats.total}
+          icon={Package}
+          iconColor="blue"
+        />
+        <StatCard
+          title="Sem Margem"
+          value={stats.semMargem}
+          subtitle="Precisam de configuracao"
+          icon={AlertCircle}
+          iconColor="yellow"
+        />
+        <StatCard
+          title="Prontos para Ativar"
+          value={stats.prontosAtivar}
+          icon={TrendingUp}
+          iconColor="purple"
+        />
+        <StatCard
+          title="Ativos no Site"
+          value={stats.ativos}
+          icon={CheckCircle}
+          iconColor="green"
+        />
       </div>
 
       {/* Ações em Massa */}

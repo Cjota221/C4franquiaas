@@ -5,8 +5,12 @@ import { createClient } from '@/lib/supabase/client';
 import { ResumoComissoes } from '@/components/franqueada/ResumoComissoes';
 import { TabelaMinhasVendas } from '@/components/franqueada/TabelaMinhasVendas';
 import type { VendaComComissao } from '@/types/financeiro';
-import { Wallet, AlertCircle } from 'lucide-react';
+import { Wallet, AlertCircle, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingState } from '@/components/ui/LoadingState';
+import Link from 'next/link';
 
 export default function MinhasComissoesPage() {
   const supabase = createClient();
@@ -23,7 +27,7 @@ export default function MinhasComissoesPage() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setErro('UsuÃ¡rio nÃ£o autenticado');
+        setErro('Usuario nao autenticado');
         return;
       }
 
@@ -76,37 +80,41 @@ export default function MinhasComissoesPage() {
     v => v.status_comissao === 'pendente' && v.status_pagamento === 'approved'
   ).length;
 
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-7xl">
+        <LoadingState message="Carregando comissoes..." />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Wallet className="w-8 h-8 text-pink-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Minhas ComissÃµes</h1>
-        </div>
-        <p className="text-gray-600">
-          Acompanhe suas vendas e comissÃµes a receber.
-        </p>
-      </div>
+      <PageHeader
+        title="Comissoes"
+        subtitle="Acompanhe suas vendas e comissoes a receber"
+        icon={Wallet}
+      />
 
       {/* Alerta: Cadastrar Dados PIX */}
-      {!temDadosPix && !loading && (
-        <Card className="p-4 mb-6 bg-yellow-50 border-yellow-200">
+      {!temDadosPix && (
+        <Card className="p-4 mb-6 bg-amber-50 border-amber-200">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-yellow-900 mb-1">
+            <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 mb-1">
                 Cadastre seus dados de recebimento
               </h3>
-              <p className="text-sm text-yellow-800 mb-3">
-                Para receber suas comissÃµes, vocÃª precisa cadastrar sua chave PIX.
+              <p className="text-sm text-amber-800 mb-3">
+                Para receber suas comissoes, voce precisa cadastrar sua chave PIX.
               </p>
-              <a
-                href="/franqueada/perfil"
-                className="inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
-              >
-                Cadastrar Chave PIX
-              </a>
+              <Link href="/franqueada/perfil">
+                <Button variant="outline" size="sm" className="border-amber-600 text-amber-700 hover:bg-amber-100">
+                  Cadastrar Chave PIX
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>
@@ -125,8 +133,8 @@ export default function MinhasComissoesPage() {
         </Card>
       )}
 
-      {/* Resumo de ComissÃµes */}
-      {!loading && !erro && (
+      {/* Resumo de Comissoes */}
+      {!erro && (
         <ResumoComissoes
           totalPendente={totalPendente}
           totalPago={totalPago}
@@ -135,7 +143,7 @@ export default function MinhasComissoesPage() {
       )}
 
       {/* Tabela de Vendas */}
-      <TabelaMinhasVendas vendas={vendas} loading={loading} />
+      <TabelaMinhasVendas vendas={vendas} loading={false} />
     </div>
   );
 }

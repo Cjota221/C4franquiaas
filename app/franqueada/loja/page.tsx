@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Store, Save, Upload, AlertCircle, Palette, FileText, Share2, BarChart3, Settings, Copy, ExternalLink } from 'lucide-react';
 import { authenticatedFetch } from '@/lib/authenticatedFetch';
 import Tabs from '@/components/Tabs';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { toast } from 'sonner';
 
 type Loja = {
   id: string;
@@ -266,7 +269,8 @@ export default function LojaPage() {
 
       const json = await res.json();
       setLoja(json.loja);
-      setSuccess('✅ Loja salva com sucesso!');
+      toast.success('Loja salva com sucesso');
+      setSuccess('Loja salva com sucesso');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Erro ao salvar loja:', err);
@@ -299,7 +303,8 @@ export default function LojaPage() {
 
       const json = await res.json();
       setLogo(json.url);
-      setSuccess('✅ Logo enviada com sucesso!');
+      toast.success('Logo enviada com sucesso');
+      setSuccess('Logo enviada com sucesso');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Erro ao fazer upload:', err);
@@ -312,7 +317,8 @@ export default function LojaPage() {
   function copyLink() {
     const link = `https://c4franquiaas.netlify.app/loja/${dominio}`;
     navigator.clipboard.writeText(link);
-    setSuccess('✅ Link copiado!');
+    toast.success('Link copiado');
+    setSuccess('Link copiado');
     setTimeout(() => setSuccess(''), 2000);
   }
 
@@ -322,36 +328,28 @@ export default function LojaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando...</p>
-        </div>
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+        <LoadingState message="Carregando configuracoes da loja..." />
       </div>
     );
   }
 
   const tabs = [
     { id: 'identidade', label: 'Identidade Visual', icon: <Palette size={18} /> },
-    { id: 'conteudo', label: 'Conteúdo', icon: <FileText size={18} /> },
+    { id: 'conteudo', label: 'Conteudo', icon: <FileText size={18} /> },
     { id: 'social', label: 'Redes Sociais', icon: <Share2 size={18} /> },
-    { id: 'seo', label: 'SEO & Analytics', icon: <BarChart3 size={18} /> },
-    { id: 'config', label: 'Configurações', icon: <Settings size={18} /> },
+    { id: 'seo', label: 'SEO e Analytics', icon: <BarChart3 size={18} /> },
+    { id: 'config', label: 'Configuracoes', icon: <Settings size={18} /> },
   ];
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
       {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 md:gap-3">
-          <Store className="text-pink-600" size={28} />
-          <span className="hidden sm:inline">Customização Avançada da Loja</span>
-          <span className="sm:hidden">Minha Loja</span>
-        </h1>
-        <p className="text-sm md:text-base text-gray-600 mt-2">
-          {loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender!'}
-        </p>
-      </div>
+      <PageHeader
+        title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
+        subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
+        icon={Store}
+      />
 
       {/* Alertas */}
       {error && (
@@ -403,9 +401,8 @@ export default function LojaPage() {
                     {dominio || '(digite o nome acima)'}
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <span>✨</span>
-                  <span>Gerada automaticamente a partir do nome da loja</span>
+                <p className="text-xs text-gray-500 mt-1">
+                  Gerada automaticamente a partir do nome da loja
                 </p>
               </div>
 

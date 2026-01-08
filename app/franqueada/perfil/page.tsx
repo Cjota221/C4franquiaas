@@ -3,6 +3,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User, Mail, Phone, MapPin, Calendar, Wallet } from 'lucide-react';
 import { FormDadosPagamento } from '@/components/franqueada/FormDadosPagamento';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { Card } from '@/components/ui/card';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 type Franqueada = {
   id: string;
@@ -52,87 +57,96 @@ export default function FranqueadaPerfilPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando perfil...</p>
-        </div>
+      <div className="p-4 md:p-6">
+        <LoadingState message="Carregando perfil..." />
       </div>
     );
   }
 
   if (!franqueada) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+      <div className="p-4 md:p-6">
+        <Card className="bg-red-50 border-red-200 p-4 text-red-700">
           Erro ao carregar perfil
-        </div>
+        </Card>
       </div>
     );
   }
 
+  const getStatusType = (status: string) => {
+    switch (status) {
+      case 'aprovada': return 'active';
+      case 'pendente': return 'pending';
+      default: return 'error';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'aprovada': return 'Aprovada';
+      case 'pendente': return 'Pendente';
+      default: return 'Rejeitada';
+    }
+  };
+
   return (
     <div className="p-4 md:p-6">
-      {/* Cabeçalho */}
-      <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">👤 Meu Perfil</h1>
-        <p className="text-sm md:text-base text-gray-600">Informações da sua conta</p>
-      </div>
+      {/* Cabecalho */}
+      <PageHeader
+        title="Meu Perfil"
+        subtitle="Informacoes da sua conta"
+        icon={User}
+      />
 
       {/* Card de Perfil */}
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl">
+      <Card className="p-6 max-w-2xl">
         {/* Avatar e Nome */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
-          <div className="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center">
             <User className="w-10 h-10 text-pink-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">{franqueada.nome}</h2>
-            <p className="text-sm text-gray-600">
-              Status: <span className={`font-medium ${
-                franqueada.status === 'aprovada' ? 'text-green-600' :
-                franqueada.status === 'pendente' ? 'text-yellow-600' :
-                'text-red-600'
-              }`}>
-                {franqueada.status === 'aprovada' ? 'Aprovada' :
-                 franqueada.status === 'pendente' ? 'Pendente' :
-                 'Rejeitada'}
-              </span>
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">{franqueada.nome}</h2>
+            <div className="mt-1">
+              <StatusBadge 
+                status={getStatusType(franqueada.status) as 'active' | 'pending' | 'error'} 
+                label={getStatusLabel(franqueada.status)} 
+              />
+            </div>
           </div>
         </div>
 
-        {/* Informações Pessoais */}
+        {/* Informacoes Pessoais */}
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600">Email</p>
-              <p className="font-medium text-gray-800">{franqueada.email}</p>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-medium text-gray-900">{franqueada.email}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600">Telefone</p>
-              <p className="font-medium text-gray-800">{franqueada.telefone}</p>
+              <p className="text-sm text-gray-500">Telefone</p>
+              <p className="font-medium text-gray-900">{franqueada.telefone}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <User className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600">CPF</p>
-              <p className="font-medium text-gray-800">{franqueada.cpf}</p>
+              <p className="text-sm text-gray-500">CPF</p>
+              <p className="font-medium text-gray-900">{franqueada.cpf}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600">Localização</p>
-              <p className="font-medium text-gray-800">
+              <p className="text-sm text-gray-500">Localizacao</p>
+              <p className="font-medium text-gray-900">
                 {franqueada.cidade}, {franqueada.estado}
               </p>
             </div>
@@ -141,8 +155,8 @@ export default function FranqueadaPerfilPage() {
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600">Membro desde</p>
-              <p className="font-medium text-gray-800">
+              <p className="text-sm text-gray-500">Membro desde</p>
+              <p className="font-medium text-gray-900">
                 {new Date(franqueada.criado_em).toLocaleDateString('pt-BR')}
               </p>
             </div>
@@ -152,8 +166,8 @@ export default function FranqueadaPerfilPage() {
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm text-gray-600">Aprovado em</p>
-                <p className="font-medium text-gray-800">
+                <p className="text-sm text-gray-500">Aprovado em</p>
+                <p className="font-medium text-gray-900">
                   {new Date(franqueada.aprovado_em).toLocaleDateString('pt-BR')}
                 </p>
               </div>
@@ -164,9 +178,9 @@ export default function FranqueadaPerfilPage() {
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm text-gray-600">Último acesso</p>
-                <p className="font-medium text-gray-800">
-                  {new Date(franqueada.ultimo_acesso).toLocaleDateString('pt-BR')} às{' '}
+                <p className="text-sm text-gray-500">Ultimo acesso</p>
+                <p className="font-medium text-gray-900">
+                  {new Date(franqueada.ultimo_acesso).toLocaleDateString('pt-BR')} as{' '}
                   {new Date(franqueada.ultimo_acesso).toLocaleTimeString('pt-BR')}
                 </p>
               </div>
@@ -174,24 +188,26 @@ export default function FranqueadaPerfilPage() {
           )}
         </div>
 
-        {/* Ações */}
+        {/* Acoes */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <button
             disabled
-            className="w-full px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed"
+            className="w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm"
           >
             Editar Perfil (Em breve)
           </button>
         </div>
-      </div>
+      </Card>
 
       {/* Dados de Pagamento PIX */}
       <div className="mt-8 max-w-2xl">
-        <div className="mb-4 flex items-center gap-2">
-          <Wallet className="w-6 h-6 text-pink-600" />
-          <h2 className="text-xl font-semibold text-gray-800">Dados de Recebimento</h2>
-        </div>
-        <FormDadosPagamento />
+        <SectionHeader
+          title="Dados de Recebimento"
+          icon={Wallet}
+        />
+        <Card className="p-0">
+          <FormDadosPagamento />
+        </Card>
       </div>
     </div>
   );

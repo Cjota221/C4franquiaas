@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { DollarSign, Package, Calendar, Check, X, Clock, TrendingUp } from 'lucide-react';
+import { ShoppingBag, DollarSign, Package, Calendar, Check, X, Clock, TrendingUp } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Card } from '@/components/ui/card';
 
 interface Venda {
   id: string;
@@ -58,87 +63,90 @@ export default function VendasFranqueadaPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      approved: { bg: 'bg-green-100', text: 'text-green-800', icon: Check, label: 'Aprovado' },
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock, label: 'Pendente' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: X, label: 'Recusado' },
+      approved: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: Check, label: 'Aprovado' },
+      pending: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: Clock, label: 'Pendente' },
+      rejected: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: X, label: 'Recusado' },
     };
     const badge = badges[status as keyof typeof badges] || badges.pending;
     const Icon = badge.icon;
     
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
+      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border ${badge.bg} ${badge.text} ${badge.border}`}>
         <Icon className="w-3 h-3" />
         {badge.label}
       </span>
     );
   };
 
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <LoadingState message="Carregando vendas..." />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Minhas Vendas</h1>
+      <PageHeader 
+        title="Vendas" 
+        subtitle="Historico de vendas realizadas na sua loja"
+        icon={ShoppingBag}
+      />
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <DollarSign className="w-10 h-10 text-green-600" />
-            <div>
-              <p className="text-sm text-gray-600">Total em Vendas</p>
-              <p className="text-2xl font-bold">R$ {totalVendas.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="w-10 h-10 text-blue-600" />
-            <div>
-              <p className="text-sm text-gray-600">Minhas ComissÃµes</p>
-              <p className="text-2xl font-bold text-blue-600">R$ {totalComissoes.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <Package className="w-10 h-10 text-purple-600" />
-            <div>
-              <p className="text-sm text-gray-600">Vendas Aprovadas</p>
-              <p className="text-2xl font-bold">{vendasAprovadas}</p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Total em Vendas"
+          value={`R$ ${totalVendas.toFixed(2)}`}
+          icon={DollarSign}
+          variant="success"
+        />
+        <StatCard
+          title="Minhas Comissoes"
+          value={`R$ ${totalComissoes.toFixed(2)}`}
+          icon={TrendingUp}
+          variant="primary"
+        />
+        <StatCard
+          title="Vendas Aprovadas"
+          value={vendasAprovadas.toString()}
+          icon={Package}
+          variant="default"
+        />
       </div>
 
       {/* Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <label className="block text-sm font-medium mb-2">Filtrar por Status</label>
+      <Card className="p-4 mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por Status</label>
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value)}
-          className="border rounded px-3 py-2"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
         >
           <option value="todos">Todos</option>
           <option value="approved">Aprovados</option>
           <option value="pending">Pendentes</option>
           <option value="rejected">Recusados</option>
         </select>
-      </div>
+      </Card>
 
       {/* Lista de vendas */}
-      <div className="bg-white rounded-lg shadow">
-        {loading ? (
-          <div className="p-8 text-center">Carregando...</div>
-        ) : vendas.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhuma venda encontrada</div>
+      <Card>
+        {vendas.length === 0 ? (
+          <EmptyState
+            title="Nenhuma venda encontrada"
+            description="As vendas realizadas na sua loja aparecerao aqui."
+            icon={ShoppingBag}
+          />
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-gray-100">
             {vendas.map((venda) => (
-              <div key={venda.id} className="p-4 hover:bg-gray-50">
+              <div key={venda.id} className="p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-semibold">{venda.cliente_nome}</h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <h3 className="font-semibold text-gray-900">{venda.cliente_nome}</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                       <Calendar className="w-4 h-4" />
                       {new Date(venda.created_at).toLocaleDateString('pt-BR', {
                         day: '2-digit',
@@ -151,16 +159,16 @@ export default function VendasFranqueadaPage() {
                   </div>
                   <div className="text-right">
                     {getStatusBadge(venda.status_pagamento)}
-                    <p className="text-lg font-bold mt-1">R$ {venda.valor_total.toFixed(2)}</p>
-                    <p className="text-sm text-green-600">
-                      ComissÃ£o: R$ {venda.comissao_franqueada.toFixed(2)}
+                    <p className="text-lg font-semibold text-gray-900 mt-2">R$ {venda.valor_total.toFixed(2)}</p>
+                    <p className="text-sm text-emerald-600 font-medium">
+                      Comissao: R$ {venda.comissao_franqueada.toFixed(2)}
                     </p>
                   </div>
                 </div>
                 
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-gray-700">Itens:</p>
-                  <ul className="text-sm text-gray-600">
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Itens:</p>
+                  <ul className="text-sm text-gray-600 space-y-0.5">
                     {venda.items.map((item, idx) => (
                       <li key={idx}>
                         {item.quantidade}x {item.nome} - R$ {item.preco.toFixed(2)}
@@ -172,7 +180,7 @@ export default function VendasFranqueadaPage() {
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

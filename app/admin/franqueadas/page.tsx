@@ -3,6 +3,20 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/PageWrapper';
 import Image from 'next/image';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { 
+  Users, Clock, CheckCircle, XCircle, Store, 
+  Search, Mail, Phone, MapPin, Calendar, 
+  DollarSign, Package, RefreshCw, Palette, 
+  CreditCard, Power, User
+} from 'lucide-react';
 
 type Loja = {
   id: string;
@@ -73,16 +87,18 @@ export default function FranqueadasPage() {
       if (!res.ok) throw new Error(data.error || 'Erro ao aprovar');
       
       await loadFranqueadas();
-      setStatusMsg({ type: 'success', text: '✅ ' + data.message });
+      toast.success(data.message);
+      setStatusMsg({ type: 'success', text: data.message });
       setTimeout(() => setStatusMsg(null), 5000);
     } catch (err) {
       console.error('Erro ao aprovar:', err);
-      setStatusMsg({ type: 'error', text: '❌ Erro ao aprovar franqueada' });
+      toast.error('Erro ao aprovar franqueada');
+      setStatusMsg({ type: 'error', text: 'Erro ao aprovar franqueada' });
     }
   }
 
   async function rejeitarFranqueada(id: string) {
-    const observacao = prompt('Motivo da rejeição (opcional):');
+    const observacao = prompt('Motivo da rejeicao (opcional):');
     if (observacao === null) return;
     try {
       const res = await fetch('/api/admin/franqueadas/action', {
@@ -92,11 +108,13 @@ export default function FranqueadasPage() {
       });
       if (!res.ok) throw new Error('Erro ao rejeitar');
       await loadFranqueadas();
+      toast.success('Franqueada rejeitada');
       setStatusMsg({ type: 'success', text: 'Franqueada rejeitada' });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (err) {
       console.error('Erro ao rejeitar:', err);
-      setStatusMsg({ type: 'error', text: '❌ Erro ao rejeitar franqueada' });
+      toast.error('Erro ao rejeitar franqueada');
+      setStatusMsg({ type: 'error', text: 'Erro ao rejeitar franqueada' });
     }
   }
 
@@ -110,18 +128,21 @@ export default function FranqueadasPage() {
       });
       if (!res.ok) throw new Error('Erro ao atualizar loja');
       await loadFranqueadas();
-      setStatusMsg({ type: 'success', text: `✅ Loja ${ativo ? 'ativada' : 'desativada'} com sucesso!` });
+      toast.success(`Loja ${ativo ? 'ativada' : 'desativada'} com sucesso`);
+      setStatusMsg({ type: 'success', text: `Loja ${ativo ? 'ativada' : 'desativada'} com sucesso` });
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (err) {
       console.error('Erro ao atualizar loja:', err);
-      setStatusMsg({ type: 'error', text: '❌ Erro ao atualizar loja' });
+      toast.error('Erro ao atualizar loja');
+      setStatusMsg({ type: 'error', text: 'Erro ao atualizar loja' });
     }
   }
 
   async function revincularProdutos(id: string) {
-    if (!confirm('Deseja revincular os produtos ativos a esta franqueada? Isso vai recriar todas as vinculações.')) return;
+    if (!confirm('Deseja revincular os produtos ativos a esta franqueada? Isso vai recriar todas as vinculacoes.')) return;
     try {
-      setStatusMsg({ type: 'success', text: '⏳ Revinculando produtos...' });
+      toast.info('Revinculando produtos...');
+      setStatusMsg({ type: 'success', text: 'Revinculando produtos...' });
       const res = await fetch('/api/admin/franqueadas/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,11 +154,13 @@ export default function FranqueadasPage() {
       if (!res.ok) throw new Error(data.error || 'Erro ao revincular');
       
       await loadFranqueadas();
-      setStatusMsg({ type: 'success', text: '✅ ' + data.message });
+      toast.success(data.message);
+      setStatusMsg({ type: 'success', text: data.message });
       setTimeout(() => setStatusMsg(null), 5000);
     } catch (err) {
       console.error('Erro ao revincular:', err);
-      setStatusMsg({ type: 'error', text: '❌ Erro ao revincular produtos' });
+      toast.error('Erro ao revincular produtos');
+      setStatusMsg({ type: 'error', text: 'Erro ao revincular produtos' });
     }
   }
 
@@ -161,73 +184,96 @@ export default function FranqueadasPage() {
   return (
     <PageWrapper title="Franqueadas">
       <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">👥 Gerenciar Franqueadas</h1>
+        <PageHeader
+          title="Gerenciar Franqueadas"
+          subtitle="Gerencie as franqueadas da plataforma"
+          icon={Users}
+        />
 
         {/* Mensagem de Status */}
         {statusMsg && (
-          <div className={`mb-4 p-4 rounded ${
-            statusMsg.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          <div className={`mb-4 p-4 rounded-lg border ${
+            statusMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
           }`}>
             {statusMsg.text}
           </div>
         )}
 
         {/* Filtros e Busca */}
-        <div className="flex gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="🔍 Buscar por nome, email ou domínio..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
-          >
-            <option value="todos">📊 Todos os Status</option>
-            <option value="pendente">⏳ Pendentes</option>
-            <option value="aprovada">✓ Aprovadas</option>
-            <option value="rejeitada">✕ Rejeitadas</option>
-            <option value="ativa">🟢 Lojas Ativas</option>
-            <option value="inativa">🔴 Lojas Inativas</option>
-          </select>
-        </div>
+        <Card className="p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, email ou dominio..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+            >
+              <option value="todos">Todos os Status</option>
+              <option value="pendente">Pendentes</option>
+              <option value="aprovada">Aprovadas</option>
+              <option value="rejeitada">Rejeitadas</option>
+              <option value="ativa">Lojas Ativas</option>
+              <option value="inativa">Lojas Inativas</option>
+            </select>
+          </div>
+        </Card>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-            <div className="text-yellow-700 text-sm font-medium">⏳ Pendentes</div>
-            <div className="text-2xl font-bold text-yellow-800">{estatisticas.pendentes}</div>
-          </div>
-          <div className="bg-green-50 border border-green-300 rounded-lg p-4">
-            <div className="text-green-700 text-sm font-medium">✓ Aprovadas</div>
-            <div className="text-2xl font-bold text-green-800">{estatisticas.aprovadas}</div>
-          </div>
-          <div className="bg-red-50 border border-red-300 rounded-lg p-4">
-            <div className="text-red-700 text-sm font-medium">✕ Rejeitadas</div>
-            <div className="text-2xl font-bold text-red-800">{estatisticas.rejeitadas}</div>
-          </div>
-          <div className="bg-blue-50 border border-blue-300 rounded-lg p-4">
-            <div className="text-blue-700 text-sm font-medium">🟢 Lojas Ativas</div>
-            <div className="text-2xl font-bold text-blue-800">{estatisticas.ativas}</div>
-          </div>
-          <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-            <div className="text-gray-700 text-sm font-medium">🔴 Lojas Inativas</div>
-            <div className="text-2xl font-bold text-gray-800">{estatisticas.inativas}</div>
-          </div>
+        {/* Estatisticas */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <StatCard
+            title="Pendentes"
+            value={estatisticas.pendentes}
+            icon={Clock}
+            variant="warning"
+          />
+          <StatCard
+            title="Aprovadas"
+            value={estatisticas.aprovadas}
+            icon={CheckCircle}
+            variant="success"
+          />
+          <StatCard
+            title="Rejeitadas"
+            value={estatisticas.rejeitadas}
+            icon={XCircle}
+            variant="danger"
+          />
+          <StatCard
+            title="Lojas Ativas"
+            value={estatisticas.ativas}
+            icon={Store}
+            variant="primary"
+          />
+          <StatCard
+            title="Lojas Inativas"
+            value={estatisticas.inativas}
+            icon={Power}
+            variant="default"
+          />
         </div>
 
         {/* Lista de Franqueadas */}
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Carregando...</div>
+          <LoadingState message="Carregando franqueadas..." />
         ) : franqueadasFiltradas.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">Nenhuma franqueada encontrada</div>
+          <EmptyState
+            title="Nenhuma franqueada encontrada"
+            description="Nao ha franqueadas que correspondam aos filtros selecionados."
+            icon={Users}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {franqueadasFiltradas.map((f) => (
-              <div key={f.id} className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition">
+              <Card key={f.id} className="p-4 hover:shadow-md transition">
                 <div className="flex items-start gap-4">
                   {/* Logo */}
                   {f.loja?.logo ? (
@@ -240,139 +286,163 @@ export default function FranqueadasPage() {
                     />
                   ) : (
                     <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-gray-400">
-                      👤
+                      <User className="w-8 h-8" />
                     </div>
                   )}
                   
                   <div className="flex-1">
-                    {/* Cabeçalho com Badges */}
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h3 className="text-lg font-semibold">{f.nome}</h3>
+                    {/* Cabecalho com Badges */}
+                    <div className="flex items-center gap-3 mb-3 flex-wrap">
+                      <h3 className="text-lg font-semibold text-gray-900">{f.nome}</h3>
                       
-                      {f.status === 'pendente' && (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">
-                          ⏳ Pendente
-                        </span>
-                      )}
-                      {f.status === 'aprovada' && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                          ✓ Aprovada
-                        </span>
-                      )}
-                      {f.status === 'rejeitada' && (
-                        <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
-                          ✕ Rejeitada
-                        </span>
-                      )}
+                      <StatusBadge 
+                        status={f.status === 'pendente' ? 'pending' : f.status === 'aprovada' ? 'active' : 'error'} 
+                        label={f.status === 'pendente' ? 'Pendente' : f.status === 'aprovada' ? 'Aprovada' : 'Rejeitada'} 
+                      />
                       
-                      {f.loja?.ativo && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                          🟢 Loja Ativa
-                        </span>
-                      )}
-                      {f.loja && !f.loja.ativo && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
-                          🔴 Loja Inativa
-                        </span>
+                      {f.status === 'aprovada' && f.loja && (
+                        <StatusBadge 
+                          status={f.loja.ativo ? 'active' : 'inactive'} 
+                          label={f.loja.ativo ? 'Loja Ativa' : 'Loja Inativa'} 
+                        />
                       )}
                     </div>
                     
-                    {/* Informações em Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    {/* Informacoes em Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       {/* Dados Pessoais */}
-                      <div className="space-y-1">
-                        <p className="font-medium text-gray-700">📋 Dados Pessoais</p>
-                        <p>📧 {f.email}</p>
-                        {f.telefone && <p>📱 {f.telefone}</p>}
-                        {f.cpf && <p>🆔 {f.cpf}</p>}
-                        {f.cidade && f.estado && <p>📍 {f.cidade}/{f.estado}</p>}
+                      <div className="space-y-1.5">
+                        <p className="font-medium text-gray-700 flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-gray-400" />
+                          Dados Pessoais
+                        </p>
+                        <p className="flex items-center gap-1.5 text-gray-600">
+                          <Mail className="w-3.5 h-3.5 text-gray-400" />
+                          {f.email}
+                        </p>
+                        {f.telefone && (
+                          <p className="flex items-center gap-1.5 text-gray-600">
+                            <Phone className="w-3.5 h-3.5 text-gray-400" />
+                            {f.telefone}
+                          </p>
+                        )}
+                        {f.cidade && f.estado && (
+                          <p className="flex items-center gap-1.5 text-gray-600">
+                            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                            {f.cidade}/{f.estado}
+                          </p>
+                        )}
                       </div>
                       
                       {/* Dados da Loja */}
-                      <div className="space-y-1">
-                        <p className="font-medium text-gray-700">🏪 Dados da Loja</p>
+                      <div className="space-y-1.5">
+                        <p className="font-medium text-gray-700 flex items-center gap-1.5">
+                          <Store className="w-4 h-4 text-gray-400" />
+                          Dados da Loja
+                        </p>
                         {f.loja ? (
                           <>
-                            {f.loja.nome && <p>🏷️ {f.loja.nome}</p>}
-                            {f.loja.dominio && <p>🌐 {f.loja.dominio}</p>}
-                            <p>📦 {f.loja.produtos_ativos || 0} produtos ativos</p>
+                            {f.loja.nome && (
+                              <p className="text-gray-600">{f.loja.nome}</p>
+                            )}
+                            {f.loja.dominio && (
+                              <p className="text-gray-600 text-xs font-mono">{f.loja.dominio}</p>
+                            )}
+                            <p className="flex items-center gap-1.5 text-gray-600">
+                              <Package className="w-3.5 h-3.5 text-gray-400" />
+                              {f.loja.produtos_ativos || 0} produtos ativos
+                            </p>
                           </>
                         ) : (
-                          <p className="text-gray-400">Loja não configurada</p>
+                          <p className="text-gray-400 italic">Loja nao configurada</p>
                         )}
                       </div>
                       
                       {/* Dados Financeiros */}
-                      <div className="space-y-1">
-                        <p className="font-medium text-gray-700">💰 Dados Financeiros</p>
-                        <p>💵 Vendas: R$ {(f.vendas_total || 0).toFixed(2)}</p>
-                        <p>💸 Comissão: R$ {(f.comissao_acumulada || 0).toFixed(2)}</p>
-                        <p>📅 Cadastro: {f.criado_em ? new Date(f.criado_em).toLocaleDateString('pt-BR') : '—'}</p>
+                      <div className="space-y-1.5">
+                        <p className="font-medium text-gray-700 flex items-center gap-1.5">
+                          <DollarSign className="w-4 h-4 text-gray-400" />
+                          Dados Financeiros
+                        </p>
+                        <p className="text-gray-600">Vendas: R$ {(f.vendas_total || 0).toFixed(2)}</p>
+                        <p className="text-gray-600">Comissao: R$ {(f.comissao_acumulada || 0).toFixed(2)}</p>
+                        <p className="flex items-center gap-1.5 text-gray-600">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                          {f.criado_em ? new Date(f.criado_em).toLocaleDateString('pt-BR') : '-'}
+                        </p>
                       </div>
                     </div>
                     
-                    {/* Observações */}
+                    {/* Observacoes */}
                     {f.observacoes && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-                        <p className="text-sm text-red-700">💬 Obs: {f.observacoes}</p>
+                      <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                        Obs: {f.observacoes}
                       </div>
                     )}
                   </div>
                   
-                  {/* Botões de Ação */}
+                  {/* Botoes de Acao */}
                   <div className="flex flex-col gap-2">
                     {f.status === 'pendente' && (
                       <>
-                        <button
+                        <Button
                           onClick={() => aprovarFranqueada(f.id)}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition whitespace-nowrap"
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
-                          ✓ Aprovar
-                        </button>
-                        <button
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Aprovar
+                        </Button>
+                        <Button
                           onClick={() => rejeitarFranqueada(f.id)}
-                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition whitespace-nowrap"
+                          size="sm"
+                          variant="destructive"
                         >
-                          ✕ Rejeitar
-                        </button>
+                          <XCircle className="w-4 h-4 mr-1" />
+                          Rejeitar
+                        </Button>
                       </>
                     )}
                     
                     {f.status === 'aprovada' && f.loja && (
                       <>
-                        <button
+                        <Button
                           onClick={() => router.push(`/admin/franqueadas/${f.id}/customizacao`)}
-                          className="px-3 py-1 bg-pink-600 text-white rounded text-sm hover:bg-pink-700 transition whitespace-nowrap"
+                          size="sm"
+                          className="bg-pink-600 hover:bg-pink-700 text-white"
                         >
-                          🎨 Customizar Loja
-                        </button>
-                        <button
+                          <Palette className="w-4 h-4 mr-1" />
+                          Customizar
+                        </Button>
+                        <Button
                           onClick={() => router.push(`/admin/lojas/${f.loja.id}/pagamentos`)}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition whitespace-nowrap"
+                          size="sm"
+                          variant="outline"
                         >
-                          💳 Pagamentos
-                        </button>
-                        <button
+                          <CreditCard className="w-4 h-4 mr-1" />
+                          Pagamentos
+                        </Button>
+                        <Button
                           onClick={() => toggleLojaAtiva(f.id, !f.loja.ativo)}
-                          className={`px-3 py-1 rounded text-sm transition whitespace-nowrap ${
-                            f.loja.ativo
-                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
-                          }`}
+                          size="sm"
+                          variant={f.loja.ativo ? "outline" : "default"}
                         >
-                          {f.loja.ativo ? '🔴 Desativar' : '🟢 Ativar'}
-                        </button>
-                        <button
+                          <Power className="w-4 h-4 mr-1" />
+                          {f.loja.ativo ? 'Desativar' : 'Ativar'}
+                        </Button>
+                        <Button
                           onClick={() => revincularProdutos(f.id)}
-                          className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition whitespace-nowrap"
+                          size="sm"
+                          variant="outline"
                         >
-                          🔄 Revincular Produtos
-                        </button>
+                          <RefreshCw className="w-4 h-4 mr-1" />
+                          Revincular
+                        </Button>
                       </>
                     )}
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
