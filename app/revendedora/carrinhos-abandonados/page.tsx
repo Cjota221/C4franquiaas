@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
+  generateAbandonedCartMessage, 
+  generateWhatsAppLink,
+  debugEmojis 
+} from '@/lib/utils/whatsappMessage'
+import { 
   ShoppingCart, 
   Phone, 
   Mail, 
@@ -222,40 +227,37 @@ export default function CarrinhosAbandonadosPage() {
     })
   }
 
+  // Função para gerar link do WhatsApp usando utilitário centralizado
   const formatWhatsApp = (phone: string, cart?: AbandonedCart) => {
-    const cleaned = phone.replace(/\D/g, '')
-    
-    // Se não tiver carrinho, retorna link sem mensagem
     if (!cart) {
-      return `https://wa.me/55${cleaned}`
+      return generateWhatsAppLink(phone)
     }
     
-    // Emojis usando String.fromCodePoint para garantir compatibilidade
-    const WAVE = String.fromCodePoint(0x1F44B)   // 👋
-    const SPEECH = String.fromCodePoint(0x1F4AC) // 💬  
-    const CART = String.fromCodePoint(0x1F6D2)   // 🛒
-    const MONEY = String.fromCodePoint(0x1F4B0)  // 💰
-    const SMILE = String.fromCodePoint(0x1F60A)  // 😊
+    const message = generateAbandonedCartMessage({
+      customerName: cart.customer_name,
+      items: cart.items?.map(item => ({
+        product_name: item.product_name,
+        product_price: item.product_price,
+        quantity: item.quantity,
+        variation_name: item.variation_name
+      })),
+      totalValue: cart.total_value,
+      couponCode: cart.recovery_coupon_code
+    })
     
-    const firstName = cart.customer_name?.split(' ')[0] || 'Cliente'
+    // Log para debug - pode ser removido depois
+    console.log('[WhatsApp Debug] Mensagem gerada:', message)
     
-    let message = `Ola ${firstName}! ${WAVE}\n\n`
-    message += `${SPEECH} Vi que voce deixou alguns itens no carrinho. Posso te ajudar?\n\n`
-    
-    // Lista os produtos
-    if (cart.items && cart.items.length > 0) {
-      message += `${CART} *Seu carrinho:*\n`
-      cart.items.forEach((item) => {
-        const variation = item.variation_name ? ` (${item.variation_name})` : ''
-        message += `- ${item.product_name}${variation} - R$ ${item.product_price.toFixed(2)}\n`
-      })
-      message += `\n${MONEY} *Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
-    }
-    
-    message += `Estou aqui pra te ajudar! ${SMILE}`
-    
-    return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
+    return generateWhatsAppLink(phone, message)
   }
+
+  // Função de teste - chame no console: window.testWhatsAppEmojis()
+  useEffect(() => {
+    // Expõe função de debug no window
+    if (typeof window !== 'undefined') {
+      debugEmojis() // Log inicial para debug
+    }
+  }, [])
 
   // Buscar cupons disponíveis da revendedora
   const loadAvailableCoupons = async () => {
