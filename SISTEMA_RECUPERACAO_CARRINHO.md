@@ -45,7 +45,7 @@ ALTER TABLE abandoned_carts
 ADD COLUMN IF NOT EXISTS link_access_count INTEGER DEFAULT 0;
 
 -- 6. Criar índice para busca rápida pelo token
-CREATE INDEX IF NOT EXISTS idx_abandoned_carts_recovery_token 
+CREATE INDEX IF NOT EXISTS idx_abandoned_carts_recovery_token
 ON abandoned_carts(recovery_token) WHERE recovery_token IS NOT NULL;
 
 -- 7. Função para gerar token único
@@ -99,6 +99,7 @@ USING (true);
 ## 📁 Arquivos Criados/Modificados
 
 ### Novos Arquivos:
+
 - `migrations/046_abandoned_cart_recovery.sql` - Migration do banco
 - `app/api/abandoned-cart/save/route.ts` - API para salvar carrinho
 - `app/api/abandoned-cart/recover/[token]/route.ts` - API para recuperar carrinho
@@ -107,6 +108,7 @@ USING (true);
 - `lib/utils/abandonedCart.ts` - Utilitário para salvar carrinho
 
 ### Arquivos Modificados:
+
 - `app/revendedora/carrinhos-abandonados/page.tsx` - Adicionado cupom e link real
 
 ---
@@ -114,11 +116,13 @@ USING (true);
 ## 🔗 URLs de Recuperação
 
 O link de recuperação segue o formato:
+
 ```
 https://seusite.com/loja/{slug-da-loja}/recuperar/{token}
 ```
 
 Exemplo:
+
 ```
 https://c4franquiaas.netlify.app/loja/maria-cosmeticos/recuperar/abc123def456...
 ```

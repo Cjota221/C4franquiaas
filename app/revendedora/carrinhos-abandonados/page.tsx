@@ -15,10 +15,8 @@ import {
   RefreshCw,
   Search,
   Filter,
-  Copy,
   TrendingUp,
-  Package,
-  ExternalLink
+  Package
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -65,8 +63,6 @@ export default function CarrinhosAbandonadosPage() {
   const [carts, setCarts] = useState<AbandonedCart[]>([])
   const [loading, setLoading] = useState(true)
   const [resellerId, setResellerId] = useState<string | null>(null)
-  const [resellerSlug, setResellerSlug] = useState<string | null>(null)
-  const [lojaDominio, setLojaDominio] = useState<string | null>(null)
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null)
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
@@ -108,7 +104,7 @@ export default function CarrinhosAbandonadosPage() {
 
         const { data: reseller, error: resellerError } = await supabase
           .from('resellers')
-          .select('id, store_name, slug')
+          .select('id, store_name')
           .eq('user_id', user.id)
           .single()
 
@@ -118,20 +114,10 @@ export default function CarrinhosAbandonadosPage() {
           return
         }
 
-        // Buscar domínio da loja vinculada
-        const { data: loja } = await supabase
-          .from('lojas')
-          .select('dominio')
-          .eq('reseller_id', reseller.id)
-          .eq('ativo', true)
-          .single()
-
         // 🆕 Atualizar título da página para Google Analytics
         document.title = `Carrinhos Abandonados - ${reseller.store_name} | C4 Franquias`;
 
         setResellerId(reseller.id)
-        setResellerSlug(reseller.slug)
-        setLojaDominio(loja?.dominio || reseller.slug) // Fallback para slug se não tiver loja
         await loadCarts(reseller.id)
       } catch (err) {
         console.error('Erro ao carregar:', err)
@@ -260,53 +246,9 @@ export default function CarrinhosAbandonadosPage() {
       message += `\n💰 *Total: R$ ${(cart.total_value || 0).toFixed(2)}*\n\n`
     }
     
-    // Adiciona link de recuperação se tiver slug
-    if (resellerSlug) {
-      const recoveryLink = generateRecoveryLink(cart)
-      message += `🔗 *Clique para continuar sua compra:*\n${recoveryLink}\n\n`
-    }
-    
     message += `Estou aqui para te ajudar! 😊`
     
     return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
-  }
-
-  // Gera link de recuperação do carrinho usando o token único
-  const generateRecoveryLink = (cart: AbandonedCart) => {
-    // Usar domínio da loja para a URL (não o slug da revendedora)
-    const dominio = lojaDominio || resellerSlug
-    if (!dominio) return ''
-    
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquiaas.netlify.app'
-    
-    // Se tem recovery_token, usa o link de recuperação real
-    if (cart.recovery_token) {
-      return `${baseUrl}/loja/${dominio}/recuperar/${cart.recovery_token}`
-    }
-    
-    // Fallback: link para o catálogo com produtos (compatibilidade)
-    if (cart.items && cart.items.length > 0) {
-      const productIds = cart.items.map(item => item.product_id).join(',')
-      return `${baseUrl}/catalogo/${resellerSlug}?cart=${encodeURIComponent(productIds)}`
-    }
-    
-    return `${baseUrl}/catalogo/${resellerSlug}`
-  }
-
-  // Copiar link de recuperação
-  const copyRecoveryLink = async (cart: AbandonedCart) => {
-    const link = generateRecoveryLink(cart)
-    if (!link) {
-      toast.error('Não foi possível gerar o link')
-      return
-    }
-    
-    try {
-      await navigator.clipboard.writeText(link)
-      toast.success('Link copiado! 📋')
-    } catch {
-      toast.error('Erro ao copiar link')
-    }
   }
 
   // Buscar cupons disponíveis da revendedora
@@ -671,18 +613,6 @@ export default function CarrinhosAbandonadosPage() {
                         <CheckCircle className="w-4 h-4" />
                       </button>
                     )}
-
-                    {/* Botão Copiar Link */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        copyRecoveryLink(cart)
-                      }}
-                      className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm hover:bg-blue-200"
-                      title="Copiar link de recuperação"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
                     
                     <button
                       onClick={(e) => {
@@ -829,38 +759,6 @@ export default function CarrinhosAbandonadosPage() {
                     <p className="text-xs text-purple-500 mt-2">
                       💡 O cupom será aplicado automaticamente quando o cliente acessar o link
                     </p>
-                  </div>
-                )}
-
-                {/* Link de Recuperação */}
-                {resellerSlug && selectedCart.items && selectedCart.items.length > 0 && (
-                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="text-xs text-blue-600 font-medium mb-1">🔗 Link para recuperar carrinho:</p>
-                        <p className="text-xs text-blue-800 truncate font-mono">
-                          {generateRecoveryLink(selectedCart)}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => copyRecoveryLink(selectedCart)}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-                          title="Copiar link"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <a
-                          href={generateRecoveryLink(selectedCart)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-                          title="Abrir catálogo"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
                   </div>
                 )}
 
