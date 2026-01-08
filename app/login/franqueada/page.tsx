@@ -37,12 +37,12 @@ export default function LoginFranqueadaPage() {
 
       if (!franqueada) {
         await supabase.auth.signOut();
-        throw new Error('Acesso negado. Esta área é exclusiva para franqueadas.');
+        throw new Error('Acesso negado. Esta área é exclusiva para Revendedoras Pro.');
       }
 
       if (!franqueada.ativo) {
         await supabase.auth.signOut();
-        throw new Error('Sua conta de franqueada está inativa. Entre em contato com o administrador.');
+        throw new Error('Sua conta está inativa. Entre em contato com o administrador.');
       }
 
       router.push('/franqueada/dashboard');
@@ -63,7 +63,7 @@ export default function LoginFranqueadaPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Portal da Franqueada</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Portal Revendedora Pro</h1>
           <p className="text-sm text-gray-500">C4 Franquias - Área Exclusiva</p>
         </div>
 
@@ -71,7 +71,7 @@ export default function LoginFranqueadaPage() {
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email da Franqueada
+              Email
             </label>
             <input
               id="email"
@@ -82,7 +82,7 @@ export default function LoginFranqueadaPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 mt-1 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#DB1472] focus:border-[#DB1472] transition-all"
-              placeholder="franqueada@email.com"
+              placeholder="seu@email.com"
             />
           </div>
 
