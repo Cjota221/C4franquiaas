@@ -48,6 +48,8 @@ interface AbandonedCart {
   contacted_at: string | null
   notes: string | null
   items: CartItem[]
+  recovery_token?: string | null  // Token único para link de recuperação
+  recovery_coupon_code?: string | null  // Cupom aplicado
 }
 
 // Interface para produtos mais abandonados
@@ -69,6 +71,9 @@ export default function CarrinhosAbandonadosPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [showTopProducts, setShowTopProducts] = useState(true)
+  const [availableCoupons, setAvailableCoupons] = useState<{code: string, name: string}[]>([])
+  const [selectedCoupon, setSelectedCoupon] = useState<string>('')
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
 
   const loadCarts = async (rId: string) => {
     try {
@@ -256,16 +261,24 @@ export default function CarrinhosAbandonadosPage() {
     return `https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`
   }
 
-  // Gera link de recuperação do carrinho com produtos pré-selecionados
+  // Gera link de recuperação do carrinho usando o token único
   const generateRecoveryLink = (cart: AbandonedCart) => {
-    if (!resellerSlug || !cart.items || cart.items.length === 0) return ''
+    if (!resellerSlug) return ''
     
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://c4franquiaas.netlify.app'
     
-    // Cria parâmetros com IDs dos produtos
-    const productIds = cart.items.map(item => item.product_id).join(',')
+    // Se tem recovery_token, usa o link de recuperação real
+    if (cart.recovery_token) {
+      return `${baseUrl}/loja/${resellerSlug}/recuperar/${cart.recovery_token}`
+    }
     
-    return `${baseUrl}/catalogo/${resellerSlug}?cart=${encodeURIComponent(productIds)}`
+    // Fallback: link para o catálogo com produtos (compatibilidade)
+    if (cart.items && cart.items.length > 0) {
+      const productIds = cart.items.map(item => item.product_id).join(',')
+      return `${baseUrl}/catalogo/${resellerSlug}?cart=${encodeURIComponent(productIds)}`
+    }
+    
+    return `${baseUrl}/catalogo/${resellerSlug}`
   }
 
   // Copiar link de recuperação
@@ -281,6 +294,91 @@ export default function CarrinhosAbandonadosPage() {
       toast.success('Link copiado! 📋')
     } catch {
       toast.error('Erro ao copiar link')
+    }
+  }
+
+  // Buscar cupons disponíveis da revendedora
+  const loadAvailableCoupons = async () => {
+    if (!resellerId) return
+    
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('promotions')
+        .select('coupon_code, name')
+        .eq('reseller_id', resellerId)
+        .eq('is_active', true)
+        .not('coupon_code', 'is', null)
+      
+      if (data) {
+        setAvailableCoupons(data.map(p => ({ code: p.coupon_code!, name: p.name })))
+      }
+    } catch (err) {
+      console.error('Erro ao buscar cupons:', err)
+    }
+  }
+
+  // Aplicar cupom ao carrinho
+  const applyCouponToCart = async (cartId: string, couponCode: string) => {
+    if (!couponCode) {
+      toast.error('Selecione um cupom')
+      return
+    }
+    
+    setApplyingCoupon(true)
+    try {
+      const response = await fetch('/api/abandoned-cart/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartId, couponCode })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        toast.error(data.error || 'Erro ao aplicar cupom')
+        return
+      }
+      
+      toast.success(`Cupom ${couponCode} aplicado! 🎉`)
+      await reloadCarts()
+      setSelectedCoupon('')
+      
+      // Atualizar o carrinho selecionado
+      if (selectedCart?.id === cartId) {
+        setSelectedCart(prev => prev ? {
+          ...prev,
+          recovery_coupon_code: couponCode
+        } : null)
+      }
+    } catch (err) {
+      console.error('Erro ao aplicar cupom:', err)
+      toast.error('Erro ao aplicar cupom')
+    } finally {
+      setApplyingCoupon(false)
+    }
+  }
+
+  // Remover cupom do carrinho
+  const removeCouponFromCart = async (cartId: string) => {
+    try {
+      const response = await fetch(`/api/abandoned-cart/apply-coupon?cartId=${cartId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        toast.success('Cupom removido')
+        await reloadCarts()
+        
+        if (selectedCart?.id === cartId) {
+          setSelectedCart(prev => prev ? {
+            ...prev,
+            recovery_coupon_code: null
+          } : null)
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao remover cupom:', err)
     }
   }
 
@@ -674,6 +772,53 @@ export default function CarrinhosAbandonadosPage() {
                     R$ {(selectedCart.total_value || 0).toFixed(2)}
                   </span>
                 </div>
+
+                {/* Seção de Cupom */}
+                {selectedCart.status === 'abandoned' && (
+                  <div className="bg-purple-50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-purple-600 font-medium mb-2">🎁 Aplicar cupom para recuperação:</p>
+                    
+                    {selectedCart.recovery_coupon_code ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-purple-800">
+                          Cupom aplicado: <strong>{selectedCart.recovery_coupon_code}</strong>
+                        </span>
+                        <button
+                          onClick={() => removeCouponFromCart(selectedCart.id)}
+                          className="text-xs text-red-500 hover:text-red-700"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedCoupon}
+                          onChange={(e) => setSelectedCoupon(e.target.value)}
+                          onFocus={loadAvailableCoupons}
+                          className="flex-1 text-sm border rounded-lg px-2 py-1"
+                        >
+                          <option value="">Selecionar cupom...</option>
+                          {availableCoupons.map(c => (
+                            <option key={c.code} value={c.code}>
+                              {c.code} - {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => applyCouponToCart(selectedCart.id, selectedCoupon)}
+                          disabled={!selectedCoupon || applyingCoupon}
+                          className="px-3 py-1 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 disabled:opacity-50"
+                        >
+                          {applyingCoupon ? '...' : 'Aplicar'}
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-xs text-purple-500 mt-2">
+                      💡 O cupom será aplicado automaticamente quando o cliente acessar o link
+                    </p>
+                  </div>
+                )}
 
                 {/* Link de Recuperação */}
                 {resellerSlug && selectedCart.items && selectedCart.items.length > 0 && (
