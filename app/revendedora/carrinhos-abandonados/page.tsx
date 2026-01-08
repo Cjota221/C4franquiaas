@@ -5,8 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
   generateAbandonedCartMessage, 
-  generateWhatsAppLink,
-  debugEmojis 
+  generateWhatsAppLink
 } from '@/lib/utils/whatsappMessage'
 import { 
   ShoppingCart, 
@@ -245,19 +244,8 @@ export default function CarrinhosAbandonadosPage() {
       couponCode: cart.recovery_coupon_code
     })
     
-    // Log para debug - pode ser removido depois
-    console.log('[WhatsApp Debug] Mensagem gerada:', message)
-    
     return generateWhatsAppLink(phone, message)
   }
-
-  // Função de teste - chame no console: window.testWhatsAppEmojis()
-  useEffect(() => {
-    // Expõe função de debug no window
-    if (typeof window !== 'undefined') {
-      debugEmojis() // Log inicial para debug
-    }
-  }, [])
 
   // Buscar cupons disponíveis da revendedora
   const loadAvailableCoupons = async () => {
@@ -595,19 +583,20 @@ export default function CarrinhosAbandonadosPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                    <a
-                      href={formatWhatsApp(cart.customer_phone, cart)}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
                       onClick={(e) => {
                         e.stopPropagation()
+                        // Gera e abre o link no momento do clique
+                        const url = formatWhatsApp(cart.customer_phone, cart)
+                        console.log('[WhatsApp] Abrindo URL:', url)
+                        window.open(url, '_blank', 'noopener,noreferrer')
                         markAsContacted(cart.id)
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
                     >
                       <MessageCircle className="w-4 h-4" />
                       WhatsApp
-                    </a>
+                    </button>
                     
                     {cart.status === 'abandoned' && (
                       <button
@@ -772,16 +761,18 @@ export default function CarrinhosAbandonadosPage() {
 
                 {/* Status Actions */}
                 <div className="flex flex-wrap gap-2">
-                  <a
-                    href={formatWhatsApp(selectedCart.customer_phone, selectedCart)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => markAsContacted(selectedCart.id)}
+                  <button
+                    onClick={() => {
+                      const url = formatWhatsApp(selectedCart.customer_phone, selectedCart)
+                      console.log('[WhatsApp Modal] Abrindo URL:', url)
+                      window.open(url, '_blank', 'noopener,noreferrer')
+                      markAsContacted(selectedCart.id)
+                    }}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Enviar WhatsApp
-                  </a>
+                  </button>
                   
                   {selectedCart.status === 'abandoned' && (
                     <>
