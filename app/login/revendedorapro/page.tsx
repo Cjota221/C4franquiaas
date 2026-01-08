@@ -31,7 +31,7 @@ export default function LoginRevendedoraProPage() {
       // Verificar se é Revendedora Pro (franqueada)
       const { data: franqueada } = await supabase
         .from('franqueadas')
-        .select('id, status, nome, nome_fantasia')
+        .select('id, status, nome')
         .eq('user_id', user.id)
         .maybeSingle();
 
