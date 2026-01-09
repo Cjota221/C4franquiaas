@@ -328,7 +328,7 @@ export default function LojaPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="p-4 lg:p-6 w-full">
         <LoadingState message="Carregando configuracoes da loja..." />
       </div>
     );
@@ -343,7 +343,7 @@ export default function LojaPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+    <div className="p-4 lg:p-6 w-full">
       {/* Header */}
       <PageHeader
         title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}

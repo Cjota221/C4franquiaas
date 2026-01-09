@@ -130,11 +130,14 @@ export default function RevendedoraProLayout({ children }: { children: React.Rea
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
       <SidebarFranqueada franqueadaNome={franqueadaNome} />
-      <main className="flex-1 ml-64 p-8">
-        {children}
+      {/* Main content: padding-top no mobile para header fixo, ml-64 no desktop para sidebar */}
+      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
+        <div className="w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

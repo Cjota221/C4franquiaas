@@ -12,7 +12,7 @@ import { Sliders } from 'lucide-react';
 
 export default function CustomizacoesPage() {
   return (
-    <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+    <div className="p-4 lg:p-6 w-full">
       <PageHeader
         title="Personalizacao"
         subtitle="Personalize completamente a aparencia e funcionalidades da sua loja"

@@ -82,14 +82,14 @@ export default function MinhasComissoesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="p-4 lg:p-6 w-full">
         <LoadingState message="Carregando comissoes..." />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
+    <div className="p-4 lg:p-6 w-full">
       {/* Header */}
       <PageHeader
         title="Comissoes"
