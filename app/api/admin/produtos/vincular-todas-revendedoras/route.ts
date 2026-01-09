@@ -75,16 +75,16 @@ export async function POST(request: NextRequest) {
         const key = `${revendedora.id}-${produto.id}`;
         const existingMargin = existingMargins.get(key);
         
-        // 🆕 Usar margem padrão da loja se não houver margem existente
+        // 🆕 Usar margem padrão da loja se configurada, senão usar 0 (revendedora precisa configurar)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const margemPadrao = (revendedora as any).lojas?.margem_padrao || 70;
-        const defaultMargin = existingMargin ?? margemPadrao;
+        const margemPadrao = (revendedora as any).lojas?.margem_padrao;
+        const defaultMargin = existingMargin ?? (margemPadrao || 0); // Se não tem margem configurada, fica 0
         
         vinculacoes.push({
           reseller_id: revendedora.id,
           product_id: produto.id,
-          margin_percent: defaultMargin, // Usa margem configurada na loja
-          is_active: true,
+          margin_percent: defaultMargin,
+          is_active: margemPadrao ? true : false, // Só ativa se tiver margem configurada
         });
       }
     }

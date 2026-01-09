@@ -6,17 +6,12 @@
 -- Date: 2025-01-09
 -- ============================================================================
 
--- STEP 1: Adicionar coluna margem_padrao
+-- STEP 1: Adicionar coluna margem_padrao (SEM valor padrão - revendedora escolhe)
 ALTER TABLE lojas 
-ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT 70.00;
+ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT NULL;
 
 -- STEP 2: Comentário explicativo
-COMMENT ON COLUMN lojas.margem_padrao IS 'Margem de lucro padrão (%) aplicada automaticamente em produtos novos';
-
--- STEP 3: Atualizar lojas existentes para margem padrão de 70%
-UPDATE lojas 
-SET margem_padrao = 70.00 
-WHERE margem_padrao IS NULL;
+COMMENT ON COLUMN lojas.margem_padrao IS 'Margem de lucro padrão (%) aplicada automaticamente em produtos novos. NULL = revendedora precisa configurar';
 
 -- ============================================================================
 -- ✅ APLICADO COM SUCESSO

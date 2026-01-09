@@ -17,17 +17,12 @@
 4. Copiar e executar este SQL:
 
 ```sql
--- Adicionar coluna margem_padrao
+-- Adicionar coluna margem_padrao (SEM valor padrão)
 ALTER TABLE lojas 
-ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT 70.00;
+ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT NULL;
 
 -- Comentário explicativo
-COMMENT ON COLUMN lojas.margem_padrao IS 'Margem de lucro padrão (%) aplicada automaticamente em produtos novos';
-
--- Atualizar lojas existentes para margem padrão de 70%
-UPDATE lojas 
-SET margem_padrao = 70.00 
-WHERE margem_padrao IS NULL;
+COMMENT ON COLUMN lojas.margem_padrao IS 'Margem de lucro padrão (%) aplicada automaticamente em produtos novos. NULL = revendedora precisa configurar';
 ```
 
 ✅ **Resultado esperado:** "Success. No rows returned"
@@ -84,16 +79,24 @@ git push
 ### Para a Revendedora:
 
 1. Acessa **Minha Loja** → aba **Configurações**
-2. Define sua **Margem de Lucro Padrão** (ex: 70%)
+2. Define sua **Margem de Lucro Padrão** (ex: 70%, 80%, 100%)
 3. Clica em **Salvar**
+
+⚠️ **Importante:** Revendedora PRECISA configurar sua margem! Sem ela, produtos novos ficam desativados.
 
 ### Quando produtos novos chegam:
 
+**SE REVENDEDORA JÁ CONFIGUROU MARGEM:**
 1. ✅ Admin ativa produto no painel
 2. ✅ Produto é vinculado às revendedoras
-3. ✅ **Margem é aplicada AUTOMATICAMENTE** (70% no exemplo)
+3. ✅ **Margem é aplicada AUTOMATICAMENTE** (conforme configurado)
 4. ✅ Produto JÁ FICA ATIVO no catálogo
 5. ✅ **NÃO HÁ NOTIFICAÇÃO** (produto já está pronto para vender)
+
+**SE REVENDEDORA NÃO CONFIGUROU:**
+1. ⚠️ Produto chega com margem 0%
+2. ⚠️ Produto fica DESATIVADO
+3. ⚠️ Revendedora precisa configurar margem primeiro
 
 ---
 
@@ -103,8 +106,8 @@ git push
 
 1. Fazer login como revendedora Pro
 2. Ir em **Minha Loja** → **Configurações**
-3. Verificar campo "Margem de Lucro Padrão" (deve estar com 70%)
-4. Alterar para outro valor (ex: 80%)
+3. Verificar campo "Margem de Lucro Padrão (\*)" - deve estar **vazio**
+4. Preencher com um valor (ex: 70%)
 5. Salvar
 6. Recarregar página e verificar que o valor foi salvo
 
@@ -125,14 +128,15 @@ git push
 
 ### Revendedoras existentes:
 
-- Todas as lojas receberão margem_padrao = 70% automaticamente
-- Elas podem alterar para o valor que quiserem
-- Produtos já vinculados **NÃO SERÃO ALTERADOS** (apenas novos produtos usarão essa margem)
+- Todas as lojas terão margem_padrao = **NULL** (não configurada)
+- **Cada revendedora precisa configurar sua própria margem** em Minha Loja > Configurações
+- Produtos já vinculados **NÃO SERÃO ALTERADOS**
+- Apenas novos produtos usarão a margem configurada
 
 ### Produtos novos:
 
-- **Se revendedora tem margem_padrao configurada:** Produto vem com essa margem
-- **Se revendedora NÃO configurou:** Produto vem com margem_padrao padrão da loja (70%)
+- **Se revendedora configurou margem_padrao:** Produto vem com essa margem e fica ATIVO
+- **Se revendedora NÃO configurou:** Produto vem com margem 0% e fica DESATIVADO
 - Revendedora ainda pode alterar a margem individualmente depois
 
 ---
@@ -141,10 +145,11 @@ git push
 
 | Antes | Depois |
 |-------|--------|
-| ❌ Produtos novos sem margem | ✅ Produtos com margem automática |
-| ❌ Revendedora precisa configurar um por um | ✅ Produtos prontos para vender |
+| ❌ Produtos novos sem margem | ✅ Produtos com margem automática (se configurada) |
+| ❌ Revendedora precisa configurar um por um | ✅ Produtos prontos para vender (se margem configurada) |
 | ❌ Notificações "X produtos novos" | ✅ Sem notificações (não precisa) |
-| ❌ Produtos desativados por padrão | ✅ Produtos ativos por padrão |
+| ❌ Produtos desativados por padrão | ✅ Produtos ativos por padrão (se margem configurada) |
+| ✅ Sem valor padrão fixo | ✅ Cada revendedora escolhe sua margem |
 
 ---
 

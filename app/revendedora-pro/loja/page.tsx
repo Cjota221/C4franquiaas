@@ -100,7 +100,7 @@ export default function LojaPage() {
   const [permitirCarrinho, setPermitirCarrinho] = useState(true);
   const [modoCatalogo, setModoCatalogo] = useState(false);
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState('Olá! Gostaria de mais informações sobre este produto:');
-  const [margemPadrao, setMargemPadrao] = useState(70); // 🆕 Margem padrão para produtos novos
+  const [margemPadrao, setMargemPadrao] = useState<number | null>(null); // 🆕 Revendedora escolhe sua margem
 
   // Form state - Customização da Logo (Migration 017)
   const [logoLarguraMax, setLogoLarguraMax] = useState(280);
@@ -181,7 +181,7 @@ export default function LojaPage() {
         setPermitirCarrinho(l.permitir_carrinho ?? true);
         setModoCatalogo(l.modo_catalogo ?? false);
         setMensagemWhatsapp(l.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:');
-        setMargemPadrao(l.margem_padrao || 70); // 🆕 Carregar margem padrão
+        setMargemPadrao(l.margem_padrao || null); // 🆕 Carregar margem (pode ser null)
 
         // Customização da Logo
         setLogoLarguraMax(l.logo_largura_max || 280);
@@ -983,19 +983,20 @@ export default function LojaPage() {
               {/* 🆕 Margem de Lucro Padrão */}
               <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-pink-200">
                 <label className="block text-sm font-semibold mb-2 text-pink-800">
-                  ✨ Margem de Lucro Padrão (%)
+                  ✨ Margem de Lucro Padrão (%) *
                 </label>
                 <input
                   type="number"
                   min="0"
                   max="500"
                   step="5"
-                  value={margemPadrao}
-                  onChange={(e) => setMargemPadrao(Number(e.target.value))}
+                  value={margemPadrao ?? ''}
+                  onChange={(e) => setMargemPadrao(e.target.value ? Number(e.target.value) : null)}
+                  placeholder="Ex: 70"
                   className="w-full px-3 py-2 border-2 border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-lg"
                 />
                 <p className="text-xs text-pink-700 mt-2 font-medium">
-                  🎯 <strong>Importante:</strong> Produtos novos já virão com essa margem aplicada automaticamente!
+                  🎯 <strong>Importante:</strong> Defina sua margem! Produtos novos já virão com ela aplicada automaticamente.
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
                   Exemplo: Com margem de 70%, um produto de R$ 100,00 será vendido por R$ 170,00
