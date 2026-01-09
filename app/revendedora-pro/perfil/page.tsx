@@ -57,7 +57,7 @@ export default function FranqueadaPerfilPage() {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="p-4 lg:p-6">
         <LoadingState message="Carregando perfil..." />
       </div>
     );
@@ -65,7 +65,7 @@ export default function FranqueadaPerfilPage() {
 
   if (!franqueada) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="p-4 lg:p-6">
         <Card className="bg-red-50 border-red-200 p-4 text-red-700">
           Erro ao carregar perfil
         </Card>
@@ -90,7 +90,7 @@ export default function FranqueadaPerfilPage() {
   };
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 lg:p-6">
       {/* Cabecalho */}
       <PageHeader
         title="Meu Perfil"

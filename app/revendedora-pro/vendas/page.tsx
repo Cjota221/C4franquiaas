@@ -80,14 +80,14 @@ export default function VendasFranqueadaPage() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 w-full">
+      <div className="p-4 lg:p-6">
         <LoadingState message="Carregando vendas..." />
       </div>
     );
   }
 
   return (
-    <div className="p-4 lg:p-6 w-full">
+    <div className="p-4 lg:p-6">
       <PageHeader 
         title="Vendas" 
         subtitle="Historico de vendas realizadas na sua loja"

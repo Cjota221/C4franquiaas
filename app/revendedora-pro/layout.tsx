@@ -46,7 +46,7 @@ export default function RevendedoraProLayout({ children }: { children: React.Rea
             setLoading(false);
             return; // Skip DB call!
           }
-        } catch (e) {
+        } catch {
           sessionStorage.removeItem(AUTH_CACHE_KEY);
         }
       }
@@ -130,14 +130,15 @@ export default function RevendedoraProLayout({ children }: { children: React.Rea
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       <Toaster position="top-right" />
+      
+      {/* Sidebar - fixa no desktop, drawer no mobile */}
       <SidebarFranqueada franqueadaNome={franqueadaNome} />
-      {/* Main content: padding-top no mobile para header fixo, ml-64 no desktop para sidebar */}
-      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
-        <div className="w-full">
-          {children}
-        </div>
+      
+      {/* Main content area - flex-1 ocupa todo espaço restante */}
+      <main className="flex-1 flex flex-col min-h-screen pt-14 lg:pt-0">
+        {children}
       </main>
     </div>
   );

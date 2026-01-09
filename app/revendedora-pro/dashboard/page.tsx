@@ -100,7 +100,7 @@ export default function FranqueadaDashboardPage() {
   }
 
   return (
-    <div className="p-4 lg:p-6 w-full">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Dashboard"
         subtitle="Acompanhe as metricas da sua loja e produtos"

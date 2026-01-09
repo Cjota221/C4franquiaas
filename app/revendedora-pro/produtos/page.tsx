@@ -153,10 +153,19 @@ export default function RevendedoraProProdutosPage() {
     ativos: produtos.filter(p => p.is_active).length
   }), [produtos]);
 
-  if (loading) return (<div className="min-h-screen flex items-center justify-center"><div className="text-center"><Loader2 className="w-8 h-8 animate-spin text-pink-600 mx-auto mb-2" /><p className="text-gray-600">Carregando produtos...</p></div></div>);
+  if (loading) return (
+    <div className="p-4 lg:p-6">
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-pink-600 mx-auto mb-2" />
+          <p className="text-gray-600">Carregando produtos...</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-4 lg:p-6 space-y-4 pb-32 lg:pb-6 w-full">
+    <div className="p-4 lg:p-6 space-y-4 pb-32 lg:pb-6">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-pink-100 rounded-lg"><Package className="w-6 h-6 text-pink-600" /></div>
         <div><h1 className="text-xl font-bold text-gray-900">Produtos</h1><p className="text-sm text-gray-500">Gerencie margens de lucro e disponibilidade dos produtos na sua loja</p></div>

@@ -328,7 +328,7 @@ export default function LojaPage() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 w-full">
+      <div className="p-4 lg:p-6">
         <LoadingState message="Carregando configuracoes da loja..." />
       </div>
     );
@@ -343,7 +343,7 @@ export default function LojaPage() {
   ];
 
   return (
-    <div className="p-4 lg:p-6 w-full">
+    <div className="p-4 lg:p-6">
       {/* Header */}
       <PageHeader
         title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
