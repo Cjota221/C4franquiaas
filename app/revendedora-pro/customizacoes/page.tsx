@@ -5,7 +5,6 @@ import CustomizacoesPaginaInicial from '@/components/franqueada/customizacoes/Cu
 import CustomizacoesProdutos from '@/components/franqueada/customizacoes/CustomizacoesProdutos';
 import CustomizacoesCarrinho from '@/components/franqueada/customizacoes/CustomizacoesCarrinho';
 import CustomizacoesComunicacao from '@/components/franqueada/customizacoes/CustomizacoesComunicacao';
-import CustomizacoesPromocoes from '@/components/franqueada/customizacoes/CustomizacoesPromocoes';
 import CustomizacoesAvancado from '@/components/franqueada/customizacoes/CustomizacoesAvancado';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Sliders } from 'lucide-react';
@@ -20,13 +19,12 @@ export default function CustomizacoesPage() {
       />
 
       <Tabs defaultValue="header" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 lg:w-auto h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 lg:w-auto h-auto">
           <TabsTrigger value="header" className="text-xs sm:text-sm">Header e Menu</TabsTrigger>
           <TabsTrigger value="home" className="text-xs sm:text-sm">Pagina Inicial</TabsTrigger>
           <TabsTrigger value="produtos" className="text-xs sm:text-sm">Produtos</TabsTrigger>
           <TabsTrigger value="carrinho" className="text-xs sm:text-sm">Carrinho</TabsTrigger>
           <TabsTrigger value="comunicacao" className="text-xs sm:text-sm">Comunicacao</TabsTrigger>
-          <TabsTrigger value="promocoes" className="text-xs sm:text-sm">Promocoes</TabsTrigger>
           <TabsTrigger value="avancado" className="text-xs sm:text-sm">Avancado</TabsTrigger>
         </TabsList>
 
@@ -48,10 +46,6 @@ export default function CustomizacoesPage() {
 
         <TabsContent value="comunicacao">
           <CustomizacoesComunicacao />
-        </TabsContent>
-
-        <TabsContent value="promocoes">
-          <CustomizacoesPromocoes />
         </TabsContent>
 
         <TabsContent value="avancado">

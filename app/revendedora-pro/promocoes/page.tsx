@@ -122,30 +122,29 @@ export default function PromocoesPage() {
     setLoadingProducts(true)
     try {
       const supabase = createClient()
-      // Buscar produtos vinculados a esta revendedora
-      const { data: resellerProducts, error } = await supabase
-        .from('reseller_products')
+      // Buscar produtos vinculados a esta franqueada
+      const { data: franqueadaProducts, error } = await supabase
+        .from('produtos_franqueadas')
         .select(`
-          product_id,
-          produtos:product_id (
+          produto_id,
+          produtos:produto_id (
             id,
             nome,
             preco_base,
             imagem
           )
         `)
-        .eq('reseller_id', rId)
-        .eq('is_active', true)
+        .eq('franqueada_id', rId)
       
       if (error) {
         console.error('Erro na query:', error)
         return
       }
       
-      if (resellerProducts) {
-        const prods = resellerProducts
-          .map((rp) => {
-            const prod = rp.produtos as unknown as { id: string; nome: string; preco_base: number; imagem: string | null }
+      if (franqueadaProducts) {
+        const prods = franqueadaProducts
+          .map((fp) => {
+            const prod = fp.produtos as unknown as { id: string; nome: string; preco_base: number; imagem: string | null }
             if (!prod) return null
             return {
               id: prod.id,
@@ -196,8 +195,8 @@ export default function PromocoesPage() {
         }
 
         const { data: reseller, error: resellerError } = await supabase
-          .from('resellers')
-          .select('id, store_name')
+          .from('franqueadas')
+          .select('id, nome')
           .eq('user_id', user.id)
           .single()
 
@@ -208,7 +207,7 @@ export default function PromocoesPage() {
         }
 
         // 🆕 Atualizar título da página para Google Analytics
-        document.title = `Promoções - ${reseller.store_name} | C4 Franquias`;
+        document.title = `Promoções - ${reseller.nome} | C4 Franquias`;
 
         setResellerId(reseller.id)
         await loadPromotions(reseller.id)
