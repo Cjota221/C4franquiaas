@@ -105,7 +105,6 @@ export default function PersonalizacaoRevendedoraPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [bannerMobileUrl, setBannerMobileUrl] = useState("");
-  const [pendingBanner, setPendingBanner] = useState(false);
   const [primaryColor, setPrimaryColor] = useState("#ec4899");
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
@@ -224,17 +223,45 @@ export default function PersonalizacaoRevendedoraPage() {
   const handleImageUpload = async (file: File, type: "logo" | "banner" | "banner_mobile") => {
     if (!reseller) return;
     setUploading(type);
-    const fileExt = file.name.split(".").pop();
-    const fileName = reseller.id + "/" + type + "_" + Date.now() + "." + fileExt;
+    
     try {
-      const { error: uploadError } = await supabase.storage.from("reseller-assets").upload(fileName, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("reseller-assets").getPublicUrl(fileName);
-      
       if (type === "logo") {
-        // Logo vai direto, sem moderacao
-        setLogoUrl(publicUrl);
+        // Logo usa API própria com bucket 'logos'
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        
+        if (!token) {
+          throw new Error("Sessão expirada. Faça login novamente.");
+        }
+        
+        const response = await fetch("/api/franqueada/loja/upload-logo", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          setLogoUrl(data.url);
+        } else {
+          throw new Error(data.error || "Erro ao enviar logo");
+        }
       } else {
+        // Banners usam bucket reseller-assets
+        const fileExt = file.name.split(".").pop();
+        const fileName = reseller.id + "/" + type + "_" + Date.now() + "." + fileExt;
+        
+        const { error: uploadError } = await supabase.storage.from("reseller-assets").upload(fileName, file);
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage.from("reseller-assets").getPublicUrl(fileName);
+        
         // Banners vao para moderacao
         const bannerType = type === "banner" ? "desktop" : "mobile";
         
@@ -259,7 +286,7 @@ export default function PersonalizacaoRevendedoraPage() {
       }
     } catch (error) {
       console.error("Erro:", error);
-      alert("Erro ao enviar imagem.");
+      alert(error instanceof Error ? error.message : "Erro ao enviar imagem.");
     } finally {
       setUploading(null);
     }
