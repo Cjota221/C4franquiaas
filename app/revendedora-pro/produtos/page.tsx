@@ -49,7 +49,7 @@ export default function RevendedoraProProdutosPage() {
       const { data: loja } = await supabase.from('lojas').select('dominio').eq('franqueada_id', franqueada.id).single();
       if (loja?.dominio) setFranqueadaDominio(loja.dominio);
       const { data: vinculacoes } = await supabase.from('produtos_franqueadas')
-        .select('id, produto_id, produtos:produto_id (id, nome, preco_base, estoque, ativo, imagem, created_at, produto_categorias (categorias (nome)))')
+        .select('id, produto_id, produtos:produto_id (id, nome, preco_base, estoque, ativo, imagem, created_at)')
         .eq('franqueada_id', franqueada.id);
       if (!vinculacoes || vinculacoes.length === 0) { setProdutos([]); return; }
       const vinculacaoIds = vinculacoes.map(v => v.id);
@@ -59,8 +59,7 @@ export default function RevendedoraProProdutosPage() {
         const produto = Array.isArray(v.produtos) ? v.produtos[0] : v.produtos;
         if (!produto) return null;
         const preco = precos?.find(p => p.produto_franqueada_id === v.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const categorias = produto.produto_categorias?.map((pc: any) => pc.categorias?.nome).filter(Boolean).join(', ') || 'Sem categoria';
+        const categorias = 'Sem categoria'; // Simplificado por enquanto
         let margemPercentual = 0, precoFinal = produto.preco_base || 0;
         if (preco?.ajuste_tipo === 'porcentagem' && preco?.ajuste_valor) { margemPercentual = preco.ajuste_valor; precoFinal = (produto.preco_base || 0) * (1 + preco.ajuste_valor / 100); }
         else if (preco?.ajuste_tipo === 'fixo' && preco?.ajuste_valor) { precoFinal = (produto.preco_base || 0) + preco.ajuste_valor; margemPercentual = produto.preco_base ? (preco.ajuste_valor / produto.preco_base) * 100 : 0; }
