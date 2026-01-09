@@ -1,1134 +1,380 @@
-'use client';'use client';"use client";
-
-
-
-import { useState, useEffect } from 'react';import React, { useEffect, useState } from 'react';
-
-import { Card, CardContent } from '@/components/ui/card';
-
-import { Button } from '@/components/ui/button';import { useState, useEffect } from 'react';import { Store, Save, Upload, AlertCircle, Palette, FileText, Share2, BarChart3, Settings, Copy, ExternalLink } from 'lucide-react';
-
-import { Save, Eye, EyeOff, Loader2 } from 'lucide-react';
-
-import { toast } from 'sonner';import { Card, CardContent } from '@/components/ui/card';import { authenticatedFetch } from '@/lib/authenticatedFetch';
-
-import { useLojaConfig } from '@/hooks/useLojaConfig';
-
-import LojaIdentidadeSection from '@/components/loja-config/LojaIdentidadeSection';import { Button } from '@/components/ui/button';import Tabs from '@/components/Tabs';
-
-import LojaHomeSection from '@/components/loja-config/LojaHomeSection';
-
-import LojaProdutosSection from '@/components/loja-config/LojaProdutosSection';import { Save, Eye, EyeOff, Loader2 } from 'lucide-react';import { PageHeader } from '@/components/ui/PageHeader';
-
-import LojaContatoSection from '@/components/loja-config/LojaContatoSection';
-
-import LojaSeoSection from '@/components/loja-config/LojaSeoSection';import { toast } from 'sonner';import { LoadingState } from '@/components/ui/LoadingState';
-
-
-
-type SectionId = 'identidade' | 'home' | 'produtos' | 'contato' | 'seo';import { useLojaConfig } from '@/hooks/useLojaConfig';import { toast } from 'sonner';
-
-
-
-interface Section {import LojaIdentidadeSection from '@/components/loja-config/LojaIdentidadeSection';
-
-  id: SectionId;
-
-  label: string;import LojaHomeSection from '@/components/loja-config/LojaHomeSection';type Loja = {
-
-  icon: string;
-
-  description: string;import LojaProdutosSection from '@/components/loja-config/LojaProdutosSection';  id: string;
-
-}
-
-import LojaContatoSection from '@/components/loja-config/LojaContatoSection';  nome: string;
-
-const sections: Section[] = [
-
-  {import LojaSeoSection from '@/components/loja-config/LojaSeoSection';  dominio: string;
-
-    id: 'identidade',
-
-    label: 'Identidade',  logo: string | null;
-
-    icon: '🎨',
-
-    description: 'Nome, logo, cores e fontes da sua loja',type SectionId = 'identidade' | 'home' | 'produtos' | 'contato' | 'seo';  cor_primaria: string;
-
-  },
-
-  {  cor_secundaria: string;
-
-    id: 'home',
-
-    label: 'Página Inicial',interface Section {  ativo: boolean;
-
-    icon: '🏠',
-
-    description: 'Banners, textos e conteúdo da home',  id: SectionId;  // Novos campos da migration 013
-
-  },
-
-  {  label: string;  descricao?: string | null;
-
-    id: 'produtos',
-
-    label: 'Produtos',  icon: string;  slogan?: string | null;
-
-    icon: '📦',
-
-    description: 'Como seus produtos são exibidos',  description: string;  banner_hero?: string | null;
-
-  },
-
-  {}  texto_hero?: string | null;
-
-    id: 'contato',
-
-    label: 'Contato',  subtexto_hero?: string | null;
-
-    icon: '📞',
-
-    description: 'WhatsApp, telefone e redes sociais',const sections: Section[] = [  favicon?: string | null;
-
-  },
-
-  {  {  whatsapp?: string | null;
-
-    id: 'seo',
-
-    label: 'SEO & Analytics',    id: 'identidade',  instagram?: string | null;
-
-    icon: '📊',
-
-    description: 'Meta tags, Google Analytics e Pixel',    label: 'Identidade',  facebook?: string | null;
-
-  },
-
-];    icon: '🎨',  email_contato?: string | null;
-
-
-
-export default function LojaConfigPage() {    description: 'Nome, logo, cores e fontes da sua loja',  telefone?: string | null;
-
-  const {
-
-    loja,  },  endereco?: string | null;
-
-    banners,
-
-    loading,  {  meta_title?: string | null;
-
-    saving,
-
-    updateLojaField,    id: 'home',  meta_description?: string | null;
-
-    saveLoja,
-
-    uploadImage,    label: 'Página Inicial',  google_analytics?: string | null;
-
-    addBanner,
-
-    updateBanner,    icon: '🏠',  facebook_pixel?: string | null;
-
-    deleteBanner,
-
-    saveBanners,    description: 'Banners, textos e conteúdo da home',  fonte_principal?: string | null;
-
-    uploadBannerImage,
-
-  } = useLojaConfig();  },  fonte_secundaria?: string | null;
-
-
-
-  const [activeSection, setActiveSection] = useState<SectionId>('identidade');  {  cor_texto?: string | null;
-
-  const [showPreview, setShowPreview] = useState(false);
-
-  const [hasChanges, setHasChanges] = useState(false);    id: 'produtos',  cor_fundo?: string | null;
-
-
-
-  // Detecta mudanças para mostrar botão de salvar    label: 'Produtos',  cor_botao?: string | null;
-
-  useEffect(() => {
-
-    setHasChanges(true);    icon: '📦',  cor_botao_hover?: string | null;
-
-  }, [loja, banners]);
-
-    description: 'Como seus produtos são exibidos',  cor_link?: string | null;
-
-  const handleSave = async () => {
-
-    try {  },  mostrar_estoque?: boolean;
-
-      // Validações básicas
-
-      if (!loja?.nome || loja.nome.trim() === '') {  {  mostrar_codigo_barras?: boolean;
-
-        toast.error('O nome da loja é obrigatório');
-
-        setActiveSection('identidade');    id: 'contato',  permitir_carrinho?: boolean;
-
-        return;
-
-      }    label: 'Contato',  modo_catalogo?: boolean;
-
-
-
-      if (!loja?.dominio || loja.dominio.trim() === '') {    icon: '📞',  mensagem_whatsapp?: string | null;
-
-        toast.error('O domínio da loja é obrigatório');
-
-        setActiveSection('identidade');    description: 'WhatsApp, telefone e redes sociais',};
-
-        return;
-
-      }  },
-
-
-
-      // Salva loja  {export default function LojaPage() {
-
-      await saveLoja();
-
-    id: 'seo',  const [loja, setLoja] = useState<Loja | null>(null);
-
-      // Salva banners se houver mudanças
-
-      if (banners.length > 0) {    label: 'SEO & Analytics',  const [loading, setLoading] = useState(true);
-
-        await saveBanners();
-
-      }    icon: '📊',  const [saving, setSaving] = useState(false);
-
-
-
-      setHasChanges(false);    description: 'Meta tags, Google Analytics e Pixel',  const [uploadingLogo, setUploadingLogo] = useState(false);
-
-      toast.success('Configurações salvas com sucesso!');
-
-    } catch (err) {  },  const [error, setError] = useState('');
-
-      console.error('Erro ao salvar:', err);
-
-      toast.error('Erro ao salvar as configurações');];  const [success, setSuccess] = useState('');
-
-    }
-
-  };
-
-
-
-  const handlePreviewToggle = () => {export default function LojaConfigPage() {  // Form state - Básico
-
-    setShowPreview(!showPreview);
-
-  };  const {  const [nome, setNome] = useState('');
-
-
-
-  const renderSection = () => {    loja,  const [dominio, setDominio] = useState('');
-
-    if (!loja) return null;
-
-    banners,  const [logo, setLogo] = useState<string | null>(null);
-
-    switch (activeSection) {
-
-      case 'identidade':    loading,  const [ativo, setAtivo] = useState(true);
-
-        return (
-
-          <LojaIdentidadeSection    saving,
-
-            loja={loja}
-
-            onChange={updateLojaField}    updateLojaField,  // Form state - Identidade Visual
-
-            onUpload={uploadImage}
-
-          />    saveLoja,  const [corPrimaria, setCorPrimaria] = useState('#DB1472');
-
-        );
-
-      case 'home':    uploadImage,  const [corSecundaria, setCorSecundaria] = useState('#F8B81F');
-
-        return (
-
-          <LojaHomeSection    addBanner,  const [corTexto, setCorTexto] = useState('#1F2937');
-
-            loja={loja}
-
-            banners={banners}    updateBanner,  const [corFundo, setCorFundo] = useState('#FFFFFF');
-
-            onChange={updateLojaField}
-
-            onUpload={uploadImage}    deleteBanner,  const [corBotao, setCorBotao] = useState('#DB1472');
-
-            onAddBanner={addBanner}
-
-            onUpdateBanner={updateBanner}    saveBanners,  const [corBotaoHover, setCorBotaoHover] = useState('#B01059');
-
-            onDeleteBanner={deleteBanner}
-
-            onUploadBannerImage={uploadBannerImage}    uploadBannerImage,  const [corLink, setCorLink] = useState('#F8B81F');
-
-          />
-
-        );  } = useLojaConfig();  const [fontePrincipal, setFontePrincipal] = useState('Inter');
-
-      case 'produtos':
-
-        return (  const [fonteSecundaria, setFonteSecundaria] = useState('Poppins');
-
-          <LojaProdutosSection loja={loja} onChange={updateLojaField} />
-
-        );  const [activeSection, setActiveSection] = useState<SectionId>('identidade');  const [bannerHero, setBannerHero] = useState<string | null>(null);
-
-      case 'contato':
-
-        return (  const [showPreview, setShowPreview] = useState(false);  const [favicon, setFavicon] = useState<string | null>(null);
-
-          <LojaContatoSection loja={loja} onChange={updateLojaField} />
-
-        );  const [hasChanges, setHasChanges] = useState(false);
-
-      case 'seo':
-
-        return <LojaSeoSection loja={loja} onChange={updateLojaField} />;  // Form state - Conteúdo
-
-      default:
-
-        return null;  // Detecta mudanças para mostrar botão de salvar  const [descricao, setDescricao] = useState('');
-
-    }
-
-  };  useEffect(() => {  const [slogan, setSlogan] = useState('');
-
-
-
-  if (loading) {    setHasChanges(true);  const [textoHero, setTextoHero] = useState('');
-
-    return (
-
-      <div className="flex h-screen items-center justify-center">  }, [loja, banners]);  const [subtextoHero, setSubtextoHero] = useState('');
-
-        <div className="flex flex-col items-center gap-4">
-
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-
-          <p className="text-sm text-muted-foreground">
-
-            Carregando configurações...  const handleSave = async () => {  // Form state - Redes Sociais
-
-          </p>
-
-        </div>    try {  const [whatsapp, setWhatsapp] = useState('');
-
-      </div>
-
-    );      // Validações básicas  const [instagram, setInstagram] = useState('');
-
+"use client";
+import React, { useEffect, useState } from 'react';
+import { Store, Save, Upload, AlertCircle, Palette, FileText, Share2, BarChart3, Settings, Copy, ExternalLink } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
+import Tabs from '@/components/Tabs';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { toast } from 'sonner';
+
+type Loja = {
+  id: string;
+  nome: string;
+  dominio: string;
+  logo: string | null;
+  cor_primaria: string;
+  cor_secundaria: string;
+  ativo: boolean;
+  // Novos campos da migration 013
+  descricao?: string | null;
+  slogan?: string | null;
+  banner_hero?: string | null;
+  texto_hero?: string | null;
+  subtexto_hero?: string | null;
+  favicon?: string | null;
+  whatsapp?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  email_contato?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  google_analytics?: string | null;
+  facebook_pixel?: string | null;
+  fonte_principal?: string | null;
+  fonte_secundaria?: string | null;
+  cor_texto?: string | null;
+  cor_fundo?: string | null;
+  cor_botao?: string | null;
+  cor_botao_hover?: string | null;
+  cor_link?: string | null;
+  mostrar_estoque?: boolean;
+  mostrar_codigo_barras?: boolean;
+  permitir_carrinho?: boolean;
+  modo_catalogo?: boolean;
+  mensagem_whatsapp?: string | null;
+};
+
+export default function LojaPage() {
+  const [loja, setLoja] = useState<Loja | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Form state - Básico
+  const [nome, setNome] = useState('');
+  const [dominio, setDominio] = useState('');
+  const [logo, setLogo] = useState<string | null>(null);
+  const [ativo, setAtivo] = useState(true);
+
+  // Form state - Identidade Visual
+  const [corPrimaria, setCorPrimaria] = useState('#DB1472');
+  const [corSecundaria, setCorSecundaria] = useState('#F8B81F');
+  const [corTexto, setCorTexto] = useState('#1F2937');
+  const [corFundo, setCorFundo] = useState('#FFFFFF');
+  const [corBotao, setCorBotao] = useState('#DB1472');
+  const [corBotaoHover, setCorBotaoHover] = useState('#B01059');
+  const [corLink, setCorLink] = useState('#F8B81F');
+  const [fontePrincipal, setFontePrincipal] = useState('Inter');
+  const [fonteSecundaria, setFonteSecundaria] = useState('Poppins');
+  const [bannerHero, setBannerHero] = useState<string | null>(null);
+  const [favicon, setFavicon] = useState<string | null>(null);
+
+  // Form state - Conteúdo
+  const [descricao, setDescricao] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [textoHero, setTextoHero] = useState('');
+  const [subtextoHero, setSubtextoHero] = useState('');
+
+  // Form state - Redes Sociais
+  const [whatsapp, setWhatsapp] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [emailContato, setEmailContato] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [endereco, setEndereco] = useState('');
+
+  // Form state - SEO
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [googleAnalytics, setGoogleAnalytics] = useState('');
+  const [facebookPixel, setFacebookPixel] = useState('');
+
+  // Form state - Configurações
+  const [mostrarEstoque, setMostrarEstoque] = useState(true);
+  const [mostrarCodigoBarras, setMostrarCodigoBarras] = useState(false);
+  const [permitirCarrinho, setPermitirCarrinho] = useState(true);
+  const [modoCatalogo, setModoCatalogo] = useState(false);
+  const [mensagemWhatsapp, setMensagemWhatsapp] = useState('Olá! Gostaria de mais informações sobre este produto:');
+
+  // Form state - Customização da Logo (Migration 017)
+  const [logoLarguraMax, setLogoLarguraMax] = useState(280);
+  const [logoAlturaMax, setLogoAlturaMax] = useState(80);
+  const [logoFormato, setLogoFormato] = useState<'horizontal' | 'redondo'>('horizontal');
+
+  // Função para gerar domínio automaticamente
+  function gerarDominio(nomeLoja: string): string {
+    return nomeLoja
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 50);
   }
 
-      if (!loja?.nome || loja.nome.trim() === '') {  const [facebook, setFacebook] = useState('');
-
-  return (
-
-    <div className="flex flex-col lg:flex-row h-screen overflow-hidden">        toast.error('O nome da loja é obrigatório');  const [emailContato, setEmailContato] = useState('');
-
-      {/* Área de Configuração */}
-
-      <div className="flex-1 flex flex-col overflow-hidden">        setActiveSection('identidade');  const [telefone, setTelefone] = useState('');
-
-        {/* Header */}
-
-        <div className="border-b bg-white p-4 lg:p-6">        return;  const [endereco, setEndereco] = useState('');
-
-          <div className="flex items-center justify-between">
-
-            <div>      }
-
-              <h1 className="text-2xl font-bold">Configurar Loja</h1>
-
-              <p className="text-sm text-muted-foreground mt-1">  // Form state - SEO
-
-                Personalize a identidade e configurações da sua loja
-
-              </p>      if (!loja?.dominio || loja.dominio.trim() === '') {  const [metaTitle, setMetaTitle] = useState('');
-
-            </div>
-
-        toast.error('O domínio da loja é obrigatório');  const [metaDescription, setMetaDescription] = useState('');
-
-            {/* Botão de Preview (Mobile) */}
-
-            <Button        setActiveSection('identidade');  const [googleAnalytics, setGoogleAnalytics] = useState('');
-
-              variant="outline"
-
-              size="sm"        return;  const [facebookPixel, setFacebookPixel] = useState('');
-
-              onClick={handlePreviewToggle}
-
-              className="lg:hidden"      }
-
-            >
-
-              {showPreview ? (  // Form state - Configurações
-
-                <>
-
-                  <EyeOff className="h-4 w-4 mr-2" />      // Salva loja  const [mostrarEstoque, setMostrarEstoque] = useState(true);
-
-                  Editar
-
-                </>      await saveLoja();  const [mostrarCodigoBarras, setMostrarCodigoBarras] = useState(false);
-
-              ) : (
-
-                <>  const [permitirCarrinho, setPermitirCarrinho] = useState(true);
-
-                  <Eye className="h-4 w-4 mr-2" />
-
-                  Preview      // Salva banners se houver mudanças  const [modoCatalogo, setModoCatalogo] = useState(false);
-
-                </>
-
-              )}      if (banners.length > 0) {  const [mensagemWhatsapp, setMensagemWhatsapp] = useState('Olá! Gostaria de mais informações sobre este produto:');
-
-            </Button>
-
-          </div>        await saveBanners();
-
-        </div>
-
-      }  // Form state - Customização da Logo (Migration 017)
-
-        {/* Tabs de Navegação - Scrollável no mobile */}
-
-        <div className="border-b bg-white overflow-x-auto">  const [logoLarguraMax, setLogoLarguraMax] = useState(280);
-
-          <div className="flex min-w-max lg:min-w-0 px-4 lg:px-6">
-
-            {sections.map((section) => (      setHasChanges(false);  const [logoAlturaMax, setLogoAlturaMax] = useState(80);
-
-              <button
-
-                key={section.id}      toast.success('Configurações salvas com sucesso!');  const [logoFormato, setLogoFormato] = useState<'horizontal' | 'redondo'>('horizontal');
-
-                onClick={() => setActiveSection(section.id)}
-
-                className={`    } catch (error) {
-
-                  flex items-center gap-2 px-4 py-3 border-b-2 transition-colors
-
-                  whitespace-nowrap text-sm font-medium      console.error('Erro ao salvar:', error);  // Função para gerar domínio automaticamente
-
-                  ${
-
-                    activeSection === section.id      toast.error('Erro ao salvar as configurações');  function gerarDominio(nomeLoja: string): string {
-
-                      ? 'border-primary text-primary'
-
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'    }    return nomeLoja
-
-                  }
-
-                `}  };      .toLowerCase()
-
-              >
-
-                <span className="text-lg">{section.icon}</span>      .normalize('NFD')
-
-                <span className="hidden sm:inline">{section.label}</span>
-
-              </button>  const handlePreviewToggle = () => {      .replace(/[\u0300-\u036f]/g, '')
-
-            ))}
-
-          </div>    setShowPreview(!showPreview);      .replace(/[^a-z0-9]/g, '')
-
-        </div>
-
-  };      .substring(0, 50);
-
-        {/* Descrição da Seção Ativa */}
-
-        <div className="bg-blue-50 border-b px-4 lg:px-6 py-3">  }
-
-          <p className="text-sm text-blue-900">
-
-            {sections.find((s) => s.id === activeSection)?.description}  const renderSection = () => {
-
-          </p>
-
-        </div>    if (!loja) return null;  useEffect(() => {
-
-
-
-        {/* Conteúdo da Seção */}    loadLoja();
-
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50">
-
-          {!showPreview && renderSection()}    switch (activeSection) {  }, []);
-
-
-
-          {/* Preview Mobile */}      case 'identidade':
-
-          {showPreview && (
-
-            <Card className="lg:hidden">        return (  useEffect(() => {
-
-              <CardContent className="p-4">
-
-                <div className="aspect-[9/16] bg-white rounded-lg shadow-lg overflow-hidden">          <LojaIdentidadeSection    if (nome && !loja) {
-
-                  {loja?.dominio ? (
-
-                    <iframe            loja={loja}      const novoDominio = gerarDominio(nome);
-
-                      src={`https://${loja.dominio}.c4lojas.com.br`}
-
-                      className="w-full h-full"            onChange={updateLojaField}      setDominio(novoDominio);
-
-                      title="Preview da Loja"
-
-                    />            onUpload={uploadImage}    }
-
-                  ) : (
-
-                    <div className="flex items-center justify-center h-full text-center p-8">          />  }, [nome, loja]);
-
-                      <div>
-
-                        <p className="text-muted-foreground mb-2">        );
-
-                          Configure um domínio para ver o preview
-
-                        </p>      case 'home':  async function loadLoja() {
-
-                        <Button
-
-                          variant="outline"        return (    try {
-
-                          size="sm"
-
-                          onClick={() => {          <LojaHomeSection      const res = await authenticatedFetch('/api/franqueada/loja');
-
-                            setActiveSection('identidade');
-
-                            setShowPreview(false);            loja={loja}      if (!res.ok) throw new Error('Erro ao carregar loja');
-
-                          }}
-
-                        >            banners={banners}      const json = await res.json();
-
-                          Configurar Domínio
-
-                        </Button>            onChange={updateLojaField}
-
-                      </div>
-
-                    </div>            onUpload={uploadImage}      if (json.loja) {
-
-                  )}
-
-                </div>            onAddBanner={addBanner}        const l = json.loja;
-
-              </CardContent>
-
-            </Card>            onUpdateBanner={updateBanner}        setLoja(l);
-
-          )}
-
-        </div>            onDeleteBanner={deleteBanner}        setNome(l.nome);
-
-
-
-        {/* Botão Fixo de Salvar (Mobile) */}            onUploadBannerImage={uploadBannerImage}        setDominio(l.dominio);
-
-        {hasChanges && !showPreview && (
-
-          <div className="lg:hidden border-t bg-white p-4 shadow-lg">          />        setLogo(l.logo);
-
-            <Button
-
-              onClick={handleSave}        );        setAtivo(l.ativo);
-
-              disabled={saving}
-
-              className="w-full h-12 text-base font-medium"      case 'produtos':        
-
-            >
-
-              {saving ? (        return (        // Identidade Visual
-
-                <>
-
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />          <LojaProdutosSection loja={loja} onChange={updateLojaField} />        setCorPrimaria(l.cor_primaria || '#DB1472');
-
-                  Salvando...
-
-                </>        );        setCorSecundaria(l.cor_secundaria || '#F8B81F');
-
-              ) : (
-
-                <>      case 'contato':        setCorTexto(l.cor_texto || '#1F2937');
-
-                  <Save className="mr-2 h-5 w-5" />
-
-                  Salvar Alterações        return (        setCorFundo(l.cor_fundo || '#FFFFFF');
-
-                </>
-
-              )}          <LojaContatoSection loja={loja} onChange={updateLojaField} />        setCorBotao(l.cor_botao || '#DB1472');
-
-            </Button>
-
-          </div>        );        setCorBotaoHover(l.cor_botao_hover || '#B01059');
-
-        )}
-
-      </div>      case 'seo':        setCorLink(l.cor_link || '#F8B81F');
-
-
-
-      {/* Preview Desktop - Fixo à direita */}        return <LojaSeoSection loja={loja} onChange={updateLojaField} />;        setFontePrincipal(l.fonte_principal || 'Inter');
-
-      <div className="hidden lg:flex lg:w-[400px] xl:w-[480px] border-l bg-gray-100 flex-col">
-
-        {/* Header Preview */}      default:        setFonteSecundaria(l.fonte_secundaria || 'Poppins');
-
-        <div className="border-b bg-white p-4">
-
-          <div className="flex items-center justify-between mb-4">        return null;        setBannerHero(l.banner_hero);
-
-            <h2 className="font-semibold">Preview da Loja</h2>
-
-            {hasChanges && (    }        setFavicon(l.favicon);
-
-              <Button onClick={handleSave} disabled={saving} size="sm">
-
-                {saving ? (  };
-
-                  <>
-
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />        // Conteúdo
-
-                    Salvando...
-
-                  </>  if (loading) {        setDescricao(l.descricao || '');
-
-                ) : (
-
-                  <>    return (        setSlogan(l.slogan || '');
-
-                    <Save className="mr-2 h-4 w-4" />
-
-                    Salvar      <div className="flex h-screen items-center justify-center">        setTextoHero(l.texto_hero || '');
-
-                  </>
-
-                )}        <div className="flex flex-col items-center gap-4">        setSubtextoHero(l.subtexto_hero || '');
-
-              </Button>
-
-            )}          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-
-          </div>
-
-          <p className="text-xs text-muted-foreground">          <p className="text-sm text-muted-foreground">        // Redes Sociais
-
-            {loja?.dominio
-
-              ? `https://${loja.dominio}.c4lojas.com.br`            Carregando configurações...        setWhatsapp(l.whatsapp || '');
-
-              : 'Configure um domínio para ver o preview'}
-
-          </p>          </p>        setInstagram(l.instagram || '');
-
-        </div>
-
-        </div>        setFacebook(l.facebook || '');
-
-        {/* iPhone Mockup */}
-
-        <div className="flex-1 p-6 flex items-center justify-center overflow-hidden">      </div>        setEmailContato(l.email_contato || '');
-
-          <div className="relative w-full max-w-[320px] aspect-[9/19.5]">
-
-            {/* Moldura do iPhone */}    );        setTelefone(l.telefone || '');
-
-            <div className="absolute inset-0 bg-black rounded-[3rem] shadow-2xl p-3">
-
-              {/* Notch */}  }        setEndereco(l.endereco || '');
-
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
-
-
-
-              {/* Tela */}
-
-              <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">  return (        // SEO
-
-                {loja?.dominio ? (
-
-                  <iframe    <div className="flex flex-col lg:flex-row h-screen overflow-hidden">        setMetaTitle(l.meta_title || '');
-
-                    src={`https://${loja.dominio}.c4lojas.com.br`}
-
-                    className="w-full h-full"      {/* Área de Configuração */}        setMetaDescription(l.meta_description || '');
-
-                    title="Preview da Loja Desktop"
-
-                  />      <div className="flex-1 flex flex-col overflow-hidden">        setGoogleAnalytics(l.google_analytics || '');
-
-                ) : (
-
-                  <div className="flex items-center justify-center h-full text-center p-8">        {/* Header */}        setFacebookPixel(l.facebook_pixel || '');
-
-                    <div>
-
-                      <p className="text-sm text-muted-foreground mb-3">        <div className="border-b bg-white p-4 lg:p-6">
-
-                        Configure um domínio na seção{' '}
-
-                        <strong>Identidade</strong> para ver o preview          <div className="flex items-center justify-between">        // Configurações
-
-                      </p>
-
-                      <Button            <div>        setMostrarEstoque(l.mostrar_estoque ?? true);
-
-                        variant="outline"
-
-                        size="sm"              <h1 className="text-2xl font-bold">Configurar Loja</h1>        setMostrarCodigoBarras(l.mostrar_codigo_barras ?? false);
-
-                        onClick={() => setActiveSection('identidade')}
-
-                      >              <p className="text-sm text-muted-foreground mt-1">        setPermitirCarrinho(l.permitir_carrinho ?? true);
-
-                        Ir para Identidade
-
-                      </Button>                Personalize a identidade e configurações da sua loja        setModoCatalogo(l.modo_catalogo ?? false);
-
-                    </div>
-
-                  </div>              </p>        setMensagemWhatsapp(l.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:');
-
-                )}
-
-              </div>            </div>
-
-            </div>
-
-          </div>        // Customização da Logo
-
-        </div>
-
-            {/* Botão de Preview (Mobile) */}        setLogoLarguraMax(l.logo_largura_max || 280);
-
-        {/* Footer Preview */}
-
-        <div className="border-t bg-white p-4">            <Button        setLogoAlturaMax(l.logo_altura_max || 80);
-
-          <p className="text-xs text-center text-muted-foreground">
-
-            💡 As alterações aparecerão após salvar              variant="outline"        setLogoFormato(l.logo_formato || 'horizontal');
-
-          </p>
-
-        </div>              size="sm"      }
-
-      </div>
-
-    </div>              onClick={handlePreviewToggle}    } catch (err) {
-
-  );
-
-}              className="lg:hidden"      console.error('Erro ao carregar loja:', err);
-
-
-            >      setError('Erro ao carregar loja');
-
-              {showPreview ? (    } finally {
-
-                <>      setLoading(false);
-
-                  <EyeOff className="h-4 w-4 mr-2" />    }
-
-                  Editar  }
-
-                </>
-
-              ) : (  async function handleSave() {
-
-                <>    if (!nome) {
-
-                  <Eye className="h-4 w-4 mr-2" />      setError('Preencha o nome da loja');
-
-                  Preview      return;
-
-                </>    }
-
-              )}
-
-            </Button>    if (dominio.length < 3) {
-
-          </div>      setError('O nome da loja deve ter pelo menos 3 caracteres válidos');
-
-        </div>      return;
-
+  useEffect(() => {
+    loadLoja();
+  }, []);
+
+  useEffect(() => {
+    if (nome && !loja) {
+      const novoDominio = gerarDominio(nome);
+      setDominio(novoDominio);
+    }
+  }, [nome, loja]);
+
+  async function loadLoja() {
+    try {
+      const res = await authenticatedFetch('/api/franqueada/loja');
+      if (!res.ok) throw new Error('Erro ao carregar loja');
+      const json = await res.json();
+
+      if (json.loja) {
+        const l = json.loja;
+        setLoja(l);
+        setNome(l.nome);
+        setDominio(l.dominio);
+        setLogo(l.logo);
+        setAtivo(l.ativo);
+        
+        // Identidade Visual
+        setCorPrimaria(l.cor_primaria || '#DB1472');
+        setCorSecundaria(l.cor_secundaria || '#F8B81F');
+        setCorTexto(l.cor_texto || '#1F2937');
+        setCorFundo(l.cor_fundo || '#FFFFFF');
+        setCorBotao(l.cor_botao || '#DB1472');
+        setCorBotaoHover(l.cor_botao_hover || '#B01059');
+        setCorLink(l.cor_link || '#F8B81F');
+        setFontePrincipal(l.fonte_principal || 'Inter');
+        setFonteSecundaria(l.fonte_secundaria || 'Poppins');
+        setBannerHero(l.banner_hero);
+        setFavicon(l.favicon);
+
+        // Conteúdo
+        setDescricao(l.descricao || '');
+        setSlogan(l.slogan || '');
+        setTextoHero(l.texto_hero || '');
+        setSubtextoHero(l.subtexto_hero || '');
+
+        // Redes Sociais
+        setWhatsapp(l.whatsapp || '');
+        setInstagram(l.instagram || '');
+        setFacebook(l.facebook || '');
+        setEmailContato(l.email_contato || '');
+        setTelefone(l.telefone || '');
+        setEndereco(l.endereco || '');
+
+        // SEO
+        setMetaTitle(l.meta_title || '');
+        setMetaDescription(l.meta_description || '');
+        setGoogleAnalytics(l.google_analytics || '');
+        setFacebookPixel(l.facebook_pixel || '');
+
+        // Configurações
+        setMostrarEstoque(l.mostrar_estoque ?? true);
+        setMostrarCodigoBarras(l.mostrar_codigo_barras ?? false);
+        setPermitirCarrinho(l.permitir_carrinho ?? true);
+        setModoCatalogo(l.modo_catalogo ?? false);
+        setMensagemWhatsapp(l.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:');
+
+        // Customização da Logo
+        setLogoLarguraMax(l.logo_largura_max || 280);
+        setLogoAlturaMax(l.logo_altura_max || 80);
+        setLogoFormato(l.logo_formato || 'horizontal');
+      }
+    } catch (err) {
+      console.error('Erro ao carregar loja:', err);
+      setError('Erro ao carregar loja');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!nome) {
+      setError('Preencha o nome da loja');
+      return;
     }
 
-        {/* Tabs de Navegação - Scrollável no mobile */}
+    if (dominio.length < 3) {
+      setError('O nome da loja deve ter pelo menos 3 caracteres válidos');
+      return;
+    }
 
-        <div className="border-b bg-white overflow-x-auto">    setSaving(true);
+    setSaving(true);
+    setError('');
+    setSuccess('');
 
-          <div className="flex min-w-max lg:min-w-0 px-4 lg:px-6">    setError('');
+    try {
+      const url = loja ? '/api/franqueada/loja/update' : '/api/franqueada/loja';
+      const method = loja ? 'PUT' : 'POST';
 
-            {sections.map((section) => (    setSuccess('');
-
-              <button
-
-                key={section.id}    try {
-
-                onClick={() => setActiveSection(section.id)}      const url = loja ? '/api/franqueada/loja/update' : '/api/franqueada/loja';
-
-                className={`      const method = loja ? 'PUT' : 'POST';
-
-                  flex items-center gap-2 px-4 py-3 border-b-2 transition-colors
-
-                  whitespace-nowrap text-sm font-medium      const res = await authenticatedFetch(url, {
-
-                  ${        method,
-
-                    activeSection === section.id        headers: { 'Content-Type': 'application/json' },
-
-                      ? 'border-primary text-primary'        body: JSON.stringify({
-
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'          nome,
-
-                  }          dominio,
-
-                `}          logo,
-
-              >          ativo,
-
-                <span className="text-lg">{section.icon}</span>          // Identidade Visual
-
-                <span className="hidden sm:inline">{section.label}</span>          cor_primaria: corPrimaria,
-
-              </button>          cor_secundaria: corSecundaria,
-
-            ))}          cor_texto: corTexto,
-
-          </div>          cor_fundo: corFundo,
-
-        </div>          cor_botao: corBotao,
-
+      const res = await authenticatedFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          dominio,
+          logo,
+          ativo,
+          // Identidade Visual
+          cor_primaria: corPrimaria,
+          cor_secundaria: corSecundaria,
+          cor_texto: corTexto,
+          cor_fundo: corFundo,
+          cor_botao: corBotao,
           cor_botao_hover: corBotaoHover,
-
-        {/* Descrição da Seção Ativa */}          cor_link: corLink,
-
-        <div className="bg-blue-50 border-b px-4 lg:px-6 py-3">          fonte_principal: fontePrincipal,
-
-          <p className="text-sm text-blue-900">          fonte_secundaria: fonteSecundaria,
-
-            {sections.find((s) => s.id === activeSection)?.description}          banner_hero: bannerHero,
-
-          </p>          favicon: favicon,
-
-        </div>          // Conteúdo
-
+          cor_link: corLink,
+          fonte_principal: fontePrincipal,
+          fonte_secundaria: fonteSecundaria,
+          banner_hero: bannerHero,
+          favicon: favicon,
+          // Conteúdo
           descricao,
-
-        {/* Conteúdo da Seção */}          slogan,
-
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50">          texto_hero: textoHero,
-
-          {!showPreview && renderSection()}          subtexto_hero: subtextoHero,
-
+          slogan,
+          texto_hero: textoHero,
+          subtexto_hero: subtextoHero,
           // Redes Sociais
+          whatsapp,
+          instagram,
+          facebook,
+          email_contato: emailContato,
+          telefone,
+          endereco,
+          // SEO
+          meta_title: metaTitle,
+          meta_description: metaDescription,
+          google_analytics: googleAnalytics,
+          facebook_pixel: facebookPixel,
+          // Configurações
+          mostrar_estoque: mostrarEstoque,
+          mostrar_codigo_barras: mostrarCodigoBarras,
+          permitir_carrinho: permitirCarrinho,
+          modo_catalogo: modoCatalogo,
+          mensagem_whatsapp: mensagemWhatsapp,
+          // Customização da Logo
+          logo_largura_max: logoLarguraMax,
+          logo_altura_max: logoAlturaMax,
+          logo_formato: logoFormato
+        })
+      });
 
-          {/* Preview Mobile */}          whatsapp,
-
-          {showPreview && (          instagram,
-
-            <Card className="lg:hidden">          facebook,
-
-              <CardContent className="p-4">          email_contato: emailContato,
-
-                <div className="aspect-[9/16] bg-white rounded-lg shadow-lg overflow-hidden">          telefone,
-
-                  {loja?.dominio ? (          endereco,
-
-                    <iframe          // SEO
-
-                      src={`https://${loja.dominio}.c4lojas.com.br`}          meta_title: metaTitle,
-
-                      className="w-full h-full"          meta_description: metaDescription,
-
-                      title="Preview da Loja"          google_analytics: googleAnalytics,
-
-                    />          facebook_pixel: facebookPixel,
-
-                  ) : (          // Configurações
-
-                    <div className="flex items-center justify-center h-full text-center p-8">          mostrar_estoque: mostrarEstoque,
-
-                      <div>          mostrar_codigo_barras: mostrarCodigoBarras,
-
-                        <p className="text-muted-foreground mb-2">          permitir_carrinho: permitirCarrinho,
-
-                          Configure um domínio para ver o preview          modo_catalogo: modoCatalogo,
-
-                        </p>          mensagem_whatsapp: mensagemWhatsapp,
-
-                        <Button          // Customização da Logo
-
-                          variant="outline"          logo_largura_max: logoLarguraMax,
-
-                          size="sm"          logo_altura_max: logoAlturaMax,
-
-                          onClick={() => {          logo_formato: logoFormato
-
-                            setActiveSection('identidade');        })
-
-                            setShowPreview(false);      });
-
-                          }}
-
-                        >      if (!res.ok) {
-
-                          Configurar Domínio        const json = await res.json();
-
-                        </Button>        throw new Error(json.error || 'Erro ao salvar loja');
-
-                      </div>      }
-
-                    </div>
-
-                  )}      const json = await res.json();
-
-                </div>      setLoja(json.loja);
-
-              </CardContent>      toast.success('Loja salva com sucesso');
-
-            </Card>      setSuccess('Loja salva com sucesso');
-
-          )}      setTimeout(() => setSuccess(''), 3000);
-
-        </div>    } catch (err) {
-
-      console.error('Erro ao salvar loja:', err);
-
-        {/* Botão Fixo de Salvar (Mobile) */}      setError(err instanceof Error ? err.message : 'Erro ao salvar loja');
-
-        {hasChanges && !showPreview && (    } finally {
-
-          <div className="lg:hidden border-t bg-white p-4 shadow-lg">      setSaving(false);
-
-            <Button    }
-
-              onClick={handleSave}  }
-
-              disabled={saving}
-
-              className="w-full h-12 text-base font-medium"  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-
-            >    const file = e.target.files?.[0];
-
-              {saving ? (    if (!file) return;
-
-                <>
-
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />    setUploadingLogo(true);
-
-                  Salvando...    setError('');
-
-                </>
-
-              ) : (    try {
-
-                <>      const formData = new FormData();
-
-                  <Save className="mr-2 h-5 w-5" />      formData.append('file', file);
-
-                  Salvar Alterações
-
-                </>      const res = await authenticatedFetch('/api/franqueada/loja/upload-logo', {
-
-              )}        method: 'POST',
-
-            </Button>        body: formData
-
-          </div>      });
-
-        )}
-
-      </div>      if (!res.ok) {
-
+      if (!res.ok) {
         const json = await res.json();
+        throw new Error(json.error || 'Erro ao salvar loja');
+      }
 
-      {/* Preview Desktop - Fixo à direita */}        throw new Error(json.error || 'Erro ao fazer upload');
+      const json = await res.json();
+      setLoja(json.loja);
+      toast.success('Loja salva com sucesso');
+      setSuccess('Loja salva com sucesso');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Erro ao salvar loja:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao salvar loja');
+    } finally {
+      setSaving(false);
+    }
+  }
 
-      <div className="hidden lg:flex lg:w-[400px] xl:w-[480px] border-l bg-gray-100 flex-col">      }
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        {/* Header Preview */}
+    setUploadingLogo(true);
+    setError('');
 
-        <div className="border-b bg-white p-4">      const json = await res.json();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-          <div className="flex items-center justify-between mb-4">      setLogo(json.url);
+      const res = await authenticatedFetch('/api/franqueada/loja/upload-logo', {
+        method: 'POST',
+        body: formData
+      });
 
-            <h2 className="font-semibold">Preview da Loja</h2>      toast.success('Logo enviada com sucesso');
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Erro ao fazer upload');
+      }
 
-            {hasChanges && (      setSuccess('Logo enviada com sucesso');
+      const json = await res.json();
+      setLogo(json.url);
+      toast.success('Logo enviada com sucesso');
+      setSuccess('Logo enviada com sucesso');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Erro ao fazer upload:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao fazer upload');
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
 
-              <Button onClick={handleSave} disabled={saving} size="sm">      setTimeout(() => setSuccess(''), 3000);
+  function copyLink() {
+    const link = `https://c4franquiaas.netlify.app/loja/${dominio}`;
+    navigator.clipboard.writeText(link);
+    toast.success('Link copiado');
+    setSuccess('Link copiado');
+    setTimeout(() => setSuccess(''), 2000);
+  }
 
-                {saving ? (    } catch (err) {
-
-                  <>      console.error('Erro ao fazer upload:', err);
-
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />      setError(err instanceof Error ? err.message : 'Erro ao fazer upload');
-
-                    Salvando...    } finally {
-
-                  </>      setUploadingLogo(false);
-
-                ) : (    }
-
-                  <>  }
-
-                    <Save className="mr-2 h-4 w-4" />
-
-                    Salvar  function copyLink() {
-
-                  </>    const link = `https://c4franquiaas.netlify.app/loja/${dominio}`;
-
-                )}    navigator.clipboard.writeText(link);
-
-              </Button>    toast.success('Link copiado');
-
-            )}    setSuccess('Link copiado');
-
-          </div>    setTimeout(() => setSuccess(''), 2000);
-
-          <p className="text-xs text-muted-foreground">  }
-
-            {loja?.dominio
-
-              ? `https://${loja.dominio}.c4lojas.com.br`  function openLoja() {
-
-              : 'Configure um domínio para ver o preview'}    window.open(`/loja/${dominio}`, '_blank');
-
-          </p>  }
-
-        </div>
+  function openLoja() {
+    window.open(`/loja/${dominio}`, '_blank');
+  }
 
   if (loading) {
-
-        {/* iPhone Mockup */}    return (
-
-        <div className="flex-1 p-6 flex items-center justify-center overflow-hidden">      <div className="p-4 lg:p-6">
-
-          <div className="relative w-full max-w-[320px] aspect-[9/19.5]">        <LoadingState message="Carregando configuracoes da loja..." />
-
-            {/* Moldura do iPhone */}      </div>
-
-            <div className="absolute inset-0 bg-black rounded-[3rem] shadow-2xl p-3">    );
-
-              {/* Notch */}  }
-
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10" />
+    return (
+      <div className="p-4 lg:p-6">
+        <LoadingState message="Carregando configuracoes da loja..." />
+      </div>
+    );
+  }
 
   const tabs = [
+    { id: 'identidade', label: 'Identidade Visual', icon: <Palette size={18} /> },
+    { id: 'conteudo', label: 'Conteudo', icon: <FileText size={18} /> },
+    { id: 'social', label: 'Redes Sociais', icon: <Share2 size={18} /> },
+    { id: 'seo', label: 'SEO e Analytics', icon: <BarChart3 size={18} /> },
+    { id: 'config', label: 'Configuracoes', icon: <Settings size={18} /> },
+  ];
 
-              {/* Tela */}    { id: 'identidade', label: 'Identidade Visual', icon: <Palette size={18} /> },
+  return (
+    <div className="p-4 lg:p-6">
+      {/* Header com botão de acesso à loja */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <PageHeader
+          title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
+          subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
+          icon={Store}
+        />
+        
+        {/* Botão de acesso rápido à loja */}
+        {dominio && (
+          <button
+            onClick={openLoja}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap"
+          >
+            <Store size={20} />
+            <span>Ver Minha Loja</span>
+            <ExternalLink size={16} />
+          </button>
+        )}
+      </div>
 
-              <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">    { id: 'conteudo', label: 'Conteudo', icon: <FileText size={18} /> },
+      {/* Alertas */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
 
-                {loja?.dominio ? (    { id: 'social', label: 'Redes Sociais', icon: <Share2 size={18} /> },
-
-                  <iframe    { id: 'seo', label: 'SEO e Analytics', icon: <BarChart3 size={18} /> },
-
-                    src={`https://${loja.dominio}.c4lojas.com.br`}    { id: 'config', label: 'Configuracoes', icon: <Settings size={18} /> },
-
-                    className="w-full h-full"  ];
-
-                    title="Preview da Loja Desktop"
-
-                  />  return (
-
-                ) : (    <div className="p-4 lg:p-6">
-
-                  <div className="flex items-center justify-center h-full text-center p-8">      {/* Header com botão de acesso à loja */}
-
-                    <div>      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-
-                      <p className="text-sm text-muted-foreground mb-3">        <PageHeader
-
-                        Configure um domínio na seção{' '}          title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
-
-                        <strong>Identidade</strong> para ver o preview          subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
-
-                      </p>          icon={Store}
-
-                      <Button        />
-
-                        variant="outline"        
-
-                        size="sm"        {/* Botão de acesso rápido à loja */}
-
-                        onClick={() => setActiveSection('identidade')}        {dominio && (
-
-                      >          <button
-
-                        Ir para Identidade            onClick={openLoja}
-
-                      </Button>            className="inline-flex items-center gap-2 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap"
-
-                    </div>          >
-
-                  </div>            <Store size={20} />
-
-                )}            <span>Ver Minha Loja</span>
-
-              </div>            <ExternalLink size={16} />
-
-            </div>          </button>
-
-          </div>        )}
-
-        </div>      </div>
-
-
-
-        {/* Footer Preview */}      {/* Alertas */}
-
-        <div className="border-t bg-white p-4">      {error && (
-
-          <p className="text-xs text-center text-muted-foreground">        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-
-            💡 As alterações aparecerão após salvar          <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-
-          </p>          <p className="text-red-800">{error}</p>
-
-        </div>        </div>
-
-      </div>      )}
-
-    </div>
-
-  );      {success && (
-
-}        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
           <AlertCircle className="text-green-600 flex-shrink-0" size={20} />
           <p className="text-green-800">{success}</p>
         </div>
