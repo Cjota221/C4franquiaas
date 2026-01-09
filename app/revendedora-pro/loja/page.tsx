@@ -344,12 +344,26 @@ export default function LojaPage() {
 
   return (
     <div className="p-4 lg:p-6">
-      {/* Header */}
-      <PageHeader
-        title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
-        subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
-        icon={Store}
-      />
+      {/* Header com botão de acesso à loja */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <PageHeader
+          title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
+          subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
+          icon={Store}
+        />
+        
+        {/* Botão de acesso rápido à loja */}
+        {dominio && (
+          <button
+            onClick={openLoja}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap"
+          >
+            <Store size={20} />
+            <span>Ver Minha Loja</span>
+            <ExternalLink size={16} />
+          </button>
+        )}
+      </div>
 
       {/* Alertas */}
       {error && (

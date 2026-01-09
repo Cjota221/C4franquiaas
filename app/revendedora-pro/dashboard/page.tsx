@@ -9,7 +9,8 @@ import {
   Store,
   ArrowRight,
   BarChart3,
-  Wallet
+  Wallet,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -23,6 +24,7 @@ type Stats = {
   totalVendas: number;
   comissaoAcumulada: number;
   lojaAtiva: boolean;
+  lojaDominio: string | null;
 };
 
 export default function FranqueadaDashboardPage() {
@@ -31,7 +33,8 @@ export default function FranqueadaDashboardPage() {
     produtosAtivos: 0,
     totalVendas: 0,
     comissaoAcumulada: 0,
-    lojaAtiva: false
+    lojaAtiva: false,
+    lojaDominio: null
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +52,7 @@ export default function FranqueadaDashboardPage() {
             id, ativo,
             produtos_franqueadas_precos(id, ativo_no_site)
           ),
-          lojas(ativo)
+          lojas(ativo, dominio)
         `)
         .eq('user_id', user.id)
         .eq('produtos_franqueadas.ativo', true)
@@ -65,10 +68,13 @@ export default function FranqueadaDashboardPage() {
       ).length;
 
       // Verificar status da loja
-      const lojas = franqueada.lojas as { ativo: boolean }[] | { ativo: boolean } | null;
+      const lojas = franqueada.lojas as { ativo: boolean; dominio: string }[] | { ativo: boolean; dominio: string } | null;
       const lojaAtiva = Array.isArray(lojas) 
         ? lojas[0]?.ativo ?? false 
         : lojas?.ativo ?? false;
+      const lojaDominio = Array.isArray(lojas) 
+        ? lojas[0]?.dominio ?? null 
+        : lojas?.dominio ?? null;
 
       // TODO: Buscar vendas e comissoes quando implementado
       const totalVendas = 0;
@@ -79,7 +85,8 @@ export default function FranqueadaDashboardPage() {
         produtosAtivos,
         totalVendas,
         comissaoAcumulada,
-        lojaAtiva
+        lojaAtiva,
+        lojaDominio
       });
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -101,11 +108,27 @@ export default function FranqueadaDashboardPage() {
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Dashboard"
-        subtitle="Acompanhe as metricas da sua loja e produtos"
-        icon={BarChart3}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <PageHeader
+          title="Dashboard"
+          subtitle="Acompanhe as metricas da sua loja e produtos"
+          icon={BarChart3}
+        />
+        
+        {/* Botão de acesso à loja */}
+        {stats.lojaDominio && (
+          <a
+            href={`/loja/${stats.lojaDominio}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+          >
+            <Store className="w-5 h-5" />
+            <span>Ver Minha Loja</span>
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+      </div>
 
       {/* Cards de Metricas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

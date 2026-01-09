@@ -43,28 +43,87 @@ export default function RevendedoraProProdutosPage() {
       setLoading(true);
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('[RevendedoraPro/Produtos] User:', user?.id);
       if (!user) return;
-      const { data: franqueada } = await supabase.from('franqueadas').select('id').eq('user_id', user.id).single();
+      
+      const { data: franqueada, error: franqueadaError } = await supabase.from('franqueadas').select('id').eq('user_id', user.id).single();
+      console.log('[RevendedoraPro/Produtos] Franqueada:', franqueada, 'Error:', franqueadaError);
       if (!franqueada) return;
+      
       const { data: loja } = await supabase.from('lojas').select('dominio').eq('franqueada_id', franqueada.id).single();
+      console.log('[RevendedoraPro/Produtos] Loja:', loja);
       if (loja?.dominio) setFranqueadaDominio(loja.dominio);
-      const { data: vinculacoes } = await supabase.from('produtos_franqueadas')
-        .select('id, produto_id, produtos:produto_id (id, nome, preco_base, estoque, ativo, imagem, created_at, produto_categorias (categorias (nome)))')
+      
+      // Buscar vinculações
+      const { data: vinculacoes, error: vinculacoesError } = await supabase
+        .from('produtos_franqueadas')
+        .select('id, produto_id, ativo')
         .eq('franqueada_id', franqueada.id);
-      if (!vinculacoes || vinculacoes.length === 0) { setProdutos([]); return; }
+      
+      console.log('[RevendedoraPro/Produtos] Vinculacoes:', vinculacoes?.length, 'Error:', vinculacoesError);
+      
+      if (!vinculacoes || vinculacoes.length === 0) { 
+        console.log('[RevendedoraPro/Produtos] Nenhuma vinculacao encontrada');
+        setProdutos([]); 
+        return; 
+      }
+      
+      // Buscar produtos separadamente
+      const produtoIds = vinculacoes.map(v => v.produto_id);
+      console.log('[RevendedoraPro/Produtos] Produto IDs:', produtoIds);
+      
+      const { data: produtosData, error: produtosError } = await supabase
+        .from('produtos')
+        .select('id, nome, preco_base, estoque, ativo, imagem, created_at, produto_categorias (categorias (nome))')
+        .in('id', produtoIds);
+      
+      console.log('[RevendedoraPro/Produtos] Produtos:', produtosData?.length, 'Error:', produtosError);
+      
+      if (!produtosData || produtosData.length === 0) { 
+        console.log('[RevendedoraPro/Produtos] Nenhum produto encontrado');
+        setProdutos([]); 
+        return; 
+      }
+      
+      // Buscar preços
       const vinculacaoIds = vinculacoes.map(v => v.id);
       const { data: precos } = await supabase.from('produtos_franqueadas_precos').select('*').in('produto_franqueada_id', vinculacaoIds);
+      console.log('[RevendedoraPro/Produtos] Precos:', precos?.length);
+      
+      // Formatar produtos
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const produtosFormatados = vinculacoes.map((v: any) => {
-        const produto = Array.isArray(v.produtos) ? v.produtos[0] : v.produtos;
+        // Encontrar o produto correspondente
+        const produto = produtosData.find(p => p.id === v.produto_id);
         if (!produto) return null;
+        
         const preco = precos?.find(p => p.produto_franqueada_id === v.id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const categorias = produto.produto_categorias?.map((pc: any) => pc.categorias?.nome).filter(Boolean).join(', ') || 'Sem categoria';
         let margemPercentual = 0, precoFinal = produto.preco_base || 0;
-        if (preco?.ajuste_tipo === 'porcentagem' && preco?.ajuste_valor) { margemPercentual = preco.ajuste_valor; precoFinal = (produto.preco_base || 0) * (1 + preco.ajuste_valor / 100); }
-        else if (preco?.ajuste_tipo === 'fixo' && preco?.ajuste_valor) { precoFinal = (produto.preco_base || 0) + preco.ajuste_valor; margemPercentual = produto.preco_base ? (preco.ajuste_valor / produto.preco_base) * 100 : 0; }
-        return { id: String(produto.id), produto_franqueada_id: v.id, nome: produto.nome || '', preco_base: produto.preco_base || 0, margin_percent: margemPercentual, preco_final: precoFinal, is_active: preco?.ativo_no_site || false, estoque: produto.estoque || 0, imagem: produto.imagem || null, categorias, created_at: produto.created_at, produto_ativo: produto.ativo || false, pode_ativar: (produto.ativo || false) && (produto.estoque || 0) > 0 } as ProdutoComMargem;
+        if (preco?.ajuste_tipo === 'porcentagem' && preco?.ajuste_valor) { 
+          margemPercentual = preco.ajuste_valor; 
+          precoFinal = (produto.preco_base || 0) * (1 + preco.ajuste_valor / 100); 
+        } else if (preco?.ajuste_tipo === 'fixo' && preco?.ajuste_valor) { 
+          precoFinal = (produto.preco_base || 0) + preco.ajuste_valor; 
+          margemPercentual = produto.preco_base ? (preco.ajuste_valor / produto.preco_base) * 100 : 0; 
+        }
+        
+        return { 
+          id: String(produto.id), 
+          produto_franqueada_id: v.id, 
+          nome: produto.nome || '', 
+          preco_base: produto.preco_base || 0, 
+          margin_percent: margemPercentual, 
+          preco_final: precoFinal, 
+          is_active: preco?.ativo_no_site || false, 
+          estoque: produto.estoque || 0, 
+          imagem: produto.imagem || null, 
+          categorias, 
+          created_at: produto.created_at, 
+          produto_ativo: produto.ativo || false, 
+          pode_ativar: (produto.ativo || false) && (produto.estoque || 0) > 0 
+        } as ProdutoComMargem;
       }).filter((p): p is ProdutoComMargem => p !== null);
       setProdutos(produtosFormatados);
     } catch (err) { console.error('Erro:', err); } finally { setLoading(false); }
