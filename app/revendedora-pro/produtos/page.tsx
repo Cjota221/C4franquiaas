@@ -168,6 +168,32 @@ export default function RevendedoraProProdutosPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4"><div className="flex items-center gap-3"><div className="p-2 bg-green-50 rounded-lg"><CheckCircle className="w-5 h-5 text-green-600" /></div><div><p className="text-2xl font-bold text-green-600">{stats.ativos}</p><p className="text-xs text-gray-500">Ativos no Site</p></div></div></div>
       </div>
 
+      {/* Botão destacado para aplicar margem em todos */}
+      <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl p-4 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-center gap-4">
+          <div className="flex-1 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-yellow-300" />
+              <h3 className="text-lg font-bold text-white">Configure sua margem de lucro rapidamente!</h3>
+            </div>
+            <p className="text-pink-50 text-sm">
+              Selecione todos os produtos e aplique a mesma margem de uma vez. Economize tempo!
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedIds(new Set(produtos.map(p => p.id)));
+              setShowModalMargem(true);
+            }}
+            className="w-full lg:w-auto px-6 py-3 bg-white text-pink-600 rounded-lg font-bold hover:bg-pink-50 transition-all shadow-md hover:shadow-xl flex items-center justify-center gap-2"
+            style={{ minHeight: '44px' }}
+          >
+            <Percent className="w-5 h-5" />
+            <span>Aplicar Margem em Todos</span>
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2"><Filter className="w-5 h-5 text-gray-400" /><span className="font-medium text-gray-700">Filtros</span></div>
