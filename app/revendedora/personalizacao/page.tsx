@@ -105,6 +105,7 @@ export default function PersonalizacaoRevendedoraPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [bannerMobileUrl, setBannerMobileUrl] = useState("");
+  const [bannerSubmissions, setBannerSubmissions] = useState<{banner_type: string; status: string}[]>([]);
   const [primaryColor, setPrimaryColor] = useState("#ec4899");
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
@@ -444,7 +445,7 @@ export default function PersonalizacaoRevendedoraPage() {
                   <Image src={bannerUrl} alt="Banner" fill className="object-cover" />
                 </div>
                 <p className="text-xs text-gray-600 text-center mt-2 flex items-center justify-center gap-2">
-                  {pendingBanner ? (
+                  {bannerSubmissions.some(s => s.banner_type === 'desktop' && s.status === 'pending') ? (
                     <><Clock size={14} className="text-amber-500" /> Aguardando aprovacao</>
                   ) : (
                     <><CheckCircle size={14} className="text-green-500" /> Banner aprovado</>
