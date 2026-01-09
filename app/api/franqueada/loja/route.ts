@@ -119,6 +119,7 @@ export async function POST(req: Request) {
         permitir_carrinho: body.permitir_carrinho !== undefined ? body.permitir_carrinho : true,
         modo_catalogo: body.modo_catalogo !== undefined ? body.modo_catalogo : false,
         mensagem_whatsapp: body.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:',
+        margem_padrao: body.margem_padrao || 70, // 🆕 Margem padrão 70%
         // Customização da Logo (migration 017)
         logo_largura_max: body.logo_largura_max || 280,
         logo_altura_max: body.logo_altura_max || 80,

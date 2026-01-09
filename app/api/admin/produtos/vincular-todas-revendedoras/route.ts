@@ -13,9 +13,14 @@ export async function POST(request: NextRequest) {
 
     console.log('\n[Vincular Revendedoras] Iniciando...\n');
 
+    // 🆕 Buscar revendedoras COM suas configurações de margem padrão
     const { data: revendedoras, error: revendedorasError } = await supabase
       .from('resellers')
-      .select('id, store_name')
+      .select(`
+        id, 
+        store_name,
+        lojas!inner(margem_padrao)
+      `)
       .eq('status', 'aprovada');
 
     if (revendedorasError || !revendedoras || revendedoras.length === 0) {
@@ -70,10 +75,15 @@ export async function POST(request: NextRequest) {
         const key = `${revendedora.id}-${produto.id}`;
         const existingMargin = existingMargins.get(key);
         
+        // 🆕 Usar margem padrão da loja se não houver margem existente
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const margemPadrao = (revendedora as any).lojas?.margem_padrao || 70;
+        const defaultMargin = existingMargin ?? margemPadrao;
+        
         vinculacoes.push({
           reseller_id: revendedora.id,
           product_id: produto.id,
-          margin_percent: existingMargin ?? 20, // Preserva margem existente ou usa 20% padrão
+          margin_percent: defaultMargin, // Usa margem configurada na loja
           is_active: true,
         });
       }

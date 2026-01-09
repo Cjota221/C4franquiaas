@@ -44,6 +44,7 @@ type Loja = {
   permitir_carrinho?: boolean;
   modo_catalogo?: boolean;
   mensagem_whatsapp?: string | null;
+  margem_padrao?: number; // 🆕 Margem de lucro padrão em %
 };
 
 export default function LojaPage() {
@@ -99,6 +100,7 @@ export default function LojaPage() {
   const [permitirCarrinho, setPermitirCarrinho] = useState(true);
   const [modoCatalogo, setModoCatalogo] = useState(false);
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState('Olá! Gostaria de mais informações sobre este produto:');
+  const [margemPadrao, setMargemPadrao] = useState(70); // 🆕 Margem padrão para produtos novos
 
   // Form state - Customização da Logo (Migration 017)
   const [logoLarguraMax, setLogoLarguraMax] = useState(280);
@@ -179,6 +181,7 @@ export default function LojaPage() {
         setPermitirCarrinho(l.permitir_carrinho ?? true);
         setModoCatalogo(l.modo_catalogo ?? false);
         setMensagemWhatsapp(l.mensagem_whatsapp || 'Olá! Gostaria de mais informações sobre este produto:');
+        setMargemPadrao(l.margem_padrao || 70); // 🆕 Carregar margem padrão
 
         // Customização da Logo
         setLogoLarguraMax(l.logo_largura_max || 280);
@@ -255,6 +258,7 @@ export default function LojaPage() {
           permitir_carrinho: permitirCarrinho,
           modo_catalogo: modoCatalogo,
           mensagem_whatsapp: mensagemWhatsapp,
+          margem_padrao: margemPadrao, // 🆕 Salvar margem padrão
           // Customização da Logo
           logo_largura_max: logoLarguraMax,
           logo_altura_max: logoAlturaMax,
@@ -973,6 +977,28 @@ export default function LojaPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Mensagem que aparecerá ao clicar em &ldquo;Comprar pelo WhatsApp&rdquo;
+                </p>
+              </div>
+
+              {/* 🆕 Margem de Lucro Padrão */}
+              <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-pink-200">
+                <label className="block text-sm font-semibold mb-2 text-pink-800">
+                  ✨ Margem de Lucro Padrão (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="500"
+                  step="5"
+                  value={margemPadrao}
+                  onChange={(e) => setMargemPadrao(Number(e.target.value))}
+                  className="w-full px-3 py-2 border-2 border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-lg"
+                />
+                <p className="text-xs text-pink-700 mt-2 font-medium">
+                  🎯 <strong>Importante:</strong> Produtos novos já virão com essa margem aplicada automaticamente!
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Exemplo: Com margem de 70%, um produto de R$ 100,00 será vendido por R$ 170,00
                 </p>
               </div>
             </div>
