@@ -1,57 +1,39 @@
-"use client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CustomizacoesHeader from '@/components/franqueada/customizacoes/CustomizacoesHeader';
-import CustomizacoesPaginaInicial from '@/components/franqueada/customizacoes/CustomizacoesPaginaInicial';
-import CustomizacoesProdutos from '@/components/franqueada/customizacoes/CustomizacoesProdutos';
-import CustomizacoesCarrinho from '@/components/franqueada/customizacoes/CustomizacoesCarrinho';
-import CustomizacoesComunicacao from '@/components/franqueada/customizacoes/CustomizacoesComunicacao';
-import CustomizacoesAvancado from '@/components/franqueada/customizacoes/CustomizacoesAvancado';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { Sliders } from 'lucide-react';
+'use client';
 
-export default function CustomizacoesPage() {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+export default function CustomizacoesRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    toast.info('Redirecionando para a nova página de Configurações...', {
+      duration: 2000,
+    });
+
+    // Aguarda um pouco para o usuário ver a mensagem
+    setTimeout(() => {
+      router.replace('/revendedora-pro/loja');
+    }, 500);
+  }, [router]);
+
   return (
-    <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Personalizacao"
-        subtitle="Personalize completamente a aparencia e funcionalidades da sua loja"
-        icon={Sliders}
-      />
-
-      <Tabs defaultValue="header" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 lg:w-auto h-auto">
-          <TabsTrigger value="header" className="text-xs sm:text-sm">Header e Menu</TabsTrigger>
-          <TabsTrigger value="home" className="text-xs sm:text-sm">Pagina Inicial</TabsTrigger>
-          <TabsTrigger value="produtos" className="text-xs sm:text-sm">Produtos</TabsTrigger>
-          <TabsTrigger value="carrinho" className="text-xs sm:text-sm">Carrinho</TabsTrigger>
-          <TabsTrigger value="comunicacao" className="text-xs sm:text-sm">Comunicacao</TabsTrigger>
-          <TabsTrigger value="avancado" className="text-xs sm:text-sm">Avancado</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="header">
-          <CustomizacoesHeader />
-        </TabsContent>
-
-        <TabsContent value="home">
-          <CustomizacoesPaginaInicial />
-        </TabsContent>
-
-        <TabsContent value="produtos">
-          <CustomizacoesProdutos />
-        </TabsContent>
-
-        <TabsContent value="carrinho">
-          <CustomizacoesCarrinho />
-        </TabsContent>
-
-        <TabsContent value="comunicacao">
-          <CustomizacoesComunicacao />
-        </TabsContent>
-
-        <TabsContent value="avancado">
-          <CustomizacoesAvancado />
-        </TabsContent>
-      </Tabs>
+    <div className="flex h-screen items-center justify-center">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div>
+          <h2 className="text-xl font-semibold mb-2">
+            Página Atualizada!
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md">
+            As páginas de <strong>Personalização</strong> e{' '}
+            <strong>Configurações</strong> foram unificadas em uma única
+            página mais simples e eficiente.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
