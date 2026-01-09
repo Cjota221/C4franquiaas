@@ -12,7 +12,8 @@ import {
   Menu, 
   X, 
   Wallet,
-  ShoppingBag
+  ShoppingBag,
+  Tag
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -55,6 +56,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
       items: [
         { href: '/revendedora-pro/loja', label: 'Configuracoes', icon: Store },
         { href: '/revendedora-pro/customizacoes', label: 'Personalizacao', icon: Palette },
+        { href: '/revendedora-pro/promocoes', label: 'Promocoes', icon: Tag },
       ]
     },
     {
