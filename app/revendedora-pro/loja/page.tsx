@@ -347,8 +347,8 @@ export default function LojaPage() {
       {/* Header com botão de acesso à loja */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <PageHeader
-          title={loja ? 'Configuracoes da Loja' : 'Criar Loja'}
-          subtitle={loja ? 'Configure todos os aspectos da sua loja online' : 'Crie sua loja online personalizada e comece a vender'}
+          title={loja ? 'Configuracoes' : 'Criar Loja'}
+          subtitle={loja ? 'Gerencie suas informacoes pessoais e configuracoes da conta' : 'Configure sua conta para comecar'}
           icon={Store}
         />
         

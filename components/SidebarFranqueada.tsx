@@ -54,7 +54,6 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
     {
       title: 'Loja',
       items: [
-        { href: '/revendedora-pro/loja', label: 'Configuracoes', icon: Store },
         { href: '/revendedora-pro/customizacoes', label: 'Personalizacao', icon: Palette },
         { href: '/revendedora-pro/promocoes', label: 'Promocoes', icon: Tag },
       ]
@@ -63,6 +62,7 @@ export default function SidebarFranqueada({ franqueadaNome }: { franqueadaNome: 
       title: 'Conta',
       items: [
         { href: '/revendedora-pro/perfil', label: 'Meu Perfil', icon: User },
+        { href: '/revendedora-pro/loja', label: 'Configuracoes', icon: Store },
       ]
     }
   ];
