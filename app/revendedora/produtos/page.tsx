@@ -371,6 +371,32 @@ export default function ProdutosRevendedoraPage() {
         </div>
       </div>
 
+      {/* Botão destacado para aplicar margem em todos */}
+      <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-yellow-300" />
+              <h3 className="text-lg md:text-xl font-bold text-white">Configure sua margem de lucro rapidamente!</h3>
+            </div>
+            <p className="text-pink-50 text-sm md:text-base">
+              Selecione todos os produtos e aplique a mesma margem de uma vez. Economize tempo!
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedIds(new Set(produtos.map(p => p.id)));
+              setShowModalMargem(true);
+            }}
+            className="w-full md:w-auto px-6 py-3 bg-white text-pink-600 rounded-lg font-bold hover:bg-pink-50 transition-all shadow-md hover:shadow-xl flex items-center justify-center gap-2"
+            style={{ minHeight: '44px' }}
+          >
+            <Percent className="w-5 h-5" />
+            <span>Aplicar Margem em Todos</span>
+          </button>
+        </div>
+      </div>
+
       {/* 🆕 Card de Produtos Novos (se houver) */}
       {stats.novos > 0 && (
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6 text-white">

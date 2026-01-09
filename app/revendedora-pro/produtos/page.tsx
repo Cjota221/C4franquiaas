@@ -156,16 +156,53 @@ export default function RevendedoraProProdutosPage() {
 
   return (
     <div className="p-4 lg:p-6 space-y-4 pb-32 lg:pb-6 w-full">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-pink-100 rounded-lg"><Package className="w-6 h-6 text-pink-600" /></div>
-        <div><h1 className="text-xl font-bold text-gray-900">Produtos</h1><p className="text-sm text-gray-500">Gerencie margens de lucro e disponibilidade dos produtos na sua loja</p></div>
+      {/* Header */}
+      <div className="mb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Produtos</h1>
+        <p className="text-sm md:text-base text-gray-600">Gerencie margens de lucro e disponibilidade dos produtos na sua loja</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl border border-gray-200 p-4"><div className="flex items-center gap-3"><div className="p-2 bg-blue-50 rounded-lg"><Package className="w-5 h-5 text-blue-600" /></div><div><p className="text-2xl font-bold text-gray-900">{stats.total}</p><p className="text-xs text-gray-500">Total de Produtos</p></div></div></div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4"><div className="flex items-center gap-3"><div className="p-2 bg-yellow-50 rounded-lg"><AlertCircle className="w-5 h-5 text-yellow-600" /></div><div><p className="text-2xl font-bold text-yellow-600">{stats.semMargem}</p><p className="text-xs text-gray-500">Sem Margem</p><p className="text-[10px] text-gray-400">Precisam de configuracao</p></div></div></div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4"><div className="flex items-center gap-3"><div className="p-2 bg-purple-50 rounded-lg"><TrendingUp className="w-5 h-5 text-purple-600" /></div><div><p className="text-2xl font-bold text-purple-600">{stats.prontos}</p><p className="text-xs text-gray-500">Prontos para Ativar</p></div></div></div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4"><div className="flex items-center gap-3"><div className="p-2 bg-green-50 rounded-lg"><CheckCircle className="w-5 h-5 text-green-600" /></div><div><p className="text-2xl font-bold text-green-600">{stats.ativos}</p><p className="text-xs text-gray-500">Ativos no Site</p></div></div></div>
+      {/* Cards de Estatísticas - 2x2 no mobile, 4 colunas no desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs md:text-sm text-gray-600">Total</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-900">{stats.total}</p>
+            </div>
+            <Package className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs md:text-sm text-gray-600">Sem Margem</p>
+              <p className="text-xl md:text-2xl font-bold text-yellow-600">{stats.semMargem}</p>
+            </div>
+            <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs md:text-sm text-gray-600">Prontos</p>
+              <p className="text-xl md:text-2xl font-bold text-purple-600">{stats.prontos}</p>
+            </div>
+            <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-purple-500" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs md:text-sm text-gray-600">Ativos</p>
+              <p className="text-xl md:text-2xl font-bold text-green-600">{stats.ativos}</p>
+            </div>
+            <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
+          </div>
+        </div>
       </div>
 
       {/* Botão destacado para aplicar margem em todos */}
