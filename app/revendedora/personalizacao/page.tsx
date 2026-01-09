@@ -105,7 +105,6 @@ export default function PersonalizacaoRevendedoraPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [bannerMobileUrl, setBannerMobileUrl] = useState("");
-  const [bannerSubmissions, setBannerSubmissions] = useState<{banner_type: string; status: string}[]>([]);
   const [primaryColor, setPrimaryColor] = useState("#ec4899");
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
