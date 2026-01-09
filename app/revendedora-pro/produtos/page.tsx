@@ -43,87 +43,28 @@ export default function RevendedoraProProdutosPage() {
       setLoading(true);
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('[RevendedoraPro/Produtos] User:', user?.id);
       if (!user) return;
-      
-      const { data: franqueada, error: franqueadaError } = await supabase.from('franqueadas').select('id').eq('user_id', user.id).single();
-      console.log('[RevendedoraPro/Produtos] Franqueada:', franqueada, 'Error:', franqueadaError);
+      const { data: franqueada } = await supabase.from('franqueadas').select('id').eq('user_id', user.id).single();
       if (!franqueada) return;
-      
       const { data: loja } = await supabase.from('lojas').select('dominio').eq('franqueada_id', franqueada.id).single();
-      console.log('[RevendedoraPro/Produtos] Loja:', loja);
       if (loja?.dominio) setFranqueadaDominio(loja.dominio);
-      
-      // Buscar vinculações
-      const { data: vinculacoes, error: vinculacoesError } = await supabase
-        .from('produtos_franqueadas')
-        .select('id, produto_id, ativo')
+      const { data: vinculacoes } = await supabase.from('produtos_franqueadas')
+        .select('id, produto_id, produtos:produto_id (id, nome, preco_base, estoque, ativo, imagem, created_at, produto_categorias (categorias (nome)))')
         .eq('franqueada_id', franqueada.id);
-      
-      console.log('[RevendedoraPro/Produtos] Vinculacoes:', vinculacoes?.length, 'Error:', vinculacoesError);
-      
-      if (!vinculacoes || vinculacoes.length === 0) { 
-        console.log('[RevendedoraPro/Produtos] Nenhuma vinculacao encontrada');
-        setProdutos([]); 
-        return; 
-      }
-      
-      // Buscar produtos separadamente
-      const produtoIds = vinculacoes.map(v => v.produto_id);
-      console.log('[RevendedoraPro/Produtos] Produto IDs:', produtoIds);
-      
-      const { data: produtosData, error: produtosError } = await supabase
-        .from('produtos')
-        .select('id, nome, preco_base, estoque, ativo, imagem, created_at, produto_categorias (categorias (nome))')
-        .in('id', produtoIds);
-      
-      console.log('[RevendedoraPro/Produtos] Produtos:', produtosData?.length, 'Error:', produtosError);
-      
-      if (!produtosData || produtosData.length === 0) { 
-        console.log('[RevendedoraPro/Produtos] Nenhum produto encontrado');
-        setProdutos([]); 
-        return; 
-      }
-      
-      // Buscar preços
+      if (!vinculacoes || vinculacoes.length === 0) { setProdutos([]); return; }
       const vinculacaoIds = vinculacoes.map(v => v.id);
       const { data: precos } = await supabase.from('produtos_franqueadas_precos').select('*').in('produto_franqueada_id', vinculacaoIds);
-      console.log('[RevendedoraPro/Produtos] Precos:', precos?.length);
-      
-      // Formatar produtos
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const produtosFormatados = vinculacoes.map((v: any) => {
-        // Encontrar o produto correspondente
-        const produto = produtosData.find(p => p.id === v.produto_id);
+        const produto = Array.isArray(v.produtos) ? v.produtos[0] : v.produtos;
         if (!produto) return null;
-        
         const preco = precos?.find(p => p.produto_franqueada_id === v.id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const categorias = produto.produto_categorias?.map((pc: any) => pc.categorias?.nome).filter(Boolean).join(', ') || 'Sem categoria';
         let margemPercentual = 0, precoFinal = produto.preco_base || 0;
-        if (preco?.ajuste_tipo === 'porcentagem' && preco?.ajuste_valor) { 
-          margemPercentual = preco.ajuste_valor; 
-          precoFinal = (produto.preco_base || 0) * (1 + preco.ajuste_valor / 100); 
-        } else if (preco?.ajuste_tipo === 'fixo' && preco?.ajuste_valor) { 
-          precoFinal = (produto.preco_base || 0) + preco.ajuste_valor; 
-          margemPercentual = produto.preco_base ? (preco.ajuste_valor / produto.preco_base) * 100 : 0; 
-        }
-        
-        return { 
-          id: String(produto.id), 
-          produto_franqueada_id: v.id, 
-          nome: produto.nome || '', 
-          preco_base: produto.preco_base || 0, 
-          margin_percent: margemPercentual, 
-          preco_final: precoFinal, 
-          is_active: preco?.ativo_no_site || false, 
-          estoque: produto.estoque || 0, 
-          imagem: produto.imagem || null, 
-          categorias, 
-          created_at: produto.created_at, 
-          produto_ativo: produto.ativo || false, 
-          pode_ativar: (produto.ativo || false) && (produto.estoque || 0) > 0 
-        } as ProdutoComMargem;
+        if (preco?.ajuste_tipo === 'porcentagem' && preco?.ajuste_valor) { margemPercentual = preco.ajuste_valor; precoFinal = (produto.preco_base || 0) * (1 + preco.ajuste_valor / 100); }
+        else if (preco?.ajuste_tipo === 'fixo' && preco?.ajuste_valor) { precoFinal = (produto.preco_base || 0) + preco.ajuste_valor; margemPercentual = produto.preco_base ? (preco.ajuste_valor / produto.preco_base) * 100 : 0; }
+        return { id: String(produto.id), produto_franqueada_id: v.id, nome: produto.nome || '', preco_base: produto.preco_base || 0, margin_percent: margemPercentual, preco_final: precoFinal, is_active: preco?.ativo_no_site || false, estoque: produto.estoque || 0, imagem: produto.imagem || null, categorias, created_at: produto.created_at, produto_ativo: produto.ativo || false, pode_ativar: (produto.ativo || false) && (produto.estoque || 0) > 0 } as ProdutoComMargem;
       }).filter((p): p is ProdutoComMargem => p !== null);
       setProdutos(produtosFormatados);
     } catch (err) { console.error('Erro:', err); } finally { setLoading(false); }
@@ -212,19 +153,10 @@ export default function RevendedoraProProdutosPage() {
     ativos: produtos.filter(p => p.is_active).length
   }), [produtos]);
 
-  if (loading) return (
-    <div className="p-4 lg:p-6">
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-pink-600 mx-auto mb-2" />
-          <p className="text-gray-600">Carregando produtos...</p>
-        </div>
-      </div>
-    </div>
-  );
+  if (loading) return (<div className="min-h-screen flex items-center justify-center"><div className="text-center"><Loader2 className="w-8 h-8 animate-spin text-pink-600 mx-auto mb-2" /><p className="text-gray-600">Carregando produtos...</p></div></div>);
 
   return (
-    <div className="p-4 lg:p-6 space-y-4 pb-32 lg:pb-6">
+    <div className="p-4 lg:p-6 space-y-4 pb-32 lg:pb-6 w-full">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-pink-100 rounded-lg"><Package className="w-6 h-6 text-pink-600" /></div>
         <div><h1 className="text-xl font-bold text-gray-900">Produtos</h1><p className="text-sm text-gray-500">Gerencie margens de lucro e disponibilidade dos produtos na sua loja</p></div>
