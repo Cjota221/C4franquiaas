@@ -22,7 +22,7 @@ interface LojaIdentidadeProps {
     fonte_principal: string;
     fonte_secundaria: string;
   };
-  onChange: (field: string, value: any) => void;
+  onChange: (field: string, value: string | File) => void;
   onUpload: (field: string, file: File) => Promise<void>;
 }
 

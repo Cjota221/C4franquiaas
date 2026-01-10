@@ -5,8 +5,16 @@ import { Sparkles, Upload, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BannerEditorFinal from "./BannerEditorFinal";
 
+interface BannerData {
+  templateId: string | null;
+  customDesktopUrl?: string;
+  customMobileUrl?: string;
+  titulo?: string;
+  subtitulo?: string;
+}
+
 interface BannerSelectorProps {
-  onSave: (bannerData: any) => Promise<void>;
+  onSave: (bannerData: BannerData) => Promise<void>;
   onCancel: () => void;
 }
 

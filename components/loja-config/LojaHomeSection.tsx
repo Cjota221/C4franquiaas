@@ -202,7 +202,7 @@ export default function LojaHomeSection({
               className="w-full resize-none"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Texto que aparece na seção "Sobre" da página inicial
+              Texto que aparece na seção &ldquo;Sobre&rdquo; da página inicial
             </p>
           </div>
         </CardContent>
@@ -237,7 +237,7 @@ export default function LojaHomeSection({
             <div className="text-center py-8 text-gray-500">
               <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Nenhum banner adicionado ainda</p>
-              <p className="text-xs mt-1">Clique em "Adicionar" para criar um banner</p>
+              <p className="text-xs mt-1">Clique em &ldquo;Adicionar&rdquo; para criar um banner</p>
             </div>
           ) : (
             <div className="space-y-4">
