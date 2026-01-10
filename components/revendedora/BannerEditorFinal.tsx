@@ -216,6 +216,12 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     try {
       console.log("📤 Enviando banner via API:", { type, fileName: file.name, size: file.size });
       
+      // Obter sessão do Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      
       // Criar FormData para enviar o arquivo
       const formData = new FormData();
       formData.append('file', file);
