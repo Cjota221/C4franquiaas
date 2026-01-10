@@ -207,34 +207,56 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     }
 
     // Validar tamanho (máximo 5MB)
+    console.log("🔵 [DEBUG] Iniciando upload", { type, fileName: file.name, size: file.size });
+    
     if (file.size > 5 * 1024 * 1024) {
+      console.error("❌ [DEBUG] Arquivo muito grande:", file.size);
       alert("A imagem deve ter no máximo 5MB.");
       return;
     }
 
     setUploading(true);
     try {
+      console.log("🔵 [DEBUG] Step 1: Pegando sessão...");
+      
       // Tentar pegar a sessão
       let session = null;
       try {
         const { data } = await supabase.auth.getSession();
         session = data.session;
+        console.log("✅ [DEBUG] Sessão obtida:", { 
+          hasSession: !!session, 
+          hasUser: !!session?.user,
+          userId: session?.user?.id 
+        });
       } catch (sessionError) {
-        console.warn("Erro ao pegar sessão, tentando refresh:", sessionError);
+        console.warn("⚠️ [DEBUG] Erro ao pegar sessão, tentando refresh:", sessionError);
         // Se falhar, tentar refresh
         await supabase.auth.refreshSession();
         const { data } = await supabase.auth.getSession();
         session = data.session;
+        console.log("✅ [DEBUG] Sessão obtida após refresh:", { 
+          hasSession: !!session, 
+          hasUser: !!session?.user 
+        });
       }
 
-      if (!session?.user) throw new Error("Usuário não autenticado. Faça login novamente.");
+      if (!session?.user) {
+        console.error("❌ [DEBUG] Usuário não autenticado!");
+        throw new Error("Usuário não autenticado. Faça login novamente.");
+      }
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${session.user.id}/banners/custom-${type}-${Date.now()}.${fileExt}`;
 
-      console.log("📤 Fazendo upload:", fileName);
+      console.log("� [DEBUG] Step 2: Fazendo upload...", { 
+        bucket: "banner-uploads",
+        fileName,
+        fileSize: file.size,
+        fileType: file.type
+      });
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("banner-uploads")
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -242,22 +264,37 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
         });
 
       if (uploadError) {
-        console.error("❌ Erro no upload:", uploadError);
+        console.error("❌ [DEBUG] Erro no upload:", {
+          error: uploadError,
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          details: uploadError
+        });
         throw uploadError;
       }
+
+      console.log("✅ [DEBUG] Upload bem-sucedido:", uploadData);
+
+      console.log("🔵 [DEBUG] Step 3: Pegando URL pública...");
 
       const { data: { publicUrl } } = supabase.storage
         .from("banner-uploads")
         .getPublicUrl(fileName);
+
+      console.log("✅ [DEBUG] URL pública obtida:", publicUrl);
 
       setCustomImages({
         ...customImages,
         [type]: publicUrl,
       });
 
-      console.log(`✅ Upload ${type} concluído:`, publicUrl);
+      console.log(`🎉 [DEBUG] Upload ${type} concluído com sucesso!`);
     } catch (error) {
-      console.error(`❌ Erro ao fazer upload ${type}:`, error);
+      console.error(`❌ [DEBUG] Erro geral no upload ${type}:`, {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       alert(`Erro ao fazer upload da imagem ${type}. Tente novamente.`);
     } finally {
       setUploading(false);
