@@ -1,11 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Criar cliente para verificar autenticação
     const supabase = await createClient()
 
-    // Verificar autenticação
+    // Verificar autenticação do usuário
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -17,6 +19,18 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [API] Usuário autenticado:', user.id)
+
+    // Criar cliente admin com service role key para upload
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Obter o arquivo do FormData
     const formData = await request.formData()
@@ -59,7 +73,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Upload usando service role (bypassa RLS)
-    const { data, error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabaseAdmin.storage
       .from('banner-uploads')
       .upload(filePath, buffer, {
         contentType: 'image/png',
@@ -77,7 +91,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ [API] Upload bem-sucedido:', data)
 
     // Obter URL pública
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabaseAdmin.storage
       .from('banner-uploads')
       .getPublicUrl(filePath)
 
