@@ -267,8 +267,8 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
         console.error("❌ [DEBUG] Erro no upload:", {
           error: uploadError,
           message: uploadError.message,
-          statusCode: uploadError.statusCode,
-          details: uploadError
+          name: uploadError.name,
+          details: JSON.stringify(uploadError)
         });
         throw uploadError;
       }
