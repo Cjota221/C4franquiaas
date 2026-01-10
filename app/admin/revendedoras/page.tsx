@@ -100,13 +100,34 @@ export default function AdminRevendedorasPage() {
         return !hasLogo && !hasBanner && !hasColors;
       }).length || 0;
       
+      // Calcular revendedoras sem margem (sem produtos com margem configurada)
+      let semMargem = 0;
+      if (data && data.length > 0) {
+        const resellerIds = data.map(r => r.id);
+        const { data: productsData } = await supabase
+          .from('reseller_products')
+          .select('reseller_id, margin_percent, custom_price')
+          .in('reseller_id', resellerIds)
+          .eq('is_active', true);
+        
+        // Agrupar por reseller_id e verificar se tem algum produto com margem
+        const resellersComMargem = new Set<string>();
+        productsData?.forEach(p => {
+          if (p.margin_percent || p.custom_price) {
+            resellersComMargem.add(p.reseller_id);
+          }
+        });
+        
+        semMargem = resellerIds.filter(id => !resellersComMargem.has(id)).length;
+      }
+      
       setStats({
         total,
         pendentes,
         aprovadas,
         ativas,
         semPersonalizacao,
-        semMargem: 0, // Será calculado depois se necessário
+        semMargem,
       });
     } catch (err) {
       console.error('Erro ao carregar estatísticas:', err);
@@ -438,52 +459,89 @@ export default function AdminRevendedorasPage() {
 
       <div className="max-w-[1800px] mx-auto px-4 md:px-6 py-6 space-y-6">
         {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard 
-            label="Total" 
+            label="Total de Revendedoras" 
+            sublabel="Todas cadastradas"
             value={stats.total} 
             icon={<Users className="w-5 h-5" />}
-            color="blue"
+            color="slate"
+            isActive={filtroStatus === 'todas' && filtroAtivacao === 'todos'}
+            onClick={() => {
+              setFiltroStatus('todas');
+              setFiltroAtivacao('todos');
+            }}
           />
           <StatCard 
-            label="Pendentes" 
+            label="Pendentes de Aprovação" 
+            sublabel="Aguardando análise"
             value={stats.pendentes} 
             icon={<Clock className="w-5 h-5" />}
-            color="yellow"
-            highlight={stats.pendentes > 0}
+            color="amber"
+            alert={stats.pendentes > 0}
+            isActive={filtroStatus === 'pendente'}
+            onClick={() => {
+              setFiltroStatus('pendente');
+              setFiltroAtivacao('todos');
+            }}
           />
           <StatCard 
-            label="Aprovadas" 
-            value={stats.aprovadas} 
-            icon={<CheckCircle className="w-5 h-5" />}
-            color="green"
-          />
-          <StatCard 
-            label="Ativas" 
+            label="Ativas no Sistema" 
+            sublabel="Com acesso liberado"
             value={stats.ativas} 
             icon={<ToggleRight className="w-5 h-5" />}
-            color="purple"
+            color="emerald"
+            isActive={filtroAtivacao === 'ativas'}
+            onClick={() => {
+              setFiltroStatus('aprovada');
+              setFiltroAtivacao('ativas');
+            }}
           />
           <StatCard 
-            label="Sem Personaliz." 
+            label="Sem Personalização" 
+            sublabel="Sem logo, cores ou banner"
             value={stats.semPersonalizacao} 
             icon={<Palette className="w-5 h-5" />}
             color="orange"
-            highlight={stats.semPersonalizacao > 0}
+            alert={stats.semPersonalizacao > 0}
+            isActive={filtroAtivacao === 'sem_personalizacao'}
+            onClick={() => {
+              setFiltroStatus('aprovada');
+              setFiltroAtivacao('sem_personalizacao');
+            }}
           />
           <StatCard 
-            label="Completas" 
-            value={stats.total - stats.semPersonalizacao} 
+            label="Sem Margem Configurada" 
+            sublabel="Nenhum produto com margem"
+            value={stats.semMargem} 
+            icon={<Percent className="w-5 h-5" />}
+            color="rose"
+            alert={stats.semMargem > 0}
+            isActive={filtroAtivacao === 'sem_margem'}
+            onClick={() => {
+              setFiltroStatus('aprovada');
+              setFiltroAtivacao('sem_margem');
+            }}
+          />
+          <StatCard 
+            label="Setup Completo" 
+            sublabel="Logo, banner, cores e margem"
+            value={stats.total - stats.semPersonalizacao - stats.semMargem} 
             icon={<Target className="w-5 h-5" />}
-            color="emerald"
+            color="indigo"
+            isActive={filtroAtivacao === 'completas'}
+            onClick={() => {
+              setFiltroStatus('aprovada');
+              setFiltroAtivacao('completas');
+            }}
           />
         </div>
 
         {/* Filtros */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-4">
           {/* Filtros de Status */}
           <div>
-            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Status do Cadastro</p>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Status do Cadastro</p>
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'todas', label: 'Todas', icon: <Users className="w-4 h-4" /> },
@@ -494,10 +552,10 @@ export default function AdminRevendedorasPage() {
                 <button
                   key={value}
                   onClick={() => setFiltroStatus(value as FiltroStatus)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     filtroStatus === value
-                      ? 'bg-[#DB1472] text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-[#DB1472] text-white shadow-md shadow-[#DB1472]/20'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
                   {icon}
@@ -509,27 +567,27 @@ export default function AdminRevendedorasPage() {
 
           {/* Filtros de Ativação */}
           <div>
-            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Filtros Rápidos</p>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Filtros Operacionais</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'todos', label: 'Todos', icon: '📋' },
-                { value: 'ativas', label: 'Ativas', icon: '✅' },
-                { value: 'inativas', label: 'Inativas', icon: '⏸️' },
-                { value: 'completas', label: 'Completas', icon: '🎯' },
-                { value: 'personalizadas', label: 'Personalizadas', icon: '🎨' },
-                { value: 'sem_personalizacao', label: 'Sem Personalização', icon: '⚠️' },
+                { value: 'todos', label: 'Todas', icon: <Users className="w-4 h-4" /> },
+                { value: 'ativas', label: 'Ativas', icon: <ToggleRight className="w-4 h-4" /> },
+                { value: 'inativas', label: 'Inativas', icon: <XCircle className="w-4 h-4" /> },
+                { value: 'sem_personalizacao', label: 'Sem Personalização', icon: <Palette className="w-4 h-4" /> },
                 { value: 'sem_margem', label: 'Sem Margem', icon: <Percent className="w-4 h-4" /> },
+                { value: 'completas', label: 'Setup Completo', icon: <Target className="w-4 h-4" /> },
+                { value: 'personalizadas', label: 'Personalizadas', icon: <CheckCircle className="w-4 h-4" /> },
               ].map(({ value, label, icon }) => (
                 <button
                   key={value}
                   onClick={() => setFiltroAtivacao(value as FiltroAtivacao)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     filtroAtivacao === value
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
-                  {typeof icon === 'string' ? <span>{icon}</span> : icon}
+                  {icon}
                   {label}
                 </button>
               ))}
@@ -594,38 +652,109 @@ export default function AdminRevendedorasPage() {
 
 // Componente de Card de Estatística
 function StatCard({ 
-  label, 
+  label,
+  sublabel,
   value, 
   icon, 
   color, 
-  highlight = false 
+  alert = false,
+  isActive = false,
+  onClick
 }: { 
-  label: string; 
+  label: string;
+  sublabel: string;
   value: number; 
   icon: React.ReactNode; 
-  color: 'blue' | 'yellow' | 'green' | 'purple' | 'orange' | 'emerald'; 
-  highlight?: boolean;
+  color: 'slate' | 'amber' | 'emerald' | 'orange' | 'rose' | 'indigo'; 
+  alert?: boolean;
+  isActive?: boolean;
+  onClick?: () => void;
 }) {
   const colorClasses = {
-    blue: 'border-blue-500 bg-blue-50 text-blue-700',
-    yellow: 'border-yellow-500 bg-yellow-50 text-yellow-700',
-    green: 'border-green-500 bg-green-50 text-green-700',
-    purple: 'border-purple-500 bg-purple-50 text-purple-700',
-    orange: 'border-orange-500 bg-orange-50 text-orange-700',
-    emerald: 'border-emerald-500 bg-emerald-50 text-emerald-700',
+    slate: {
+      border: 'border-slate-200',
+      bg: isActive ? 'bg-slate-100' : 'bg-white',
+      text: 'text-slate-700',
+      icon: 'text-slate-600',
+      hover: 'hover:bg-slate-50',
+      ring: isActive ? 'ring-2 ring-slate-400' : ''
+    },
+    amber: {
+      border: 'border-amber-200',
+      bg: isActive ? 'bg-amber-50' : 'bg-white',
+      text: 'text-amber-900',
+      icon: 'text-amber-600',
+      hover: 'hover:bg-amber-50',
+      ring: isActive ? 'ring-2 ring-amber-400' : alert ? 'ring-2 ring-amber-300 animate-pulse' : ''
+    },
+    emerald: {
+      border: 'border-emerald-200',
+      bg: isActive ? 'bg-emerald-50' : 'bg-white',
+      text: 'text-emerald-900',
+      icon: 'text-emerald-600',
+      hover: 'hover:bg-emerald-50',
+      ring: isActive ? 'ring-2 ring-emerald-400' : ''
+    },
+    orange: {
+      border: 'border-orange-200',
+      bg: isActive ? 'bg-orange-50' : 'bg-white',
+      text: 'text-orange-900',
+      icon: 'text-orange-600',
+      hover: 'hover:bg-orange-50',
+      ring: isActive ? 'ring-2 ring-orange-400' : alert ? 'ring-2 ring-orange-300' : ''
+    },
+    rose: {
+      border: 'border-rose-200',
+      bg: isActive ? 'bg-rose-50' : 'bg-white',
+      text: 'text-rose-900',
+      icon: 'text-rose-600',
+      hover: 'hover:bg-rose-50',
+      ring: isActive ? 'ring-2 ring-rose-400' : alert ? 'ring-2 ring-rose-300' : ''
+    },
+    indigo: {
+      border: 'border-indigo-200',
+      bg: isActive ? 'bg-indigo-50' : 'bg-white',
+      text: 'text-indigo-900',
+      icon: 'text-indigo-600',
+      hover: 'hover:bg-indigo-50',
+      ring: isActive ? 'ring-2 ring-indigo-400' : ''
+    },
   };
 
+  const styles = colorClasses[color];
+
   return (
-    <div className={`rounded-lg border-l-4 p-4 ${colorClasses[color]} ${highlight ? 'ring-2 ring-offset-1 ring-yellow-400' : ''}`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium opacity-80">{label}</p>
-          <p className="text-2xl font-bold">{value}</p>
+    <button
+      onClick={onClick}
+      className={`
+        relative rounded-xl border-2 p-4 text-left transition-all duration-200
+        ${styles.border} ${styles.bg} ${styles.hover} ${styles.ring}
+        hover:shadow-md cursor-pointer
+        ${isActive ? 'shadow-lg' : 'shadow-sm'}
+      `}
+    >
+      {isActive && (
+        <div className="absolute top-2 right-2">
+          <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
         </div>
-        <div className="opacity-60">
+      )}
+      
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className={`text-xs font-semibold mb-1 ${styles.text} opacity-70 uppercase tracking-wide`}>
+            {label}
+          </p>
+          <p className={`text-3xl font-bold mb-1 ${styles.text}`}>
+            {value}
+          </p>
+          <p className={`text-xs ${styles.text} opacity-60`}>
+            {sublabel}
+          </p>
+        </div>
+        <div className={`${styles.icon} opacity-70 flex-shrink-0`}>
           {icon}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
