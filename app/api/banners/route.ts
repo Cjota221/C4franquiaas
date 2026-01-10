@@ -218,23 +218,25 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (action === 'approve') {
-      // Buscar o template para obter as URLs padrão
-      const { data: template } = await supabase
-        .from('banner_templates')
-        .select('desktop_url, mobile_url')
-        .eq('id', submission.template_id)
-        .single()
+      let finalDesktopUrl = submission.desktop_final_url
+      let finalMobileUrl = submission.mobile_final_url
       
-      if (!template) {
-        return NextResponse.json(
-          { error: 'Template não encontrado' },
-          { status: 404 }
-        )
+      // Se o banner usa template, buscar as URLs do template como fallback
+      if (submission.template_id) {
+        const { data: template } = await supabase
+          .from('banner_templates')
+          .select('desktop_url, mobile_url')
+          .eq('id', submission.template_id)
+          .single()
+        
+        if (template) {
+          // Usar URLs customizadas se existirem, senão usar as do template
+          finalDesktopUrl = submission.desktop_final_url || template.desktop_url
+          finalMobileUrl = submission.mobile_final_url || template.mobile_url
+        }
       }
-      
-      // Usar URLs customizadas se existirem, senão usar as do template
-      const finalDesktopUrl = submission.desktop_final_url || template.desktop_url
-      const finalMobileUrl = submission.mobile_final_url || template.mobile_url
+      // Se não tem template_id, é um banner 100% customizado (uploaded)
+      // Usa apenas as URLs custom que já estão na submission
       
       // Aprovar: atualizar status e confirmar as URLs finais
       const { error: updateError } = await supabase
