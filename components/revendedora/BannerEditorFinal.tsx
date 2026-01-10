@@ -213,7 +213,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     //@ts-expect-error - Função legado será removida
     setUploading(true);
     try {
-      console.log("ðŸ"¤ Enviando banner via API:", { type, fileName: file.name, size: file.size });
+      console.log("¤ Enviando banner via API:", { type, fileName: file.name, size: file.size });
       
       // Obter sessão do Supabase
       const { data: { session } } = await supabase.auth.getSession();
@@ -238,11 +238,11 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
       const result = await response.json();
 
       if (!response.ok) {
-        console.error("âŒ Erro na API:", result);
+        console.error(" Erro na API:", result);
         throw new Error(result.error || 'Erro ao fazer upload');
       }
 
-      console.log("âœ… Upload bem-sucedido via API:", result);
+      console.log("… Upload bem-sucedido via API:", result);
 
       //@ts-expect-error - Função legado será removida
       setCustomImages({
@@ -250,9 +250,9 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
         [type]: result.url,
       });
 
-      console.log(`ðŸŽ‰ Upload ${type} concluÃ­do com sucesso!`);
+      console.log(`‰ Upload ${type} concluÃ­do com sucesso!`);
     } catch (error) {
-      console.error(`âŒ Erro no upload ${type}:`, error);
+      console.error(` Erro no upload ${type}:`, error);
       alert(`Erro ao fazer upload da imagem ${type}. Tente novamente.`);
     } finally {
       //@ts-expect-error - Função legado será removida
