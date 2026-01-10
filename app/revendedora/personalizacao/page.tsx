@@ -324,9 +324,8 @@ export default function PersonalizacaoRevendedoraPage() {
           console.log(" DADOS RECEBIDOS DO EDITOR:", bannerData);
 
           // Preparar dados para salvar
-          const dataToInsert = {
+          const dataToInsert: Record<string, string | number | null> = {
           user_id: user.id,
-          template_id: bannerData.templateId,
           titulo: bannerData.titulo,
           subtitulo: bannerData.subtitulo,
           texto_adicional: bannerData.textoAdicional,
@@ -346,6 +345,11 @@ export default function PersonalizacaoRevendedoraPage() {
           mobile_final_url: bannerData.customMobileUrl || null,
           status: "pending",
           };
+
+          // Só incluir template_id se não for null (banners customizados não têm template)
+          if (bannerData.templateId) {
+            dataToInsert.template_id = bannerData.templateId;
+          }
 
           console.log(" DADOS PARA INSERIR NO BANCO:", dataToInsert);
 
