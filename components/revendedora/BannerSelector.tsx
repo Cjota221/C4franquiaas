@@ -20,6 +20,8 @@ interface BannerData {
   mobileAlignment?: string;
   desktopFontSize?: number;
   mobileFontSize?: number;
+  lineSpacing?: number;
+  letterSpacing?: number;
 }
 
 interface BannerSelectorProps {
