@@ -24,8 +24,8 @@ interface BannerData {
   mobilePosition: { x: number; y: number };
   desktopAlignment: "left" | "center" | "right";
   mobileAlignment: "left" | "center" | "right";
-  lineSpacing: number; // Espaçamento entre linhas (gap)
-  letterSpacing: number; // Espaçamento entre letras
+  lineSpacing: number; // Espaï¿½amento entre linhas (gap)
+  letterSpacing: number; // Espaï¿½amento entre letras
   desktopFontSize: number; // Escala de tamanho da fonte no desktop (%)
   mobileFontSize: number; // Escala de tamanho da fonte no mobile (%)
   textColor: string; // Cor do texto (hex)
@@ -38,10 +38,10 @@ interface BannerEditorProps {
   onCancel: () => void;
 }
 
-// Combinações harmônicas de fontes (título + corpo)
+// Combinaï¿½ï¿½es harmï¿½nicas de fontes (tï¿½tulo + corpo)
 const FONT_COMBINATIONS = [
   { 
-    name: "Elegante Clássica", 
+    name: "Elegante Clï¿½ssica", 
     title: "Playfair Display", 
     body: "Lato",
     titleWeight: "700",
@@ -54,7 +54,7 @@ const FONT_COMBINATIONS = [
     body: "Open Sans",
     titleWeight: "600",
     bodyWeight: "400",
-    style: "Geométrica e Profissional"
+    style: "Geomï¿½trica e Profissional"
   },
   { 
     name: "Impacto Total", 
@@ -73,7 +73,7 @@ const FONT_COMBINATIONS = [
     style: "Delicada e Refinada"
   },
   { 
-    name: "Retrô Divertida", 
+    name: "Retrï¿½ Divertida", 
     title: "Lobster", 
     body: "Lato",
     titleWeight: "400",
@@ -89,12 +89,12 @@ const FONT_COMBINATIONS = [
     style: "Condensada e Arrojada"
   },
   { 
-    name: "Clássica Séria", 
+    name: "Clï¿½ssica Sï¿½ria", 
     title: "Merriweather", 
     body: "Open Sans",
     titleWeight: "700",
     bodyWeight: "400",
-    style: "Tradicional e Confiável"
+    style: "Tradicional e Confiï¿½vel"
   },
   { 
     name: "Super Forte", 
@@ -102,7 +102,7 @@ const FONT_COMBINATIONS = [
     body: "Roboto",
     titleWeight: "400",
     bodyWeight: "400",
-    style: "Máximo Impacto"
+    style: "Mï¿½ximo Impacto"
   },
 ];
 
@@ -114,7 +114,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"desktop" | "mobile">("mobile");
   const [showBackground, setShowBackground] = useState(true); // Toggle para mostrar/ocultar fundo
-  const [uploadMode, setUploadMode] = useState<"template" | "custom">("template"); // Modo de seleção
+  const [uploadMode, setUploadMode] = useState<"template" | "custom">("template"); // Modo de seleï¿½ï¿½o
   const [customImages, setCustomImages] = useState<{ desktop: string | null; mobile: string | null }>({ desktop: null, mobile: null });
   const [uploading, setUploading] = useState(false);
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -130,18 +130,18 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     mobilePosition: { x: 50, y: 15 }, // Centro superior
     desktopAlignment: "center",
     mobileAlignment: "center",
-    lineSpacing: 4, // 4px de espaçamento inicial
-    letterSpacing: 0, // sem espaçamento extra inicial
-    desktopFontSize: 100, // 100% = tamanho padrão
+    lineSpacing: 4, // 4px de espaï¿½amento inicial
+    letterSpacing: 0, // sem espaï¿½amento extra inicial
+    desktopFontSize: 100, // 100% = tamanho padrï¿½o
     mobileFontSize: 120, // 120% = maior no mobile
-    textColor: "#FFFFFF", // Branco padrão
+    textColor: "#FFFFFF", // Branco padrï¿½o
   });
 
   // Carregar Google Fonts dinamicamente
   useEffect(() => {
     const combo = FONT_COMBINATIONS.find(f => f.name === bannerData.fontFamily);
     if (combo) {
-      // Carregar fonte do título
+      // Carregar fonte do tï¿½tulo
       const titleLink = document.createElement('link');
       titleLink.href = `https://fonts.googleapis.com/css2?family=${combo.title.replace(' ', '+')}:wght@${combo.titleWeight}&display=swap`;
       titleLink.rel = 'stylesheet';
@@ -255,7 +255,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
   const handleSave = async () => {
     if (!bannerData.titulo) {
-      alert("Por favor, preencha pelo menos o título!");
+      alert("Por favor, preencha pelo menos o tï¿½tulo!");
       return;
     }
 
@@ -264,7 +264,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
     setSaving(true);
     try {
-      // Arredondar todos os valores numéricos antes de salvar
+      // Arredondar todos os valores numï¿½ricos antes de salvar
       const dataToSave = {
         ...bannerData,
         desktopPosition: {
@@ -340,7 +340,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              ?? Fazer Upload Próprio
+              ?? Fazer Upload Prï¿½prio
             </button>
           </div>
 
@@ -352,7 +352,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
               {templates.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <p className="text-gray-600">
-                    Nenhum banner disponível no momento.
+                    Nenhum banner disponï¿½vel no momento.
                   </p>
                 </div>
               ) : (
@@ -395,7 +395,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                   ?? Fazer Upload do Seu Banner
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Faça upload das versões Desktop e Mobile do seu banner personalizado.
+                  Faï¿½a upload das versï¿½es Desktop e Mobile do seu banner personalizado.
                 </p>
                 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -487,7 +487,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8">
-            {/* Coluna Esquerda - Controles (ROLÁVEL) - ORDER 2 no mobile */}
+            {/* Coluna Esquerda - Controles (ROLï¿½VEL) - ORDER 2 no mobile */}
             <div className="order-2 lg:order-1 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-4 pb-20 
                           scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-gray-100 
                           hover:scrollbar-thumb-pink-400">
@@ -496,10 +496,10 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                   ?? Textos (sempre em 1 linha)
                 </h3>
 
-                {/* Título */}
+                {/* Tï¿½tulo */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
-                    Título Principal *
+                    Tï¿½tulo Principal *
                   </label>
                   <input
                     type="text"
@@ -510,14 +510,14 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     maxLength={40}
                   />
                   <p className="text-xs text-gray-500">
-                    {bannerData.titulo.length}/40 • Fonte ajusta automaticamente
+                    {bannerData.titulo.length}/40 ï¿½ Fonte ajusta automaticamente
                   </p>
                 </div>
 
-                {/* Subtítulo */}
+                {/* Subtï¿½tulo */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
-                    Subtítulo
+                    Subtï¿½tulo
                   </label>
                   <input
                     type="text"
@@ -541,7 +541,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     type="text"
                     value={bannerData.textoAdicional}
                     onChange={(e) => setBannerData({ ...bannerData, textoAdicional: e.target.value })}
-                    placeholder="Ex: conheça nossa coleção completa"
+                    placeholder="Ex: conheï¿½a nossa coleï¿½ï¿½o completa"
                     className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                     maxLength={60}
                   />
@@ -642,7 +642,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     />
                     <div className="flex justify-between text-xs text-gray-400">
                       <span>70% (Menor)</span>
-                      <span>100% (Padrão)</span>
+                      <span>100% (Padrï¿½o)</span>
                       <span>150% (Maior)</span>
                     </div>
                   </div>
@@ -652,13 +652,13 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                 </div>
               </div>
 
-              {/* Espaçamentos */}
+              {/* Espaï¿½amentos */}
               <div className="bg-white rounded-xl border-2 border-gray-200 p-6 space-y-4">
                 <h3 className="text-xl font-bold text-gray-900 pb-3 border-b">
-                  ?? Espaçamentos
+                  ?? Espaï¿½amentos
                 </h3>
                 
-                {/* Espaçamento entre linhas */}
+                {/* Espaï¿½amento entre linhas */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
                     Entre linhas: {bannerData.lineSpacing}px
@@ -672,11 +672,11 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     className="w-full"
                   />
                   <p className="text-xs text-gray-500">
-                    Espaço entre título, subtítulo e texto
+                    Espaï¿½o entre tï¿½tulo, subtï¿½tulo e texto
                   </p>
                 </div>
 
-                {/* Espaçamento entre letras */}
+                {/* Espaï¿½amento entre letras */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
                     Entre letras: {bannerData.letterSpacing}px
@@ -690,7 +690,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     className="w-full"
                   />
                   <p className="text-xs text-gray-500">
-                    Espaço entre cada letra do texto
+                    Espaï¿½o entre cada letra do texto
                   </p>
                 </div>
               </div>
@@ -702,7 +702,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                 </h3>
                 
                 <div className="space-y-4">
-                  {/* Paleta de cores pré-definidas */}
+                  {/* Paleta de cores prï¿½-definidas */}
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-3">
                       Cores populares:
@@ -759,7 +759,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                           maxLength={7}
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Código da cor (ex: #FFFFFF)
+                          Cï¿½digo da cor (ex: #FFFFFF)
                         </p>
                       </div>
                     </div>
@@ -777,10 +777,10 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                 </div>
               </div>
 
-              {/* Combinações de Fonte */}
+              {/* Combinaï¿½ï¿½es de Fonte */}
               <div className="bg-white rounded-xl border-2 border-gray-200 p-6 space-y-4">
                 <h3 className="text-xl font-bold text-gray-900 pb-3 border-b">
-                  ? Combinação de Fontes
+                  ? Combinaï¿½ï¿½o de Fontes
                 </h3>
                 
                 <div className="grid grid-cols-1 gap-3">
@@ -805,10 +805,10 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                       </div>
                       <div className="bg-gray-100 rounded p-3 space-y-1">
                         <p className="text-lg font-bold" style={{ fontFamily: combo.title, fontWeight: combo.titleWeight }}>
-                          Título Principal
+                          Tï¿½tulo Principal
                         </p>
                         <p className="text-sm" style={{ fontFamily: combo.body, fontWeight: combo.bodyWeight }}>
-                          Subtítulo e texto adicional
+                          Subtï¿½tulo e texto adicional
                         </p>
                       </div>
                     </button>
@@ -853,7 +853,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-yellow-600" />
                     <span className="text-sm font-medium text-gray-700">
-                      {showBackground ? "Modo Edição (com fundo)" : "Resultado Final (sem fundo)"}
+                      {showBackground ? "Modo Ediï¿½ï¿½o (com fundo)" : "Resultado Final (sem fundo)"}
                     </span>
                   </div>
                   <button
@@ -864,14 +864,14 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                         : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
-                    {showBackground ? "Ver Resultado Final" : "Voltar para Edição"}
+                    {showBackground ? "Ver Resultado Final" : "Voltar para Ediï¿½ï¿½o"}
                   </button>
                 </div>
               </div>
 
               <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-4 max-h-[calc(100vh-250px)] overflow-y-auto">
                 <p className="text-sm text-gray-600 mb-3 sticky top-0 bg-gray-100 pb-2">
-                  ?? {showBackground ? "Clique para mover o texto" : "Assim ficará no site"} (Desktop e Mobile independentes)
+                  ?? {showBackground ? "Clique para mover o texto" : "Assim ficarï¿½ no site"} (Desktop e Mobile independentes)
                 </p>
 
                 {activeView === "desktop" ? (
@@ -952,7 +952,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                               </p>
                             )}
                             {!bannerData.titulo && (
-                              <p className="text-white/50 text-sm">Digite o título ??</p>
+                              <p className="text-white/50 text-sm">Digite o tï¿½tulo ??</p>
                             )}
                           </>
                         );
@@ -1037,7 +1037,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                               </p>
                             )}
                             {!bannerData.titulo && (
-                              <p className="text-white/50 text-xs">Digite o título ??</p>
+                              <p className="text-white/50 text-xs">Digite o tï¿½tulo ??</p>
                             )}
                           </>
                         );
@@ -1049,7 +1049,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
             </div>
           </div>
 
-          {/* Botões de Ação */}
+          {/* Botï¿½es de Aï¿½ï¿½o */}
           <div className="flex justify-between pt-6 border-t">
             <button
               onClick={onCancel}
@@ -1070,7 +1070,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
               ) : (
                 <>
                   <Check className="w-5 h-5" />
-                  Enviar para Aprovação
+                  Enviar para Aprovaï¿½ï¿½o
                 </>
               )}
             </button>
