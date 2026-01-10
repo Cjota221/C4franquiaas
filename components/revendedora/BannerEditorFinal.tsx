@@ -224,6 +224,9 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
       // Fazer requisiÃ§Ã£o para a API
       const response = await fetch('/api/revendedora/banners/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': ```Bearer `${session.access_token}```
+        },
         body: formData
       });
 

@@ -1,19 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { getAuthUser } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    // Criar cliente para verificar autenticação
-    const supabase = await createClient()
-
-    // Verificar autenticação do usuário
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
+    const authHeader = request.headers.get('authorization')
+    
+    // Buscar usuário logado
+    const { user, error: authError } = await getAuthUser(authHeader)
+    
     if (authError || !user) {
       console.error('❌ [API] Erro de autenticação:', authError)
       return NextResponse.json(
-        { error: 'Não autenticado' },
+        { error: authError || 'Não autenticado' },
         { status: 401 }
       )
     }
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ [API] Usuário autenticado:', user.id)
 
     // Criar cliente admin com service role key para upload
-    const supabaseAdmin = createAdminClient(
+    const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
