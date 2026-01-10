@@ -218,7 +218,7 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (action === 'approve') {
-      // Buscar o template para obter as URLs
+      // Buscar o template para obter as URLs padrão
       const { data: template } = await supabase
         .from('banner_templates')
         .select('desktop_url, mobile_url')
@@ -232,15 +232,19 @@ export async function PATCH(request: NextRequest) {
         )
       }
       
-      // Aprovar: atualizar status e setar as URLs finais
+      // Usar URLs customizadas se existirem, senão usar as do template
+      const finalDesktopUrl = submission.desktop_final_url || template.desktop_url
+      const finalMobileUrl = submission.mobile_final_url || template.mobile_url
+      
+      // Aprovar: atualizar status e confirmar as URLs finais
       const { error: updateError } = await supabase
         .from('banner_submissions')
         .update({
           status: 'approved',
           approved_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          desktop_final_url: template.desktop_url,
-          mobile_final_url: template.mobile_url
+          desktop_final_url: finalDesktopUrl,
+          mobile_final_url: finalMobileUrl
         })
         .eq('id', submission_id)
       
@@ -251,13 +255,13 @@ export async function PATCH(request: NextRequest) {
         )
       }
       
-      // Atualizar o banner no reseller usando as URLs do template
+      // Atualizar o banner no reseller com as URLs finais (custom ou template)
       const updateData: { banner_url?: string; banner_mobile_url?: string } = {}
-      if (template.desktop_url) {
-        updateData.banner_url = template.desktop_url
+      if (finalDesktopUrl) {
+        updateData.banner_url = finalDesktopUrl
       }
-      if (template.mobile_url) {
-        updateData.banner_mobile_url = template.mobile_url
+      if (finalMobileUrl) {
+        updateData.banner_mobile_url = finalMobileUrl
       }
       
       if (Object.keys(updateData).length > 0) {
