@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import VideoTutorialButton from "@/components/VideoTutorialButton";
 import { Upload, Save, Smartphone, Monitor, Image as ImageIcon, Check, Loader2, X, Copy, ExternalLink, ChevronRight, Store, Brush, Share2, Camera, Sparkles, Heart, Palette, CircleIcon, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
-import BannerEditorFinal from "@/components/revendedora/BannerEditorFinal";
+import BannerSelector from "@/components/revendedora/BannerSelector";
 
 type ThemeSettings = {
   button_style: "rounded" | "square";
@@ -315,7 +315,7 @@ export default function PersonalizacaoRevendedoraPage() {
   if (showBannerEditor) {
     return (
       <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <BannerEditorFinal
+      <BannerSelector
         onSave={async (bannerData) => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
