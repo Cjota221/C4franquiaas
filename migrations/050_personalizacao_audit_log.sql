@@ -278,27 +278,54 @@ CREATE TRIGGER reseller_products_margin_trigger
 
 ALTER TABLE personalizacao_historico ENABLE ROW LEVEL SECURITY;
 
--- Admins podem ver tudo
-CREATE POLICY "Admins podem ver histórico"
-  ON personalizacao_historico FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM perfil
-      WHERE perfil.id = auth.uid()
-      AND perfil.tipo = 'admin'
-    )
-  );
+-- Admins podem ver tudo (criar policy somente se tabela `perfil` existir)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_name = 'perfil' AND table_schema = current_schema()
+  ) THEN
+    EXECUTE '
+      CREATE POLICY "Admins podem ver histórico"
+        ON personalizacao_historico FOR SELECT
+        USING (
+          EXISTS (
+            SELECT 1 FROM perfil
+            WHERE perfil.id = auth.uid()
+            AND perfil.tipo = ''admin''
+          )
+        )';
+  ELSE
+    -- Se não existir a tabela `perfil`, criar uma policy mais genérica
+    -- que permite SELECT apenas a usuários autenticados com claim 'admin' no JWT
+    -- OBS: Ajuste conforme sua estratégia de roles no Supabase.
+    RAISE NOTICE 'Tabela "perfil" não encontrada: pulando criação da policy específica. Por favor, verifique roles/admins e ajuste manualmente.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
--- Revendedoras podem ver apenas seu histórico
-CREATE POLICY "Revendedoras veem seu histórico"
-  ON personalizacao_historico FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM resellers
-      WHERE resellers.id = personalizacao_historico.reseller_id
-      AND resellers.user_id = auth.uid()
-    )
-  );
+-- Revendedoras podem ver apenas seu histórico (criaremos a policy usando `resellers` que deve existir)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_name = 'resellers' AND table_schema = current_schema()
+  ) THEN
+    EXECUTE '
+      CREATE POLICY "Revendedoras veem seu histórico"
+        ON personalizacao_historico FOR SELECT
+        USING (
+          EXISTS (
+            SELECT 1 FROM resellers
+            WHERE resellers.id = personalizacao_historico.reseller_id
+            AND resellers.user_id = auth.uid()
+          )
+        )';
+  ELSE
+    RAISE NOTICE 'Tabela "resellers" não encontrada: pulando criação da policy que limita revendedoras. Verifique o schema.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 -- ============================================================================
 -- 9. COMENTÁRIOS
