@@ -11,6 +11,15 @@ interface BannerData {
   customMobileUrl?: string;
   titulo?: string;
   subtitulo?: string;
+  textoAdicional?: string;
+  fontFamily?: string;
+  textColor?: string;
+  desktopPosition?: { x: number; y: number };
+  mobilePosition?: { x: number; y: number };
+  desktopAlignment?: string;
+  mobileAlignment?: string;
+  desktopFontSize?: number;
+  mobileFontSize?: number;
 }
 
 interface BannerSelectorProps {
