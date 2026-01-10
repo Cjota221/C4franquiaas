@@ -214,11 +214,25 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
     setUploading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error("Usuário não autenticado");
+      // Tentar pegar a sessão
+      let session = null;
+      try {
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+      } catch (sessionError) {
+        console.warn("Erro ao pegar sessão, tentando refresh:", sessionError);
+        // Se falhar, tentar refresh
+        await supabase.auth.refreshSession();
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+      }
+
+      if (!session?.user) throw new Error("Usuário não autenticado. Faça login novamente.");
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${session.user.id}/banners/custom-${type}-${Date.now()}.${fileExt}`;
+
+      console.log("📤 Fazendo upload:", fileName);
 
       const { error: uploadError } = await supabase.storage
         .from("banner-uploads")
@@ -227,7 +241,10 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("❌ Erro no upload:", uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from("banner-uploads")
