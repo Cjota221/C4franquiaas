@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
@@ -196,105 +196,54 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     });
   };
 
-  const handleCustomUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "desktop" | "mobile") => {
+    const handleCustomUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "desktop" | "mobile") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validar tipo de arquivo
     if (!file.type.startsWith("image/")) {
-      alert("Por favor, selecione uma imagem válida.");
+      alert("Por favor, selecione uma imagem vÃ¡lida.");
       return;
     }
 
-    // Validar tamanho (máximo 5MB)
-    console.log("🔵 [DEBUG] Iniciando upload", { type, fileName: file.name, size: file.size });
-    
+    // Validar tamanho (mÃ¡ximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      console.error("❌ [DEBUG] Arquivo muito grande:", file.size);
-      alert("A imagem deve ter no máximo 5MB.");
+      alert("A imagem deve ter no mÃ¡ximo 5MB.");
       return;
     }
 
     setUploading(true);
     try {
-      console.log("🔵 [DEBUG] Step 1: Pegando sessão...");
+      console.log("ðŸ“¤ Enviando banner via API:", { type, fileName: file.name, size: file.size });
       
-      // Tentar pegar a sessão
-      let session = null;
-      try {
-        const { data } = await supabase.auth.getSession();
-        session = data.session;
-        console.log("✅ [DEBUG] Sessão obtida:", { 
-          hasSession: !!session, 
-          hasUser: !!session?.user,
-          userId: session?.user?.id 
-        });
-      } catch (sessionError) {
-        console.warn("⚠️ [DEBUG] Erro ao pegar sessão, tentando refresh:", sessionError);
-        // Se falhar, tentar refresh
-        await supabase.auth.refreshSession();
-        const { data } = await supabase.auth.getSession();
-        session = data.session;
-        console.log("✅ [DEBUG] Sessão obtida após refresh:", { 
-          hasSession: !!session, 
-          hasUser: !!session?.user 
-        });
-      }
+      // Criar FormData para enviar o arquivo
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type === 'desktop' ? 'header' : 'footer');
 
-      if (!session?.user) {
-        console.error("❌ [DEBUG] Usuário não autenticado!");
-        throw new Error("Usuário não autenticado. Faça login novamente.");
-      }
-
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${session.user.id}/banners/custom-${type}-${Date.now()}.${fileExt}`;
-
-      console.log("� [DEBUG] Step 2: Fazendo upload...", { 
-        bucket: "banner-uploads",
-        fileName,
-        fileSize: file.size,
-        fileType: file.type
+      // Fazer requisiÃ§Ã£o para a API
+      const response = await fetch('/api/revendedora/banners/upload', {
+        method: 'POST',
+        body: formData
       });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("banner-uploads")
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      const result = await response.json();
 
-      if (uploadError) {
-        console.error("❌ [DEBUG] Erro no upload:", {
-          error: uploadError,
-          message: uploadError.message,
-          name: uploadError.name,
-          details: JSON.stringify(uploadError)
-        });
-        throw uploadError;
+      if (!response.ok) {
+        console.error("âŒ Erro na API:", result);
+        throw new Error(result.error || 'Erro ao fazer upload');
       }
 
-      console.log("✅ [DEBUG] Upload bem-sucedido:", uploadData);
-
-      console.log("🔵 [DEBUG] Step 3: Pegando URL pública...");
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("banner-uploads")
-        .getPublicUrl(fileName);
-
-      console.log("✅ [DEBUG] URL pública obtida:", publicUrl);
+      console.log("âœ… Upload bem-sucedido via API:", result);
 
       setCustomImages({
         ...customImages,
-        [type]: publicUrl,
+        [type]: result.url,
       });
 
-      console.log(`🎉 [DEBUG] Upload ${type} concluído com sucesso!`);
+      console.log(`ðŸŽ‰ Upload ${type} concluÃ­do com sucesso!`);
     } catch (error) {
-      console.error(`❌ [DEBUG] Erro geral no upload ${type}:`, {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      console.error(`âŒ Erro no upload ${type}:`, error);
       alert(`Erro ao fazer upload da imagem ${type}. Tente novamente.`);
     } finally {
       setUploading(false);
