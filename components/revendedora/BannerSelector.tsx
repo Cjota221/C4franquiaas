@@ -74,9 +74,9 @@ export default function BannerSelector({ onSave, onCancel }: BannerSelectorProps
         return;
       }
 
-      // Criar dados do banner customizado
+      // Criar dados do banner customizado (sem template)
       const bannerData = {
-        templateId: "custom", // ID especial para banners customizados
+        templateId: null, // Null para banners customizados (sem template)
         titulo: "",
         subtitulo: "",
         textoAdicional: "",
