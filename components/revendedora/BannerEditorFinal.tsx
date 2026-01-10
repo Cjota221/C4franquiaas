@@ -114,6 +114,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"desktop" | "mobile">("mobile");
   const [showBackground, setShowBackground] = useState(true); // Toggle para mostrar/ocultar fundo
+  const [customImages, setCustomImages] = useState<{ desktop: string | null; mobile: string | null }>({ desktop: null, mobile: null });
   const desktopRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
   
@@ -244,7 +245,6 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
       console.log("… Upload bem-sucedido via API:", result);
 
-      //@ts-expect-error - Função legado será removida
       setCustomImages({
         ...customImages,
         [type]: result.url,
@@ -267,7 +267,6 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
     }
 
     console.log("🔍 ESTADO BANNER DATA ANTES DE SALVAR:", bannerData);
-    //@ts-expect-error - Variável legado será removida
     console.log("🔍 CUSTOM IMAGES:", customImages);
 
     setSaving(true);
@@ -287,9 +286,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
         mobileFontSize: Math.round(bannerData.mobileFontSize),
         lineSpacing: Math.round(bannerData.lineSpacing),
         letterSpacing: Math.round(bannerData.letterSpacing),
-        //@ts-expect-error - Variável legado será removida
         customDesktopUrl: customImages.desktop || undefined,
-        //@ts-expect-error - Variável legado será removida
         customMobileUrl: customImages.mobile || undefined,
       };
       
@@ -377,7 +374,6 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
           <button
             onClick={() => {
               setSelectedTemplateId(null);
-              //@ts-expect-error - Função legado será removida
               setCustomImages({ desktop: null, mobile: null });
             }}
             className="text-pink-600 hover:text-pink-700 font-medium"
@@ -780,7 +776,6 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     className="relative rounded-lg overflow-hidden border-4 border-pink-300 shadow-xl cursor-crosshair"
                   >
                     <Image
-                      //@ts-expect-error - Variável legado será removida
                       src={selectedTemplate ? selectedTemplate.desktop_url : customImages.desktop!}
                       alt="Preview Desktop"
                       width={1920}
@@ -866,7 +861,6 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                     className="relative rounded-lg overflow-hidden border-4 border-purple-300 shadow-xl max-w-sm mx-auto cursor-crosshair"
                   >
                     <Image
-                      //@ts-expect-error - Variável legado será removida
                       src={selectedTemplate ? selectedTemplate.mobile_url : customImages.mobile!}
                       alt="Preview Mobile"
                       width={800}
