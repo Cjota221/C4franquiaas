@@ -188,6 +188,14 @@ export default function AdminRevendedorasPage() {
             .eq('reseller_id', r.id)
             .eq('is_active', true);
           
+          // Buscar produtos COM margem configurada (margin_percent OU custom_price)
+          const { count: produtosComMargem } = await supabase
+            .from('reseller_products')
+            .select('*', { count: 'exact', head: true })
+            .eq('reseller_id', r.id)
+            .eq('is_active', true)
+            .or('margin_percent.not.is.null,custom_price.not.is.null');
+          
           // Extrair cores
           let primaryColor = null;
           let secondaryColor = null;
@@ -221,7 +229,7 @@ export default function AdminRevendedorasPage() {
             has_logo: hasLogo,
             has_banner: hasBanner,
             has_colors: hasColors,
-            has_margin: totalProdutos ? totalProdutos > 0 : false,
+            has_margin: (produtosComMargem || 0) > 0,
             primary_color: primaryColor,
             logo_url: r.logo_url || null,
             banner_url: r.banner_url || null,
