@@ -72,4 +72,39 @@ ON storage.objects FOR DELETE
 TO authenticated
 USING (bucket_id = 'reseller-assets');
 
--- ✅ PRONTO! Ambos os buckets configurados corretamente
+-- ============================================
+-- BUCKET: BANNER-UPLOADS (Editor de Banners)
+-- ============================================
+
+-- Remover políticas antigas do bucket 'banner-uploads'
+DROP POLICY IF EXISTS "Banner uploads são públicos" ON storage.objects;
+DROP POLICY IF EXISTS "Usuários podem fazer upload de banners" ON storage.objects;
+DROP POLICY IF EXISTS "Usuários podem atualizar banners" ON storage.objects;
+DROP POLICY IF EXISTS "Usuários podem deletar banners" ON storage.objects;
+DROP POLICY IF EXISTS "Banner uploads - leitura" ON storage.objects;
+DROP POLICY IF EXISTS "Banner uploads - upload" ON storage.objects;
+DROP POLICY IF EXISTS "Banner uploads - update" ON storage.objects;
+DROP POLICY IF EXISTS "Banner uploads - delete" ON storage.objects;
+
+-- Criar políticas corretas para bucket 'banner-uploads'
+CREATE POLICY "Banner uploads - leitura" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'banner-uploads');
+
+CREATE POLICY "Banner uploads - upload" 
+ON storage.objects FOR INSERT 
+TO authenticated
+WITH CHECK (bucket_id = 'banner-uploads');
+
+CREATE POLICY "Banner uploads - update" 
+ON storage.objects FOR UPDATE 
+TO authenticated
+USING (bucket_id = 'banner-uploads')
+WITH CHECK (bucket_id = 'banner-uploads');
+
+CREATE POLICY "Banner uploads - delete" 
+ON storage.objects FOR DELETE 
+TO authenticated
+USING (bucket_id = 'banner-uploads');
+
+-- ✅ PRONTO! Todos os buckets configurados corretamente

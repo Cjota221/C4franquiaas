@@ -214,15 +214,18 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
     setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Usuário não autenticado");
 
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/banners/custom-${type}-${Date.now()}.${fileExt}`;
+      const fileName = `${session.user.id}/banners/custom-${type}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("banner-uploads")
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 

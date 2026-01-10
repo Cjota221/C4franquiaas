@@ -1,6 +1,7 @@
 # 🐛 CORREÇÕES URGENTES
 
 ## Problema 1: Upload de Logo não funciona
+
 ## Problema 2: Botão "Entrar" não aparece no login
 
 ---
@@ -8,6 +9,7 @@
 ## 🔧 CORREÇÃO 1: Upload de Logo
 
 ### Diagnóstico:
+
 - Erro: "Erro ao enviar imagem"
 - Causa: Bucket 'logos' não existe ou não tem permissões públicas
 
@@ -31,35 +33,35 @@ No **SQL Editor**, executar:
 
 ```sql
 -- Permitir que todos possam ver logos (public)
-CREATE POLICY "Logos são públicas" 
-ON storage.objects FOR SELECT 
+CREATE POLICY "Logos são públicas"
+ON storage.objects FOR SELECT
 USING (bucket_id = 'logos');
 
 -- Permitir que usuários autenticados façam upload
-CREATE POLICY "Usuários podem fazer upload de logos" 
-ON storage.objects FOR INSERT 
+CREATE POLICY "Usuários podem fazer upload de logos"
+ON storage.objects FOR INSERT
 WITH CHECK (
-  bucket_id = 'logos' 
+  bucket_id = 'logos'
   AND auth.role() = 'authenticated'
 );
 
 -- Permitir que usuários atualizem suas próprias logos
-CREATE POLICY "Usuários podem atualizar suas logos" 
-ON storage.objects FOR UPDATE 
+CREATE POLICY "Usuários podem atualizar suas logos"
+ON storage.objects FOR UPDATE
 USING (
-  bucket_id = 'logos' 
+  bucket_id = 'logos'
   AND auth.uid()::text = (storage.foldername(name))[1]
 )
 WITH CHECK (
-  bucket_id = 'logos' 
+  bucket_id = 'logos'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
 -- Permitir que usuários deletem suas próprias logos
-CREATE POLICY "Usuários podem deletar suas logos" 
-ON storage.objects FOR DELETE 
+CREATE POLICY "Usuários podem deletar suas logos"
+ON storage.objects FOR DELETE
 USING (
-  bucket_id = 'logos' 
+  bucket_id = 'logos'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 ```
@@ -76,6 +78,7 @@ USING (
 ## 🔧 CORREÇÃO 2: Botão "Entrar" não aparece
 
 ### Diagnóstico:
+
 - Usuária vê email e senha
 - Mas não vê o botão "Entrar"
 - Possível causa: CSS não carregou ou ela está em página diferente
@@ -93,11 +96,13 @@ USING (
 A revendedora deve acessar:
 
 **✅ URL CORRETA:**
+
 ```
 https://c4franquias.com/login/revendedora
 ```
 
 **❌ URLs ERRADAS (não usar):**
+
 - `https://c4franquias.com/login` (login antigo)
 - `https://c4franquias.com/franqueado/login` (login de franqueado)
 - `https://c4franquias.com/revendedora/login` (não existe)
@@ -111,12 +116,14 @@ Se o problema persistir, pode ser que o deploy não finalizou. Aguardar 2-3 minu
 ## 📋 Checklist de Verificação:
 
 ### Upload de Logo:
+
 - [ ] Bucket 'logos' criado no Supabase Storage
 - [ ] Bucket marcado como **Public**
 - [ ] Políticas RLS aplicadas
 - [ ] Testado upload de logo
 
 ### Login da Revendedora:
+
 - [ ] URL correta: `/login/revendedora`
 - [ ] Cache do navegador limpo
 - [ ] Botão "Acessar Minha Conta" apareceu
@@ -127,6 +134,7 @@ Se o problema persistir, pode ser que o deploy não finalizou. Aguardar 2-3 minu
 ## 🆘 Se ainda não funcionar:
 
 ### Para Upload de Logo:
+
 Execute este SQL para debug:
 
 ```sql
@@ -138,6 +146,7 @@ SELECT * FROM storage.policies WHERE bucket_id = 'logos';
 ```
 
 ### Para Login:
+
 1. Abrir Console do Navegador (F12)
 2. Ver se há erros em vermelho
 3. Tirar print e enviar para análise

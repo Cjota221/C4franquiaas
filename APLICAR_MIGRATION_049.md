@@ -26,7 +26,7 @@ Copiar e colar o seguinte código:
 -- ============================================================================
 
 -- STEP 1: Adicionar coluna margem_padrao (SEM valor padrão - revendedora escolhe)
-ALTER TABLE lojas 
+ALTER TABLE lojas
 ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT NULL;
 
 -- STEP 2: Comentário explicativo
@@ -44,8 +44,8 @@ Se aparecer "Success. No rows returned", está tudo certo! ✅
 Execute este SQL para confirmar:
 
 ```sql
-SELECT id, nome, margem_padrao 
-FROM lojas 
+SELECT id, nome, margem_padrao
+FROM lojas
 LIMIT 5;
 ```
 
@@ -54,6 +54,7 @@ Deve mostrar o campo `margem_padrao` com valor NULL (revendedoras precisarão co
 ## ⚠️ IMPORTANTE
 
 Após aplicar esta migration, você precisa:
+
 1. Atualizar a API de vinculação de produtos
 2. Adicionar campo no painel da revendedora
 3. Remover sistema de notificações de produtos novos

@@ -18,7 +18,7 @@
 
 ```sql
 -- Adicionar coluna margem_padrao (SEM valor padrão)
-ALTER TABLE lojas 
+ALTER TABLE lojas
 ADD COLUMN IF NOT EXISTS margem_padrao DECIMAL(5,2) DEFAULT NULL;
 
 -- Comentário explicativo
@@ -41,7 +41,7 @@ DROP TRIGGER IF EXISTS trigger_notificar_produtos_novos ON reseller_products;
 DROP FUNCTION IF EXISTS notificar_revendedoras_produtos_novos();
 
 -- Limpar notificações antigas (opcional)
-DELETE FROM reseller_notifications 
+DELETE FROM reseller_notifications
 WHERE type = 'new_products';
 ```
 
@@ -54,14 +54,17 @@ WHERE type = 'new_products';
 O código já foi atualizado nos seguintes arquivos:
 
 **Backend (APIs):**
+
 - ✅ `app/api/admin/produtos/vincular-todas-revendedoras/route.ts`
 - ✅ `app/api/franqueada/loja/route.ts` (POST - criar loja)
 - ✅ `app/api/franqueada/loja/update/route.ts` (PUT - atualizar loja)
 
 **Frontend:**
+
 - ✅ `app/revendedora-pro/loja/page.tsx` (campo margem_padrao adicionado)
 
 **Migration:**
+
 - ✅ `migrations/049_add_margem_padrao_lojas.sql`
 
 **Fazer commit e push:**
@@ -87,6 +90,7 @@ git push
 ### Quando produtos novos chegam:
 
 **SE REVENDEDORA JÁ CONFIGUROU MARGEM:**
+
 1. ✅ Admin ativa produto no painel
 2. ✅ Produto é vinculado às revendedoras
 3. ✅ **Margem é aplicada AUTOMATICAMENTE** (conforme configurado)
@@ -94,6 +98,7 @@ git push
 5. ✅ **NÃO HÁ NOTIFICAÇÃO** (produto já está pronto para vender)
 
 **SE REVENDEDORA NÃO CONFIGUROU:**
+
 1. ⚠️ Produto chega com margem 0%
 2. ⚠️ Produto fica DESATIVADO
 3. ⚠️ Revendedora precisa configurar margem primeiro
@@ -143,13 +148,13 @@ git push
 
 ## 📊 Impacto da mudança:
 
-| Antes | Depois |
-|-------|--------|
-| ❌ Produtos novos sem margem | ✅ Produtos com margem automática (se configurada) |
+| Antes                                       | Depois                                                  |
+| ------------------------------------------- | ------------------------------------------------------- |
+| ❌ Produtos novos sem margem                | ✅ Produtos com margem automática (se configurada)      |
 | ❌ Revendedora precisa configurar um por um | ✅ Produtos prontos para vender (se margem configurada) |
-| ❌ Notificações "X produtos novos" | ✅ Sem notificações (não precisa) |
-| ❌ Produtos desativados por padrão | ✅ Produtos ativos por padrão (se margem configurada) |
-| ✅ Sem valor padrão fixo | ✅ Cada revendedora escolhe sua margem |
+| ❌ Notificações "X produtos novos"          | ✅ Sem notificações (não precisa)                       |
+| ❌ Produtos desativados por padrão          | ✅ Produtos ativos por padrão (se margem configurada)   |
+| ✅ Sem valor padrão fixo                    | ✅ Cada revendedora escolhe sua margem                  |
 
 ---
 
@@ -180,7 +185,7 @@ ERROR: column "margem_padrao" already exists
 ## ✅ Checklist de Aplicação
 
 - [ ] Migration 049 aplicada
-- [ ] Triggers removidos  
+- [ ] Triggers removidos
 - [ ] Código commitado e deployed
 - [ ] Teste 1 (configurar margem) OK
 - [ ] Teste 2 (vincular produto) OK
