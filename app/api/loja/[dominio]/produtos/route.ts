@@ -29,33 +29,41 @@ export async function GET(
     console.log(`[API loja/produtos] Buscando loja com dominio: ${dominio}`, { q, categoriaId, destaques });
 
     // ==========================================
-    // 1️⃣ Tentar buscar em LOJAS (sistema legado franqueadas)
-    // ==========================================
-    const { data: loja, error: lojaError } = await supabase
-      .from('lojas')
-      .select('id, franqueada_id, nome')
-      .eq('dominio', dominio)
-      .eq('ativo', true)
-      .single();
-
-    // ==========================================
-    // 2️⃣ Se não encontrou em lojas, buscar em RESELLERS (sistema novo)
+    // 1️⃣ PRIMEIRO buscar em RESELLERS (sistema novo - prioridade)
     // ==========================================
     let reseller = null;
     let usandoSistemaResellers = false;
     
-    if (lojaError || !loja) {
-      console.log('[API loja/produtos] Loja não encontrada em lojas, buscando em resellers...');
+    const { data: resellerData, error: resellerError } = await supabase
+      .from('resellers')
+      .select('id, store_name, slug, status, is_active')
+      .eq('slug', dominio)
+      .eq('status', 'aprovada')
+      .eq('is_active', true)
+      .single();
+    
+    if (resellerData && !resellerError) {
+      reseller = resellerData;
+      usandoSistemaResellers = true;
+      console.log(`[API loja/produtos] ✅ Reseller encontrada: ${reseller.store_name} (ID: ${reseller.id}) - usando sistema NOVO`);
+    }
+
+    // ==========================================
+    // 2️⃣ Se não encontrou em resellers, tentar em LOJAS (sistema legado)
+    // ==========================================
+    let loja = null;
+    
+    if (!usandoSistemaResellers) {
+      console.log('[API loja/produtos] Reseller não encontrada, buscando em lojas (legado)...');
       
-      const { data: resellerData, error: resellerError } = await supabase
-        .from('resellers')
-        .select('id, store_name, slug, status, is_active')
-        .eq('slug', dominio)
-        .eq('status', 'aprovada')
-        .eq('is_active', true)
+      const { data: lojaData, error: lojaError } = await supabase
+        .from('lojas')
+        .select('id, franqueada_id, nome')
+        .eq('dominio', dominio)
+        .eq('ativo', true)
         .single();
       
-      if (resellerError || !resellerData) {
+      if (lojaError || !lojaData) {
         console.error('[API loja/produtos] Loja/Reseller não encontrada:', { lojaError, resellerError });
         return NextResponse.json({ 
           error: 'Loja não encontrada ou inativa',
@@ -63,11 +71,8 @@ export async function GET(
         }, { status: 404 });
       }
       
-      reseller = resellerData;
-      usandoSistemaResellers = true;
-      console.log(`[API loja/produtos] Reseller encontrada: ${reseller.store_name} (ID: ${reseller.id})`);
-    } else {
-      console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
+      loja = lojaData;
+      console.log(`[API loja/produtos] Loja encontrada (legado): ${loja.nome} (ID: ${loja.id})`);
     }
 
     // Buscar categoria_id pelo slug se fornecido

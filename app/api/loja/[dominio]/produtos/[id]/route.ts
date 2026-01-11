@@ -18,36 +18,43 @@ export async function GET(
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // ==========================================
-    // 1️⃣ Tentar buscar em LOJAS (sistema legado franqueadas)
-    // ==========================================
-    const { data: loja, error: lojaError } = await supabase
-      .from('lojas')
-      .select('id, franqueada_id')
-      .eq('dominio', dominio)
-      .eq('ativo', true)
-      .single();
-
-    // ==========================================
-    // 2️⃣ Se não encontrou em lojas, buscar em RESELLERS (sistema novo)
+    // 1️⃣ PRIMEIRO buscar em RESELLERS (sistema novo - prioridade)
     // ==========================================
     let reseller = null;
     let usandoSistemaResellers = false;
     
-    if (lojaError || !loja) {
-      const { data: resellerData, error: resellerError } = await supabase
-        .from('resellers')
-        .select('id, store_name, slug, status, is_active')
-        .eq('slug', dominio)
-        .eq('status', 'aprovada')
-        .eq('is_active', true)
+    const { data: resellerData, error: resellerError } = await supabase
+      .from('resellers')
+      .select('id, store_name, slug, status, is_active')
+      .eq('slug', dominio)
+      .eq('status', 'aprovada')
+      .eq('is_active', true)
+      .single();
+    
+    if (resellerData && !resellerError) {
+      reseller = resellerData;
+      usandoSistemaResellers = true;
+      console.log(`[API produto] ✅ Reseller encontrada: ${reseller.store_name} - usando sistema NOVO`);
+    }
+
+    // ==========================================
+    // 2️⃣ Se não encontrou em resellers, tentar em LOJAS (sistema legado)
+    // ==========================================
+    let loja = null;
+    
+    if (!usandoSistemaResellers) {
+      const { data: lojaData, error: lojaError } = await supabase
+        .from('lojas')
+        .select('id, franqueada_id')
+        .eq('dominio', dominio)
+        .eq('ativo', true)
         .single();
       
-      if (resellerError || !resellerData) {
+      if (lojaError || !lojaData) {
         return NextResponse.json({ error: 'Loja não encontrada' }, { status: 404 });
       }
       
-      reseller = resellerData;
-      usandoSistemaResellers = true;
+      loja = lojaData;
     }
 
     // ==========================================
