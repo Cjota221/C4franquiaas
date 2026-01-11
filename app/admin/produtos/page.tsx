@@ -484,7 +484,7 @@ export default function ProdutosPage(): React.JSX.Element {
       if (error) throw error;
 
       if (novoStatus) {
-        setStatusMsg({ type: 'info', text: `✅ ${selected.length} produto(s) ativado(s). Vinculando às franqueadas...` });
+        setStatusMsg({ type: 'info', text: `${selected.length} produto(s) ativado(s). Vinculando às franqueadas...` });
         
         try {
           const response = await fetch('/api/admin/produtos/vincular-todas-franqueadas', {
@@ -499,23 +499,23 @@ export default function ProdutosPage(): React.JSX.Element {
             console.warn('Aviso ao vincular:', data.error);
             setStatusMsg({ 
               type: 'success', 
-              text: `✅ ${selected.length} produto(s) ativado(s)` 
+              text: `${selected.length} produto(s) ativado(s)` 
             });
           } else {
             setStatusMsg({ 
               type: 'success', 
-              text: `✅ ${selected.length} produto(s) ativado(s) e vinculados!` 
+              text: `${selected.length} produto(s) ativado(s) e vinculados` 
             });
           }
         } catch (vinculacaoError) {
           console.warn('Erro ao vincular:', vinculacaoError);
           setStatusMsg({ 
             type: 'success', 
-            text: `✅ ${selected.length} produto(s) ativado(s)` 
+            text: `${selected.length} produto(s) ativado(s)` 
           });
         }
       } else {
-        setStatusMsg({ type: 'success', text: `✅ ${selected.length} produto(s) desativado(s)` });
+        setStatusMsg({ type: 'success', text: `${selected.length} produto(s) desativado(s)` });
       }
 
       setTimeout(() => setStatusMsg(null), 5000);
@@ -537,7 +537,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const sincronizarProdutos = async () => {
     try {
       setSincronizando(true);
-      setStatusMsg({ type: 'info', text: '🔄 Sincronizando produtos do FacilZap...' });
+      setStatusMsg({ type: 'info', text: 'Sincronizando produtos do FacilZap...' });
 
       const response = await fetch('/api/sync-produtos', {
         method: 'POST',
@@ -553,7 +553,7 @@ export default function ProdutosPage(): React.JSX.Element {
 
       setStatusMsg({ 
         type: 'success', 
-        text: `✅ ${data.imported} produto(s) sincronizado(s) com sucesso!` 
+        text: `${data.imported} produto(s) sincronizado(s) com sucesso` 
       });
 
       setTimeout(() => {
@@ -562,11 +562,11 @@ export default function ProdutosPage(): React.JSX.Element {
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Erro ao sincronizar:', err);
+      console.error('Erro ao sincronizar:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setStatusMsg({ 
         type: 'error', 
-        text: `❌ Erro ao sincronizar: ${errorMessage}` 
+        text: `Erro ao sincronizar: ${errorMessage}` 
       });
       setTimeout(() => setStatusMsg(null), 5000);
     } finally {
@@ -578,7 +578,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const vincularTodasFranqueadas = async () => {
     try {
       setVinculandoFranqueadas(true);
-      setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos às franqueadas...' });
+      setStatusMsg({ type: 'info', text: 'Vinculando produtos às franqueadas...' });
 
       const response = await fetch('/api/admin/produtos/vincular-todas-franqueadas', {
         method: 'POST',
@@ -594,17 +594,17 @@ export default function ProdutosPage(): React.JSX.Element {
 
       setStatusMsg({ 
         type: 'success', 
-        text: `✅ ${data.detalhes.vinculacoes} vinculações criadas!` 
+        text: `${data.detalhes.vinculacoes} vinculações criadas` 
       });
 
       setTimeout(() => setStatusMsg(null), 5000);
 
     } catch (err) {
-      console.error('❌ Erro ao vincular:', err);
+      console.error('Erro ao vincular:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setStatusMsg({ 
         type: 'error', 
-        text: `❌ Erro ao vincular: ${errorMessage}` 
+        text: `Erro ao vincular: ${errorMessage}` 
       });
       setTimeout(() => setStatusMsg(null), 5000);
     } finally {
@@ -616,7 +616,7 @@ export default function ProdutosPage(): React.JSX.Element {
   const vincularRevendedoras = async () => {
     try {
       setVinculandoRevendedoras(true);
-      setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos às revendedoras...' });
+      setStatusMsg({ type: 'info', text: 'Vinculando produtos às revendedoras...' });
 
       const selected = Object.keys(selectedIds).filter(id => selectedIds[id]);
 
@@ -636,17 +636,17 @@ export default function ProdutosPage(): React.JSX.Element {
 
       setStatusMsg({ 
         type: 'success', 
-        text: `✅ ${data.detalhes.vinculacoes} vinculações criadas às revendedoras!` 
+        text: `${data.detalhes.vinculacoes} vinculações criadas às revendedoras` 
       });
 
       setTimeout(() => setStatusMsg(null), 5000);
 
     } catch (err) {
-      console.error('❌ Erro ao vincular:', err);
+      console.error('Erro ao vincular:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setStatusMsg({ 
         type: 'error', 
-        text: `❌ Erro ao vincular: ${errorMessage}` 
+        text: `Erro ao vincular: ${errorMessage}` 
       });
       setTimeout(() => setStatusMsg(null), 5000);
     } finally {
@@ -658,199 +658,345 @@ export default function ProdutosPage(): React.JSX.Element {
   const totalPages = Math.max(1, Math.ceil(totalProdutos / PAGE_SIZE));
   const temBusca = debouncedSearchTerm.trim().length > 0;
 
+  // State para dropdown de vinculação
+  const [showVinculacaoMenu, setShowVinculacaoMenu] = useState(false);
+  const [showSecondaryMenu, setShowSecondaryMenu] = useState(false);
+
   return (
     <PageWrapper title="Produtos">
-      <h1 className="text-3xl font-bold mb-6 text-[#333]">Gerenciar Produtos</h1>
+      {/* ============================================================ */}
+      {/* HEADER - Linha 1: Título + Ações Principais */}
+      {/* ============================================================ */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        {/* Título e Subtítulo */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Produtos</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {totalProdutos} produto{totalProdutos !== 1 ? 's' : ''} no catálogo
+          </p>
+        </div>
 
-      {/* Barra de Ações Principais */}
-      <div className="mb-6 flex gap-3 items-center flex-wrap">
-        <button 
-          onClick={sincronizarProdutos}
-          disabled={sincronizando}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
-        >
-          {sincronizando ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              Sincronizando...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Sincronizar FacilZap
-            </>
-          )}
-        </button>
-
-        <button 
-          onClick={vincularTodasFranqueadas}
-          disabled={vinculandoFranqueadas}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
-        >
-          {vinculandoFranqueadas ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              Vinculando...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Vincular às Franqueadas
-            </>
-          )}
-        </button>
-
-        <button 
-          onClick={vincularRevendedoras}
-          disabled={vinculandoRevendedoras}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium flex items-center gap-2"
-        >
-          {vinculandoRevendedoras ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              Vinculando...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              Vincular às Revendedoras
-            </>
-          )}
-        </button>
-
-        <button 
-          onClick={() => setCategoryPanelOpen(true)} 
-          className="px-4 py-2 bg-[#DB1472] text-white rounded-lg hover:bg-[#DB1472]/90 transition-all shadow-md font-medium"
-        >
-          Gerenciar Categorias
-        </button>
-
-        <button 
-          onClick={() => setModalMassaOpen(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-md font-medium flex items-center gap-2"
-        >
-          📏 Guia de Tamanhos
-        </button>
-
-        <button
-          onClick={() => setModalVincularOpen(true)}
-          disabled={selectedCount === 0}
-          className="px-4 py-2 bg-[#F8B81F] text-[#333] rounded-lg hover:bg-[#F8B81F]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md font-medium"
-        >
-          Vincular/Desvincular ({selectedCount})
-        </button>
-
-        <div className="relative">
+        {/* Toolbar de Ações - Desktop */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Ação Principal: Sincronizar */}
           <button 
-            disabled={selectedCount === 0}
-            onClick={() => setShowActions(!showActions)}
-            className="px-4 py-2 bg-[#333] text-white rounded-lg disabled:opacity-50 hover:bg-[#333]/90 transition-all shadow-md flex items-center gap-2 font-medium"
+            onClick={sincronizarProdutos}
+            disabled={sincronizando}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Ações ({selectedCount}) <span className="text-xs">▼</span>
+            {sincronizando ? (
+              <>
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sincronizando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sincronizar FacilZap
+              </>
+            )}
           </button>
-          {showActions && selectedCount > 0 && (
-            <div className="absolute z-10 mt-2 w-56 bg-white rounded-lg shadow-xl border-2 border-gray-200">
-              <button 
-                onClick={() => handleBatchAction('activate')} 
-                className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-[#F8B81F]/20 font-medium transition-colors"
+
+          {/* Dropdown: Vinculação */}
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowVinculacaoMenu(!showVinculacaoMenu);
+                setShowSecondaryMenu(false);
+              }}
+              disabled={vinculandoFranqueadas || vinculandoRevendedoras}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {(vinculandoFranqueadas || vinculandoRevendedoras) ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Vinculando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  Vinculação
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              )}
+            </button>
+            {showVinculacaoMenu && (
+              <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                <button 
+                  onClick={() => { vincularTodasFranqueadas(); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Vincular às Franqueadas
+                </button>
+                <button 
+                  onClick={() => { vincularRevendedoras(); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Vincular às Revendedoras
+                </button>
+                {selectedCount > 0 && (
+                  <>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button 
+                      onClick={() => { setModalVincularOpen(true); setShowVinculacaoMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Vincular Selecionados ({selectedCount})
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown: Ações Secundárias */}
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowSecondaryMenu(!showSecondaryMenu);
+                setShowVinculacaoMenu(false);
+              }}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+              Mais
+            </button>
+            {showSecondaryMenu && (
+              <div className="absolute right-0 mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                <button 
+                  onClick={() => { setCategoryPanelOpen(true); setShowSecondaryMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Gerenciar Categorias
+                </button>
+                <button 
+                  onClick={() => { setModalMassaOpen(true); setShowSecondaryMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Guia de Tamanhos
+                </button>
+                <button 
+                  onClick={() => { setModalAtualizarPrecosOpen(true); setShowSecondaryMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Atualizar Precos
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Ações em Lote (quando há seleção) */}
+          {selectedCount > 0 && (
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-300">
+              <span className="text-sm text-gray-500">{selectedCount} selecionado{selectedCount !== 1 ? 's' : ''}</span>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowActions(!showActions)}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors"
+                >
+                  Ações
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showActions && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                    <button 
+                      onClick={() => { handleBatchAction('activate'); setShowActions(false); }} 
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700"
+                    >
+                      Ativar Selecionados
+                    </button>
+                    <button 
+                      onClick={() => { handleBatchAction('deactivate'); setShowActions(false); }} 
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
+                    >
+                      Desativar Selecionados
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button 
+                      onClick={() => { setModalMassaOpen(true); setShowActions(false); }} 
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                    >
+                      Editar Descricao/Guia
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => clearSelected()}
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
               >
-                Ativar Selecionados
-              </button>
-              <button 
-                onClick={() => handleBatchAction('deactivate')} 
-                className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
-              >
-                Desativar Selecionados
-              </button>
-              <button 
-                onClick={() => setModalAtualizarPrecosOpen(true)} 
-                className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-green-50 hover:text-green-700 font-medium transition-colors border-t-2 border-gray-100"
-              >
-                Atualizar Preços
-              </button>
-              <button 
-                onClick={() => setModalMassaOpen(true)} 
-                className="block w-full text-left px-4 py-3 text-sm text-[#333] hover:bg-purple-50 hover:text-purple-700 font-medium transition-colors"
-              >
-                📝 Descrição/Guia em Massa
+                Limpar
               </button>
             </div>
           )}
         </div>
 
-        {selectedCount > 0 && (
-          <button
-            onClick={() => clearSelected()}
-            className="px-4 py-2 bg-gray-200 text-[#333] rounded-lg hover:bg-gray-300 transition-colors font-medium"
+        {/* Toolbar Mobile - Menu Compacto */}
+        <div className="flex md:hidden items-center gap-2">
+          <button 
+            onClick={sincronizarProdutos}
+            disabled={sincronizando}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg disabled:opacity-50"
           >
-            Limpar Seleção
+            {sincronizando ? (
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            )}
+            Sincronizar
           </button>
-        )}
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowVinculacaoMenu(!showVinculacaoMenu);
+                setShowSecondaryMenu(false);
+              }}
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              Menu
+            </button>
+            {showVinculacaoMenu && (
+              <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                <button 
+                  onClick={() => { vincularTodasFranqueadas(); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Vincular as Franqueadas
+                </button>
+                <button 
+                  onClick={() => { vincularRevendedoras(); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Vincular as Revendedoras
+                </button>
+                <div className="border-t border-gray-100 my-1"></div>
+                <button 
+                  onClick={() => { setCategoryPanelOpen(true); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Gerenciar Categorias
+                </button>
+                <button 
+                  onClick={() => { setModalMassaOpen(true); setShowVinculacaoMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Guia de Tamanhos
+                </button>
+                {selectedCount > 0 && (
+                  <>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <div className="px-4 py-2 text-xs text-gray-500 font-medium uppercase">
+                      {selectedCount} selecionado{selectedCount !== 1 ? 's' : ''}
+                    </div>
+                    <button 
+                      onClick={() => { handleBatchAction('activate'); setShowVinculacaoMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                    >
+                      Ativar Selecionados
+                    </button>
+                    <button 
+                      onClick={() => { handleBatchAction('deactivate'); setShowVinculacaoMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                    >
+                      Desativar Selecionados
+                    </button>
+                    <button 
+                      onClick={() => { clearSelected(); setShowVinculacaoMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-50"
+                    >
+                      Limpar Selecao
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Alerta de Produtos Não Vinculados */}
+      {/* ============================================================ */}
+      {/* ALERTA - Linha 2: Produtos Não Vinculados (condicional) */}
+      {/* ============================================================ */}
       {statsVinculacao && statsVinculacao.produtos_nao_vinculados > 0 && (
-        <div className="mb-6 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 p-2 bg-orange-100 rounded-full">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 p-1.5 bg-amber-100 rounded">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-orange-800">
-                  ⚠️ {statsVinculacao.produtos_nao_vinculados} produto(s) não vinculado(s) às revendedoras
+                <h3 className="text-sm font-semibold text-amber-800">
+                  {statsVinculacao.produtos_nao_vinculados} produto{statsVinculacao.produtos_nao_vinculados !== 1 ? 's' : ''} nao vinculado{statsVinculacao.produtos_nao_vinculados !== 1 ? 's' : ''}
                 </h3>
-                <p className="text-sm text-orange-700">
-                  Esses produtos estão ativos mas não aparecem para nenhuma revendedora. 
-                  {statsVinculacao.total_revendedoras > 0 && ` (${statsVinculacao.total_revendedoras} revendedora(s) ativa(s))`}
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Esses produtos estao ativos mas nao aparecem para nenhuma revendedora
+                  {statsVinculacao.total_revendedoras > 0 && ` (${statsVinculacao.total_revendedoras} revendedora${statsVinculacao.total_revendedoras !== 1 ? 's' : ''} ativa${statsVinculacao.total_revendedoras !== 1 ? 's' : ''})`}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2 sm:flex-shrink-0">
               <button
                 onClick={() => setFiltroNaoVinculados(!filtroNaoVinculados)}
-                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                   filtroNaoVinculados 
-                    ? 'bg-orange-600 text-white hover:bg-orange-700' 
-                    : 'bg-white text-orange-700 border-2 border-orange-300 hover:bg-orange-100'
+                    ? 'bg-amber-600 text-white hover:bg-amber-700' 
+                    : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                {filtroNaoVinculados ? 'Mostrando Não Vinculados' : 'Ver Não Vinculados'}
+                {filtroNaoVinculados ? 'Mostrando' : 'Ver'}
               </button>
               <button
                 onClick={async () => {
-                  // Selecionar todos os não vinculados visíveis
-                  produtosExibidos.forEach(p => {
-                    if (produtosNaoVinculadosIds.has(p.id)) {
-                      setSelectedId(p.id, true);
-                    }
-                  });
-                  setFiltroNaoVinculados(true);
-                }}
-                className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 font-medium flex items-center gap-2 transition-all border border-orange-300"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Selecionar Todos
-              </button>
-              <button
-                onClick={async () => {
-                  // Vincular diretamente os não vinculados
                   setVinculandoRevendedoras(true);
-                  setStatusMsg({ type: 'info', text: '🔗 Vinculando produtos não vinculados às revendedoras...' });
+                  setStatusMsg({ type: 'info', text: 'Vinculando produtos nao vinculados as revendedoras...' });
                   try {
                     const idsNaoVinculados = Array.from(produtosNaoVinculadosIds);
                     const response = await fetch('/api/admin/produtos/vincular-revendedoras', {
@@ -860,30 +1006,32 @@ export default function ProdutosPage(): React.JSX.Element {
                     });
                     const data = await response.json();
                     if (data.success) {
-                      setStatusMsg({ type: 'success', text: `✅ ${data.detalhes.vinculacoes} vinculações criadas!` });
-                      // Recarregar lista de não vinculados
+                      setStatusMsg({ type: 'success', text: `${data.detalhes.vinculacoes} vinculacoes criadas com sucesso` });
                       carregarProdutosNaoVinculados();
                     } else {
                       throw new Error(data.error);
                     }
                   } catch (err) {
-                    setStatusMsg({ type: 'error', text: `❌ Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}` });
+                    setStatusMsg({ type: 'error', text: `Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}` });
                   } finally {
                     setVinculandoRevendedoras(false);
                     setTimeout(() => setStatusMsg(null), 5000);
                   }
                 }}
                 disabled={vinculandoRevendedoras || loadingNaoVinculados}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center gap-2 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors"
               >
                 {vinculandoRevendedoras ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
                     Vinculando...
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                     Vincular Todos
