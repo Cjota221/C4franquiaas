@@ -85,45 +85,45 @@ export default function AlertaProdutosSemMargem({
     async function verificarProdutosSemMargem() {
       setLoading(true);
       try {
-        // ✅ CORRIGIDO: Buscar produtos da revendedora COM JOIN na tabela products
-        // Para garantir que só conta produtos que REALMENTE existem e estão ativos
-        const { data, error } = await supabase
+        // ✅ Buscar produtos da revendedora
+        const { data: resellerProducts, error: rpError } = await supabase
           .from("reseller_products")
-          .select(`
-            id, 
-            margin_percent, 
-            custom_price, 
-            is_active,
-            product:products!inner(id, ativo)
-          `)
+          .select("id, product_id, margin_percent, custom_price, is_active")
           .eq("reseller_id", revendedoraId);
 
-        if (error) throw error;
+        if (rpError) throw rpError;
+
+        // Buscar IDs dos produtos ativos na franqueadora
+        const { data: produtosAtivos, error: pError } = await supabase
+          .from("produtos")
+          .select("id")
+          .eq("ativo", true);
+
+        if (pError) throw pError;
+
+        // Criar set de IDs válidos para lookup rápido
+        const idsAtivos = new Set((produtosAtivos || []).map(p => p.id));
 
         // Filtrar: produto existe, está ativo na franqueadora, e não tem margem
-        const semMargem = (data || []).filter((p: Record<string, unknown>) => {
-          // Acessar product (pode ser objeto ou array dependendo do Supabase)
-          const product = Array.isArray(p.product) ? p.product[0] : p.product;
+        const semMargem = (resellerProducts || []).filter(p => {
           // Produto não existe ou está inativo na franqueadora? Ignora
-          if (!product || !(product as Record<string, unknown>).ativo) return false;
+          if (!idsAtivos.has(p.product_id)) return false;
           // Tem margem percentual > 0? OK, não precisa de atenção
-          if (p.margin_percent && (p.margin_percent as number) > 0) return false;
+          if (p.margin_percent && p.margin_percent > 0) return false;
           // Tem preço customizado > 0? OK, não precisa de atenção
-          if (p.custom_price && (p.custom_price as number) > 0) return false;
+          if (p.custom_price && p.custom_price > 0) return false;
           // Não tem nem margem nem preço = precisa de atenção!
           return true;
         });
 
         // Contar também quantos produtos válidos existem
-        const produtosValidos = (data || []).filter((p: Record<string, unknown>) => {
-          const product = Array.isArray(p.product) ? p.product[0] : p.product;
-          return product && (product as Record<string, unknown>).ativo;
-        });
+        const produtosValidos = (resellerProducts || []).filter(p => idsAtivos.has(p.product_id));
         
         console.log(`[AlertaProdutosSemMargem] Válidos: ${produtosValidos.length}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
       } catch (err) {
         console.error("Erro ao verificar produtos sem margem:", err);
+        setQuantidade(0); // Em caso de erro, não mostra alerta
       } finally {
         setLoading(false);
       }
