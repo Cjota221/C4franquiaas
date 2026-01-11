@@ -235,16 +235,42 @@ export default function ProdutosRevendedoraPage() {
         marginPercent = (valor / precoMedio) * 100;
       }
 
-      // Atualizar cada produto selecionado
-      const updates = Array.from(selectedIds).map(productId => 
-        supabase
+      console.log('🔧 [DEBUG] Aplicando margem:', {
+        revendedoraId,
+        marginPercent,
+        produtosIds: Array.from(selectedIds),
+        margemTipo,
+        valorOriginal: valor
+      });
+
+      // Atualizar cada produto selecionado E CAPTURAR ERROS
+      let erros: string[] = [];
+      let sucessos = 0;
+      
+      for (const productId of Array.from(selectedIds)) {
+        console.log(`🔧 [DEBUG] Atualizando produto ${productId}...`);
+        
+        const { data, error } = await supabase
           .from('reseller_products')
           .update({ margin_percent: marginPercent })
           .eq('reseller_id', revendedoraId)
           .eq('product_id', productId)
-      );
+          .select(); // ⬅️ IMPORTANTE: select() para ver o que foi atualizado
+        
+        if (error) {
+          console.error(`❌ [DEBUG] Erro ao atualizar produto ${productId}:`, error);
+          erros.push(`${productId}: ${error.message}`);
+        } else {
+          console.log(`✅ [DEBUG] Produto ${productId} atualizado:`, data);
+          sucessos++;
+        }
+      }
 
-      await Promise.all(updates);
+      // Verificar se houve erros
+      if (erros.length > 0) {
+        console.error('❌ [DEBUG] Erros encontrados:', erros);
+        alert(`Atenção: ${erros.length} erro(s) ao salvar margem.\n\n${erros.join('\n')}`);
+      }
 
       // Recarregar dados
       await carregarDados();
@@ -253,7 +279,9 @@ export default function ProdutosRevendedoraPage() {
       setMargemValor('');
       setSelectedIds(new Set());
       
-      alert(`Margem aplicada com sucesso em ${selectedIds.size} produtos!`);
+      if (sucessos > 0) {
+        alert(`Margem aplicada com sucesso em ${sucessos} produto(s)!${erros.length > 0 ? ` (${erros.length} erros)` : ''}`);
+      }
     } catch (error) {
       console.error('Erro ao aplicar margem:', error);
       alert('Erro ao aplicar margem');
