@@ -328,6 +328,15 @@ export default function ProdutosRevendedoraPage() {
       setShowModalAtivar(false);
       setProdutosParaAtivar([]);
       
+      // ✅ Resetar filtros para "Todos" para evitar confusão
+      setMargemFiltro('todos');
+      setStatusFiltro('todos');
+      
+      // ✅ Limpar URL se tiver filtro
+      if (window.location.search.includes('filtro=sem-margem')) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+      
       alert(`✅ ${produtosParaAtivar.length} produto(s) ativado(s) com sucesso! Agora eles aparecem na sua loja.`);
     } catch (error) {
       console.error('Erro ao ativar produtos:', error);

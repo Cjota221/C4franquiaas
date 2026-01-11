@@ -75,9 +75,16 @@ export default function AlertaProdutosSemMargem({
   // Buscar produtos sem margem (INATIVOS E sem margem - que REALMENTE precisam de atenção)
   useEffect(() => {
     // Se estiver na página de produtos, não buscar (já tem card roxo lá)
-    if (isNaPaginaProdutos || !revendedoraId) return;
+    // MAS não fazemos return - deixa o effect rodar para quando sair da página
+    if (isNaPaginaProdutos) {
+      setLoading(false);
+      return;
+    }
+    
+    if (!revendedoraId) return;
     
     async function verificarProdutosSemMargem() {
+      setLoading(true);
       try {
         // ✅ Buscar produtos que:
         // 1. Estão INATIVOS (não aparecem na loja)
@@ -103,7 +110,7 @@ export default function AlertaProdutosSemMargem({
           return true;
         });
 
-        console.log(`[AlertaProdutosSemMargem] Inativos: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
+        console.log(`[AlertaProdutosSemMargem] Revalidando... Inativos: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
       } catch (err) {
         console.error("Erro ao verificar produtos sem margem:", err);
@@ -112,8 +119,21 @@ export default function AlertaProdutosSemMargem({
       }
     }
 
+    // ✅ Executar imediatamente
     verificarProdutosSemMargem();
-  }, [revendedoraId, supabase, isNaPaginaProdutos]);
+    
+    // ✅ Revalidar quando a página voltar a ter foco (usuário voltou de outra aba)
+    const handleFocus = () => {
+      console.log('[AlertaProdutosSemMargem] Página focou - revalidando...');
+      verificarProdutosSemMargem();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [revendedoraId, supabase, isNaPaginaProdutos, pathname]); // ✅ pathname dispara revalidação quando navega
 
   // Não mostrar se carregando, sem produtos, foi fechado, ou na página de produtos
   if (loading || quantidade === 0 || dismissed || isNaPaginaProdutos) {
