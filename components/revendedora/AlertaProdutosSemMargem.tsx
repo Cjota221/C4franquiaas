@@ -72,10 +72,9 @@ export default function AlertaProdutosSemMargem({
     buscarRevendedoraId();
   }, [revendedoraIdProp, supabase, isNaPaginaProdutos]);
 
-  // Buscar produtos sem margem (INATIVOS E sem margem - que REALMENTE precisam de atenção)
+  // Buscar produtos sem margem (que REALMENTE precisam de atenção)
   useEffect(() => {
     // Se estiver na página de produtos, não buscar (já tem card roxo lá)
-    // MAS não fazemos return - deixa o effect rodar para quando sair da página
     if (isNaPaginaProdutos) {
       setLoading(false);
       return;
@@ -86,31 +85,26 @@ export default function AlertaProdutosSemMargem({
     async function verificarProdutosSemMargem() {
       setLoading(true);
       try {
-        // ✅ Buscar produtos que:
-        // 1. Estão INATIVOS (não aparecem na loja)
-        // 2. E NÃO TÊM margem definida (margin_percent = 0 ou null E custom_price = 0 ou null)
-        // 
-        // Se o produto está inativo MAS tem margem > 0, ele só precisa ser ATIVADO
-        // (não precisa aparecer no alerta de "sem margem")
+        // ✅ CORRIGIDO: Buscar TODOS os produtos da revendedora que estão SEM MARGEM
+        // Não importa se está ativo ou inativo - se não tem margem, precisa configurar
         const { data, error } = await supabase
           .from("reseller_products")
           .select("id, margin_percent, custom_price, is_active")
-          .eq("reseller_id", revendedoraId)
-          .eq("is_active", false); // Apenas inativos
+          .eq("reseller_id", revendedoraId);
 
         if (error) throw error;
 
         // Filtrar apenas os que REALMENTE estão sem margem
         const semMargem = (data || []).filter(p => {
-          // Tem margem percentual? Não precisa de atenção
+          // Tem margem percentual > 0? OK, não precisa de atenção
           if (p.margin_percent && p.margin_percent > 0) return false;
-          // Tem preço customizado? Não precisa de atenção
+          // Tem preço customizado > 0? OK, não precisa de atenção
           if (p.custom_price && p.custom_price > 0) return false;
           // Não tem nem margem nem preço = precisa de atenção!
           return true;
         });
 
-        console.log(`[AlertaProdutosSemMargem] Revalidando... Inativos: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
+        console.log(`[AlertaProdutosSemMargem] Total: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
       } catch (err) {
         console.error("Erro ao verificar produtos sem margem:", err);
@@ -163,19 +157,18 @@ export default function AlertaProdutosSemMargem({
           </div>
           <div>
             <h3 className="font-semibold text-amber-800">
-              Atualização importante nos seus produtos
+              Configure a margem de lucro dos seus produtos
             </h3>
             <p className="text-sm text-amber-700 mt-1">
-              Estamos passando por uma atualização no sistema.{" "}
-              <strong>{quantidade} produto(s)</strong> foram desativados por estarem sem margem de lucro configurada.
-              Para que seus produtos voltem a aparecer na sua loja, revise e ajuste a margem de lucro.
+              Você tem <strong>{quantidade} produto(s)</strong> sem margem de lucro configurada.
+              Para que eles apareçam na sua loja com o preço correto, defina a margem de lucro desejada.
             </p>
             <div className="mt-3">
               <Link
                 href="/revendedora/produtos?filtro=sem-margem"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
               >
-                Atualizar margens de lucro
+                Configurar margem de lucro
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
