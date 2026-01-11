@@ -72,30 +72,38 @@ export default function AlertaProdutosSemMargem({
     buscarRevendedoraId();
   }, [revendedoraIdProp, supabase, isNaPaginaProdutos]);
 
-  // Buscar produtos sem margem (INATIVOS que precisam de atenção)
+  // Buscar produtos sem margem (INATIVOS E sem margem - que REALMENTE precisam de atenção)
   useEffect(() => {
     // Se estiver na página de produtos, não buscar (já tem card roxo lá)
     if (isNaPaginaProdutos || !revendedoraId) return;
     
     async function verificarProdutosSemMargem() {
       try {
-        // ✅ CORRIGIDO: Buscar apenas produtos INATIVOS sem margem
-        // (são estes que a revendedora precisa configurar para aparecer na loja)
+        // ✅ Buscar produtos que:
+        // 1. Estão INATIVOS (não aparecem na loja)
+        // 2. E NÃO TÊM margem definida (margin_percent = 0 ou null E custom_price = 0 ou null)
+        // 
+        // Se o produto está inativo MAS tem margem > 0, ele só precisa ser ATIVADO
+        // (não precisa aparecer no alerta de "sem margem")
         const { data, error } = await supabase
           .from("reseller_products")
           .select("id, margin_percent, custom_price, is_active")
           .eq("reseller_id", revendedoraId)
-          .eq("is_active", false) // ✅ Apenas inativos
-          .or("margin_percent.is.null,margin_percent.eq.0");
+          .eq("is_active", false); // Apenas inativos
 
         if (error) throw error;
 
-        // Filtrar onde custom_price também é null/0
+        // Filtrar apenas os que REALMENTE estão sem margem
         const semMargem = (data || []).filter(p => {
+          // Tem margem percentual? Não precisa de atenção
+          if (p.margin_percent && p.margin_percent > 0) return false;
+          // Tem preço customizado? Não precisa de atenção
           if (p.custom_price && p.custom_price > 0) return false;
+          // Não tem nem margem nem preço = precisa de atenção!
           return true;
         });
 
+        console.log(`[AlertaProdutosSemMargem] Inativos: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
       } catch (err) {
         console.error("Erro ao verificar produtos sem margem:", err);

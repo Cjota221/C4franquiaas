@@ -57,6 +57,10 @@ export default function ProdutosRevendedoraPage() {
   const [margemValor, setMargemValor] = useState('');
   const [processando, setProcessando] = useState(false);
   
+  // Modal de confirmação para ativar produtos após aplicar margem
+  const [showModalAtivar, setShowModalAtivar] = useState(false);
+  const [produtosParaAtivar, setProdutosParaAtivar] = useState<string[]>([]);
+  
   // Estado para filtros colapsáveis no mobile
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   
@@ -246,6 +250,7 @@ export default function ProdutosRevendedoraPage() {
       // Atualizar cada produto selecionado E CAPTURAR ERROS
       const erros: string[] = [];
       let sucessos = 0;
+      const idsAtualizados: string[] = [];
       
       for (const productId of Array.from(selectedIds)) {
         console.log(`🔧 [DEBUG] Atualizando produto ${productId}...`);
@@ -263,6 +268,7 @@ export default function ProdutosRevendedoraPage() {
         } else {
           console.log(`✅ [DEBUG] Produto ${productId} atualizado:`, data);
           sucessos++;
+          idsAtualizados.push(productId);
         }
       }
 
@@ -279,12 +285,53 @@ export default function ProdutosRevendedoraPage() {
       setMargemValor('');
       setSelectedIds(new Set());
       
+      // ✅ Se salvou com sucesso, perguntar se quer ativar
       if (sucessos > 0) {
-        alert(`Margem aplicada com sucesso em ${sucessos} produto(s)!${erros.length > 0 ? ` (${erros.length} erros)` : ''}`);
+        // Verificar quais produtos estão inativos
+        const produtosQueForamAtualizados = produtos.filter(p => idsAtualizados.includes(p.id));
+        const produtosInativos = produtosQueForamAtualizados.filter(p => !p.is_active);
+        
+        if (produtosInativos.length > 0) {
+          // Tem produtos inativos - perguntar se quer ativar
+          setProdutosParaAtivar(produtosInativos.map(p => p.id));
+          setShowModalAtivar(true);
+        } else {
+          // Todos já estavam ativos
+          alert(`✅ Margem aplicada com sucesso em ${sucessos} produto(s)!`);
+        }
       }
     } catch (error) {
       console.error('Erro ao aplicar margem:', error);
       alert('Erro ao aplicar margem');
+    } finally {
+      setProcessando(false);
+    }
+  }
+
+  // ✅ NOVA FUNÇÃO: Ativar produtos após aplicar margem
+  async function ativarProdutosAposMargem() {
+    if (!revendedoraId || produtosParaAtivar.length === 0) return;
+    
+    setProcessando(true);
+    try {
+      const updates = produtosParaAtivar.map(productId => 
+        supabase
+          .from('reseller_products')
+          .update({ is_active: true })
+          .eq('reseller_id', revendedoraId)
+          .eq('product_id', productId)
+      );
+
+      await Promise.all(updates);
+      await carregarDados();
+      
+      setShowModalAtivar(false);
+      setProdutosParaAtivar([]);
+      
+      alert(`✅ ${produtosParaAtivar.length} produto(s) ativado(s) com sucesso! Agora eles aparecem na sua loja.`);
+    } catch (error) {
+      console.error('Erro ao ativar produtos:', error);
+      alert('Erro ao ativar produtos');
     } finally {
       setProcessando(false);
     }
@@ -1152,6 +1199,65 @@ export default function ProdutosRevendedoraPage() {
                     </>
                   ) : (
                     'Aplicar'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Ativar Produtos após aplicar margem */}
+      {showModalAtivar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              {/* Ícone de sucesso */}
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                Margem aplicada com sucesso! 🎉
+              </h3>
+
+              <p className="text-gray-600 text-center mb-6">
+                {produtosParaAtivar.length === 1 
+                  ? 'Este produto ainda está desativado e não aparece na sua loja.'
+                  : `Estes ${produtosParaAtivar.length} produtos ainda estão desativados e não aparecem na sua loja.`
+                }
+                <br />
+                <span className="font-medium text-pink-600">
+                  Deseja ativá-los agora?
+                </span>
+              </p>
+
+              {/* Botões */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowModalAtivar(false);
+                    setProdutosParaAtivar([]);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Não, depois
+                </button>
+                <button
+                  onClick={ativarProdutosAposMargem}
+                  disabled={processando}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {processando ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Ativando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Sim, ativar!
+                    </>
                   )}
                 </button>
               </div>
