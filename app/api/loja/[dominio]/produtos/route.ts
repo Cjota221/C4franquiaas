@@ -28,7 +28,9 @@ export async function GET(
 
     console.log(`[API loja/produtos] Buscando loja com dominio: ${dominio}`, { q, categoriaId, destaques });
 
-    // Buscar loja
+    // ==========================================
+    // 1️⃣ Tentar buscar em LOJAS (sistema legado franqueadas)
+    // ==========================================
     const { data: loja, error: lojaError } = await supabase
       .from('lojas')
       .select('id, franqueada_id, nome')
@@ -36,15 +38,37 @@ export async function GET(
       .eq('ativo', true)
       .single();
 
+    // ==========================================
+    // 2️⃣ Se não encontrou em lojas, buscar em RESELLERS (sistema novo)
+    // ==========================================
+    let reseller = null;
+    let usandoSistemaResellers = false;
+    
     if (lojaError || !loja) {
-      console.error('[API loja/produtos] Loja não encontrada ou inativa:', lojaError);
-      return NextResponse.json({ 
-        error: 'Loja não encontrada ou inativa',
-        details: lojaError?.message
-      }, { status: 404 });
+      console.log('[API loja/produtos] Loja não encontrada em lojas, buscando em resellers...');
+      
+      const { data: resellerData, error: resellerError } = await supabase
+        .from('resellers')
+        .select('id, store_name, slug, status, is_active')
+        .eq('slug', dominio)
+        .eq('status', 'aprovada')
+        .eq('is_active', true)
+        .single();
+      
+      if (resellerError || !resellerData) {
+        console.error('[API loja/produtos] Loja/Reseller não encontrada:', { lojaError, resellerError });
+        return NextResponse.json({ 
+          error: 'Loja não encontrada ou inativa',
+          details: lojaError?.message || resellerError?.message
+        }, { status: 404 });
+      }
+      
+      reseller = resellerData;
+      usandoSistemaResellers = true;
+      console.log(`[API loja/produtos] Reseller encontrada: ${reseller.store_name} (ID: ${reseller.id})`);
+    } else {
+      console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
     }
-
-    console.log(`[API loja/produtos] Loja encontrada: ${loja.nome} (ID: ${loja.id})`);
 
     // Buscar categoria_id pelo slug se fornecido
     let categoriaIdFinal = categoriaId;
@@ -61,38 +85,129 @@ export async function GET(
       }
     }
 
-    // Construir query base
-    let query = supabase
-      .from('produtos_franqueadas')
-      .select(`
-        id,
-        produto_id,
-        produtos:produto_id (
-          id,
-          nome,
-          descricao,
-          preco_base,
-          estoque,
-          imagem,
-          imagens,
-          codigo_barras,
-          variacoes_meta,
-          ativo
-        )
-      `)
-      .eq('franqueada_id', loja.franqueada_id)
-      .eq('ativo', true);
+    // ==========================================
+    // 3️⃣ Buscar produtos conforme o sistema
+    // ==========================================
     
-    // Buscar categorias separadamente após obter produtos
-    // (evita ambiguidade no relacionamento)
+    type VinculacaoType = {
+      id: string;
+      produto_id?: string;
+      product_id?: string;
+      margin_percent?: number;
+      custom_price?: number;
+      produtos: {
+        id: string;
+        nome: string;
+        descricao?: string;
+        preco_base: number;
+        estoque: number;
+        imagem?: string;
+        imagens?: string[];
+        codigo_barras?: string;
+        variacoes_meta?: Array<{
+          sku?: string;
+          nome?: string;
+          estoque?: number;
+          codigo_barras?: string;
+        }>;
+        ativo: boolean;
+      } | null;
+    };
+    
+    let vinculacoes: VinculacaoType[] = [];
+    let vinculacoesError: Error | null = null;
 
-    // Se buscar produto específico por ID
-    if (produtoId) {
-      console.log(`[API loja/produtos] Buscando produto específico: ${produtoId}`);
-      query = query.eq('produto_id', produtoId);
+    if (usandoSistemaResellers && reseller) {
+      // ✅ SISTEMA NOVO: reseller_products
+      console.log(`[API loja/produtos] 🆕 Usando sistema RESELLERS para: ${reseller.store_name}`);
+      
+      let queryReseller = supabase
+        .from('reseller_products')
+        .select(`
+          id,
+          product_id,
+          margin_percent,
+          custom_price,
+          produtos:product_id (
+            id,
+            nome,
+            descricao,
+            preco_base,
+            estoque,
+            imagem,
+            imagens,
+            codigo_barras,
+            variacoes_meta,
+            ativo
+          )
+        `)
+        .eq('reseller_id', reseller.id)
+        .eq('is_active', true);  // ⚠️ CHAVE: só produtos ATIVOS na loja da revendedora
+
+      // Se buscar produto específico por ID
+      if (produtoId) {
+        console.log(`[API loja/produtos] Buscando produto específico: ${produtoId}`);
+        queryReseller = queryReseller.eq('product_id', produtoId);
+      }
+
+      const result = await queryReseller;
+      
+      if (result.error) {
+        vinculacoesError = result.error;
+      } else {
+        // Mapear para formato compatível
+        vinculacoes = (result.data || []).map(item => ({
+          id: item.id,
+          produto_id: item.product_id,
+          margin_percent: item.margin_percent,
+          custom_price: item.custom_price,
+          produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos
+        }));
+      }
+      
+    } else if (loja) {
+      // ✅ SISTEMA LEGADO: produtos_franqueadas
+      console.log(`[API loja/produtos] 📦 Usando sistema LEGADO (produtos_franqueadas) para: ${loja.nome}`);
+      
+      let queryLegado = supabase
+        .from('produtos_franqueadas')
+        .select(`
+          id,
+          produto_id,
+          produtos:produto_id (
+            id,
+            nome,
+            descricao,
+            preco_base,
+            estoque,
+            imagem,
+            imagens,
+            codigo_barras,
+            variacoes_meta,
+            ativo
+          )
+        `)
+        .eq('franqueada_id', loja.franqueada_id)
+        .eq('ativo', true);
+
+      // Se buscar produto específico por ID
+      if (produtoId) {
+        console.log(`[API loja/produtos] Buscando produto específico: ${produtoId}`);
+        queryLegado = queryLegado.eq('produto_id', produtoId);
+      }
+
+      const result = await queryLegado;
+      
+      if (result.error) {
+        vinculacoesError = result.error;
+      } else {
+        vinculacoes = (result.data || []).map(item => ({
+          id: item.id,
+          produto_id: item.produto_id,
+          produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos
+        }));
+      }
     }
-
-    const { data: vinculacoes, error: vinculacoesError } = await query;
 
     if (vinculacoesError) {
       console.error('[API loja/produtos] Erro ao buscar vinculações:', vinculacoesError);
@@ -129,27 +244,65 @@ export async function GET(
       }
     });
 
-    // Buscar preços personalizados
-    const vinculacaoIds = vinculacoes.map(v => v.id);
-    const { data: precos, error: precosError } = await supabase
-      .from('produtos_franqueadas_precos')
-      .select('*')
-      .in('produto_franqueada_id', vinculacaoIds);
+    // ==========================================
+    // 4️⃣ Buscar preços conforme o sistema
+    // ==========================================
+    let precos: Array<{
+      produto_franqueada_id: string;
+      preco_final: number;
+      ajuste_tipo?: string;
+      ajuste_valor?: number;
+    }> | null = null;
+    
+    if (!usandoSistemaResellers) {
+      // Sistema legado: buscar na tabela produtos_franqueadas_precos
+      const vinculacaoIds = vinculacoes.map(v => v.id);
+      const { data: precosData, error: precosError } = await supabase
+        .from('produtos_franqueadas_precos')
+        .select('*')
+        .in('produto_franqueada_id', vinculacaoIds);
 
-    if (precosError) {
-      console.error('[API loja/produtos] Erro ao buscar preços (não fatal):', precosError);
+      if (precosError) {
+        console.error('[API loja/produtos] Erro ao buscar preços legados (não fatal):', precosError);
+      }
+      precos = precosData;
     }
+    // No sistema novo (resellers), o preço é calculado diretamente da margin_percent ou custom_price
 
     // Combinar dados
     const produtos = vinculacoes
       .map(v => {
-        const produto = Array.isArray(v.produtos) ? v.produtos[0] : v.produtos;
+        const produto = v.produtos;
         if (!produto) return null;
 
-        const preco = precos?.find(p => p.produto_franqueada_id === v.id);
-        
-        // ✅ CORREÇÃO: Usar preco_base como fallback
-        const precoFinal = preco?.preco_final || produto.preco_base;
+        // ==========================================
+        // 5️⃣ Calcular preço final conforme o sistema
+        // ==========================================
+        let precoFinal = produto.preco_base;
+        let ajusteTipo: string | null = null;
+        let ajusteValor: number | null = null;
+
+        if (usandoSistemaResellers) {
+          // Sistema novo: usar margin_percent ou custom_price
+          if (v.custom_price && v.custom_price > 0) {
+            precoFinal = v.custom_price;
+            ajusteTipo = 'fixo';
+            ajusteValor = v.custom_price;
+          } else if (v.margin_percent && v.margin_percent > 0) {
+            precoFinal = produto.preco_base * (1 + v.margin_percent / 100);
+            ajusteTipo = 'porcentagem';
+            ajusteValor = v.margin_percent;
+          }
+          console.log(`[API loja/produtos] Preço reseller: base=${produto.preco_base}, margem=${v.margin_percent}%, custom=${v.custom_price}, final=${precoFinal.toFixed(2)}`);
+        } else {
+          // Sistema legado: buscar na tabela de preços
+          const preco = precos?.find(p => p.produto_franqueada_id === v.id);
+          if (preco?.preco_final) {
+            precoFinal = preco.preco_final;
+            ajusteTipo = preco.ajuste_tipo || null;
+            ajusteValor = preco.ajuste_valor || null;
+          }
+        }
 
         // 🔧 FIX: Sempre usar proxy em produção para evitar erro 403
         const isDev = process.env.NODE_ENV === 'development';
@@ -303,8 +456,8 @@ export async function GET(
           preco_base: produto.preco_base || 0,
           preco_venda: precoVenda !== produto.preco_base ? precoVenda : undefined,
           preco_final: precoFinal,
-          ajuste_tipo: preco?.ajuste_tipo || null,
-          ajuste_valor: preco?.ajuste_valor || null,
+          ajuste_tipo: ajusteTipo,
+          ajuste_valor: ajusteValor,
           estoque: estoqueTotal, // ⭐ ESTOQUE TOTAL CALCULADO
           imagem: processarImagem(produto.imagem),
           imagens: (() => {
