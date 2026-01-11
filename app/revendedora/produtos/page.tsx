@@ -244,7 +244,7 @@ export default function ProdutosRevendedoraPage() {
       });
 
       // Atualizar cada produto selecionado E CAPTURAR ERROS
-      let erros: string[] = [];
+      const erros: string[] = [];
       let sucessos = 0;
       
       for (const productId of Array.from(selectedIds)) {
