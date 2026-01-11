@@ -142,6 +142,30 @@ export default function ProdutosRevendedoraPage() {
         };
       });
 
+      // 5. 🔴 AUTO-DESATIVAR produtos com margem 0% que estão ativos
+      const produtosParaDesativar = produtosComMargem.filter(p => 
+        p.is_active && (p.margin_percent === 0 || p.margin_percent === null)
+      );
+
+      if (produtosParaDesativar.length > 0) {
+        console.log(`[Auto-desativar] ${produtosParaDesativar.length} produtos com margem 0% serão desativados`);
+        
+        // Desativar no banco
+        const idsParaDesativar = produtosParaDesativar.map(p => p.id);
+        await supabase
+          .from('reseller_products')
+          .update({ is_active: false })
+          .eq('reseller_id', revendedora.id)
+          .in('product_id', idsParaDesativar);
+
+        // Atualizar estado local
+        produtosComMargem.forEach(p => {
+          if (idsParaDesativar.includes(p.id)) {
+            p.is_active = false;
+          }
+        });
+      }
+
       setProdutos(produtosComMargem);
     } catch (error: unknown) {
       console.error('Erro ao carregar dados:', error);
