@@ -14,11 +14,13 @@ export interface RevendedoraCompleta {
   created_at: string;
   rejection_reason?: string;
   
-  // Indicadores de personalização
-  has_logo: boolean;
-  has_banner: boolean;
-  has_colors: boolean;
-  has_margin: boolean;
+  // Indicadores de personalização (todos comparados com valores padrão)
+  has_logo: boolean;          // logo_url preenchido
+  has_banner: boolean;        // banner_url OU banner_mobile_url preenchido
+  has_colors: boolean;        // cores DIFERENTES do padrão (#ec4899, #8b5cf6)
+  has_styles: boolean;        // estilos DIFERENTES do padrão
+  has_margin: boolean;        // pelo menos 1 produto ATIVO com margem configurada
+  is_personalizada: boolean;  // has_logo OR has_colors OR has_styles OR has_banner
   primary_color: string | null;
   logo_url: string | null;
   banner_url: string | null;

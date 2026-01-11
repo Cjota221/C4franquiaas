@@ -16,6 +16,128 @@ type FiltroAtivacao = 'todos' | 'ativas' | 'inativas' | 'personalizadas' | 'sem_
 
 const ITEMS_PER_PAGE = 15;
 
+// ============================================================================
+// CONSTANTES - Valores padrão do sistema para comparação
+// ============================================================================
+const CORES_PADRAO = {
+  primary: '#ec4899',
+  secondary: '#8b5cf6',
+};
+
+const ESTILOS_PADRAO = {
+  button_style: 'rounded',
+  card_style: 'shadow',
+  header_style: 'gradient',
+  show_prices: true,
+  show_stock: false,
+  show_whatsapp_float: true,
+};
+
+// ============================================================================
+// HELPERS - Funções para calcular personalização
+// ============================================================================
+
+interface PersonalizacaoFlags {
+  hasLogo: boolean;
+  hasColors: boolean;
+  hasStyles: boolean;
+  hasBanner: boolean;
+  isPersonalizada: boolean;
+  hasCustomMargins: boolean;
+}
+
+/**
+ * Verifica se a revendedora tem logo configurada
+ */
+function checkHasLogo(logoUrl: string | null | undefined): boolean {
+  return !!(logoUrl && typeof logoUrl === 'string' && logoUrl.trim() !== '');
+}
+
+/**
+ * Verifica se a revendedora tem cores diferentes do padrão
+ */
+function checkHasColors(colors: unknown): boolean {
+  try {
+    const parsed = typeof colors === 'string' ? JSON.parse(colors) : (colors || {});
+    const primary = parsed.primary || null;
+    const secondary = parsed.secondary || null;
+    
+    // Tem cores SE:
+    // - primary OU secondary existem E
+    // - São DIFERENTES dos valores padrão
+    if (!primary && !secondary) return false;
+    
+    const primaryDiferente = primary && primary !== CORES_PADRAO.primary;
+    const secondaryDiferente = secondary && secondary !== CORES_PADRAO.secondary;
+    
+    return !!(primaryDiferente || secondaryDiferente);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Verifica se a revendedora tem estilos diferentes do padrão
+ */
+function checkHasStyles(themeSettings: unknown): boolean {
+  try {
+    const parsed = typeof themeSettings === 'string' ? JSON.parse(themeSettings) : (themeSettings || {});
+    
+    // Compara cada campo de estilo com o padrão
+    const buttonDiferente = parsed.button_style && parsed.button_style !== ESTILOS_PADRAO.button_style;
+    const cardDiferente = parsed.card_style && parsed.card_style !== ESTILOS_PADRAO.card_style;
+    const headerDiferente = parsed.header_style && parsed.header_style !== ESTILOS_PADRAO.header_style;
+    const showPricesDiferente = typeof parsed.show_prices === 'boolean' && parsed.show_prices !== ESTILOS_PADRAO.show_prices;
+    const showStockDiferente = typeof parsed.show_stock === 'boolean' && parsed.show_stock !== ESTILOS_PADRAO.show_stock;
+    const showWhatsappDiferente = typeof parsed.show_whatsapp_float === 'boolean' && parsed.show_whatsapp_float !== ESTILOS_PADRAO.show_whatsapp_float;
+    
+    return !!(buttonDiferente || cardDiferente || headerDiferente || showPricesDiferente || showStockDiferente || showWhatsappDiferente);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Verifica se a revendedora tem banner configurado
+ */
+function checkHasBanner(bannerUrl: string | null | undefined, bannerMobileUrl: string | null | undefined): boolean {
+  const hasDesktop = !!(bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '');
+  const hasMobile = !!(bannerMobileUrl && typeof bannerMobileUrl === 'string' && bannerMobileUrl.trim() !== '');
+  return hasDesktop || hasMobile;
+}
+
+/**
+ * Calcula todas as flags de personalização para uma revendedora
+ */
+function calcularPersonalizacaoFlags(
+  logoUrl: string | null | undefined,
+  colors: unknown,
+  themeSettings: unknown,
+  bannerUrl: string | null | undefined,
+  bannerMobileUrl: string | null | undefined,
+  produtosComMargem: number
+): PersonalizacaoFlags {
+  const hasLogo = checkHasLogo(logoUrl);
+  const hasColors = checkHasColors(colors);
+  const hasStyles = checkHasStyles(themeSettings);
+  const hasBanner = checkHasBanner(bannerUrl, bannerMobileUrl);
+  
+  // isPersonalizada = pelo menos 1 elemento personalizado
+  const isPersonalizada = hasLogo || hasColors || hasStyles || hasBanner;
+  
+  // hasCustomMargins = pelo menos 1 produto ATIVO com margem configurada
+  const hasCustomMargins = produtosComMargem > 0;
+  
+  return {
+    hasLogo,
+    hasColors,
+    hasStyles,
+    hasBanner,
+    isPersonalizada,
+    hasCustomMargins,
+  };
+}
+
 export default function AdminRevendedorasPage() {
   // Estados principais
   const [revendedoras, setRevendedoras] = useState<RevendedoraCompleta[]>([]);
@@ -73,51 +195,63 @@ export default function AdminRevendedorasPage() {
     setCurrentPage(1); // Reset para primeira página ao mudar filtro
   }, [filtroStatus, filtroAtivacao]);
 
-  // Carregar estatísticas (separado da paginação)
+  // ============================================================================
+  // CARREGAR ESTATÍSTICAS - APENAS REVENDEDORAS ATIVAS para filtros operacionais
+  // ============================================================================
   const carregarEstatisticas = useCallback(async () => {
     try {
       const supabase = createClient();
       
+      // Buscar TODAS as revendedoras com campos necessários
       const { data, error } = await supabase
         .from('resellers')
-        .select('id, status, is_active, logo_url, banner_url, banner_mobile_url, colors');
+        .select('id, status, is_active, logo_url, banner_url, banner_mobile_url, colors, theme_settings');
       
       if (error) throw error;
       
+      // CONTADORES GERAIS (todas as revendedoras)
       const total = data?.length || 0;
       const pendentes = data?.filter(r => r.status === 'pendente').length || 0;
       const aprovadas = data?.filter(r => r.status === 'aprovada').length || 0;
-      const ativas = data?.filter(r => r.is_active).length || 0;
+      const ativas = data?.filter(r => r.status === 'aprovada' && r.is_active).length || 0;
       
-      const semPersonalizacao = data?.filter(r => {
-        const hasLogo = !!(r.logo_url && r.logo_url.trim());
-        const hasBanner = !!(r.banner_url && r.banner_url.trim()) || !!(r.banner_mobile_url && r.banner_mobile_url.trim());
-        let hasColors = false;
-        try {
-          const colors = typeof r.colors === 'string' ? JSON.parse(r.colors) : (r.colors || {});
-          hasColors = !!(colors.primary && colors.secondary);
-        } catch { /* ignore */ }
-        return !hasLogo && !hasBanner && !hasColors;
-      }).length || 0;
+      // ============================================================================
+      // FILTRAR APENAS REVENDEDORAS ATIVAS para cálculos operacionais
+      // ============================================================================
+      const revendedorasAtivas = data?.filter(r => r.status === 'aprovada' && r.is_active) || [];
       
-      // Calcular revendedoras sem margem (sem produtos com margem configurada)
+      // CALCULAR "SEM PERSONALIZAÇÃO" - Apenas revendedoras ATIVAS
+      const semPersonalizacao = revendedorasAtivas.filter(r => {
+        const hasLogo = checkHasLogo(r.logo_url);
+        const hasColors = checkHasColors(r.colors);
+        const hasStyles = checkHasStyles(r.theme_settings);
+        const hasBanner = checkHasBanner(r.banner_url, r.banner_mobile_url);
+        
+        // Sem personalização = NÃO tem NENHUM dos 4 elementos
+        return !hasLogo && !hasColors && !hasStyles && !hasBanner;
+      }).length;
+      
+      // CALCULAR "SEM MARGEM" - Apenas revendedoras ATIVAS
       let semMargem = 0;
-      if (data && data.length > 0) {
-        const resellerIds = data.map(r => r.id);
+      if (revendedorasAtivas.length > 0) {
+        const resellerIds = revendedorasAtivas.map(r => r.id);
+        
+        // Buscar produtos ATIVOS com margem configurada
         const { data: productsData } = await supabase
           .from('reseller_products')
           .select('reseller_id, margin_percent, custom_price')
           .in('reseller_id', resellerIds)
           .eq('is_active', true);
         
-        // Agrupar por reseller_id e verificar se tem algum produto com margem
+        // Identificar quais revendedoras TÊM pelo menos 1 produto com margem
         const resellersComMargem = new Set<string>();
         productsData?.forEach(p => {
-          if (p.margin_percent || p.custom_price) {
+          if (p.margin_percent !== null || p.custom_price !== null) {
             resellersComMargem.add(p.reseller_id);
           }
         });
         
+        // Sem margem = revendedoras ativas que NÃO têm produtos com margem
         semMargem = resellerIds.filter(id => !resellersComMargem.has(id)).length;
       }
       
@@ -181,14 +315,14 @@ export default function AdminRevendedorasPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const processadas: RevendedoraCompleta[] = await Promise.all(data.map(async (r: any) => {
         try {
-          // Buscar contagem de produtos
+          // Buscar contagem de produtos ATIVOS
           const { count: totalProdutos } = await supabase
             .from('reseller_products')
             .select('*', { count: 'exact', head: true })
             .eq('reseller_id', r.id)
             .eq('is_active', true);
           
-          // Buscar produtos COM margem configurada (margin_percent OU custom_price)
+          // Buscar produtos ATIVOS COM margem configurada
           const { count: produtosComMargem } = await supabase
             .from('reseller_products')
             .select('*', { count: 'exact', head: true })
@@ -196,22 +330,24 @@ export default function AdminRevendedorasPage() {
             .eq('is_active', true)
             .or('margin_percent.not.is.null,custom_price.not.is.null');
           
-          // Extrair cores
+          // ============================================================================
+          // CALCULAR FLAGS DE PERSONALIZAÇÃO usando os helpers
+          // ============================================================================
+          const flags = calcularPersonalizacaoFlags(
+            r.logo_url,
+            r.colors,
+            r.theme_settings,
+            r.banner_url,
+            r.banner_mobile_url,
+            produtosComMargem || 0
+          );
+          
+          // Extrair primary color para exibição
           let primaryColor = null;
-          let secondaryColor = null;
           try {
             const colors = typeof r.colors === 'string' ? JSON.parse(r.colors) : (r.colors || {});
             primaryColor = colors.primary || null;
-            secondaryColor = colors.secondary || null;
           } catch { /* ignore */ }
-          
-          // Verificar personalização
-          const hasLogo = !!(r.logo_url && typeof r.logo_url === 'string' && r.logo_url.trim() !== '');
-          const hasBanner = !!(
-            (r.banner_url && typeof r.banner_url === 'string' && r.banner_url.trim() !== '') || 
-            (r.banner_mobile_url && typeof r.banner_mobile_url === 'string' && r.banner_mobile_url.trim() !== '')
-          );
-          const hasColors = !!(primaryColor && secondaryColor);
           
           return {
             id: r.id || '',
@@ -226,10 +362,14 @@ export default function AdminRevendedorasPage() {
             catalog_views: r.catalog_views || 0,
             created_at: r.created_at || '',
             rejection_reason: r.rejection_reason || undefined,
-            has_logo: hasLogo,
-            has_banner: hasBanner,
-            has_colors: hasColors,
-            has_margin: (produtosComMargem || 0) > 0,
+            // Flags de personalização
+            has_logo: flags.hasLogo,
+            has_banner: flags.hasBanner,
+            has_colors: flags.hasColors,
+            has_styles: flags.hasStyles,
+            has_margin: flags.hasCustomMargins,
+            is_personalizada: flags.isPersonalizada,
+            // Dados adicionais
             primary_color: primaryColor,
             logo_url: r.logo_url || null,
             banner_url: r.banner_url || null,
@@ -256,7 +396,9 @@ export default function AdminRevendedorasPage() {
             has_logo: false,
             has_banner: false,
             has_colors: false,
+            has_styles: false,
             has_margin: false,
+            is_personalizada: false,
             primary_color: null,
             logo_url: null,
             banner_url: null,
@@ -268,27 +410,47 @@ export default function AdminRevendedorasPage() {
         }
       }));
 
-      // Aplicar filtros client-side que não podem ser feitos no Supabase
+      // ============================================================================
+      // APLICAR FILTROS CLIENT-SIDE
+      // ============================================================================
       let filtered = processadas;
       switch (filtroAtivacao) {
         case 'ativas':
-          filtered = processadas.filter(r => r.is_active);
+          // Apenas revendedoras ativas
+          filtered = processadas.filter(r => r.status === 'aprovada' && r.is_active);
           break;
         case 'inativas':
+          // Apenas revendedoras inativas (podem ser aprovadas mas desativadas)
           filtered = processadas.filter(r => !r.is_active);
           break;
         case 'personalizadas':
-          filtered = processadas.filter(r => r.has_logo || r.has_banner || r.has_colors);
+          // APENAS ATIVAS + tem personalização (logo OR cores OR estilos OR banner)
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && r.is_personalizada
+          );
           break;
         case 'sem_personalizacao':
-          filtered = processadas.filter(r => !r.has_logo && !r.has_banner && !r.has_colors);
+          // APENAS ATIVAS + NÃO tem nenhuma personalização
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && !r.is_personalizada
+          );
           break;
         case 'sem_margem':
-          filtered = processadas.filter(r => !r.has_margin);
+          // APENAS ATIVAS + não tem produtos com margem
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && !r.has_margin
+          );
           break;
         case 'completas':
+          // APENAS ATIVAS + tem TUDO configurado
           filtered = processadas.filter(r => 
-            r.has_logo && r.has_banner && r.has_colors && r.has_margin && r.total_products > 0
+            r.status === 'aprovada' && 
+            r.is_active && 
+            r.has_logo && 
+            r.has_banner && 
+            r.has_colors && 
+            r.has_margin && 
+            r.total_products > 0
           );
           break;
       }

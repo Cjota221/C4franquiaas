@@ -20,24 +20,29 @@ Um **painel completo** para visualizar quem realmente personalizou a loja e quem
 O sistema analisa **5 elementos** de personalização:
 
 ### 1. Logo (20 pontos)
+
 - ✅ Tem logo customizada = 20 pontos
 - ❌ Sem logo = 0 pontos
 
 ### 2. Cores (15 pontos)
+
 - ✅ Paleta diferente do padrão (#ec4899, #8b5cf6) = 15 pontos
 - ❌ Usando cores padrão = 0 pontos
 
 ### 3. Banners (30 pontos)
+
 - ✅ Desktop + Mobile = 30 pontos
 - ✅ Apenas Desktop = 15 pontos
 - ✅ Apenas Mobile = 15 pontos
 - ❌ Sem banners = 0 pontos
 
 ### 4. Estilos (15 pontos)
+
 - ✅ `theme_settings` customizado = 15 pontos
 - ❌ Usando estilos padrão = 0 pontos
 
 ### 5. Margens de Produtos (20 pontos)
+
 - ✅ 76-100% dos produtos = 20 pontos
 - ✅ 51-75% dos produtos = 15 pontos
 - ✅ 26-50% dos produtos = 10 pontos
@@ -48,13 +53,13 @@ O sistema analisa **5 elementos** de personalização:
 
 ## 🏆 Níveis de Personalização
 
-| Nível | Score | Emoji | Cor | Descrição |
-|-------|-------|-------|-----|-----------|
-| **ZERADA** | 0 | 🚫 | Vermelho | Nenhuma personalização |
-| **BAIXA** | 1-30 | ⚠️ | Laranja | Personalização mínima |
-| **MÉDIA** | 31-60 | 📊 | Amarelo | Algumas personalizações |
-| **ALTA** | 61-90 | ⭐ | Azul | Bem personalizada |
-| **COMPLETA** | 91-100 | 🏆 | Verde | Totalmente customizada |
+| Nível        | Score  | Emoji | Cor      | Descrição               |
+| ------------ | ------ | ----- | -------- | ----------------------- |
+| **ZERADA**   | 0      | 🚫    | Vermelho | Nenhuma personalização  |
+| **BAIXA**    | 1-30   | ⚠️    | Laranja  | Personalização mínima   |
+| **MÉDIA**    | 31-60  | 📊    | Amarelo  | Algumas personalizações |
+| **ALTA**     | 61-90  | ⭐    | Azul     | Bem personalizada       |
+| **COMPLETA** | 91-100 | 🏆    | Verde    | Totalmente customizada  |
 
 ---
 
@@ -84,30 +89,36 @@ Ou pelo menu admin: **Sidebar → Personalização** (ícone de paleta 🎨)
 O painel mostra:
 
 #### 📊 Cards Resumo (topo)
+
 - Total de revendedoras
 - Score médio geral
 - Quantas estão COMPLETAS
 - Quantas têm POUCA personalização
 
 #### 📈 Gráfico de Níveis
+
 - Distribuição visual por nível
 - Barras de progresso coloridas
 - Percentuais de cada categoria
 
 #### 🎨 Elementos de Personalização
+
 - 5 cards mostrando % de adoção de cada elemento
 - Logo, Cores, Banners, Estilos, Margens
 
 #### 🔍 Filtros
+
 - **Busca:** Nome ou slug da loja
 - **Nível:** Filtrar por ZERADA, BAIXA, MÉDIA, ALTA, COMPLETA
 
 #### 📋 Tabela Detalhada
+
 - Lista todas as revendedoras
 - Colunas: Loja, Nível, Score, ✓/✗ para cada elemento
 - **Expandir detalhes:** Clique na seta para ver análise completa
 
 #### 💾 Exportar CSV
+
 - Botão no topo direito
 - Gera planilha com todos os dados filtrados
 
@@ -116,6 +127,7 @@ O painel mostra:
 ## 🔌 Endpoints da API
 
 ### 1. Análise Completa (Todas as Revendedoras)
+
 ```typescript
 GET /api/admin/personalizacao
 
@@ -127,16 +139,18 @@ Response: {
 ```
 
 ### 2. Análise de Uma Revendedora
-```typescript
-GET /api/admin/personalizacao?reseller_id=<UUID>
 
-Response: {
-  success: true,
-  data: PersonalizacaoDetalhes
-}
+```typescript
+GET / api / admin / personalizacao
+  ? (reseller_id = <UUID>Response)
+  : {
+      success: true,
+      data: PersonalizacaoDetalhes,
+    };
 ```
 
 ### 3. Resumo Agregado
+
 ```typescript
 GET /api/admin/personalizacao?resumo=true
 
@@ -151,9 +165,11 @@ Response: {
 ## 📁 Arquivos Criados
 
 ### 1. Tipos TypeScript
+
 ```
 lib/types/personalizacao.ts
 ```
+
 - `PersonalizacaoStatus`
 - `PersonalizacaoDetalhes`
 - `PersonalizacaoResumo`
@@ -161,40 +177,50 @@ lib/types/personalizacao.ts
 - Helpers e constantes
 
 ### 2. Serviço de Análise
+
 ```
 lib/services/personalizacao.ts
 ```
+
 - `calcularPersonalizacaoLoja()` - Analisa uma loja
 - `analisarTodasRevendedoras()` - Analisa todas
 - `gerarResumoPersonalizacao()` - Gera dashboard
 
 ### 3. API Endpoint
+
 ```
 app/api/admin/personalizacao/route.ts
 ```
+
 - GET com 3 modos de operação
 
 ### 4. Página do Painel
+
 ```
 app/admin/personalizacao/page.tsx
 ```
+
 - Interface completa
 - Gráficos, filtros, tabelas
 - Detalhes expandíveis
 
 ### 5. Migration SQL
+
 ```
 migrations/050_personalizacao_audit_log.sql
 ```
+
 - Tabela `personalizacao_historico`
 - 5 triggers automáticos
 - Funções de log
 - RLS policies
 
 ### 6. Menu Admin Atualizado
+
 ```
 components/Sidebar.tsx
 ```
+
 - Link "Personalização" adicionado
 
 ---
@@ -202,6 +228,7 @@ components/Sidebar.tsx
 ## 🎨 Interface Visual
 
 ### Cards de Resumo
+
 ```
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
 │ 👥 Total        │  │ 📈 Score Médio  │  │ 🏆 Completas    │  │ ⚠️ Sem Pessoa.  │
@@ -210,6 +237,7 @@ components/Sidebar.tsx
 ```
 
 ### Gráfico de Níveis
+
 ```
 ZERADA    ████████████ 12%
 BAIXA     ██████████████████ 18%
@@ -219,6 +247,7 @@ COMPLETA  ██████████████ 14%
 ```
 
 ### Tabela de Revendedoras
+
 ```
 ┌────────────────┬────────┬───────┬──────┬───────┬────────┬─────────┬─────────┬─────────┐
 │ Loja           │ Nível  │ Score │ Logo │ Cores │ Banner │ Estilos │ Margens │ Detalhe │
@@ -236,6 +265,7 @@ COMPLETA  ██████████████ 14%
 O sistema registra **automaticamente** toda alteração em:
 
 ### Elementos Rastreados
+
 1. **Logo** - Upload/remoção
 2. **Cores** - Mudanças na paleta
 3. **Banner Desktop** - Envio/aprovação
@@ -244,11 +274,13 @@ O sistema registra **automaticamente** toda alteração em:
 6. **Margens** - Mudanças em produtos individuais
 
 ### Triggers Automáticos
+
 - Disparam ao UPDATE das tabelas `resellers` e `reseller_products`
 - Registram: antes/depois, timestamp, tipo de ação
 - Não requer código adicional - funciona automaticamente!
 
 ### Consultar Histórico
+
 ```sql
 -- Ver histórico de uma revendedora
 SELECT
@@ -274,30 +306,35 @@ AND r.is_active = true;
 ## 💡 Casos de Uso
 
 ### 1. Identificar Franqueadas Inativas
+
 ```
 Filtro: Nível = ZERADA ou BAIXA
 Ação: Cobrar personalização ou oferecer suporte
 ```
 
 ### 2. Reconhecer as Melhores
+
 ```
 Filtro: Nível = COMPLETA
 Ação: Destaque, bônus, case de sucesso
 ```
 
 ### 3. Análise de Adoção de Features
+
 ```
 Ver cards de elementos: quantas % usam banners vs logos?
 Decisão: Investir em feature mais popular
 ```
 
 ### 4. Relatório Gerencial
+
 ```
 Exportar CSV → Enviar para diretoria
 Mostrar evolução da personalização
 ```
 
 ### 5. Suporte Proativo
+
 ```
 Buscar loja específica → Ver detalhes expandidos
 Identificar o que falta → Orientar franqueada
@@ -313,12 +350,12 @@ Edite: `lib/types/personalizacao.ts`
 
 ```typescript
 export const CRITERIOS_PONTUACAO = {
-  logo: { peso: 20 },      // Altere aqui
-  cores: { peso: 15 },     // Altere aqui
-  banner: { peso: 30 },    // Altere aqui
-  estilos: { peso: 15 },   // Altere aqui
-  margens: { peso: 20 },   // Altere aqui
-}
+  logo: { peso: 20 }, // Altere aqui
+  cores: { peso: 15 }, // Altere aqui
+  banner: { peso: 30 }, // Altere aqui
+  estilos: { peso: 15 }, // Altere aqui
+  margens: { peso: 20 }, // Altere aqui
+};
 ```
 
 ### Adicionar Novo Elemento Rastreado
@@ -346,16 +383,19 @@ O sistema permite responder:
 ## 🚨 Troubleshooting
 
 ### Erro: "Erro ao processar análise"
+
 - Verifique se migration foi executada
 - Cheque logs do Supabase
 - Confirme que RLS não está bloqueando admin
 
 ### Score sempre 0
+
 - Verifique dados em `resellers` e `reseller_products`
 - Confirme que campos não estão NULL
 - Teste query direto no Supabase
 
 ### Audit log não registra
+
 - Confirme que triggers foram criados
 - Execute: `SELECT * FROM pg_trigger WHERE tgname LIKE '%personalizacao%'`
 - Verifique permissões da função
@@ -387,11 +427,13 @@ O sistema permite responder:
 ---
 
 **Acesse agora:**
+
 ```
 https://c4franquias.com/admin/personalizacao
 ```
 
 Ou localmente:
+
 ```
 http://localhost:3000/admin/personalizacao
 ```

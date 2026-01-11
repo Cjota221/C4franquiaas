@@ -10,6 +10,7 @@ O sistema estava com 2 bugs críticos impedindo banners customizados:
 ## 🔧 Correções Aplicadas
 
 ### 1. ✅ API Corrigida (arquivo `route.ts`)
+
 - **Arquivo**: `app/api/banners/route.ts` (linhas 220-237)
 - **O que mudou**: API agora verifica se `template_id` existe antes de buscar template
 - **Resultado**: Banners customizados podem ser aprovados sem erro "Template não encontrado"
@@ -19,7 +20,7 @@ O sistema estava com 2 bugs críticos impedindo banners customizados:
 **VOCÊ PRECISA EXECUTAR ESTE SQL NO SUPABASE:**
 
 ```sql
-ALTER TABLE banner_submissions 
+ALTER TABLE banner_submissions
 ALTER COLUMN template_id DROP NOT NULL;
 ```
 
@@ -37,12 +38,14 @@ ALTER COLUMN template_id DROP NOT NULL;
 ## 📋 PRÓXIMOS PASSOS (EM ORDEM)
 
 ### Passo 1: Executar SQL no Supabase
+
 - [ ] Abrir Supabase Dashboard
 - [ ] Acessar SQL Editor
 - [ ] Executar: `ALTER TABLE banner_submissions ALTER COLUMN template_id DROP NOT NULL;`
 - [ ] Verificar sucesso da execução
 
 ### Passo 2: Fazer Deploy no Netlify
+
 ```powershell
 git add .
 git commit -m "fix: corrigir aprovacao de banners customizados sem template"
@@ -52,6 +55,7 @@ git push
 **Aguardar deploy completar** (~2-3 minutos)
 
 ### Passo 3: Testar Localmente PRIMEIRO
+
 1. Certifique-se que dev server está rodando (`npm run dev`)
 2. Acesse: http://localhost:3000/revendedora/personalizacao
 3. Teste **banner customizado** (upload de imagens):
@@ -64,6 +68,7 @@ git push
 6. Verificar se não aparece erro "Template não encontrado"
 
 ### Passo 4: Testar em Produção
+
 1. Após deploy Netlify completar
 2. Acesse: https://c4franquias.com/revendedora/personalizacao
 3. Submeta banner customizado
@@ -76,11 +81,13 @@ git push
 ## 🎯 O Que Cada Correção Faz
 
 ### Correção do Database (SQL)
+
 - **Antes**: `template_id` era obrigatório → banners customizados falhavam
 - **Depois**: `template_id` pode ser NULL → banners customizados funcionam
 - **Permite**: Sistema diferenciar banners de template vs customizados
 
 ### Correção da API
+
 - **Antes**: Tentava buscar template SEMPRE → erro 404 se `template_id` null
 - **Depois**: Só busca template SE `template_id` existir
 - **Lógica**:
@@ -99,11 +106,13 @@ git push
 ### Indicadores de Sucesso:
 
 1. **Submissão funciona**:
+
    - Revendedora consegue enviar banner customizado
    - Nenhum erro de banco de dados
    - Banner aparece em "pendente" no admin
 
 2. **Aprovação funciona**:
+
    - Admin consegue aprovar sem erro 404
    - Não aparece "Template não encontrado"
    - Banner aprovado vai para catálogo da revendedora
@@ -122,32 +131,37 @@ git push
 
 ## 📊 Status Atual
 
-| Componente | Status | Ação Necessária |
-|-----------|--------|-----------------|
-| Código Frontend | ✅ OK | Nenhuma - já corrigido |
-| API Backend | ✅ OK | Deploy no Netlify |
-| Database Schema | ❌ BLOQUEADO | **EXECUTAR SQL AGORA** |
-| Netlify Deploy | ⏳ AGUARDANDO | Push + aguardar build |
+| Componente      | Status        | Ação Necessária        |
+| --------------- | ------------- | ---------------------- |
+| Código Frontend | ✅ OK         | Nenhuma - já corrigido |
+| API Backend     | ✅ OK         | Deploy no Netlify      |
+| Database Schema | ❌ BLOQUEADO  | **EXECUTAR SQL AGORA** |
+| Netlify Deploy  | ⏳ AGUARDANDO | Push + aguardar build  |
 
 ---
 
 ## 🆘 Se Ainda Der Erro
 
 ### Erro: "null value in column template_id"
+
 **Causa**: SQL não foi executado
 **Solução**: Execute o SQL no Supabase (Passo 1 acima)
 
 ### Erro: "Template não encontrado" (404)
+
 **Causa**: Código antigo ainda em produção
-**Solução**: 
+**Solução**:
+
 1. Verifique se push foi feito: `git log -1`
 2. Verifique Netlify: https://app.netlify.com (site deployments)
 3. Aguarde build completar
 4. Limpe cache do browser (Ctrl+Shift+R)
 
 ### Admin Panel em Branco
+
 **Causa**: JavaScript error ao carregar dados
 **Solução**:
+
 1. Abra DevTools (F12) → Console
 2. Procure erros em vermelho
 3. Verifique Network tab → procure 404 ou 500
