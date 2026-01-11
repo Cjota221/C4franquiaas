@@ -101,19 +101,24 @@ export default function AlertaProdutosSemMargem({
         if (error) throw error;
 
         // Filtrar: produto existe, está ativo na franqueadora, e não tem margem
-        const semMargem = (data || []).filter(p => {
+        const semMargem = (data || []).filter((p: Record<string, unknown>) => {
+          // Acessar product (pode ser objeto ou array dependendo do Supabase)
+          const product = Array.isArray(p.product) ? p.product[0] : p.product;
           // Produto não existe ou está inativo na franqueadora? Ignora
-          if (!p.product || !p.product.ativo) return false;
+          if (!product || !(product as Record<string, unknown>).ativo) return false;
           // Tem margem percentual > 0? OK, não precisa de atenção
-          if (p.margin_percent && p.margin_percent > 0) return false;
+          if (p.margin_percent && (p.margin_percent as number) > 0) return false;
           // Tem preço customizado > 0? OK, não precisa de atenção
-          if (p.custom_price && p.custom_price > 0) return false;
+          if (p.custom_price && (p.custom_price as number) > 0) return false;
           // Não tem nem margem nem preço = precisa de atenção!
           return true;
         });
 
         // Contar também quantos produtos válidos existem
-        const produtosValidos = (data || []).filter(p => p.product && p.product.ativo);
+        const produtosValidos = (data || []).filter((p: Record<string, unknown>) => {
+          const product = Array.isArray(p.product) ? p.product[0] : p.product;
+          return product && (product as Record<string, unknown>).ativo;
+        });
         
         console.log(`[AlertaProdutosSemMargem] Válidos: ${produtosValidos.length}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
