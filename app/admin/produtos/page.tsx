@@ -613,12 +613,15 @@ export default function ProdutosPage(): React.JSX.Element {
   };
 
   // Vincular produtos às revendedoras
-  const vincularRevendedoras = async () => {
+  const vincularRevendedoras = async (produtoIdsEspecificos?: string[]) => {
     try {
       setVinculandoRevendedoras(true);
-      setStatusMsg({ type: 'info', text: 'Vinculando produtos às revendedoras...' });
-
-      const selected = Object.keys(selectedIds).filter(id => selectedIds[id]);
+      
+      // Se não passou IDs específicos, usa os selecionados
+      const selected = produtoIdsEspecificos || Object.keys(selectedIds).filter(id => selectedIds[id]);
+      
+      const quantidadeProdutos = selected.length || 'todos';
+      setStatusMsg({ type: 'info', text: `Vinculando ${quantidadeProdutos} produto(s) às revendedoras...` });
 
       const response = await fetch('/api/admin/produtos/vincular-revendedoras', {
         method: 'POST',
@@ -634,10 +637,22 @@ export default function ProdutosPage(): React.JSX.Element {
         throw new Error(data.error || data.message || 'Erro ao vincular produtos');
       }
 
-      setStatusMsg({ 
-        type: 'success', 
-        text: `${data.detalhes.vinculacoes} vinculações criadas às revendedoras` 
-      });
+      // Mensagem detalhada de sucesso
+      const { vinculacoes_novas, produtos, revendedoras } = data.detalhes;
+      let mensagem = `${produtos} produto(s) vinculado(s) a ${revendedoras} revendedora(s)`;
+      if (vinculacoes_novas > 0) {
+        mensagem += ` (${vinculacoes_novas} nova(s))`;
+      }
+
+      setStatusMsg({ type: 'success', text: mensagem });
+
+      // IMPORTANTE: Atualizar lista de não vinculados após vinculação
+      await carregarProdutosNaoVinculados();
+      
+      // Se tinha filtro de não vinculados ativo e não há mais produtos, desativa
+      if (filtroNaoVinculados && produtosNaoVinculadosIds.size === 0) {
+        setFiltroNaoVinculados(false);
+      }
 
       setTimeout(() => setStatusMsg(null), 5000);
 
@@ -973,7 +988,7 @@ export default function ProdutosPage(): React.JSX.Element {
                   {statsVinculacao.produtos_nao_vinculados} produto{statsVinculacao.produtos_nao_vinculados !== 1 ? 's' : ''} nao vinculado{statsVinculacao.produtos_nao_vinculados !== 1 ? 's' : ''}
                 </h3>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  Esses produtos estao ativos mas nao aparecem para nenhuma revendedora
+                  Esses produtos estao ativos mas nao aparecem para todas as revendedoras
                   {statsVinculacao.total_revendedoras > 0 && ` (${statsVinculacao.total_revendedoras} revendedora${statsVinculacao.total_revendedoras !== 1 ? 's' : ''} ativa${statsVinculacao.total_revendedoras !== 1 ? 's' : ''})`}
                 </p>
               </div>
@@ -994,29 +1009,10 @@ export default function ProdutosPage(): React.JSX.Element {
                 {filtroNaoVinculados ? 'Mostrando' : 'Ver'}
               </button>
               <button
-                onClick={async () => {
-                  setVinculandoRevendedoras(true);
-                  setStatusMsg({ type: 'info', text: 'Vinculando produtos nao vinculados as revendedoras...' });
-                  try {
-                    const idsNaoVinculados = Array.from(produtosNaoVinculadosIds);
-                    const response = await fetch('/api/admin/produtos/vincular-revendedoras', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ produto_ids: idsNaoVinculados }),
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                      setStatusMsg({ type: 'success', text: `${data.detalhes.vinculacoes} vinculacoes criadas com sucesso` });
-                      carregarProdutosNaoVinculados();
-                    } else {
-                      throw new Error(data.error);
-                    }
-                  } catch (err) {
-                    setStatusMsg({ type: 'error', text: `Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}` });
-                  } finally {
-                    setVinculandoRevendedoras(false);
-                    setTimeout(() => setStatusMsg(null), 5000);
-                  }
+                onClick={() => {
+                  // Usa a função centralizada passando os IDs não vinculados
+                  const idsNaoVinculados = Array.from(produtosNaoVinculadosIds).map(String);
+                  vincularRevendedoras(idsNaoVinculados);
                 }}
                 disabled={vinculandoRevendedoras || loadingNaoVinculados}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors"
