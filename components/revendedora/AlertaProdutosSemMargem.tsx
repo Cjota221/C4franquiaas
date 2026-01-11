@@ -61,17 +61,19 @@ export default function AlertaProdutosSemMargem({
     buscarRevendedoraId();
   }, [revendedoraIdProp, supabase]);
 
-  // Buscar produtos sem margem
+  // Buscar produtos sem margem (INATIVOS que precisam de atenção)
   useEffect(() => {
     if (!revendedoraId) return;
     
     async function verificarProdutosSemMargem() {
       try {
-        // Buscar produtos sem margem
+        // ✅ CORRIGIDO: Buscar apenas produtos INATIVOS sem margem
+        // (são estes que a revendedora precisa configurar para aparecer na loja)
         const { data, error } = await supabase
           .from("reseller_products")
-          .select("id, margin_percent, custom_price")
+          .select("id, margin_percent, custom_price, is_active")
           .eq("reseller_id", revendedoraId)
+          .eq("is_active", false) // ✅ Apenas inativos
           .or("margin_percent.is.null,margin_percent.eq.0");
 
         if (error) throw error;

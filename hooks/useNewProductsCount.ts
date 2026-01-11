@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 /**
- * Hook para buscar a contagem de produtos novos pendentes de ativação
- * pela franqueada logada
+ * Hook para buscar a contagem de produtos INATIVOS (sem margem) da revendedora logada
+ * Mostra no badge do menu "Produtos" para alertar a revendedora
  */
 export function useNewProductsCount() {
   const [count, setCount] = useState(0);
@@ -37,13 +37,16 @@ export function useNewProductsCount() {
           return;
         }
 
-        // Buscar contagem de produtos novos pendentes
+        // ✅ CORRIGIDO: Buscar produtos INATIVOS desta revendedora específica
+        // (produtos que precisam de atenção - definir margem e ativar)
         const { count: newCount, error } = await supabase
-          .from('produtos_novos_franqueada')
-          .select('*', { count: 'exact', head: true });
+          .from('reseller_products')
+          .select('*', { count: 'exact', head: true })
+          .eq('reseller_id', resellerData.id)
+          .eq('is_active', false); // Apenas inativos
 
         if (error) {
-          console.error('Erro ao buscar contagem de produtos novos:', error);
+          console.error('Erro ao buscar contagem de produtos inativos:', error);
           setCount(0);
         } else {
           setCount(newCount || 0);
