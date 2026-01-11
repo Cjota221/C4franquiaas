@@ -7,6 +7,7 @@ import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora';
 import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnboardingTutorial from '@/components/revendedora/OnboardingTutorial';
+import AlertaProdutosSemMargem from '@/components/revendedora/AlertaProdutosSemMargem';
 
 export default function RevendedoraRootLayout({
   children,
@@ -253,6 +254,7 @@ export default function RevendedoraRootLayout({
       <SidebarRevendedora />
       <main className="flex-1 w-full lg:ml-0">
         <div className="pt-16 lg:pt-0">
+          <AlertaProdutosSemMargem />
           {children}
         </div>
       </main>

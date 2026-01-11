@@ -45,6 +45,7 @@ export default function ProdutosRevendedoraPage() {
   const [categoriaFiltro, setCategoriaFiltro] = useState('todas');
   const [statusFiltro, setStatusFiltro] = useState<'todos' | 'ativo' | 'inativo'>('todos');
   const [estoqueFiltro, setEstoqueFiltro] = useState<'todos' | 'disponivel' | 'esgotado'>('todos');
+  const [margemFiltro, setMargemFiltro] = useState<'todos' | 'sem-margem' | 'com-margem'>('todos');
   
   // Estados de ordenação
   const [sortBy] = useState<SortField>('nome');
@@ -61,6 +62,15 @@ export default function ProdutosRevendedoraPage() {
   
   // Debounce da busca
   const buscaDebounced = useDebounce(busca, 500);
+
+  // Verificar se veio com filtro na URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filtroParam = params.get('filtro');
+    if (filtroParam === 'sem-margem') {
+      setMargemFiltro('sem-margem');
+    }
+  }, []);
 
   // Carregar produtos
   useEffect(() => {
@@ -141,12 +151,25 @@ export default function ProdutosRevendedoraPage() {
     }
   }
 
+  // Verificar se produto está sem margem
+  function produtoSemMargem(produto: ProdutoComMargem): boolean {
+    return produto.margin_percent === null || 
+           produto.margin_percent === undefined || 
+           produto.margin_percent === 0;
+  }
+
   // Alternar ativação individual
   async function toggleAtivacao(produtoId: string) {
     if (!revendedoraId) return;
 
     const produto = produtos.find(p => p.id === produtoId);
     if (!produto) return;
+
+    // BLOQUEIO: Não permitir ativar produto sem margem
+    if (!produto.is_active && produtoSemMargem(produto)) {
+      alert('Defina primeiro a margem de lucro para este produto antes de ativá-lo na sua loja.');
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -219,6 +242,17 @@ export default function ProdutosRevendedoraPage() {
   async function toggleAtivacaoEmMassa(ativar: boolean) {
     if (!revendedoraId || selectedIds.size === 0) return;
 
+    // BLOQUEIO: Se ativando, verificar se algum produto está sem margem
+    if (ativar) {
+      const produtosSelecionados = produtos.filter(p => selectedIds.has(p.id));
+      const semMargem = produtosSelecionados.filter(p => produtoSemMargem(p));
+      
+      if (semMargem.length > 0) {
+        alert(`${semMargem.length} produto(s) selecionado(s) estão sem margem de lucro. Configure a margem primeiro antes de ativá-los.`);
+        return;
+      }
+    }
+
     setProcessando(true);
     try {
       const updates = Array.from(selectedIds).map(productId => 
@@ -261,6 +295,9 @@ export default function ProdutosRevendedoraPage() {
   // Filtrar produtos
   const categorias = ['todas', ...new Set(produtos.map(p => p.categorias))];
 
+  // Contar produtos sem margem (para exibir no filtro)
+  const produtosSemMargemCount = produtos.filter(p => produtoSemMargem(p)).length;
+
   // 🆕 Identificar produtos novos (desativados + sem margem ou margem zero)
   const produtosNovos = produtos.filter(p => 
     !p.is_active && (p.margin_percent === 0 || p.margin_percent === null || p.margin_percent === undefined)
@@ -275,8 +312,11 @@ export default function ProdutosRevendedoraPage() {
     const matchEstoque = estoqueFiltro === 'todos' ||
       (estoqueFiltro === 'disponivel' && p.estoque > 0) ||
       (estoqueFiltro === 'esgotado' && p.estoque === 0);
+    const matchMargem = margemFiltro === 'todos' ||
+      (margemFiltro === 'sem-margem' && produtoSemMargem(p)) ||
+      (margemFiltro === 'com-margem' && !produtoSemMargem(p));
     
-    return matchBusca && matchCategoria && matchStatus && matchEstoque;
+    return matchBusca && matchCategoria && matchStatus && matchEstoque && matchMargem;
   });
 
   // Ordenar produtos
@@ -535,9 +575,54 @@ export default function ProdutosRevendedoraPage() {
                 <option value="esgotado">Esgotado</option>
               </select>
             </div>
+
+            {/* Margem de Lucro */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Margem de Lucro
+              </label>
+              <select
+                value={margemFiltro}
+                onChange={(e) => setMargemFiltro(e.target.value as 'todos' | 'sem-margem' | 'com-margem')}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+                  margemFiltro === 'sem-margem' ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                }`}
+              >
+                <option value="todos">Todos</option>
+                <option value="sem-margem">Sem margem ({produtosSemMargemCount})</option>
+                <option value="com-margem">Com margem</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Alerta de produtos sem margem */}
+      {produtosSemMargemCount > 0 && margemFiltro !== 'sem-margem' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Sparkles className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-medium text-amber-800">
+                  {produtosSemMargemCount} produto(s) sem margem de lucro
+                </p>
+                <p className="text-sm text-amber-700">
+                  Configure a margem para ativar esses produtos na sua loja.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setMargemFiltro('sem-margem')}
+              className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap"
+            >
+              Ver produtos
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Ações em Massa - Desktop */}
       {selectedIds.size > 0 && (
