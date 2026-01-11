@@ -85,17 +85,25 @@ export default function AlertaProdutosSemMargem({
     async function verificarProdutosSemMargem() {
       setLoading(true);
       try {
-        // ✅ CORRIGIDO: Buscar TODOS os produtos da revendedora que estão SEM MARGEM
-        // Não importa se está ativo ou inativo - se não tem margem, precisa configurar
+        // ✅ CORRIGIDO: Buscar produtos da revendedora COM JOIN na tabela products
+        // Para garantir que só conta produtos que REALMENTE existem e estão ativos
         const { data, error } = await supabase
           .from("reseller_products")
-          .select("id, margin_percent, custom_price, is_active")
+          .select(`
+            id, 
+            margin_percent, 
+            custom_price, 
+            is_active,
+            product:products!inner(id, ativo)
+          `)
           .eq("reseller_id", revendedoraId);
 
         if (error) throw error;
 
-        // Filtrar apenas os que REALMENTE estão sem margem
+        // Filtrar: produto existe, está ativo na franqueadora, e não tem margem
         const semMargem = (data || []).filter(p => {
+          // Produto não existe ou está inativo na franqueadora? Ignora
+          if (!p.product || !p.product.ativo) return false;
           // Tem margem percentual > 0? OK, não precisa de atenção
           if (p.margin_percent && p.margin_percent > 0) return false;
           // Tem preço customizado > 0? OK, não precisa de atenção
@@ -104,7 +112,10 @@ export default function AlertaProdutosSemMargem({
           return true;
         });
 
-        console.log(`[AlertaProdutosSemMargem] Total: ${data?.length || 0}, Sem margem: ${semMargem.length}`);
+        // Contar também quantos produtos válidos existem
+        const produtosValidos = (data || []).filter(p => p.product && p.product.ativo);
+        
+        console.log(`[AlertaProdutosSemMargem] Válidos: ${produtosValidos.length}, Sem margem: ${semMargem.length}`);
         setQuantidade(semMargem.length);
       } catch (err) {
         console.error("Erro ao verificar produtos sem margem:", err);
