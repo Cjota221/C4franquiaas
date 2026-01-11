@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AlertTriangle, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -13,21 +14,31 @@ interface AlertaMargemProps {
 
 /**
  * Componente de alerta que aparece quando a revendedora tem produtos sem margem de lucro
- * Usado na home do painel e na página de produtos
+ * NÃO aparece na página de produtos (lá já tem o card roxo com a mesma info)
  */
 export default function AlertaProdutosSemMargem({ 
   revendedoraId: revendedoraIdProp, 
   showCloseButton = false,
   compacto = false 
 }: AlertaMargemProps) {
+  const pathname = usePathname();
   const [revendedoraId, setRevendedoraId] = useState<string | null>(revendedoraIdProp || null);
   const [quantidade, setQuantidade] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
   const supabase = createClient();
 
+  // 🆕 NÃO mostrar na página de produtos (já tem o card roxo lá)
+  const isNaPaginaProdutos = pathname?.includes('/revendedora/produtos');
+
   // Buscar ID da revendedora se não foi passado
   useEffect(() => {
+    // Se estiver na página de produtos, não precisa buscar nada
+    if (isNaPaginaProdutos) {
+      setLoading(false);
+      return;
+    }
+
     if (revendedoraIdProp) {
       setRevendedoraId(revendedoraIdProp);
       return;
@@ -59,11 +70,12 @@ export default function AlertaProdutosSemMargem({
     }
 
     buscarRevendedoraId();
-  }, [revendedoraIdProp, supabase]);
+  }, [revendedoraIdProp, supabase, isNaPaginaProdutos]);
 
   // Buscar produtos sem margem (INATIVOS que precisam de atenção)
   useEffect(() => {
-    if (!revendedoraId) return;
+    // Se estiver na página de produtos, não buscar (já tem card roxo lá)
+    if (isNaPaginaProdutos || !revendedoraId) return;
     
     async function verificarProdutosSemMargem() {
       try {
@@ -93,10 +105,10 @@ export default function AlertaProdutosSemMargem({
     }
 
     verificarProdutosSemMargem();
-  }, [revendedoraId, supabase]);
+  }, [revendedoraId, supabase, isNaPaginaProdutos]);
 
-  // Não mostrar se carregando, sem produtos, ou foi fechado
-  if (loading || quantidade === 0 || dismissed) {
+  // Não mostrar se carregando, sem produtos, foi fechado, ou na página de produtos
+  if (loading || quantidade === 0 || dismissed || isNaPaginaProdutos) {
     return null;
   }
 
