@@ -379,6 +379,99 @@ async function handleNovoPedido(data: any, eventType: string) {
   };
 }
 
+/**
+ * 🆕 Processa exclusão de produto do FácilZap
+ * Desativa o produto em todas as franquias e revendedoras
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleProdutoExcluido(data: any, eventType: string) {
+  const facilzapId = extractFacilZapId(data);
+  
+  if (!facilzapId) {
+    console.error('[Webhook] ❌ ID do produto não encontrado no payload de exclusão');
+    throw new Error('ID do produto é obrigatório para exclusão');
+  }
+
+  console.log(`[Webhook] 🗑️ Processando EXCLUSÃO: ID=${facilzapId} | Evento=${eventType}`);
+
+  // Buscar produto existente
+  const { data: produto, error: errBusca } = await supabaseAdmin
+    .from('produtos')
+    .select('id, nome, facilzap_id, id_externo')
+    .or(`facilzap_id.eq.${facilzapId},id_externo.eq.${facilzapId}`)
+    .single();
+
+  if (errBusca || !produto) {
+    console.warn(`[Webhook] ⚠️ Produto não encontrado para exclusão: ${facilzapId}`);
+    return { message: 'Produto não encontrado', facilzap_id: facilzapId };
+  }
+
+  console.log(`[Webhook] 🗑️ Produto encontrado: ${produto.nome} (${produto.id})`);
+
+  // 1️⃣ Desativar o produto principal
+  const { error: errDesativar } = await supabaseAdmin
+    .from('produtos')
+    .update({ 
+      ativo: false,
+      ultima_sincronizacao: new Date().toISOString()
+    })
+    .eq('id', produto.id);
+
+  if (errDesativar) {
+    console.error('[Webhook] ❌ Erro ao desativar produto:', errDesativar);
+  } else {
+    console.log(`[Webhook] ✅ Produto ${produto.nome} DESATIVADO`);
+  }
+
+  // 2️⃣ Desativar em todas as franqueadas
+  const { data: franqueadas } = await supabaseAdmin
+    .from('produtos_franqueadas')
+    .select('id')
+    .eq('produto_id', produto.id);
+
+  if (franqueadas && franqueadas.length > 0) {
+    const franqueadaIds = franqueadas.map((f: { id: string }) => f.id);
+    
+    await supabaseAdmin
+      .from('produtos_franqueadas_precos')
+      .update({ ativo_no_site: false })
+      .in('produto_franqueada_id', franqueadaIds);
+    
+    console.log(`[Webhook] ✅ Desativado em ${franqueadaIds.length} franqueadas`);
+  }
+
+  // 3️⃣ Desativar em todas as revendedoras
+  const { error: errRevendedoras, count } = await supabaseAdmin
+    .from('reseller_products')
+    .update({ is_active: false })
+    .eq('product_id', produto.id)
+    .select('id', { count: 'exact' });
+
+  if (!errRevendedoras) {
+    console.log(`[Webhook] ✅ Desativado em ${count || 0} revendedoras`);
+  }
+
+  // 4️⃣ Registrar log
+  await supabaseAdmin.from('logs_sincronizacao').insert({
+    tipo: 'webhook_produto_excluido',
+    produto_id: produto.id,
+    facilzap_id: facilzapId,
+    descricao: `Produto "${produto.nome}" EXCLUÍDO do FácilZap - desativado em todas franquias e revendedoras`,
+    payload: { event: eventType, data, produto_id: produto.id },
+    sucesso: true,
+    erro: null,
+  });
+
+  return {
+    produto_id: produto.id,
+    nome: produto.nome,
+    facilzap_id: facilzapId,
+    acao: 'excluido',
+    franqueadas_desativadas: franqueadas?.length || 0,
+    revendedoras_desativadas: count || 0
+  };
+}
+
 // ============ ENDPOINT PRINCIPAL ============
 
 export async function POST(request: NextRequest) {
@@ -430,8 +523,12 @@ export async function POST(request: NextRequest) {
     const data = payload.data || payload;
     let result;
 
+    // 🆕 Eventos de EXCLUSÃO de produto (deve vir ANTES do handler genérico de produto)
+    if (event.includes('exclu') || event.includes('delet') || event.includes('remov') || event.includes('removed')) {
+      result = await handleProdutoExcluido(data, event);
+    }
     // Eventos de Produto/Estoque
-    if (event.includes('produto') || event.includes('product') || event.includes('estoque') || event.includes('stock')) {
+    else if (event.includes('produto') || event.includes('product') || event.includes('estoque') || event.includes('stock')) {
       result = await handleProdutoEstoque(data, event);
     }
     // Eventos de Pedido (futuro ERP)
@@ -496,7 +593,9 @@ export async function GET() {
       'produto_criado / product.created',
       'produto_atualizado / product.updated',
       'estoque_atualizado / product.stock.updated',
-      'pedido_criado / order.created (em desenvolvimento)',
+      'produto_excluido / product.deleted / product.removed', // 🆕 EXCLUSÃO
+      'pedido_criado / order.created',
+      'pedido_cancelado / order.cancelled',
       'sync.full (trigger sincronização completa)'
     ],
     authentication: {
