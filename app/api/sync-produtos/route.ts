@@ -260,11 +260,16 @@ async function handleSync(page?: number, length?: number) {
     console.log('🔄 Verificando produtos que voltaram a ter estoque...');
     await reativarProdutosComEstoque(supabase);
 
+    // 🗑️ DETECTAR E DESATIVAR produtos que foram EXCLUÍDOS do FácilZap
+    console.log('🗑️ Verificando produtos excluídos do FácilZap...');
+    const produtosExcluidos = await detectarProdutosExcluidos(supabase, produtos);
+
     console.log(`✅ SINCRONIZAÇÃO CONCLUÍDA:`);
     console.log(`   📊 Total processado: ${totalProcessed} produtos`);
     console.log(`   🆕 Novos: ${totalNew}`);
     console.log(`   🔄 Atualizados: ${totalUpdated}`);
     console.log(`   ⚪ Inalterados: ${totalUnchanged}`);
+    console.log(`   🗑️ Excluídos: ${produtosExcluidos}`);
     
     return NextResponse.json({ 
       ok: true, 
@@ -272,6 +277,7 @@ async function handleSync(page?: number, length?: number) {
       new: totalNew,
       updated: totalUpdated,
       unchanged: totalUnchanged,
+      deleted: produtosExcluidos, // 🆕 Produtos excluídos
       // Mantém 'imported' para compatibilidade com código existente
       imported: totalNew + totalUpdated,
       timestamp: new Date().toISOString(),
@@ -475,3 +481,119 @@ async function reativarProdutosComEstoque(supabase: any) {
   }
 }
 
+/**
+ * 🗑️ Detecta e desativa produtos que foram EXCLUÍDOS do FácilZap
+ * Compara os IDs do FácilZap com os nossos e desativa os que não existem mais
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[]): Promise<number> {
+  try {
+    // Criar Set de IDs que existem no FácilZap
+    const idsFacilzap = new Set(
+      produtosFacilzap.map(p => {
+        const rec = p as unknown as Record<string, unknown>;
+        return String(rec['id_externo'] ?? rec['id'] ?? '');
+      }).filter(id => id !== '')
+    );
+
+    console.log(`📊 FácilZap tem ${idsFacilzap.size} produtos`);
+
+    // Buscar todos os produtos ATIVOS no nosso banco que vieram do FácilZap
+    const { data: produtosNoBanco, error: errBusca } = await supabase
+      .from('produtos')
+      .select('id, nome, id_externo, facilzap_id, ativo')
+      .eq('ativo', true)
+      .or('id_externo.not.is.null,facilzap_id.not.is.null');
+
+    if (errBusca) {
+      console.error('❌ Erro ao buscar produtos do banco:', errBusca);
+      return 0;
+    }
+
+    if (!produtosNoBanco || produtosNoBanco.length === 0) {
+      console.log('✅ Nenhum produto ativo para verificar');
+      return 0;
+    }
+
+    console.log(`📊 Nosso banco tem ${produtosNoBanco.length} produtos ativos do FácilZap`);
+
+    // Encontrar produtos que NÃO existem mais no FácilZap
+    const produtosExcluidos = produtosNoBanco.filter((p: { id_externo: string; facilzap_id: string }) => {
+      const idExterno = p.id_externo || p.facilzap_id;
+      return idExterno && !idsFacilzap.has(String(idExterno));
+    });
+
+    if (produtosExcluidos.length === 0) {
+      console.log('✅ Nenhum produto excluído detectado');
+      return 0;
+    }
+
+    console.log(`🗑️ Detectados ${produtosExcluidos.length} produtos EXCLUÍDOS do FácilZap:`);
+    produtosExcluidos.slice(0, 5).forEach((p: { nome: string; id_externo: string }) => {
+      console.log(`   - ${p.nome} (${p.id_externo})`);
+    });
+    if (produtosExcluidos.length > 5) {
+      console.log(`   ... e mais ${produtosExcluidos.length - 5} produtos`);
+    }
+
+    // Desativar os produtos excluídos
+    const idsParaDesativar = produtosExcluidos.map((p: { id: string }) => p.id);
+    
+    // 1. Desativar na tabela produtos
+    const { error: errDesativar } = await supabase
+      .from('produtos')
+      .update({ 
+        ativo: false,
+        ultima_sincronizacao: new Date().toISOString()
+      })
+      .in('id', idsParaDesativar);
+
+    if (errDesativar) {
+      console.error('❌ Erro ao desativar produtos:', errDesativar);
+    } else {
+      console.log(`✅ ${produtosExcluidos.length} produtos DESATIVADOS`);
+    }
+
+    // 2. Desativar em franqueadas
+    const { data: franqueadas } = await supabase
+      .from('produtos_franqueadas')
+      .select('id')
+      .in('produto_id', idsParaDesativar);
+
+    if (franqueadas && franqueadas.length > 0) {
+      const franqueadaIds = franqueadas.map((f: { id: string }) => f.id);
+      await supabase
+        .from('produtos_franqueadas_precos')
+        .update({ ativo_no_site: false })
+        .in('produto_franqueada_id', franqueadaIds);
+      console.log(`✅ Desativados em ${franqueadaIds.length} franqueadas`);
+    }
+
+    // 3. Desativar em reseller_products
+    await supabase
+      .from('reseller_products')
+      .update({ is_active: false })
+      .in('product_id', idsParaDesativar);
+    console.log(`✅ Desativados em revendedoras`);
+
+    // 4. Registrar log
+    await supabase.from('logs_sincronizacao').insert({
+      tipo: 'produtos_excluidos_facilzap',
+      descricao: `${produtosExcluidos.length} produtos detectados como excluídos do FácilZap e desativados`,
+      payload: { 
+        total_excluidos: produtosExcluidos.length,
+        produtos: produtosExcluidos.slice(0, 10).map((p: { nome: string; id_externo: string }) => ({
+          nome: p.nome,
+          id_externo: p.id_externo
+        }))
+      },
+      sucesso: true,
+      erro: null,
+    });
+
+    return produtosExcluidos.length;
+  } catch (error) {
+    console.error('❌ Erro em detectarProdutosExcluidos:', error);
+    return 0;
+  }
+}
