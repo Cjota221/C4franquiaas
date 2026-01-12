@@ -482,8 +482,8 @@ async function reativarProdutosComEstoque(supabase: any) {
 }
 
 /**
- * 🗑️ Detecta e desativa produtos que foram EXCLUÍDOS do FácilZap
- * Compara os IDs do FácilZap com os nossos e desativa os que não existem mais
+ * 🗑️ Detecta e EXCLUI produtos que foram DELETADOS do FácilZap
+ * Compara os IDs do FácilZap com os nossos e DELETA os que não existem mais
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[]): Promise<number> {
@@ -498,11 +498,10 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
 
     console.log(`📊 FácilZap tem ${idsFacilzap.size} produtos`);
 
-    // Buscar todos os produtos ATIVOS no nosso banco que vieram do FácilZap
+    // 🔧 CORREÇÃO: Buscar TODOS os produtos (ativos E inativos) que vieram do FácilZap
     const { data: produtosNoBanco, error: errBusca } = await supabase
       .from('produtos')
       .select('id, nome, id_externo, facilzap_id, ativo')
-      .eq('ativo', true)
       .or('id_externo.not.is.null,facilzap_id.not.is.null');
 
     if (errBusca) {
@@ -511,78 +510,97 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
     }
 
     if (!produtosNoBanco || produtosNoBanco.length === 0) {
-      console.log('✅ Nenhum produto ativo para verificar');
+      console.log('✅ Nenhum produto do FácilZap no banco');
       return 0;
     }
 
-    console.log(`📊 Nosso banco tem ${produtosNoBanco.length} produtos ativos do FácilZap`);
+    console.log(`📊 Nosso banco tem ${produtosNoBanco.length} produtos do FácilZap (ativos + inativos)`);
 
     // Encontrar produtos que NÃO existem mais no FácilZap
-    const produtosExcluidos = produtosNoBanco.filter((p: { id_externo: string; facilzap_id: string }) => {
+    const produtosParaExcluir = produtosNoBanco.filter((p: { id_externo: string; facilzap_id: string }) => {
       const idExterno = p.id_externo || p.facilzap_id;
       return idExterno && !idsFacilzap.has(String(idExterno));
     });
 
-    if (produtosExcluidos.length === 0) {
+    if (produtosParaExcluir.length === 0) {
       console.log('✅ Nenhum produto excluído detectado');
       return 0;
     }
 
-    console.log(`🗑️ Detectados ${produtosExcluidos.length} produtos EXCLUÍDOS do FácilZap:`);
-    produtosExcluidos.slice(0, 5).forEach((p: { nome: string; id_externo: string }) => {
+    console.log(`🗑️ Detectados ${produtosParaExcluir.length} produtos para EXCLUIR do nosso banco:`);
+    produtosParaExcluir.slice(0, 5).forEach((p: { nome: string; id_externo: string }) => {
       console.log(`   - ${p.nome} (${p.id_externo})`);
     });
-    if (produtosExcluidos.length > 5) {
-      console.log(`   ... e mais ${produtosExcluidos.length - 5} produtos`);
+    if (produtosParaExcluir.length > 5) {
+      console.log(`   ... e mais ${produtosParaExcluir.length - 5} produtos`);
     }
 
-    // Desativar os produtos excluídos
-    const idsParaDesativar = produtosExcluidos.map((p: { id: string }) => p.id);
-    
-    // 1. Desativar na tabela produtos
-    const { error: errDesativar } = await supabase
-      .from('produtos')
-      .update({ 
-        ativo: false,
-        ultima_sincronizacao: new Date().toISOString()
-      })
-      .in('id', idsParaDesativar);
+    const idsParaExcluir = produtosParaExcluir.map((p: { id: string }) => p.id);
 
-    if (errDesativar) {
-      console.error('❌ Erro ao desativar produtos:', errDesativar);
-    } else {
-      console.log(`✅ ${produtosExcluidos.length} produtos DESATIVADOS`);
-    }
-
-    // 2. Desativar em franqueadas
+    // 🗑️ 1. DELETAR vinculações com franqueadas (produtos_franqueadas_precos primeiro por FK)
     const { data: franqueadas } = await supabase
       .from('produtos_franqueadas')
       .select('id')
-      .in('produto_id', idsParaDesativar);
+      .in('produto_id', idsParaExcluir);
 
     if (franqueadas && franqueadas.length > 0) {
       const franqueadaIds = franqueadas.map((f: { id: string }) => f.id);
+      
+      // Deletar preços primeiro (FK)
       await supabase
         .from('produtos_franqueadas_precos')
-        .update({ ativo_no_site: false })
+        .delete()
         .in('produto_franqueada_id', franqueadaIds);
-      console.log(`✅ Desativados em ${franqueadaIds.length} franqueadas`);
+      console.log(`✅ Deletados preços de ${franqueadaIds.length} franqueadas`);
+      
+      // Deletar vinculações
+      await supabase
+        .from('produtos_franqueadas')
+        .delete()
+        .in('produto_id', idsParaExcluir);
+      console.log(`✅ Deletadas vinculações com franqueadas`);
     }
 
-    // 3. Desativar em reseller_products
+    // 🗑️ 2. DELETAR vinculações com revendedoras
     await supabase
       .from('reseller_products')
-      .update({ is_active: false })
-      .in('product_id', idsParaDesativar);
-    console.log(`✅ Desativados em revendedoras`);
+      .delete()
+      .in('product_id', idsParaExcluir);
+    console.log(`✅ Deletadas vinculações com revendedoras`);
 
-    // 4. Registrar log
+    // 🗑️ 3. DELETAR da tabela produto_categorias (se existir)
+    await supabase
+      .from('produto_categorias')
+      .delete()
+      .in('produto_id', idsParaExcluir);
+    console.log(`✅ Deletadas categorias dos produtos`);
+
+    // 🗑️ 4. DELETAR os produtos
+    const { error: errDelete } = await supabase
+      .from('produtos')
+      .delete()
+      .in('id', idsParaExcluir);
+
+    if (errDelete) {
+      console.error('❌ Erro ao deletar produtos:', errDelete);
+      // Se falhar o delete, pelo menos desativar
+      await supabase
+        .from('produtos')
+        .update({ ativo: false, ultima_sincronizacao: new Date().toISOString() })
+        .in('id', idsParaExcluir);
+      console.log(`⚠️ Produtos desativados (delete falhou)`);
+    } else {
+      console.log(`✅ ${produtosParaExcluir.length} produtos EXCLUÍDOS PERMANENTEMENTE do banco`);
+    }
+
+    // 📝 5. Registrar log
     await supabase.from('logs_sincronizacao').insert({
       tipo: 'produtos_excluidos_facilzap',
-      descricao: `${produtosExcluidos.length} produtos detectados como excluídos do FácilZap e desativados`,
+      descricao: `${produtosParaExcluir.length} produtos DELETADOS do banco (não existem mais no FácilZap)`,
       payload: { 
-        total_excluidos: produtosExcluidos.length,
-        produtos: produtosExcluidos.slice(0, 10).map((p: { nome: string; id_externo: string }) => ({
+        total_excluidos: produtosParaExcluir.length,
+        acao: 'DELETE',
+        produtos: produtosParaExcluir.slice(0, 10).map((p: { nome: string; id_externo: string }) => ({
           nome: p.nome,
           id_externo: p.id_externo
         }))
@@ -591,7 +609,7 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
       erro: null,
     });
 
-    return produtosExcluidos.length;
+    return produtosParaExcluir.length;
   } catch (error) {
     console.error('❌ Erro em detectarProdutosExcluidos:', error);
     return 0;

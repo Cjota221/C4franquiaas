@@ -381,7 +381,7 @@ async function handleNovoPedido(data: any, eventType: string) {
 
 /**
  * 🆕 Processa exclusão de produto do FácilZap
- * Desativa o produto em todas as franquias e revendedoras
+ * DELETA o produto do banco de dados (não apenas desativa)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleProdutoExcluido(data: any, eventType: string) {
@@ -392,7 +392,7 @@ async function handleProdutoExcluido(data: any, eventType: string) {
     throw new Error('ID do produto é obrigatório para exclusão');
   }
 
-  console.log(`[Webhook] 🗑️ Processando EXCLUSÃO: ID=${facilzapId} | Evento=${eventType}`);
+  console.log(`[Webhook] 🗑️ Processando EXCLUSÃO PERMANENTE: ID=${facilzapId} | Evento=${eventType}`);
 
   // Buscar produto existente
   const { data: produto, error: errBusca } = await supabaseAdmin
@@ -408,56 +408,78 @@ async function handleProdutoExcluido(data: any, eventType: string) {
 
   console.log(`[Webhook] 🗑️ Produto encontrado: ${produto.nome} (${produto.id})`);
 
-  // 1️⃣ Desativar o produto principal
-  const { error: errDesativar } = await supabaseAdmin
-    .from('produtos')
-    .update({ 
-      ativo: false,
-      ultima_sincronizacao: new Date().toISOString()
-    })
-    .eq('id', produto.id);
-
-  if (errDesativar) {
-    console.error('[Webhook] ❌ Erro ao desativar produto:', errDesativar);
-  } else {
-    console.log(`[Webhook] ✅ Produto ${produto.nome} DESATIVADO`);
-  }
-
-  // 2️⃣ Desativar em todas as franqueadas
+  // 1️⃣ DELETAR vinculações com franqueadas (preços primeiro por FK)
   const { data: franqueadas } = await supabaseAdmin
     .from('produtos_franqueadas')
     .select('id')
     .eq('produto_id', produto.id);
 
+  let franqueadasDeletadas = 0;
   if (franqueadas && franqueadas.length > 0) {
     const franqueadaIds = franqueadas.map((f: { id: string }) => f.id);
     
+    // Deletar preços primeiro (FK)
     await supabaseAdmin
       .from('produtos_franqueadas_precos')
-      .update({ ativo_no_site: false })
+      .delete()
       .in('produto_franqueada_id', franqueadaIds);
     
-    console.log(`[Webhook] ✅ Desativado em ${franqueadaIds.length} franqueadas`);
+    // Deletar vinculações
+    await supabaseAdmin
+      .from('produtos_franqueadas')
+      .delete()
+      .eq('produto_id', produto.id);
+    
+    franqueadasDeletadas = franqueadaIds.length;
+    console.log(`[Webhook] ✅ Deletadas ${franqueadasDeletadas} vinculações com franqueadas`);
   }
 
-  // 3️⃣ Desativar em todas as revendedoras
-  const { error: errRevendedoras, data: revendedorasDesativadas } = await supabaseAdmin
+  // 2️⃣ DELETAR vinculações com revendedoras
+  const { data: revendedorasDeletadas } = await supabaseAdmin
     .from('reseller_products')
-    .update({ is_active: false })
+    .delete()
     .eq('product_id', produto.id)
     .select('id');
 
-  if (!errRevendedoras) {
-    console.log(`[Webhook] ✅ Desativado em ${revendedorasDesativadas?.length || 0} revendedoras`);
+  console.log(`[Webhook] ✅ Deletadas ${revendedorasDeletadas?.length || 0} vinculações com revendedoras`);
+
+  // 3️⃣ DELETAR categorias do produto
+  await supabaseAdmin
+    .from('produto_categorias')
+    .delete()
+    .eq('produto_id', produto.id);
+
+  // 4️⃣ DELETAR o produto
+  const { error: errDelete } = await supabaseAdmin
+    .from('produtos')
+    .delete()
+    .eq('id', produto.id);
+
+  if (errDelete) {
+    console.error('[Webhook] ❌ Erro ao deletar produto:', errDelete);
+    // Fallback: desativar se delete falhar
+    await supabaseAdmin
+      .from('produtos')
+      .update({ ativo: false, ultima_sincronizacao: new Date().toISOString() })
+      .eq('id', produto.id);
+    console.log(`[Webhook] ⚠️ Produto desativado (delete falhou)`);
+  } else {
+    console.log(`[Webhook] ✅ Produto ${produto.nome} DELETADO PERMANENTEMENTE`);
   }
 
-  // 4️⃣ Registrar log
+  // 5️⃣ Registrar log
   await supabaseAdmin.from('logs_sincronizacao').insert({
     tipo: 'webhook_produto_excluido',
-    produto_id: produto.id,
+    produto_id: null, // Produto foi deletado
     facilzap_id: facilzapId,
-    descricao: `Produto "${produto.nome}" EXCLUÍDO do FácilZap - desativado em todas franquias e revendedoras`,
-    payload: { event: eventType, data, produto_id: produto.id },
+    descricao: `Produto "${produto.nome}" DELETADO do banco (excluído do FácilZap)`,
+    payload: { 
+      event: eventType, 
+      data, 
+      produto_id_antigo: produto.id,
+      nome: produto.nome,
+      acao: 'DELETE'
+    },
     sucesso: true,
     erro: null,
   });
@@ -466,9 +488,9 @@ async function handleProdutoExcluido(data: any, eventType: string) {
     produto_id: produto.id,
     nome: produto.nome,
     facilzap_id: facilzapId,
-    acao: 'excluido',
-    franqueadas_desativadas: franqueadas?.length || 0,
-    revendedoras_desativadas: revendedorasDesativadas?.length || 0
+    acao: 'deletado',
+    franqueadas_deletadas: franqueadasDeletadas,
+    revendedoras_deletadas: revendedorasDeletadas?.length || 0
   };
 }
 
