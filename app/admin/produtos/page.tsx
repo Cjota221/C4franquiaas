@@ -47,7 +47,8 @@ export default function ProdutosPage(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [filtroCategoria, setFiltroCategoria] = useState<number | null>(null);
-  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'ativo' | 'inativo'>('todos');
+  // 🔧 IMPORTANTE: Padrão é 'ativo' para não mostrar produtos excluídos do FácilZap
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'ativo' | 'inativo'>('ativo');
   const [filtroEstoque, setFiltroEstoque] = useState<'todos' | 'disponivel' | 'esgotado'>('todos');
   const [filtroNovos, setFiltroNovos] = useState(false);
   const [precoMin, setPrecoMin] = useState<string>('');

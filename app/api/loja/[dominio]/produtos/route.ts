@@ -279,6 +279,13 @@ export async function GET(
       .map(v => {
         const produto = v.produtos;
         if (!produto) return null;
+        
+        // 🔧 IMPORTANTE: Verificar se produto está ATIVO na tabela principal
+        // Produtos excluídos do FácilZap ficam com ativo=false
+        if (!produto.ativo) {
+          console.log(`[API loja/produtos] ⛔ Produto "${produto.nome}" IGNORADO (ativo=false na tabela principal)`);
+          return null;
+        }
 
         // ==========================================
         // 5️⃣ Calcular preço final conforme o sistema
