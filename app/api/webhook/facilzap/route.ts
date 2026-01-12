@@ -441,14 +441,14 @@ async function handleProdutoExcluido(data: any, eventType: string) {
   }
 
   // 3️⃣ Desativar em todas as revendedoras
-  const { error: errRevendedoras, count } = await supabaseAdmin
+  const { error: errRevendedoras, data: revendedorasDesativadas } = await supabaseAdmin
     .from('reseller_products')
     .update({ is_active: false })
     .eq('product_id', produto.id)
-    .select('id', { count: 'exact' });
+    .select('id');
 
   if (!errRevendedoras) {
-    console.log(`[Webhook] ✅ Desativado em ${count || 0} revendedoras`);
+    console.log(`[Webhook] ✅ Desativado em ${revendedorasDesativadas?.length || 0} revendedoras`);
   }
 
   // 4️⃣ Registrar log
@@ -468,7 +468,7 @@ async function handleProdutoExcluido(data: any, eventType: string) {
     facilzap_id: facilzapId,
     acao: 'excluido',
     franqueadas_desativadas: franqueadas?.length || 0,
-    revendedoras_desativadas: count || 0
+    revendedoras_desativadas: revendedorasDesativadas?.length || 0
   };
 }
 
