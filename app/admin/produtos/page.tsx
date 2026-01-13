@@ -63,7 +63,6 @@ export default function ProdutosPage(): React.JSX.Element {
   const [modalVincularOpen, setModalVincularOpen] = useState(false);
   const [modalAtualizarPrecosOpen, setModalAtualizarPrecosOpen] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
-  const [vinculandoFranqueadas, setVinculandoFranqueadas] = useState(false);
   const [vinculandoRevendedoras, setVinculandoRevendedoras] = useState(false);
   
   // State para Modal de Descrição e Guia de Tamanhos
@@ -628,44 +627,6 @@ export default function ProdutosPage(): React.JSX.Element {
     }
   };
 
-  // Vincular produtos às franqueadas
-  const vincularTodasFranqueadas = async () => {
-    try {
-      setVinculandoFranqueadas(true);
-      setStatusMsg({ type: 'info', text: 'Vinculando produtos às franqueadas...' });
-
-      const response = await fetch('/api/admin/produtos/vincular-todas-franqueadas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || data.message || 'Erro ao vincular produtos');
-      }
-
-      setStatusMsg({ 
-        type: 'success', 
-        text: `${data.detalhes.vinculacoes} vinculações criadas` 
-      });
-
-      setTimeout(() => setStatusMsg(null), 5000);
-
-    } catch (err) {
-      console.error('Erro ao vincular:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setStatusMsg({ 
-        type: 'error', 
-        text: `Erro ao vincular: ${errorMessage}` 
-      });
-      setTimeout(() => setStatusMsg(null), 5000);
-    } finally {
-      setVinculandoFranqueadas(false);
-    }
-  };
-
   // Vincular produtos às revendedoras
   const vincularRevendedoras = async (produtoIdsEspecificos?: string[]) => {
     try {
@@ -770,75 +731,6 @@ export default function ProdutosPage(): React.JSX.Element {
               </>
             )}
           </button>
-
-          {/* Dropdown: Vinculação */}
-          <div className="relative">
-            <button 
-              onClick={() => {
-                setShowVinculacaoMenu(!showVinculacaoMenu);
-                setShowSecondaryMenu(false);
-              }}
-              disabled={vinculandoFranqueadas || vinculandoRevendedoras}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-            >
-              {(vinculandoFranqueadas || vinculandoRevendedoras) ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Vinculando...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  Vinculação
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </>
-              )}
-            </button>
-            {showVinculacaoMenu && (
-              <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                <button 
-                  onClick={() => { vincularTodasFranqueadas(); setShowVinculacaoMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Vincular às Franqueadas
-                </button>
-                <button 
-                  onClick={() => { vincularRevendedoras(); setShowVinculacaoMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Vincular às Revendedoras
-                </button>
-                {selectedCount > 0 && (
-                  <>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <button 
-                      onClick={() => { setModalVincularOpen(true); setShowVinculacaoMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Vincular Selecionados ({selectedCount})
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
           {/* Dropdown: Ações Secundárias */}
           <div className="relative">
             <button 
@@ -975,19 +867,6 @@ export default function ProdutosPage(): React.JSX.Element {
             </button>
             {showVinculacaoMenu && (
               <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                <button 
-                  onClick={() => { vincularTodasFranqueadas(); setShowVinculacaoMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Vincular as Franqueadas
-                </button>
-                <button 
-                  onClick={() => { vincularRevendedoras(); setShowVinculacaoMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Vincular as Revendedoras
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
                 <button 
                   onClick={() => { setCategoryPanelOpen(true); setShowVinculacaoMenu(false); }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -1183,7 +1062,6 @@ export default function ProdutosPage(): React.JSX.Element {
           setProdutoParaEditar(produto as ProdutoType);
           setModalDescricaoGuiaOpen(true);
         }}
-        produtosNaoVinculadosIds={produtosNaoVinculadosIds}
       />
 
       {/* Paginação */}

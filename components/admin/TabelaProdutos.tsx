@@ -48,7 +48,6 @@ interface TabelaProdutosProps {
   onToggleStatus: (id: number | string, ativo: boolean) => void;
   toggling: Record<number | string, boolean>;
   onEditDescricaoGuia?: (produto: Produto) => void;
-  produtosNaoVinculadosIds?: Set<number | string>;
 }
 
 export default function TabelaProdutos({
@@ -66,7 +65,6 @@ export default function TabelaProdutos({
   onToggleStatus,
   toggling,
   onEditDescricaoGuia,
-  produtosNaoVinculadosIds,
 }: TabelaProdutosProps) {
   
   const formatarData = (dataISO?: string) => {
@@ -219,14 +217,13 @@ export default function TabelaProdutos({
                 const isSelected = selectedIds[produto.id] ?? false;
                 const isToggling = toggling[produto.id] ?? false;
                 const produtoAtivo = produto.ativo ?? false;
-                const isNaoVinculado = produtosNaoVinculadosIds?.has(produto.id) ?? false;
 
                 return (
                   <tr 
                     key={produto.id}
                     className={`hover:bg-gray-50 transition-colors ${
                       isSelected ? 'bg-[#DB1472]/5' : ''
-                    } ${!produtoAtivo ? 'opacity-60' : ''} ${isNaoVinculado ? 'bg-orange-50/50' : ''}`}
+                    } ${!produtoAtivo ? 'opacity-60' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="px-4 py-3">
@@ -272,17 +269,6 @@ export default function TabelaProdutos({
                         {produto.temMargem === false && (
                           <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded uppercase whitespace-nowrap">
                             NOVO
-                          </span>
-                        )}
-                        {isNaoVinculado && (
-                          <span 
-                            className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded border border-orange-300 whitespace-nowrap flex items-center gap-1"
-                            title="Este produto não está vinculado a nenhuma revendedora"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            NÃO VINCULADO
                           </span>
                         )}
                       </div>
