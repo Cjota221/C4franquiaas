@@ -522,29 +522,54 @@ export default function ProdutosPage(): React.JSX.Element {
 
       if (!confirmar) return;
 
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🗑️ [CLIENTE] INICIANDO EXCLUSÃO DE PRODUTOS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`📊 Total de produtos a excluir: ${selected.length}`);
+      console.log(`🔑 IDs selecionados:`, selected);
+
       setStatusMsg({ type: 'info', text: `Excluindo ${selected.length} produto(s)...` });
 
+      console.log('📡 Enviando requisição para API...');
       const response = await fetch('/api/admin/produtos/excluir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ produto_ids: selected }),
       });
 
+      console.log(`📥 Resposta recebida - Status: ${response.status}`);
       const data = await response.json();
+      console.log('📦 Dados retornados:', data);
 
       if (!response.ok || !data.success) {
+        console.error('❌ [CLIENTE] Erro na exclusão:', data.error);
         throw new Error(data.error || 'Erro ao excluir');
+      }
+
+      console.log(`✅ [CLIENTE] ${data.total} produto(s) excluído(s)`);
+      
+      if (data.debug) {
+        console.log('🔍 Debug adicional:', data.debug);
+        if (data.debug.produtos_ainda_existem > 0) {
+          console.warn('⚠️ ATENÇÃO: Alguns produtos ainda existem no banco!');
+          console.warn('   IDs não excluídos:', data.debug.ids_nao_excluidos);
+        }
       }
 
       setStatusMsg({ type: 'success', text: `${data.total} produto(s) excluído(s) com sucesso` });
       setTimeout(() => setStatusMsg(null), 5000);
 
       // Remover produtos da lista local
+      console.log('🔄 Atualizando lista local...');
       setProdutosFiltrados(prev => prev.filter(p => !selected.includes(p.id)));
       setTotalProdutos(prev => prev - data.total);
       
       clearSelected();
       setShowActions(false);
+      
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🏁 [CLIENTE] FIM DO PROCESSO');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } catch (err) {
       console.error('Erro ao excluir produtos:', err);
       setStatusMsg({ type: 'error', text: 'Erro ao excluir produtos' });
