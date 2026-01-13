@@ -534,6 +534,59 @@ export default function ProdutosPage(): React.JSX.Element {
     }
   };
 
+  // Excluir produtos em massa
+  const handleExcluirProdutos = async () => {
+    try {
+      const selected = Object.keys(selectedIds)
+        .filter(k => selectedIds[Number(k)] || selectedIds[k])
+        .map(k => isNaN(Number(k)) ? k : Number(k));
+      
+      if (selected.length === 0) {
+        setStatusMsg({ type: 'error', text: 'Nenhum produto selecionado' });
+        setTimeout(() => setStatusMsg(null), 3000);
+        return;
+      }
+
+      // Confirmação
+      const confirmar = window.confirm(
+        `⚠️ ATENÇÃO: Você está prestes a EXCLUIR PERMANENTEMENTE ${selected.length} produto(s).\n\n` +
+        `Esta ação NÃO pode ser desfeita!\n\n` +
+        `Os produtos serão removidos do painel e de todas as lojas das revendedoras.\n\n` +
+        `Deseja continuar?`
+      );
+
+      if (!confirmar) return;
+
+      setStatusMsg({ type: 'info', text: `Excluindo ${selected.length} produto(s)...` });
+
+      const response = await fetch('/api/admin/produtos/excluir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ produto_ids: selected }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao excluir');
+      }
+
+      setStatusMsg({ type: 'success', text: `${data.total} produto(s) excluído(s) com sucesso` });
+      setTimeout(() => setStatusMsg(null), 5000);
+
+      // Remover produtos da lista local
+      setProdutosFiltrados(prev => prev.filter(p => !selected.includes(p.id)));
+      setTotalProdutos(prev => prev - data.total);
+      
+      clearSelected();
+      setShowActions(false);
+    } catch (err) {
+      console.error('Erro ao excluir produtos:', err);
+      setStatusMsg({ type: 'error', text: 'Erro ao excluir produtos' });
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
+  };
+
   // Sincronizar produtos do FacilZap
   const sincronizarProdutos = async () => {
     try {
@@ -853,20 +906,27 @@ export default function ProdutosPage(): React.JSX.Element {
                       onClick={() => { handleBatchAction('activate'); setShowActions(false); }} 
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700"
                     >
-                      Ativar Selecionados
+                      ✅ Ativar Selecionados
                     </button>
                     <button 
                       onClick={() => { handleBatchAction('deactivate'); setShowActions(false); }} 
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700"
                     >
-                      Desativar Selecionados
+                      ⏸️ Desativar Selecionados
                     </button>
                     <div className="border-t border-gray-100 my-1"></div>
                     <button 
                       onClick={() => { setModalMassaOpen(true); setShowActions(false); }} 
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700"
                     >
-                      Editar Descricao/Guia
+                      ✏️ Editar Descricao/Guia
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button 
+                      onClick={() => { handleExcluirProdutos(); setShowActions(false); }} 
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium"
+                    >
+                      🗑️ Excluir Selecionados
                     </button>
                   </div>
                 )}
