@@ -88,23 +88,21 @@ async function handleSync(page?: number, length?: number) {
         const nome = (rec['nome'] ?? rec['name'] ?? null) as string | null;
         const preco_base = (rec['preco_base'] ?? rec['preco'] ?? null) as number | string | null;
         
-        // 🔧 CORREÇÃO: Calcular estoque considerando variações
-        const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
-        let estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
-        
-        // 🆕 Se estoque do produto é 0, verificar variações
+        // 🔧 ESTOQUE: Sempre calcular pela soma das variações
         const variacoes = (rec['variacoes_meta'] ?? rec['variacoes'] ?? []) as unknown[];
-        if (estoque === 0 && Array.isArray(variacoes) && variacoes.length > 0) {
-          const estoqueVariacoes = variacoes.reduce<number>((total: number, v: unknown) => {
+        let estoque = 0;
+        
+        if (Array.isArray(variacoes) && variacoes.length > 0) {
+          // Produto TEM variações - somar estoque de todas
+          estoque = variacoes.reduce<number>((total: number, v: unknown) => {
             const varRec = v as Record<string, unknown>;
             const varEstoque = typeof varRec['estoque'] === 'number' ? varRec['estoque'] : 0;
             return total + varEstoque;
           }, 0);
-          
-          if (estoqueVariacoes > 0) {
-            console.log(`📦 [${nome}] Estoque produto=0, mas variações=${estoqueVariacoes}. Usando variações.`);
-            estoque = estoqueVariacoes;
-          }
+        } else {
+          // Produto SEM variações - usar estoque direto
+          const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? 0) as number | string;
+          estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (parseFloat(estoqueRaw) || 0);
         }
         
         // 🔥 FLUXO DE APROVAÇÃO: Produtos NOVOS ficam pendentes
@@ -167,41 +165,12 @@ async function handleSync(page?: number, length?: number) {
             changes.push(`preço: ${existing.preco_base} → ${newProduct.preco_base}`);
           }
           
-          // 🔥 PRESERVAR aprovação e status ativo de produtos existentes
-          let novoAtivo = existing.ativo; // IMPORTANTE: Manter status atual
+          // 🔥 SIMPLIFICADO: NUNCA mudar status ativo automaticamente
+          // Admin tem controle total - sync só atualiza dados
+          const novoAtivo = existing.ativo; // SEMPRE manter o que o admin definiu
           const adminAprovado = existing.admin_aprovado ?? false;
           const adminRejeitado = existing.admin_rejeitado ?? false;
-          const ehProdutoNovo = false; // Produto já existe, não é novo
-          
-          // ✅ Se produto foi reativado no FácilZap (tem estoque agora)
-          if (newProduct.estoque > 0 && existing.estoque === 0) {
-            // Se estava aprovado antes, reativar automaticamente
-            if (adminAprovado && !existing.desativado_manual) {
-              novoAtivo = true;
-              changes.push(`✅ reativado: estoque restaurado ${existing.estoque} → ${newProduct.estoque}`);
-            }
-          }
-          
-          // ❌ Se produto ficou sem estoque - SÓ DESATIVA SE ADMIN NÃO ATIVOU MANUALMENTE
-          // 🔧 CORREÇÃO: Não desativar se o admin ativou manualmente
-          if (newProduct.estoque === 0 && existing.estoque > 0) {
-            // Só desativa automaticamente se NÃO foi ativado/desativado manualmente
-            if (existing.desativado_manual === null || existing.desativado_manual === undefined) {
-              novoAtivo = false;
-              changes.push(`❌ desativado: sem estoque`);
-            } else {
-              // Admin já definiu manualmente, NÃO alterar
-              changes.push(`⚠️ estoque zerado mas mantendo status manual`);
-            }
-          }
-          
-          // 🚫 RESPEITAR desativação manual (prioridade máxima)
-          if (existing.desativado_manual === true) {
-            novoAtivo = false;
-            if (changes.length === 0 || existing.ativo === true) {
-              changes.push(`🚫 mantido desativado (manual)`);
-            }
-          }
+          const ehProdutoNovo = false;
           
           // Atualizar o produto preservando aprovação
           const productToUpsert = { 
@@ -276,15 +245,12 @@ async function handleSync(page?: number, length?: number) {
       totalProcessed += batch.length;
     }
 
-    // 🆕 Desativar produtos com estoque zero em todas franqueadas/revendedoras
-    console.log('🔄 Verificando produtos com estoque zero...');
-    await desativarProdutosEstoqueZero(supabase);
+    // 🚫 REMOVIDO: Não desativar/reativar automaticamente
+    // Admin tem controle total sobre ativar/desativar produtos
+    // await desativarProdutosEstoqueZero(supabase);
+    // await reativarProdutosComEstoque(supabase);
 
-    // 🆕 Reativar produtos que voltaram a ter estoque
-    console.log('🔄 Verificando produtos que voltaram a ter estoque...');
-    await reativarProdutosComEstoque(supabase);
-
-    // 🗑️ DETECTAR E DESATIVAR produtos que foram EXCLUÍDOS do FácilZap
+    // 🗑️ DETECTAR E EXCLUIR produtos que foram DELETADOS do FácilZap
     console.log('🗑️ Verificando produtos excluídos do FácilZap...');
     const produtosExcluidos = await detectarProdutosExcluidos(supabase, produtos);
 
@@ -315,10 +281,10 @@ async function handleSync(page?: number, length?: number) {
 }
 
 /**
- * 🆕 Desativa automaticamente produtos com estoque zero
- * em todas franqueadas e revendedoras
+ * 🚫 DESABILITADO: Funções de desativação automática
+ * Admin tem controle total sobre ativar/desativar produtos
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 async function desativarProdutosEstoqueZero(supabase: any) {
   try {
     // 1. Buscar produtos com estoque = 0
@@ -406,10 +372,9 @@ async function desativarProdutosEstoqueZero(supabase: any) {
 }
 
 /**
- * 🆕 Reativa automaticamente produtos que voltaram a ter estoque
- * Isso garante que franqueadas e revendedoras vejam produtos disponíveis
+ * 🚫 DESABILITADO: Função de reativação automática
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 async function reativarProdutosComEstoque(supabase: any) {
   try {
     // 1. Buscar produtos com estoque > 0 e que estão ATIVOS no admin

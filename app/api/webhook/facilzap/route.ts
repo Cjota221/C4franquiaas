@@ -111,17 +111,9 @@ async function handleProdutoEstoque(data: any, eventType: string) {
 
   console.log(`[Webhook] ✅ Produto ${produtoExistente ? 'atualizado' : 'criado'}: ${produto.nome}`);
 
-  // Regra de negócio: Desativar nas franquias se estoque zerou
-  if (novoEstoque <= 0) {
-    console.log('[Webhook] 🚫 Estoque zerado! Desativando produto nas franquias...');
-    await desativarProdutoNasFranquias(produto.id, facilzapId);
-  } 
-  // Reativar se voltou a ter estoque
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  else if ((produtoExistente as any)?.estoque === 0 && novoEstoque > 0) {
-    console.log('[Webhook] ✅ Estoque restaurado! Reativando produto nas franquias...');
-    await reativarProdutoNasFranquias(produto.id);
-  }
+  // 🚫 REMOVIDO: Não desativar/reativar automaticamente
+  // Admin tem controle total sobre ativar/desativar produtos
+  // O webhook apenas atualiza os DADOS (estoque, preço) mas não muda status
 
   // Registrar log
   await supabaseAdmin.from('logs_sincronizacao').insert({
@@ -328,17 +320,8 @@ async function handleNovoPedido(data: any, eventType: string) {
       console.log(`[Webhook] ✅ ${simbolo} Estoque atualizado: ${produto.nome} ${estoqueAtual} → ${novoEstoque}`);
       itensProcessados++;
 
-      // Se estoque zerou na baixa, desativar nas franquias
-      if (!isCancelamento && novoEstoque <= 0) {
-        console.log(`[Webhook] 🚫 Estoque zerado! Desativando ${produto.nome}...`);
-        await desativarProdutoNasFranquias(produto.id, produto.facilzap_id || produto.id_externo || '');
-      }
-      
-      // Se estoque voltou no cancelamento, reativar nas franquias
-      if (isCancelamento && novoEstoque > 0 && estoqueAtual <= 0) {
-        console.log(`[Webhook] ✅ Estoque restaurado! Reativando ${produto.nome}...`);
-        await reativarProdutoNasFranquias(produto.id);
-      }
+      // 🚫 REMOVIDO: Não desativar/reativar automaticamente
+      // Admin tem controle total
 
     } catch (itemError) {
       console.error(`[Webhook] ❌ Erro ao processar item:`, itemError);
