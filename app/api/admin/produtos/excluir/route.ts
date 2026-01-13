@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
 }
 
 // Fallback: excluir manualmente se a função não existir
-async function excluirManualmente(supabase: ReturnType<typeof createClient>, produto_ids: string[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function excluirManualmente(supabase: any, produto_ids: string[]) {
   console.log('⚠️ Função não existe, usando método manual...');
   
   let totalDeletados = 0;
