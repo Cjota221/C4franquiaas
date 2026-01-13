@@ -87,8 +87,25 @@ async function handleSync(page?: number, length?: number) {
         const id_externo = (rec['id_externo'] ?? rec['id'] ?? null) as string | null;
         const nome = (rec['nome'] ?? rec['name'] ?? null) as string | null;
         const preco_base = (rec['preco_base'] ?? rec['preco'] ?? null) as number | string | null;
+        
+        // 🔧 CORREÇÃO: Calcular estoque considerando variações
         const estoqueRaw = (rec['estoque'] ?? rec['stock'] ?? null) as number | string | null;
-        const estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
+        let estoque = typeof estoqueRaw === 'number' ? estoqueRaw : (typeof estoqueRaw === 'string' ? parseFloat(estoqueRaw) || 0 : 0);
+        
+        // 🆕 Se estoque do produto é 0, verificar variações
+        const variacoes = (rec['variacoes_meta'] ?? rec['variacoes'] ?? []) as unknown[];
+        if (estoque === 0 && Array.isArray(variacoes) && variacoes.length > 0) {
+          const estoqueVariacoes = variacoes.reduce<number>((total: number, v: unknown) => {
+            const varRec = v as Record<string, unknown>;
+            const varEstoque = typeof varRec['estoque'] === 'number' ? varRec['estoque'] : 0;
+            return total + varEstoque;
+          }, 0);
+          
+          if (estoqueVariacoes > 0) {
+            console.log(`📦 [${nome}] Estoque produto=0, mas variações=${estoqueVariacoes}. Usando variações.`);
+            estoque = estoqueVariacoes;
+          }
+        }
         
         // 🔥 FLUXO DE APROVAÇÃO: Produtos NOVOS ficam pendentes
         // Este valor será substituído no upsert para produtos existentes
@@ -165,10 +182,17 @@ async function handleSync(page?: number, length?: number) {
             }
           }
           
-          // ❌ Se produto ficou sem estoque
+          // ❌ Se produto ficou sem estoque - SÓ DESATIVA SE ADMIN NÃO ATIVOU MANUALMENTE
+          // 🔧 CORREÇÃO: Não desativar se o admin ativou manualmente
           if (newProduct.estoque === 0 && existing.estoque > 0) {
-            novoAtivo = false;
-            changes.push(`❌ desativado: sem estoque`);
+            // Só desativa automaticamente se NÃO foi ativado/desativado manualmente
+            if (existing.desativado_manual === null || existing.desativado_manual === undefined) {
+              novoAtivo = false;
+              changes.push(`❌ desativado: sem estoque`);
+            } else {
+              // Admin já definiu manualmente, NÃO alterar
+              changes.push(`⚠️ estoque zerado mas mantendo status manual`);
+            }
           }
           
           // 🚫 RESPEITAR desativação manual (prioridade máxima)
