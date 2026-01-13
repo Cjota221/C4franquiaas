@@ -106,8 +106,7 @@ export async function POST(req: NextRequest) {
       descricao: `Admin excluiu ${data?.total_excluidos || produto_ids.length} produtos`,
       payload: { 
         total: data?.total_excluidos || produto_ids.length,
-        produto_ids: produto_ids,
-        ainda_existem: produtosAposExcluir?.length || 0
+        produto_ids: produto_ids
       },
       sucesso: true,
       erro: null,
