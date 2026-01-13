@@ -382,6 +382,74 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 🎬 Seção de Vídeos FAQ */}
+      <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-gray-900 to-gray-800">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="text-center mb-10 md:mb-16">
+              <span className="inline-block px-4 py-1.5 bg-pink-500/20 text-pink-400 rounded-full text-sm font-semibold mb-4">Vídeos</span>
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-4">Tire suas dúvidas</h2>
+              <p className="text-lg md:text-xl text-gray-400">Assista e entenda como funciona o C4 Franquias</p>
+            </div>
+          </AnimatedSection>
+
+          {/* Grid de Vídeos - Scroll horizontal no mobile */}
+          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+            {[
+              { title: 'O que é o C4?', url: 'https://files.catbox.moe/rg19bj.MP4' },
+              { title: 'Pedido e Entrega', url: 'https://files.catbox.moe/hzg1c3.MP4' },
+              { title: 'Precisa Pagar?', url: 'https://files.catbox.moe/ukwqyj.MP4' },
+              { title: 'Definir Preços', url: 'https://files.catbox.moe/495y6q.MP4' },
+              { title: 'Personalização', url: 'https://files.catbox.moe/k5n0ja.MP4' }
+            ].map((video, index) => (
+              <div 
+                key={index} 
+                className="flex-shrink-0 w-[160px] md:w-auto snap-center group"
+              >
+                <div className="relative bg-gray-800 rounded-2xl overflow-hidden border-2 border-gray-700 hover:border-pink-500 transition-all duration-300 shadow-lg hover:shadow-pink-500/20">
+                  {/* Container do vídeo com aspect ratio de Stories (9:16) */}
+                  <div className="relative" style={{ paddingBottom: '177.78%' }}>
+                    <video
+                      className="absolute inset-0 w-full h-full object-cover"
+                      src={video.url}
+                      playsInline
+                      muted
+                      loop
+                      preload="metadata"
+                      onMouseEnter={(e) => e.currentTarget.play()}
+                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                      onTouchStart={(e) => e.currentTarget.play()}
+                      onTouchEnd={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                    />
+                    {/* Overlay com gradiente */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                    {/* Ícone de play */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 md:w-6 md:h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Título do vídeo */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                    <h3 className="text-white font-bold text-sm md:text-base leading-tight">{video.title}</h3>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Indicador de scroll no mobile */}
+          <div className="flex md:hidden justify-center gap-1.5 mt-4">
+            {[0,1,2,3,4].map((i) => (
+              <div key={i} className="w-2 h-2 rounded-full bg-gray-600" />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
