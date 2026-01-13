@@ -205,6 +205,24 @@ export default function RevendedoraProProdutosPage() {
         </div>
       </div>
 
+      {/* 💡 Informação sobre Margem Padrão */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full">
+            <Percent className="w-5 h-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">
+              💰 Margem padrão de 100% aplicada em todos os produtos
+            </h3>
+            <p className="text-xs text-blue-700">
+              Todos os produtos já vêm com uma margem de 100% definida pelo sistema. 
+              Você pode alterar a margem individualmente ou em massa clicando no botão abaixo.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Botão destacado para aplicar margem em todos */}
       <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl p-4 shadow-lg">
         <div className="flex flex-col lg:flex-row items-center gap-4">

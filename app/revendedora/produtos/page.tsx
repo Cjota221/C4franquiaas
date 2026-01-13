@@ -132,7 +132,7 @@ export default function ProdutosRevendedoraPage() {
       // 4. Combinar dados
       const produtosComMargem: ProdutoComMargem[] = (produtosData || []).map(produto => {
         const vinculacao = vinculacoes?.find(v => v.product_id === produto.id);
-        const marginPercent = vinculacao?.margin_percent ?? 0;
+        const marginPercent = vinculacao?.margin_percent ?? 100; // MARGEM PADRÃO 100%
         const precoBase = produto.preco_base ?? 0;
         const precoFinal = precoBase * (1 + marginPercent / 100);
 
@@ -145,30 +145,6 @@ export default function ProdutosRevendedoraPage() {
           estoque: produto.estoque ?? 0
         };
       });
-
-      // 5. 🔴 AUTO-DESATIVAR produtos com margem 0% que estão ativos
-      const produtosParaDesativar = produtosComMargem.filter(p => 
-        p.is_active && (p.margin_percent === 0 || p.margin_percent === null)
-      );
-
-      if (produtosParaDesativar.length > 0) {
-        console.log(`[Auto-desativar] ${produtosParaDesativar.length} produtos com margem 0% serão desativados`);
-        
-        // Desativar no banco
-        const idsParaDesativar = produtosParaDesativar.map(p => p.id);
-        await supabase
-          .from('reseller_products')
-          .update({ is_active: false })
-          .eq('reseller_id', revendedora.id)
-          .in('product_id', idsParaDesativar);
-
-        // Atualizar estado local
-        produtosComMargem.forEach(p => {
-          if (idsParaDesativar.includes(p.id)) {
-            p.is_active = false;
-          }
-        });
-      }
 
       setProdutos(produtosComMargem);
     } catch (error: unknown) {
@@ -515,6 +491,24 @@ export default function ProdutosRevendedoraPage() {
               <p className="text-xl md:text-2xl font-bold text-blue-600">{stats.comEstoque}</p>
             </div>
             <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* 💡 Informação sobre Margem Padrão */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 md:mb-6">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full">
+            <Percent className="w-5 h-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">
+              💰 Margem padrão de 100% aplicada em todos os produtos
+            </h3>
+            <p className="text-xs text-blue-700">
+              Todos os produtos já vêm com uma margem de 100% definida pelo sistema. 
+              Você pode alterar a margem individualmente ou em massa clicando no botão abaixo.
+            </p>
           </div>
         </div>
       </div>
