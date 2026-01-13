@@ -3,8 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * API para excluir produtos do painel admin
- * Exclui o produto e todas suas vinculações (reseller_products, etc)
- * OTIMIZADO: Processa em lotes para evitar timeout
+ * OTIMIZADO: Processa UM produto por vez para evitar timeout do Supabase
  */
 export async function POST(req: NextRequest) {
   try {
@@ -29,105 +28,96 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    console.log(`🗑️ Excluindo ${produto_ids.length} produtos...`);
+    console.log(`🗑️ Excluindo ${produto_ids.length} produtos (um por vez)...`);
 
-    // Processar em lotes de 50 para evitar timeout
-    const BATCH_SIZE = 50;
     let totalDeletados = 0;
     const erros: string[] = [];
 
-    for (let i = 0; i < produto_ids.length; i += BATCH_SIZE) {
-      const batch = produto_ids.slice(i, i + BATCH_SIZE);
-      console.log(`📦 Processando lote ${Math.floor(i/BATCH_SIZE) + 1} (${batch.length} produtos)`);
-
+    // Processar UM produto por vez para evitar timeout
+    for (const produtoId of produto_ids) {
       try {
-        // 1. Deletar vinculações com revendedoras (mais simples primeiro)
+        // 1. Deletar vinculação com revendedoras
         await supabase
           .from('reseller_products')
           .delete()
-          .in('product_id', batch);
+          .eq('product_id', produtoId);
 
-        // 2. Deletar categorias dos produtos
+        // 2. Deletar categorias
         await supabase
           .from('produto_categorias')
           .delete()
-          .in('produto_id', batch);
+          .eq('produto_id', produtoId);
 
-        // 3. Buscar e deletar franqueadas relacionadas
-        const { data: franqueadas } = await supabase
+        // 3. Buscar franqueada vinculada
+        const { data: franqueada } = await supabase
           .from('produtos_franqueadas')
           .select('id')
-          .in('produto_id', batch);
+          .eq('produto_id', produtoId)
+          .maybeSingle();
 
-        if (franqueadas && franqueadas.length > 0) {
-          const franqueadaIds = franqueadas.map(f => f.id);
-          
-          // Deletar preços
+        if (franqueada) {
+          // Deletar preço
           await supabase
             .from('produtos_franqueadas_precos')
             .delete()
-            .in('produto_franqueada_id', franqueadaIds);
+            .eq('produto_franqueada_id', franqueada.id);
           
-          // Deletar vinculações
+          // Deletar vinculação
           await supabase
             .from('produtos_franqueadas')
             .delete()
-            .in('produto_id', batch);
+            .eq('produto_id', produtoId);
         }
 
-        // 4. Deletar os produtos do lote
-        const { error: errProdutos, data: deletados } = await supabase
+        // 4. Deletar o produto
+        const { error } = await supabase
           .from('produtos')
           .delete()
-          .in('id', batch)
-          .select('id');
+          .eq('id', produtoId);
 
-        if (errProdutos) {
-          erros.push(`Lote ${Math.floor(i/BATCH_SIZE) + 1}: ${errProdutos.message}`);
+        if (error) {
+          erros.push(`Produto ${produtoId}: ${error.message}`);
         } else {
-          totalDeletados += deletados?.length || 0;
+          totalDeletados++;
         }
 
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-        erros.push(`Lote ${Math.floor(i/BATCH_SIZE) + 1}: ${msg}`);
+        const msg = err instanceof Error ? err.message : 'Erro';
+        erros.push(`Produto ${produtoId}: ${msg}`);
       }
     }
 
-    console.log(`✅ ${totalDeletados} produtos excluídos permanentemente`);
+    console.log(`✅ ${totalDeletados}/${produto_ids.length} produtos excluídos`);
 
-    // Registrar log (sem await para não atrasar resposta)
+    // Log assíncrono
     supabase.from('logs_sincronizacao').insert({
       tipo: 'produtos_excluidos_admin',
-      descricao: `Admin excluiu ${totalDeletados} produtos manualmente`,
-      payload: { 
-        total: totalDeletados,
-        erros: erros.length > 0 ? erros : null
-      },
-      sucesso: erros.length === 0,
-      erro: erros.length > 0 ? erros.join('; ') : null,
+      descricao: `Admin excluiu ${totalDeletados} produtos`,
+      payload: { total: totalDeletados, erros: erros.length > 0 ? erros : null },
+      sucesso: totalDeletados > 0,
+      erro: erros.length > 0 ? erros.slice(0, 5).join('; ') : null,
     });
 
-    if (totalDeletados === 0 && erros.length > 0) {
+    if (totalDeletados === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Erro ao excluir produtos: ' + erros[0]
+        error: erros[0] || 'Nenhum produto foi excluído'
       }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `${totalDeletados} produto(s) excluído(s) com sucesso`,
+      message: `${totalDeletados} produto(s) excluído(s)`,
       total: totalDeletados,
       erros: erros.length > 0 ? erros : undefined
     });
 
   } catch (error) {
-    console.error('❌ Erro na API de exclusão:', error);
+    console.error('❌ Erro:', error);
     const msg = error instanceof Error ? error.message : 'Erro interno';
     return NextResponse.json({ 
       success: false, 
-      error: 'Erro ao excluir produtos: ' + msg
+      error: 'Erro ao excluir: ' + msg
     }, { status: 500 });
   }
 }
