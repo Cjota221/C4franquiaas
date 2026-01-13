@@ -501,6 +501,17 @@ export default function ProdutosPage(): React.JSX.Element {
         return;
       }
 
+      // ⚠️ LIMITE DE 50 PRODUTOS POR VEZ (evita timeout)
+      const LIMITE_EXCLUSAO = 50;
+      if (selected.length > LIMITE_EXCLUSAO) {
+        setStatusMsg({ 
+          type: 'error', 
+          text: `⚠️ Selecione no máximo ${LIMITE_EXCLUSAO} produtos por vez` 
+        });
+        setTimeout(() => setStatusMsg(null), 4000);
+        return;
+      }
+
       // Confirmação
       const confirmar = window.confirm(
         `⚠️ ATENÇÃO: Você está prestes a EXCLUIR PERMANENTEMENTE ${selected.length} produto(s).\n\n` +
