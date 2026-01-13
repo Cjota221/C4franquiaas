@@ -83,27 +83,6 @@ export async function POST(req: NextRequest) {
     console.log('   Payload completo:', JSON.stringify(data, null, 2));
     console.log('');
 
-    // 🔍 VERIFICAR SE OS PRODUTOS FORAM REALMENTE EXCLUÍDOS
-    console.log('🔍 Verificando se os produtos ainda existem após exclusão...');
-    const { data: produtosAposExcluir, error: errVerifica2 } = await supabase
-      .from('produtos')
-      .select('id, nome, ativo')
-      .in('id', produto_ids);
-    
-    if (errVerifica2) {
-      console.error('❌ Erro ao verificar produtos após exclusão:', errVerifica2);
-    } else {
-      if (produtosAposExcluir && produtosAposExcluir.length > 0) {
-        console.warn('⚠️ PRODUTOS AINDA EXISTEM NO BANCO APÓS EXCLUSÃO:');
-        produtosAposExcluir.forEach((p: { id: string; nome: string; ativo: boolean }) => {
-          console.warn(`   - ${p.nome} (ID: ${p.id}, Ativo: ${p.ativo})`);
-        });
-      } else {
-        console.log('✅ Produtos excluídos com sucesso! Nenhum produto encontrado.');
-      }
-    }
-    console.log('');
-
     // 🔍 VERIFICAR SE FOI REGISTRADO NA TABELA DE EXCLUÍDOS
     console.log('🔍 Verificando tabela produtos_excluidos...');
     const { data: excluidos } = await supabase
@@ -137,11 +116,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       message: `${data?.total_excluidos || produto_ids.length} produto(s) excluído(s)`,
-      total: data?.total_excluidos || produto_ids.length,
-      debug: {
-        produtos_ainda_existem: produtosAposExcluir?.length || 0,
-        ids_nao_excluidos: produtosAposExcluir?.map((p: { id: string }) => p.id) || []
-      }
+      total: data?.total_excluidos || produto_ids.length
     });
 
   } catch (error) {

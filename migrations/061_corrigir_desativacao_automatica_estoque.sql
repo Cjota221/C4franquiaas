@@ -12,7 +12,10 @@
 DROP TRIGGER IF EXISTS trigger_reativar_estoque ON produtos;
 DROP FUNCTION IF EXISTS reativar_produto_com_estoque() CASCADE;
 
-RAISE NOTICE '✅ Trigger problemático removido';
+DO $$
+BEGIN
+  RAISE NOTICE '✅ Trigger problemático removido';
+END $$;
 
 -- 2️⃣ CRIAR função que calcula estoque REAL das variações
 CREATE OR REPLACE FUNCTION calcular_estoque_total_variacoes(variacoes_meta jsonb)
