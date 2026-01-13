@@ -86,6 +86,21 @@ async function excluirManualmente(supabase: any, produto_ids: string[]) {
 
   for (const produtoId of produto_ids) {
     try {
+      // 🚫 Primeiro, buscar id_externo e guardar na tabela de excluídos
+      const { data: produto } = await supabase
+        .from('produtos')
+        .select('id_externo')
+        .eq('id', produtoId)
+        .maybeSingle();
+      
+      if (produto?.id_externo) {
+        await supabase.from('produtos_excluidos').upsert({
+          id_externo: produto.id_externo,
+          excluido_em: new Date().toISOString(),
+          excluido_por: 'admin'
+        }, { onConflict: 'id_externo' });
+      }
+      
       await supabase.from('reseller_products').delete().eq('product_id', produtoId);
       await supabase.from('produto_categorias').delete().eq('produto_id', produtoId);
       

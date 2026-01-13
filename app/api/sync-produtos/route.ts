@@ -138,16 +138,35 @@ async function handleSync(page?: number, length?: number) {
 
       // 🔍 COMPARAR com dados existentes para detectar mudanças
       const idsExternos = batch.map(p => p.id_externo).filter(id => id !== null);
+      
+      // 🚫 VERIFICAR PRODUTOS EXCLUÍDOS PELO ADMIN (não devem voltar)
+      const { data: produtosExcluidos } = await supabase
+        .from('produtos_excluidos')
+        .select('id_externo')
+        .in('id_externo', idsExternos);
+      
+      const idsExcluidos = new Set((produtosExcluidos || []).map((p: { id_externo: string }) => p.id_externo));
+      
+      // Filtrar produtos excluídos do batch
+      const batchFiltrado = batch.filter(p => !idsExcluidos.has(p.id_externo || ''));
+      const totalIgnorados = batch.length - batchFiltrado.length;
+      
+      if (totalIgnorados > 0) {
+        console.log(`🚫 Ignorando ${totalIgnorados} produtos excluídos pelo admin`);
+      }
+      
+      const idsExternosFiltrados = batchFiltrado.map(p => p.id_externo).filter(id => id !== null);
+      
       const { data: existingProducts } = await supabase
         .from('produtos')
         .select('id, id_externo, estoque, preco_base, ativo, desativado_manual, ultima_sincronizacao, admin_aprovado, admin_rejeitado')
-        .in('id_externo', idsExternos);
+        .in('id_externo', idsExternosFiltrados);
 
       // Identificar produtos novos, alterados e inalterados
       const productsToUpsert: typeof batch = [];
       const changedProducts: Array<{ id_externo: string; changes: string[] }> = [];
       
-      batch.forEach(newProduct => {
+      batchFiltrado.forEach(newProduct => {
         const existing = existingProducts?.find((p: { id_externo: string }) => p.id_externo === newProduct.id_externo);
         
         if (!existing) {
