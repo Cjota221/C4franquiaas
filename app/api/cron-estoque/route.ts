@@ -96,12 +96,32 @@ async function handleSyncEstoque() {
       
       if (prod.variacoes && Array.isArray(prod.variacoes)) {
         for (const v of prod.variacoes) {
-          const est = v.estoque?.estoque ?? v.estoque ?? 0;
-          estoqueTotal += Number(est) || 0;
+          // Type narrowing para variação estoque
+          const varEstoque = typeof v === 'object' && v !== null ? v : {};
+          const estValue = 'estoque' in varEstoque ? varEstoque.estoque : undefined;
+          
+          if (typeof estValue === 'object' && estValue !== null && 'estoque' in estValue) {
+            estoqueTotal += Number(estValue.estoque) || 0;
+          } else {
+            estoqueTotal += Number(estValue) || 0;
+          }
         }
       } else {
-        const est = prod.estoque?.disponivel ?? prod.estoque?.estoque ?? prod.estoque ?? 0;
-        estoqueTotal = Number(est) || 0;
+        // Type narrowing para estoque do produto
+        const estoque = typeof prod.estoque === 'object' && prod.estoque !== null ? prod.estoque : undefined;
+        
+        let est = 0;
+        if (estoque) {
+          if ('disponivel' in estoque) {
+            est = Number(estoque.disponivel) || 0;
+          } else if ('estoque' in estoque) {
+            est = Number(estoque.estoque) || 0;
+          }
+        } else {
+          est = Number(prod.estoque) || 0;
+        }
+        
+        estoqueTotal = est;
       }
       
       estoqueMap.set(idExterno, estoqueTotal);
