@@ -62,6 +62,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 4️⃣ CRIAR trigger que mantém campo estoque atualizado
+DROP TRIGGER IF EXISTS trigger_sincronizar_estoque_variacoes ON produtos;
+
 CREATE TRIGGER trigger_sincronizar_estoque_variacoes
 BEFORE INSERT OR UPDATE ON produtos
 FOR EACH ROW

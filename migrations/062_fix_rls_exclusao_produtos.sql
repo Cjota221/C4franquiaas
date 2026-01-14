@@ -8,6 +8,8 @@
 -- ============================================
 
 -- 1️⃣ ADICIONAR policy para permitir DELETE via service_role
+DROP POLICY IF EXISTS "Service role pode deletar produtos" ON reseller_products;
+
 CREATE POLICY "Service role pode deletar produtos"
 ON reseller_products
 FOR DELETE
@@ -16,6 +18,8 @@ USING (true);
 
 -- 2️⃣ ADICIONAR policy para permitir DELETE via funções SECURITY DEFINER
 -- (quando auth.uid() é NULL, permite delete)
+DROP POLICY IF EXISTS "Funções do banco podem deletar" ON reseller_products;
+
 CREATE POLICY "Funções do banco podem deletar"
 ON reseller_products
 FOR DELETE
@@ -36,6 +40,8 @@ DROP POLICY IF EXISTS "Revendedora deleta seus produtos" ON reseller_products;
 
 -- produto_categorias
 DROP POLICY IF EXISTS "Apenas admin pode deletar categorias" ON produto_categorias;
+DROP POLICY IF EXISTS "Service role e funções podem deletar categorias" ON produto_categorias;
+
 CREATE POLICY "Service role e funções podem deletar categorias"
 ON produto_categorias
 FOR DELETE
@@ -44,6 +50,8 @@ USING (true);
 
 -- produtos_franqueadas_precos
 DROP POLICY IF EXISTS "Apenas franqueada deleta seus preços" ON produtos_franqueadas_precos;
+DROP POLICY IF EXISTS "Service role e funções podem deletar preços" ON produtos_franqueadas_precos;
+
 CREATE POLICY "Service role e funções podem deletar preços"
 ON produtos_franqueadas_precos
 FOR DELETE

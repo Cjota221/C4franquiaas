@@ -46,7 +46,7 @@ async function handleSyncEstoque() {
       return NextResponse.json({ ok: true, updated: 0, message: 'Nenhum produto para sincronizar' });
     }
     
-    // 2. Buscar estoque do FacilZap (100 produtos por página)
+    // 2. Buscar estoque do FacilZap (TODAS as páginas)
     const client = axios.create({
       baseURL: 'https://api.facilzap.app.br',
       timeout: 20000,
@@ -56,11 +56,30 @@ async function handleSyncEstoque() {
       },
     });
     
-    const response = await client.get('/produtos', {
-      params: { page: 1, length: 100 }
-    });
+    // Buscar TODAS as páginas
+    let facilzapProdutos: Array<Record<string, unknown>> = [];
+    let page = 1;
+    let hasMore = true;
     
-    const facilzapProdutos = response.data?.data || response.data?.produtos || [];
+    while (hasMore && page <= 10) { // Limite de 10 páginas (1000 produtos)
+      const response = await client.get('/produtos', {
+        params: { page, length: 100 }
+      });
+      
+      const produtos = response.data?.data || response.data?.produtos || [];
+      
+      if (produtos.length === 0) {
+        hasMore = false;
+      } else {
+        facilzapProdutos = facilzapProdutos.concat(produtos);
+        page++;
+        
+        // Se retornou menos que 100, não tem mais páginas
+        if (produtos.length < 100) {
+          hasMore = false;
+        }
+      }
+    }
     
     if (!facilzapProdutos.length) {
       return NextResponse.json({ ok: true, updated: 0, message: 'Nenhum produto no FacilZap' });
