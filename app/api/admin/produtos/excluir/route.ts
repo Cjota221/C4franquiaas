@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
     console.log('');
     console.log('✅ RESULTADO DA FUNÇÃO:');
     console.log('   Success:', data?.success);
+    console.log('   Timestamp:', new Date().toISOString());
     console.log('   Total excluídos:', data?.total_excluidos);
     console.log('   Erro:', data?.error);
     console.log('   Payload completo:', JSON.stringify(data, null, 2));
@@ -95,6 +96,13 @@ export async function POST(req: NextRequest) {
     excluidos?.forEach((e: { id_externo: string; excluido_por: string; excluido_em: string }) => {
       console.log(`   - ID Externo: ${e.id_externo}, Por: ${e.excluido_por}, Em: ${e.excluido_em}`);
     });
+    console.log('');
+    console.log('⚠️  ALERTA: MONITORE OS PRÓXIMOS 5 MINUTOS!');
+    console.log('   Se os produtos VOLTAREM, o problema está em:');
+    console.log('   1️⃣  Sync automático recriando (route: /api/sync-produtos)');
+    console.log('   2️⃣  Webhook FacilZap recriando (route: /api/webhook/facilzap)');
+    console.log('   3️⃣  Cron de estoque recriando (route: /api/cron-estoque)');
+    console.log('   Verifique os logs do terminal nos próximos minutos!');
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🏁 FIM DO PROCESSO DE EXCLUSÃO');

@@ -69,14 +69,22 @@ async function handleProdutoEstoque(data: any, eventType: string) {
   console.log(`[Webhook] 📦 Processando: ID=${facilzapId} | Evento=${eventType} | Estoque=${novoEstoque}`);
 
   // 🚫 VERIFICAR SE PRODUTO FOI EXCLUÍDO PELO ADMIN
+  console.log(`[Webhook] 🛡️  Verificando se produto ${facilzapId} foi excluído...`);
   const foiExcluido = await isProdutoExcluido(supabaseAdmin, facilzapId);
   if (foiExcluido) {
-    console.log(`🚫 [Webhook] Produto ${facilzapId} foi excluído pelo admin - ignorando webhook`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`🚫 WEBHOOK BLOQUEADO!`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`   Produto ID: ${facilzapId}`);
+    console.log(`   Motivo: Foi excluído pelo admin`);
+    console.log(`   Ação: Webhook IGNORADO - produto NÃO será recriado`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     return { 
       message: 'Produto foi excluído pelo admin - webhook ignorado', 
       facilzap_id: facilzapId 
     };
   }
+  console.log(`[Webhook] ✅ Produto ${facilzapId} não está na lista de excluídos. Prosseguindo...`);
 
   // Preparar dados para upsert
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

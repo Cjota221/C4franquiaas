@@ -547,6 +547,16 @@ export default function ProdutosPage(): React.JSX.Element {
       }
 
       console.log(`✅ [CLIENTE] ${data.total} produto(s) excluído(s)`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('⚠️  MONITORE OS LOGS DO SERVIDOR!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('   Se os produtos VOLTAREM em 1-5 minutos:');
+      console.log('   1️⃣  Verifique terminal do servidor (npm run dev)');
+      console.log('   2️⃣  Procure por mensagens de SYNC/WEBHOOK/CRON');
+      console.log('   3️⃣  Deve aparecer "🚫 BLOQUEADOS" se filtro funcionar');
+      console.log('   4️⃣  Se NÃO aparecer bloqueio = filtro FALHOU');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('');
       
       if (data.debug) {
         console.log('🔍 Debug adicional:', data.debug);

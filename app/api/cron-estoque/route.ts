@@ -48,9 +48,17 @@ async function handleSyncEstoque() {
     }
 
     // 🚫 FILTRAR PRODUTOS EXCLUÍDOS PELO ADMIN
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`🛡️  [CRON-ESTOQUE] Verificando produtos excluídos`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     console.log(`[Cron Estoque] Produtos antes de filtrar: ${produtos.length}`);
     const produtosFiltrados = await filtrarProdutosExcluidos(supabase, produtos);
     console.log(`[Cron Estoque] Produtos após filtrar excluídos: ${produtosFiltrados.length}`);
+    const totalBloqueados = produtos.length - produtosFiltrados.length;
+    if (totalBloqueados > 0) {
+      console.log(`🚫 BLOQUEADOS: ${totalBloqueados} produtos não terão estoque atualizado (foram excluídos)`);
+    }
+    console.log(``);
     
     if (produtosFiltrados.length === 0) {
       return NextResponse.json({ ok: true, updated: 0, message: 'Todos produtos foram excluídos pelo admin' });

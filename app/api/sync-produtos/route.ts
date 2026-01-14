@@ -31,8 +31,12 @@ async function handleSync(page?: number, length?: number) {
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
   try {
-    console.log('🔄 Iniciando sincronização com FácilZap...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔄 SYNC-PRODUTOS: Iniciando sincronização com FácilZap...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🔑 Token FácilZap presente:', !!process.env.FACILZAP_TOKEN);
+    console.log('🛡️ Filtro de produtos excluídos: ATIVO');
+    console.log('⏰ Timestamp:', new Date().toISOString());
     
     let produtos: ProdutoDB[] = [];
     let totalPages = 0;
@@ -75,15 +79,21 @@ async function handleSync(page?: number, length?: number) {
     }
 
     // 🚫 FILTRAR PRODUTOS EXCLUÍDOS PELO ADMIN (ANTES DE TUDO)
-    console.log('🚫 Verificando produtos excluídos pelo admin...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🛡️  VERIFICANDO PRODUTOS EXCLUÍDOS PELO ADMIN');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     const produtosOriginais = produtos.length;
     produtos = await filtrarProdutosExcluidos(supabase, produtos);
     const produtosFiltrados = produtos.length;
     const totalExcluidosIgnorados = produtosOriginais - produtosFiltrados;
     
     if (totalExcluidosIgnorados > 0) {
-      console.log(`🚫 Ignorados ${totalExcluidosIgnorados} produtos que foram excluídos pelo admin`);
+      console.log(`🚫 BLOQUEADOS: ${totalExcluidosIgnorados} produtos que foram excluídos pelo admin`);
+      console.log(`   Esses produtos NÃO serão recriados!`);
+    } else {
+      console.log(`✅ Nenhum produto excluído detectado. Prosseguindo com sync...`);
     }
+    console.log('');
 
     const BATCH_SIZE = 50;
     let totalProcessed = 0;
