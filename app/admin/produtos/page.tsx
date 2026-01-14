@@ -601,6 +601,7 @@ export default function ProdutosPage(): React.JSX.Element {
       });
 
       setTimeout(() => {
+        // ✅ Recarregar é necessário aqui para pegar novos produtos do FácilZap
         carregarProdutos(pagina, debouncedSearchTerm);
         setStatusMsg(null);
       }, 2000);
@@ -956,6 +957,7 @@ export default function ProdutosPage(): React.JSX.Element {
         onClose={() => setModalVincularOpen(false)}
         produtoIds={Object.keys(selectedIds).filter(k => selectedIds[k]).map(k => isNaN(Number(k)) ? k : Number(k))}
         onSuccess={() => {
+          // ✅ Recarregar necessário para mostrar categorias vinculadas
           carregarProdutos(pagina, debouncedSearchTerm);
           clearSelected();
         }}
@@ -965,6 +967,7 @@ export default function ProdutosPage(): React.JSX.Element {
         onClose={() => setModalAtualizarPrecosOpen(false)}
         produtoIds={Object.keys(selectedIds).filter(k => selectedIds[k]).map(k => isNaN(Number(k)) ? k : Number(k))}
         onSuccess={() => {
+          // ✅ Recarregar necessário para mostrar preços atualizados
           carregarProdutos(pagina, debouncedSearchTerm);
           clearSelected();
         }}
@@ -983,6 +986,7 @@ export default function ProdutosPage(): React.JSX.Element {
           initialDescription={produtoParaEditar.description || ''}
           initialSizeGuide={produtoParaEditar.size_guide as { image_url?: string; measurements?: { size: string }[] } | null}
           onSave={() => {
+            // ✅ Recarregar necessário para mostrar descrição/guia atualizados
             carregarProdutos(pagina, debouncedSearchTerm);
           }}
         />
@@ -993,6 +997,7 @@ export default function ProdutosPage(): React.JSX.Element {
         isOpen={modalMassaOpen}
         onClose={() => setModalMassaOpen(false)}
         onSave={() => {
+          // ✅ Recarregar necessário para mostrar alterações em massa
           carregarProdutos(pagina, debouncedSearchTerm);
         }}
       />
