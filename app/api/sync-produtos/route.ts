@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, NextRequest } from 'next/server';
 import { fetchAllProdutosFacilZap, fetchProdutosFacilZapPage, ProdutoDB } from '@/lib/facilzapClient';
+import { filtrarProdutosExcluidos } from '@/lib/produtos-excluidos';
 
 // extractCategoryNames removed: categories should be managed manually in admin panel
 
@@ -73,6 +74,17 @@ async function handleSync(page?: number, length?: number) {
       });
     }
 
+    // 🚫 FILTRAR PRODUTOS EXCLUÍDOS PELO ADMIN (ANTES DE TUDO)
+    console.log('🚫 Verificando produtos excluídos pelo admin...');
+    const produtosOriginais = produtos.length;
+    produtos = await filtrarProdutosExcluidos(supabase, produtos);
+    const produtosFiltrados = produtos.length;
+    const totalExcluidosIgnorados = produtosOriginais - produtosFiltrados;
+    
+    if (totalExcluidosIgnorados > 0) {
+      console.log(`🚫 Ignorados ${totalExcluidosIgnorados} produtos que foram excluídos pelo admin`);
+    }
+
     const BATCH_SIZE = 50;
     let totalProcessed = 0;
     let totalUpdated = 0;
@@ -139,34 +151,19 @@ async function handleSync(page?: number, length?: number) {
       // 🔍 COMPARAR com dados existentes para detectar mudanças
       const idsExternos = batch.map(p => p.id_externo).filter(id => id !== null);
       
-      // 🚫 VERIFICAR PRODUTOS EXCLUÍDOS PELO ADMIN (não devem voltar)
-      const { data: produtosExcluidos } = await supabase
-        .from('produtos_excluidos')
-        .select('id_externo')
-        .in('id_externo', idsExternos);
-      
-      const idsExcluidos = new Set((produtosExcluidos || []).map((p: { id_externo: string }) => p.id_externo));
-      
-      // Filtrar produtos excluídos do batch
-      const batchFiltrado = batch.filter(p => !idsExcluidos.has(p.id_externo || ''));
-      const totalIgnorados = batch.length - batchFiltrado.length;
-      
-      if (totalIgnorados > 0) {
-        console.log(`🚫 Ignorando ${totalIgnorados} produtos excluídos pelo admin`);
-      }
-      
-      const idsExternosFiltrados = batchFiltrado.map(p => p.id_externo).filter(id => id !== null);
+      // 🚫 REMOVIDO: Verificação em batch (agora feita ANTES do loop)
+      // A filtragem global já aconteceu antes, não precisa refiltrar aqui
       
       const { data: existingProducts } = await supabase
         .from('produtos')
         .select('id, id_externo, estoque, preco_base, ativo, desativado_manual, ultima_sincronizacao, admin_aprovado, admin_rejeitado')
-        .in('id_externo', idsExternosFiltrados);
+        .in('id_externo', idsExternos);
 
       // Identificar produtos novos, alterados e inalterados
       const productsToUpsert: typeof batch = [];
       const changedProducts: Array<{ id_externo: string; changes: string[] }> = [];
       
-      batchFiltrado.forEach(newProduct => {
+      batch.forEach(newProduct => {
         const existing = existingProducts?.find((p: { id_externo: string }) => p.id_externo === newProduct.id_externo);
         
         if (!existing) {

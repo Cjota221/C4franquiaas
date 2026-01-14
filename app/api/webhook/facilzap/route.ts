@@ -67,6 +67,16 @@ async function handleProdutoEstoque(data: any, eventType: string) {
   
   console.log(`[Webhook] 📦 Processando: ID=${facilzapId} | Evento=${eventType} | Estoque=${novoEstoque}`);
 
+  // 🚫 VERIFICAR SE PRODUTO FOI EXCLUÍDO PELO ADMIN
+  const foiExcluido = await isProdutoExcluido(supabaseAdmin, facilzapId);
+  if (foiExcluido) {
+    console.log(`🚫 [Webhook] Produto ${facilzapId} foi excluído pelo admin - ignorando webhook`);
+    return { 
+      message: 'Produto foi excluído pelo admin - webhook ignorado', 
+      facilzap_id: facilzapId 
+    };
+  }
+
   // Preparar dados para upsert
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: any = {

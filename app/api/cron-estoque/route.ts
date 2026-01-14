@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { filtrarProdutosExcluidos } from '@/lib/produtos-excluidos';
 
 // Rota otimizada para sincronização rápida de estoque via CRON
 // Busca apenas estoque dos produtos existentes - executa em menos de 30s
@@ -44,6 +45,15 @@ async function handleSyncEstoque() {
     
     if (!produtos || produtos.length === 0) {
       return NextResponse.json({ ok: true, updated: 0, message: 'Nenhum produto para sincronizar' });
+    }
+
+    // 🚫 FILTRAR PRODUTOS EXCLUÍDOS PELO ADMIN
+    console.log(`[Cron Estoque] Produtos antes de filtrar: ${produtos.length}`);
+    const produtosFiltrados = await filtrarProdutosExcluidos(supabase, produtos);
+    console.log(`[Cron Estoque] Produtos após filtrar excluídos: ${produtosFiltrados.length}`);
+    
+    if (produtosFiltrados.length === 0) {
+      return NextResponse.json({ ok: true, updated: 0, message: 'Todos produtos foram excluídos pelo admin' });
     }
     
     // 2. Buscar estoque do FacilZap (TODAS as páginas)
@@ -130,7 +140,7 @@ async function handleSyncEstoque() {
     // 4. Atualizar apenas produtos com estoque diferente
     let updated = 0;
     
-    for (const prod of produtos) {
+    for (const prod of produtosFiltrados) {
       const novoEstoque = estoqueMap.get(prod.id_externo);
       
       if (novoEstoque !== undefined && novoEstoque !== prod.estoque) {
