@@ -22,6 +22,7 @@ interface Pedido {
   created_at: string;
   criado_em: string;
   total: number;
+  valor_total?: number;
   total_itens?: number;
   observacoes?: string;
   cliente_nome?: string;
