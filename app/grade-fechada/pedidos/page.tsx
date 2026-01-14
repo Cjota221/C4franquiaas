@@ -22,6 +22,7 @@ interface Pedido {
   created_at: string;
   total: number;
   observacoes?: string;
+  cliente_nome?: string;
 }
 
 export default function PedidosGradeFechadaPage() {
