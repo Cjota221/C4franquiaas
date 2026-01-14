@@ -329,19 +329,18 @@ export default function AdminRevendedorasPage() {
       ]);
 
       // Agrupar contagens por reseller_id
-      const produtosCounts = (produtosResult.data || []).reduce((acc: Record<string, number>, item: any) => {
+      const produtosCounts = (produtosResult.data || []).reduce((acc: Record<string, number>, item) => {
         acc[item.reseller_id] = (acc[item.reseller_id] || 0) + 1;
         return acc;
       }, {});
 
-      const produtosMargemCounts = (produtosMargemResult.data || []).reduce((acc: Record<string, number>, item: any) => {
+      const produtosMargemCounts = (produtosMargemResult.data || []).reduce((acc: Record<string, number>, item) => {
         acc[item.reseller_id] = (acc[item.reseller_id] || 0) + 1;
         return acc;
       }, {});
 
       // Processar revendedoras com dados pré-carregados
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processadas: RevendedoraCompleta[] = data.map((r: any) => {
+      const processadas: RevendedoraCompleta[] = data.map((r) => {
         try {
           const totalProdutos = produtosCounts[r.id] || 0;
           const produtosComMargem = produtosMargemCounts[r.id] || 0;

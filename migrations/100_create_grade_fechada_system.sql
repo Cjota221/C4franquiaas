@@ -197,10 +197,12 @@ ON CONFLICT (chave) DO NOTHING;
 -- Produtos: acesso público para leitura, admin para escrita
 ALTER TABLE grade_fechada_produtos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Produtos são visíveis publicamente" ON grade_fechada_produtos;
 CREATE POLICY "Produtos são visíveis publicamente" ON grade_fechada_produtos
   FOR SELECT
   USING (ativo = true);
 
+DROP POLICY IF EXISTS "Admin pode gerenciar produtos" ON grade_fechada_produtos;
 CREATE POLICY "Admin pode gerenciar produtos" ON grade_fechada_produtos
   FOR ALL
   USING (true)
@@ -209,16 +211,19 @@ CREATE POLICY "Admin pode gerenciar produtos" ON grade_fechada_produtos
 -- Pedidos: admin pode ver tudo
 ALTER TABLE grade_fechada_pedidos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admin pode ver todos os pedidos" ON grade_fechada_pedidos;
 CREATE POLICY "Admin pode ver todos os pedidos" ON grade_fechada_pedidos
   FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admin pode gerenciar pedidos" ON grade_fechada_pedidos;
 CREATE POLICY "Admin pode gerenciar pedidos" ON grade_fechada_pedidos
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- Permitir inserção pública (pelo site)
+DROP POLICY IF EXISTS "Permitir criação pública de pedidos" ON grade_fechada_pedidos;
 CREATE POLICY "Permitir criação pública de pedidos" ON grade_fechada_pedidos
   FOR INSERT
   WITH CHECK (true);
@@ -226,16 +231,19 @@ CREATE POLICY "Permitir criação pública de pedidos" ON grade_fechada_pedidos
 -- Carrinhos: admin pode ver tudo
 ALTER TABLE grade_fechada_carrinhos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admin pode ver todos os carrinhos" ON grade_fechada_carrinhos;
 CREATE POLICY "Admin pode ver todos os carrinhos" ON grade_fechada_carrinhos
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- Permitir inserção e atualização pública (pelo site)
+DROP POLICY IF EXISTS "Permitir criação pública de carrinhos" ON grade_fechada_carrinhos;
 CREATE POLICY "Permitir criação pública de carrinhos" ON grade_fechada_carrinhos
   FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Permitir atualização pública de carrinhos" ON grade_fechada_carrinhos;
 CREATE POLICY "Permitir atualização pública de carrinhos" ON grade_fechada_carrinhos
   FOR UPDATE
   USING (true)
@@ -244,10 +252,12 @@ CREATE POLICY "Permitir atualização pública de carrinhos" ON grade_fechada_ca
 -- Configurações: leitura pública, escrita apenas admin
 ALTER TABLE grade_fechada_configuracoes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Configurações são visíveis publicamente" ON grade_fechada_configuracoes;
 CREATE POLICY "Configurações são visíveis publicamente" ON grade_fechada_configuracoes
   FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admin pode gerenciar configurações" ON grade_fechada_configuracoes;
 CREATE POLICY "Admin pode gerenciar configurações" ON grade_fechada_configuracoes
   FOR ALL
   USING (true)
@@ -266,21 +276,25 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_grade_fechada_produtos_updated_at ON grade_fechada_produtos;
 CREATE TRIGGER update_grade_fechada_produtos_updated_at
     BEFORE UPDATE ON grade_fechada_produtos
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_grade_fechada_pedidos_updated_at ON grade_fechada_pedidos;
 CREATE TRIGGER update_grade_fechada_pedidos_updated_at
     BEFORE UPDATE ON grade_fechada_pedidos
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_grade_fechada_carrinhos_updated_at ON grade_fechada_carrinhos;
 CREATE TRIGGER update_grade_fechada_carrinhos_updated_at
     BEFORE UPDATE ON grade_fechada_carrinhos
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_grade_fechada_configuracoes_updated_at ON grade_fechada_configuracoes;
 CREATE TRIGGER update_grade_fechada_configuracoes_updated_at
     BEFORE UPDATE ON grade_fechada_configuracoes
     FOR EACH ROW
@@ -300,6 +314,7 @@ $$ language 'plpgsql';
 -- Criar sequência para números de pedido
 CREATE SEQUENCE IF NOT EXISTS seq_grade_fechada_pedidos START 1;
 
+DROP TRIGGER IF EXISTS set_numero_pedido ON grade_fechada_pedidos;
 CREATE TRIGGER set_numero_pedido
     BEFORE INSERT ON grade_fechada_pedidos
     FOR EACH ROW

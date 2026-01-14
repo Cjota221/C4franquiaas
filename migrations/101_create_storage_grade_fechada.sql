@@ -20,11 +20,13 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 
 -- Permitir leitura pública
+DROP POLICY IF EXISTS "Imagens de produtos são públicas" ON storage.objects;
 CREATE POLICY "Imagens de produtos são públicas"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'grade-fechada-produtos');
 
 -- Permitir upload apenas para admin
+DROP POLICY IF EXISTS "Admin pode fazer upload de imagens" ON storage.objects;
 CREATE POLICY "Admin pode fazer upload de imagens"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -33,6 +35,7 @@ WITH CHECK (
 );
 
 -- Permitir update apenas para admin
+DROP POLICY IF EXISTS "Admin pode atualizar imagens" ON storage.objects;
 CREATE POLICY "Admin pode atualizar imagens"
 ON storage.objects FOR UPDATE
 USING (
@@ -45,6 +48,7 @@ WITH CHECK (
 );
 
 -- Permitir delete apenas para admin
+DROP POLICY IF EXISTS "Admin pode deletar imagens" ON storage.objects;
 CREATE POLICY "Admin pode deletar imagens"
 ON storage.objects FOR DELETE
 USING (

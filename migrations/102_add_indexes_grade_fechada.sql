@@ -36,11 +36,11 @@ ON grade_fechada_pedidos(status);
 
 -- Índice para ordenação por data (usado em dashboard)
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_data 
-ON grade_fechada_pedidos(created_at DESC);
+ON grade_fechada_pedidos(criado_em DESC);
 
 -- Índice composto para relatórios por status e data
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_status_data 
-ON grade_fechada_pedidos(status, created_at DESC);
+ON grade_fechada_pedidos(status, criado_em DESC);
 
 -- Índice para busca por número do pedido
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_numero 
@@ -48,11 +48,11 @@ ON grade_fechada_pedidos(numero_pedido);
 
 -- Índice para busca por nome do cliente (usado em filtros)
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_cliente 
-ON grade_fechada_pedidos(nome_cliente);
+ON grade_fechada_pedidos(cliente_nome);
 
 -- Índice para busca por telefone (usado em busca rápida)
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_telefone 
-ON grade_fechada_pedidos(telefone_cliente);
+ON grade_fechada_pedidos(cliente_telefone);
 
 -- Índice GIN para busca full-text em observações
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_pedidos_observacoes_gin 
@@ -70,11 +70,11 @@ ON grade_fechada_carrinhos(status);
 
 -- Índice para ordenação por última modificação
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_carrinhos_updated 
-ON grade_fechada_carrinhos(updated_at DESC);
+ON grade_fechada_carrinhos(atualizado_em DESC);
 
 -- Índice composto para carrinhos abandonados (relatórios)
 CREATE INDEX IF NOT EXISTS idx_grade_fechada_carrinhos_abandonados 
-ON grade_fechada_carrinhos(status, updated_at DESC)
+ON grade_fechada_carrinhos(status, atualizado_em DESC)
 WHERE status = 'abandonado';
 
 -- Índice para busca por session_id (recuperação de carrinho)
