@@ -137,6 +137,8 @@ export default function ProdutoDetalheEncomedaPage() {
     }, 1000);
   };
 
+  const numeracoesDisponiveis = config?.numeracoes_padrao || ['33', '34', '35', '36', '37', '38', '39', '40', '41', '42'];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -162,10 +164,6 @@ export default function ProdutoDetalheEncomedaPage() {
       </div>
     );
   }
-
-  const numeracoesDisponiveis = useMemo(() => {
-    return config?.numeracoes_padrao || ['33', '34', '35', '36', '37', '38', '39', '40', '41', '42'];
-  }, [config?.numeracoes_padrao]);
 
   return (
     <div className="container mx-auto px-4 py-8">

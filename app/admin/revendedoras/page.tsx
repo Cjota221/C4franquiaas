@@ -312,7 +312,7 @@ export default function AdminRevendedorasPage() {
       }
 
       // Buscar todas as contagens de produtos de uma vez (evita N+1)
-      const resellerIds = data.map((r: any) => r.id);
+      const resellerIds = data.map((r: { id: number }) => r.id);
       
       const [produtosResult, produtosMargemResult] = await Promise.all([
         supabase

@@ -14,8 +14,17 @@ import {
   Filter,
 } from 'lucide-react';
 
+interface Produto {
+  id: number;
+  nome: string;
+  descricao?: string;
+  preco_base: number;
+  ativo: boolean;
+  created_at: string;
+}
+
 export default function ProdutosGradeFechadaPage() {
-  const [produtos, setProdutos] = useState([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
 
@@ -121,7 +130,7 @@ export default function ProdutosGradeFechadaPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {produtos.map((produto: any) => (
+          {produtos.map((produto) => (
             <Card key={produto.id} className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">

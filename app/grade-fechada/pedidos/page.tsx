@@ -15,8 +15,16 @@ import {
   Calendar,
 } from 'lucide-react';
 
+interface Pedido {
+  id: number;
+  status: string;
+  created_at: string;
+  total: number;
+  observacoes?: string;
+}
+
 export default function PedidosGradeFechadaPage() {
-  const [pedidos, setPedidos] = useState([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState('todos');
 
@@ -43,7 +51,7 @@ export default function PedidosGradeFechadaPage() {
     }
   };
 
-  const statusConfig: any = {
+  const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
     pendente: { label: 'Pendente', color: 'yellow', icon: Clock },
     confirmado: { label: 'Confirmado', color: 'blue', icon: CheckCircle },
     producao: { label: 'Em Produção', color: 'purple', icon: PackageOpen },
@@ -134,7 +142,7 @@ export default function PedidosGradeFechadaPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {pedidos.map((pedido: any) => {
+          {pedidos.map((pedido) => {
             const status = statusConfig[pedido.status] || statusConfig.pendente;
             const StatusIcon = status.icon;
 
