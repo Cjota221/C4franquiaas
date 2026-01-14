@@ -114,64 +114,474 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-[#FAFAFA]">
+      {/* Hero Section com Vídeos + Texto */}
+      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-br from-pink-50 via-white to-pink-50">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white text-pink-700 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-sm border border-gray-100">
-              <span>Rede de Franquias Cjota Rasteirinhas</span>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1] mb-8">
-              Venda rasteirinhas
-              <span className="block mt-2 text-pink-600">
-                sem precisar de estoque
-              </span>
-            </h1>
-
-            <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
-              Receba um <strong className="text-gray-900">site profissional pronto</strong> com nossos produtos.
-              Personalize com sua marca e <strong className="text-gray-900">defina sua margem de lucro</strong>!
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link
-                href="/cadastro/revendedora"
-                className="group relative inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pink-700 hover:-translate-y-1 transition-all"
-              >
-                <span>Quero ser revendedora</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-full font-bold text-lg border border-gray-200 hover:border-pink-300 hover:text-pink-600 hover:-translate-y-1 transition-all shadow-sm"
-              >
-                Já sou revendedora
-              </Link>
-            </div>
-
-            {/* 3 Pilares principais */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-              {[
-                { icon: Boxes, title: 'Sem Estoque', desc: 'Não precisa comprar antes' },
-                { icon: Globe, title: 'Site Pronto', desc: 'Já com nossos produtos' },
-                { icon: DollarSign, title: 'Você Define', desc: 'Sua margem de lucro' }
-              ].map((item, i) => (
-                <div key={i} className="group bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
-                  <item.icon className="w-8 h-8 text-pink-600 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-                  <div className="text-lg font-bold text-gray-900">{item.title}</div>
-                  <div className="text-sm text-gray-500">{item.desc}</div>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Lado Esquerdo - Grid de Vídeos */}
+            <div className="order-2 lg:order-1">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { title: 'O que é o C4?', url: 'https://files.catbox.moe/rg19bj.MP4' },
+                  { title: 'Pedido e Entrega', url: 'https://files.catbox.moe/hzg1c3.MP4' },
+                  { title: 'Precisa Pagar?', url: 'https://files.catbox.moe/ukwqyj.MP4' },
+                  { title: 'Definir Preços', url: 'https://files.catbox.moe/495y6q.MP4' },
+                  { title: 'Personalização', url: 'https://files.catbox.moe/k5n0ja.MP4' }
+                ].map((video, index) => (
+                  <div 
+                    key={index} 
+                    className={`group relative ${index === 4 ? 'col-span-3' : ''}`}
+                  >
+                    <div className="relative bg-gray-900 rounded-2xl overflow-hidden border-2 border-gray-200 hover:border-pink-500 transition-all duration-300 shadow-lg hover:shadow-pink-500/20">
+                      {/* Container do vídeo com aspect ratio de Stories (9:16) */}
+                      <div className="relative" style={{ paddingBottom: index === 4 ? '56.25%' : '177.78%' }}>
+                        <video
+                          className="absolute inset-0 w-full h-full object-cover"
+                          src={video.url}
+                          playsInline
+                          muted
+                          loop
+                          preload="metadata"
+                          onMouseEnter={(e) => e.currentTarget.play()}
+                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                          onTouchStart={(e) => e.currentTarget.play()}
+                          onTouchEnd={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                        />
+                        {/* Overlay com gradiente */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                        {/* Ícone de play */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Título do vídeo */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
+                        <h3 className="text-white font-bold text-xs leading-tight">{video.title}</h3>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Badge de destaque abaixo dos vídeos */}
+              <div className="mt-6 flex items-center justify-center gap-4">
+                <div className="flex -space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-pink-600 border-2 border-white flex items-center justify-center text-white font-bold">C</div>
+                  <div className="w-10 h-10 rounded-full bg-pink-500 border-2 border-white flex items-center justify-center text-white font-bold">J</div>
+                  <div className="w-10 h-10 rounded-full bg-pink-400 border-2 border-white flex items-center justify-center text-white font-bold">R</div>
                 </div>
-              ))}
+                <div className="text-sm text-gray-600">
+                  <strong className="text-gray-900">+50 franqueadas</strong> já vendendo
+                </div>
+              </div>
             </div>
+
+            {/* Lado Direito - Texto */}
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 bg-white text-pink-700 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 shadow-sm border border-pink-100">
+                <span>🚀 Rede de Franquias Cjota Rasteirinhas</span>
+              </div>
+
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.05] mb-6">
+                Venda com
+                <span className="block mt-2 text-pink-600">
+                  estrutura profissional
+                </span>
+              </h1>
+
+              <p className="text-xl md:text-2xl text-gray-600 leading-relaxed mb-8">
+                O C4 Franquias nasceu para <strong className="text-gray-900">mudar a forma como as revendedoras vendem pela internet.</strong>
+              </p>
+
+              <div className="space-y-4 mb-10">
+                <div className="flex items-start gap-3">
+                  <Check className="w-6 h-6 text-pink-600 mt-1 flex-shrink-0" />
+                  <p className="text-lg text-gray-700">Venda <strong>sem investir em estoque</strong></p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-6 h-6 text-pink-600 mt-1 flex-shrink-0" />
+                  <p className="text-lg text-gray-700">Tenha um <strong>site profissional personalizado</strong></p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-6 h-6 text-pink-600 mt-1 flex-shrink-0" />
+                  <p className="text-lg text-gray-700">Defina <strong>sua margem de lucro</strong></p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-6 h-6 text-pink-600 mt-1 flex-shrink-0" />
+                  <p className="text-lg text-gray-700"><strong>Zero taxa de entrada ou mensalidade</strong></p>
+                </div>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/cadastro/revendedora"
+                  className="group relative inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:bg-pink-700 hover:-translate-y-1 transition-all"
+                >
+                  <span>Quero ser franqueada</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-full font-bold text-lg border-2 border-gray-200 hover:border-pink-600 hover:text-pink-600 hover:-translate-y-1 transition-all shadow-sm"
+                >
+                  Já sou franqueada
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <ChevronDown className="w-8 h-8 text-gray-400" />
+        </div>
+      </section>
+
+      {/* 🔥 MENSAGEM 1 - O que é o Projeto C4 Franquias */}
+      <section id="como-funciona" className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto">
+              <div className="inline-block px-4 py-2 bg-gradient-to-r from-pink-600 to-pink-500 text-white rounded-full text-sm font-bold mb-6">
+                🚀 O QUE É O PROJETO C4 FRANQUIAS
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                Mudar a forma como você <span className="text-pink-600">vende pela internet</span>
+              </h2>
+
+              <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6">
+                <p className="text-xl">
+                  Hoje, muita gente desiste de empreender por medo de:
+                </p>
+
+                <div className="grid md:grid-cols-3 gap-4 my-8">
+                  <div className="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-xl">
+                    <div className="text-red-600 font-bold mb-2">😰 Investir em estoque</div>
+                    <p className="text-sm text-gray-600">Comprar produtos antes de vender</p>
+                  </div>
+                  <div className="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-xl">
+                    <div className="text-red-600 font-bold mb-2">📦 Ficar com mercadoria parada</div>
+                    <p className="text-sm text-gray-600">Dinheiro investido sem retorno</p>
+                  </div>
+                  <div className="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-xl">
+                    <div className="text-red-600 font-bold mb-2">❌ Não conseguir vender</div>
+                    <p className="text-sm text-gray-600">Medo de não ter clientes</p>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-8 rounded-2xl my-8">
+                  <h3 className="text-2xl font-bold mb-4">O C4 Franquias é um modelo onde você vende com estrutura profissional, usando os nossos produtos, com muito mais segurança.</h3>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 my-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="w-8 h-8 text-pink-600" />
+                    </div>
+                    <h4 className="font-bold text-lg mb-2">Profissionalizar suas vendas</h4>
+                    <p className="text-gray-600 text-sm">Site completo e organizado</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Check className="w-8 h-8 text-pink-600" />
+                    </div>
+                    <h4 className="font-bold text-lg mb-2">Reduzir riscos</h4>
+                    <p className="text-gray-600 text-sm">Sem investimento em estoque</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Globe className="w-8 h-8 text-pink-600" />
+                    </div>
+                    <h4 className="font-bold text-lg mb-2">Estrutura real de loja online</h4>
+                    <p className="text-gray-600 text-sm">Pronta para vender agora</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 📦 MENSAGEM 2 - Como funciona o pedido e a entrega */}
+      <section className="py-20 px-4 bg-gradient-to-br from-pink-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto">
+              <div className="inline-block px-4 py-2 bg-white border-2 border-pink-600 text-pink-600 rounded-full text-sm font-bold mb-6">
+                📦 COMO FUNCIONA O PEDIDO E A ENTREGA
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                De forma prática e <span className="text-pink-600">organizada</span>
+              </h2>
+
+              <div className="space-y-6 my-12">
+                {[
+                  { num: '1', icon: Globe, title: 'O cliente acessa o site da franqueada', desc: 'Seu site personalizado com todos os produtos' },
+                  { num: '2', icon: ShoppingBag, title: 'Escolhe os produtos e monta o pedido', desc: 'Navegação fácil e profissional' },
+                  { num: '3', icon: Phone, title: 'Pedido vai direto para o WhatsApp da franqueada', desc: 'Você recebe a notificação instantânea' },
+                  { num: '4', icon: DollarSign, title: 'A franqueada finaliza a venda e recebe o pagamento', desc: 'Você controla toda a negociação' },
+                  { num: '5', icon: Boxes, title: 'Depois disso, a franqueada faz o pedido conosco', desc: 'Compra só depois de vender' },
+                  { num: '6', icon: Check, title: 'Nós enviamos os produtos para a franqueada', desc: 'Que realiza a entrega ao cliente final' },
+                ].map((step, i) => (
+                  <div key={i} className="flex gap-6 items-start bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                    <div className="flex-shrink-0">
+                      <div className="w-14 h-14 bg-gradient-to-br from-pink-600 to-pink-500 text-white rounded-full flex items-center justify-center font-black text-xl">
+                        {step.num}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <step.icon className="w-6 h-6 text-pink-600" />
+                        <h3 className="text-xl font-bold text-gray-900">{step.title}</h3>
+                      </div>
+                      <p className="text-gray-600">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-pink-600 text-white p-8 rounded-2xl text-center">
+                <h3 className="text-2xl font-bold mb-4">Ou seja:</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <Check className="w-10 h-10 mx-auto mb-3" />
+                    <p className="font-semibold">Você controla a venda</p>
+                  </div>
+                  <div>
+                    <Check className="w-10 h-10 mx-auto mb-3" />
+                    <p className="font-semibold">Você controla o atendimento</p>
+                  </div>
+                  <div>
+                    <Check className="w-10 h-10 mx-auto mb-3" />
+                    <p className="font-semibold">Você vende com estrutura profissional</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 💰 MENSAGEM 3 - Precisa pagar para entrar? */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-block px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-full text-sm font-bold mb-6">
+                💰 PRECISA PAGAR PARA ENTRAR NO PROJETO?
+              </div>
+              
+              <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-tight">
+                <span className="text-green-600">ZERO</span> taxa de entrada
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-12">
+                <div className="bg-green-50 border-4 border-green-600 p-8 rounded-2xl">
+                  <div className="text-6xl mb-4">❌</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Sem taxa de entrada</h3>
+                  <p className="text-gray-600">Comece agora sem investir nada</p>
+                </div>
+                <div className="bg-green-50 border-4 border-green-600 p-8 rounded-2xl">
+                  <div className="text-6xl mb-4">❌</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Sem mensalidade</h3>
+                  <p className="text-gray-600">Não paga nada todo mês</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-10 rounded-3xl mb-8">
+                <h3 className="text-3xl font-black mb-4">O Projeto C4 Franquias é GRATUITO para participar</h3>
+                <p className="text-xl opacity-90">O único custo acontece quando você vende e faz o pedido dos produtos conosco.</p>
+                <p className="text-2xl font-bold mt-4">Nada antes da venda. ✨</p>
+              </div>
+
+              <p className="text-xl text-gray-600">
+                O objetivo é <strong className="text-pink-600">crescer junto com as franqueadas</strong>, não criar barreiras para começar.
+              </p>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 🏷️ MENSAGEM 4 - Posso escolher meu preço? */}
+      <section className="py-20 px-4 bg-gradient-to-br from-pink-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto">
+              <div className="inline-block px-4 py-2 bg-pink-600 text-white rounded-full text-sm font-bold mb-6">
+                🏷️ POSSO ESCOLHER MEU PREÇO?
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                Sim. <span className="text-pink-600">Você define sua margem</span>
+              </h2>
+
+              <div className="bg-white p-10 rounded-3xl shadow-xl border-2 border-pink-200 mb-8">
+                <div className="text-center mb-8">
+                  <div className="text-6xl mb-4">💰</div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">Cada franqueada define a margem de lucro que deseja aplicar</h3>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 text-center">
+                  <div>
+                    <div className="text-4xl mb-3">📉</div>
+                    <h4 className="font-bold text-lg mb-2">Preço de atacado</h4>
+                    <p className="text-gray-600 text-sm">Você tem acesso aos nossos produtos com preço especial</p>
+                  </div>
+                  <div>
+                    <div className="text-4xl mb-3">➕</div>
+                    <h4 className="font-bold text-lg mb-2">+ Sua margem</h4>
+                    <p className="text-gray-600 text-sm">Adiciona o lucro que fizer sentido para você</p>
+                  </div>
+                  <div>
+                    <div className="text-4xl mb-3">🎯</div>
+                    <h4 className="font-bold text-lg mb-2">= Seu preço final</h4>
+                    <p className="text-gray-600 text-sm">Vende pelo valor que seu público aceita</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-pink-600 text-white p-8 rounded-2xl text-center">
+                <h3 className="text-2xl font-bold mb-2">Liberdade, estratégia e controle. 🚀</h3>
+                <p className="text-lg opacity-90">Você escolhe quanto quer ganhar em cada venda</p>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 🎨 MENSAGEM 5 - Personalização do Site */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto">
+              <div className="inline-block px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-bold mb-6">
+                🎨 PERSONALIZAÇÃO DO SITE
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                Um site profissional <span className="text-pink-600">com sua cara</span>
+              </h2>
+
+              <p className="text-xl text-gray-700 mb-12 leading-relaxed">
+                Cada franqueada recebe um site profissional que pode ser personalizado com:
+              </p>
+
+              <div className="grid md:grid-cols-3 gap-8 mb-12">
+                <div className="bg-gradient-to-br from-pink-50 to-white p-8 rounded-2xl border-2 border-pink-200 hover:shadow-lg transition-all">
+                  <div className="w-16 h-16 bg-pink-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Palette className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Logomarca</h3>
+                  <p className="text-gray-600">Coloque sua marca no topo do site</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-white p-8 rounded-2xl border-2 border-purple-200 hover:shadow-lg transition-all">
+                  <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Palette className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Paleta de cores</h3>
+                  <p className="text-gray-600">Escolha as cores da sua identidade</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border-2 border-blue-200 hover:shadow-lg transition-all">
+                  <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Heart className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Identidade visual</h3>
+                  <p className="text-gray-600">Banners, textos e estilo próprio</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-10 rounded-3xl text-center">
+                <h3 className="text-3xl font-black mb-4">Tudo dentro de um padrão pensado para:</h3>
+                <div className="grid md:grid-cols-3 gap-6 mt-8">
+                  <div>
+                    <Star className="w-12 h-12 mx-auto mb-3" />
+                    <p className="font-bold text-lg">Vender mais</p>
+                  </div>
+                  <div>
+                    <Check className="w-12 h-12 mx-auto mb-3" />
+                    <p className="font-bold text-lg">Passar credibilidade</p>
+                  </div>
+                  <div>
+                    <Users className="w-12 h-12 mx-auto mb-3" />
+                    <p className="font-bold text-lg">Facilitar a compra</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 text-center">
+                <p className="text-xl text-gray-600">
+                  Chega de vender só por <span className="line-through">fotos soltas no WhatsApp</span> ou <span className="line-through">Instagram</span>. 🚫
+                </p>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 📝 MENSAGEM 6 - Cadastro no Projeto */}
+      <section className="py-20 px-4 bg-gradient-to-br from-pink-600 to-pink-500 text-white">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-bold mb-6">
+                ✨ QUER FAZER PARTE DO C4 FRANQUIAS?
+              </div>
+              
+              <h2 className="text-5xl md:text-6xl font-black mb-6 leading-tight">
+                O cadastro já está disponível
+              </h2>
+
+              <p className="text-2xl mb-12 opacity-90">
+                Todos os perfis passam por análise e aprovação.
+              </p>
+
+              <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 p-10 rounded-3xl mb-12">
+                <h3 className="text-3xl font-bold mb-6">Por que a análise?</h3>
+                <p className="text-xl opacity-90 leading-relaxed">
+                  Queremos garantir que cada franqueada tenha o <strong>perfil adequado</strong> e esteja <strong>comprometida</strong> em construir um negócio sério e profissional.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Link
+                  href="/cadastro/revendedora"
+                  className="group relative inline-flex items-center justify-center gap-3 bg-white text-pink-600 px-10 py-5 rounded-full font-black text-xl shadow-2xl hover:bg-gray-50 hover:-translate-y-1 transition-all"
+                >
+                  <span>FAZER CADASTRO AGORA</span>
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white px-10 py-5 rounded-full font-bold text-xl border-2 border-white/30 hover:bg-white/20 hover:-translate-y-1 transition-all"
+                >
+                  Já tenho cadastro
+                </Link>
+              </div>
+
+              <div className="mt-12 flex items-center justify-center gap-4 text-sm opacity-75">
+                <Check className="w-5 h-5" />
+                <span>Análise em até 24h</span>
+                <span>•</span>
+                <Check className="w-5 h-5" />
+                <span>100% gratuito</span>
+                <span>•</span>
+                <Check className="w-5 h-5" />
+                <span>Sem compromisso</span>
+              </div>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
