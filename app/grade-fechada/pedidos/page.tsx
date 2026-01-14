@@ -17,6 +17,7 @@ import {
 
 interface Pedido {
   id: number;
+  numero?: string;
   status: string;
   created_at: string;
   total: number;
