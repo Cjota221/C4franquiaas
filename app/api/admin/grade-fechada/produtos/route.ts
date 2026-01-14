@@ -63,28 +63,65 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST - Criar novo produto
+ * POST - Criar novo produto com variações
  */
 export async function POST(req: NextRequest) {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await req.json();
 
-    const { data, error } = await supabase
+    // Separar variações do body
+    const { variacoes, ...produtoData } = body;
+
+    // 1. Inserir o produto
+    const { data: produto, error: produtoError } = await supabase
       .from('grade_fechada_produtos')
-      .insert([body])
+      .insert([{
+        ...produtoData,
+        usa_variacoes: variacoes && variacoes.length > 0,
+      }])
       .select()
       .single();
 
-    if (error) {
-      console.error('Erro ao criar produto:', error);
+    if (produtoError) {
+      console.error('Erro ao criar produto:', produtoError);
       return NextResponse.json(
-        { error: 'Erro ao criar produto', details: error.message },
+        { error: 'Erro ao criar produto', details: produtoError.message },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ data }, { status: 201 });
+    // 2. Inserir variações se existirem
+    if (variacoes && variacoes.length > 0) {
+      const variacoesData = variacoes.map((v: { cor: string; imagem_url: string; estoque?: number }, index: number) => ({
+        produto_id: produto.id,
+        cor: v.cor,
+        imagem_url: v.imagem_url,
+        estoque_disponivel: v.estoque || 0,
+        ordem: index,
+        ativo: true,
+      }));
+
+      const { error: variacoesError } = await supabase
+        .from('grade_fechada_variacoes')
+        .insert(variacoesData);
+
+      if (variacoesError) {
+        console.error('Erro ao criar variações:', variacoesError);
+        // Rollback: deletar produto criado
+        await supabase
+          .from('grade_fechada_produtos')
+          .delete()
+          .eq('id', produto.id);
+
+        return NextResponse.json(
+          { error: 'Erro ao criar variações', details: variacoesError.message },
+          { status: 400 }
+        );
+      }
+    }
+
+    return NextResponse.json({ data: produto }, { status: 201 });
   } catch (error) {
     console.error('Erro na API:', error);
     return NextResponse.json(
