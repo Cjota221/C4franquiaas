@@ -29,7 +29,8 @@ export default function VendasAdminPage() {
         .from("vendas")
         .select(`
           *,
-          lojas:loja_id(nome)
+          lojas:loja_id(nome),
+          franqueadas:franqueada_id(nome)
         `)
         .order("created_at", { ascending: false });
 
@@ -38,30 +39,16 @@ export default function VendasAdminPage() {
         return;
       }
 
-      // Buscar nomes das franqueadas
-      const vendasComDetalhes = await Promise.all(
-        (vendasData || []).map(async (venda) => {
-          let franqueada_nome = 'N/A';
-          
-          if (venda.franqueada_id) {
-            const { data: userData } = await supabase
-              .from('franqueadas')
-              .select('nome')
-              .eq('user_id', venda.franqueada_id)
-              .single();
-            
-            if (userData) {
-              franqueada_nome = userData.nome;
-            }
-          }
+      // Processar vendas com dados já carregados (sem N+1 queries)
+      const vendasComDetalhes = (vendasData || []).map((venda) => {
+        const franqueada_nome = venda.franqueadas?.nome || 'N/A';
 
-          return {
-            ...venda,
-            loja_nome: venda.lojas?.nome || 'Sem loja',
-            franqueada_nome
-          };
-        })
-      );
+        return {
+          ...venda,
+          loja_nome: venda.lojas?.nome || 'Sem loja',
+          franqueada_nome
+        };
+      });
 
       setVendas(vendasComDetalhes);
     } catch (error) {

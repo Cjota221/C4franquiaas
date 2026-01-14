@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, ShoppingCart, Check, AlertCircle, Loader2, Package, Info } from 'lucide-react';
@@ -11,7 +11,7 @@ export default function ProdutoDetalheEncomedaPage() {
   const params = useParams();
   const router = useRouter();
   const [produto, setProduto] = useState<GradeFechadaProduto | null>(null);
-  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
+  const [config, setConfig] = useState<{ pedido_minimo_grades?: number; numeracoes_padrao?: string[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [imagemAtual, setImagemAtual] = useState(0);
 
@@ -58,27 +58,36 @@ export default function ProdutoDetalheEncomedaPage() {
   };
 
   // Definir pares por tipo de grade (ajustar conforme necessário)
-  const paresPorTipo = {
+  const paresPorTipo = useMemo(() => ({
     meia: 6,
     completa: 12,
-  };
+  }), []);
 
-  // Calcular totais
-  const totalPares = Object.values(numeracoes).reduce((sum, n) => sum + n, 0);
-  const paresEsperados = quantidadeGrades * paresPorTipo[tipoGrade];
-  const isValid = totalPares === paresEsperados && cor !== '' && quantidadeGrades >= 2;
-
-  // Calcular valor
-  const valorUnitario = tipoGrade === 'meia' 
-    ? (produto?.preco_meia_grade || 0)
-    : (produto?.preco_grade_completa || 0);
-  const valorTotal = valorUnitario * quantidadeGrades;
+  // Calcular totais com useMemo
+  const { totalPares, paresEsperados, isValid, valorUnitario, valorTotal } = useMemo(() => {
+    const total = Object.values(numeracoes).reduce((sum, n) => sum + n, 0);
+    const esperados = quantidadeGrades * paresPorTipo[tipoGrade];
+    const valid = total === esperados && cor !== '' && quantidadeGrades >= 2;
+    
+    const unitario = tipoGrade === 'meia' 
+      ? (produto?.preco_meia_grade || 0)
+      : (produto?.preco_grade_completa || 0);
+    const total_valor = unitario * quantidadeGrades;
+    
+    return {
+      totalPares: total,
+      paresEsperados: esperados,
+      isValid: valid,
+      valorUnitario: unitario,
+      valorTotal: total_valor
+    };
+  }, [numeracoes, quantidadeGrades, tipoGrade, cor, paresPorTipo, produto]);
 
   const handleNumeracaoChange = (num: string, valor: string) => {
     const numValue = parseInt(valor) || 0;
     setNumeracoes(prev => ({
       ...prev,
-      [num]: numValue
+      [num]: numValue,
     }));
   };
 
@@ -154,7 +163,9 @@ export default function ProdutoDetalheEncomedaPage() {
     );
   }
 
-  const numeracoesDisponiveis = config?.numeracoes_padrao || ['33', '34', '35', '36', '37', '38', '39', '40', '41', '42'];
+  const numeracoesDisponiveis = useMemo(() => {
+    return config?.numeracoes_padrao || ['33', '34', '35', '36', '37', '38', '39', '40', '41', '42'];
+  }, [config?.numeracoes_padrao]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -178,6 +189,8 @@ export default function ProdutoDetalheEncomedaPage() {
                   alt={produto.nome}
                   fill
                   className="object-contain p-4"
+                  priority={imagemAtual === 0}
+                  loading={imagemAtual === 0 ? undefined : 'lazy'}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -198,7 +211,7 @@ export default function ProdutoDetalheEncomedaPage() {
                     imagemAtual === index ? 'border-pink-500' : 'border-transparent'
                   }`}
                 >
-                  <Image src={img} alt={`Imagem ${index + 1}`} fill className="object-cover" />
+                  <Image src={img} alt={`Imagem ${index + 1}`} fill className="object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

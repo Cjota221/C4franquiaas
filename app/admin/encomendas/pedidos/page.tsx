@@ -111,11 +111,11 @@ export default function PedidosGradeFechadaPage() {
   };
 
   return (
-    <PageWrapper>
+    <PageWrapper title="Pedidos - Grade Fechada">
       <div className="p-6 max-w-7xl mx-auto">
         <PageHeader
           title="Pedidos de Encomenda"
-          description="Gerencie os pedidos de grade fechada"
+          subtitle="Gerencie os pedidos de grade fechada"
         />
 
         {/* Barra de filtros */}

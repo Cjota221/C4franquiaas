@@ -18,7 +18,8 @@ export async function GET() {
       .select('*')
       .eq('ativo', true)
       .order('ordem', { ascending: true })
-      .order('nome', { ascending: true });
+      .order('nome', { ascending: true })
+      .limit(100); // Limitar a 100 produtos para melhor performance
 
     if (error) {
       console.error('Erro ao buscar produtos:', error);

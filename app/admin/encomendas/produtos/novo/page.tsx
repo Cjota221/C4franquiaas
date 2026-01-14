@@ -172,7 +172,7 @@ export default function ProdutoFormPage() {
 
   if (loading) {
     return (
-      <PageWrapper>
+      <PageWrapper title="Carregando...">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
@@ -184,7 +184,7 @@ export default function ProdutoFormPage() {
   }
 
   return (
-    <PageWrapper>
+    <PageWrapper title={isEdit ? 'Editar Produto' : 'Novo Produto'}>
       <div className="p-6 max-w-5xl mx-auto">
         <div className="mb-6">
           <Button
@@ -198,7 +198,7 @@ export default function ProdutoFormPage() {
           
           <PageHeader
             title={isEdit ? 'Editar Produto' : 'Novo Produto'}
-            description="Preencha as informações do produto de grade fechada"
+            subtitle="Preencha as informações do produto de grade fechada"
           />
         </div>
 

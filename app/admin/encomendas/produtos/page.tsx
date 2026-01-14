@@ -106,11 +106,11 @@ export default function ProdutosGradeFechadaPage() {
   );
 
   return (
-    <PageWrapper>
+    <PageWrapper title="Produtos - Grade Fechada">
       <div className="p-6 max-w-7xl mx-auto">
         <PageHeader
           title="Produtos - Grade Fechada"
-          description="Cadastro e gestão de produtos para venda por grade"
+          subtitle="Cadastro e gestão de produtos para venda por grade"
         />
 
         {/* Barra de ações */}
@@ -155,10 +155,12 @@ export default function ProdutosGradeFechadaPage() {
             icon={Package}
             title="Nenhum produto encontrado"
             description="Comece cadastrando seu primeiro produto de grade fechada"
-            action={{
-              label: 'Cadastrar Produto',
-              onClick: () => router.push('/admin/encomendas/produtos/novo'),
-            }}
+            action={
+              <Button onClick={() => router.push('/admin/encomendas/produtos/novo')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Cadastrar Produto
+              </Button>
+            }
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

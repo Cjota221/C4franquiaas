@@ -9,7 +9,13 @@ import { toast } from 'sonner';
 export default function CarrinhoEncomendaPage() {
   const router = useRouter();
   const [itens, setItens] = useState<ItemPedido[]>([]);
-  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
+  const [config, setConfig] = useState<{ 
+    pedido_minimo_grades?: number; 
+    prazo_producao_min?: number; 
+    prazo_producao_max?: number;
+    whatsapp_numero?: string;
+    mensagem_whatsapp?: string;
+  } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   // Dados do cliente

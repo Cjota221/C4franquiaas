@@ -92,11 +92,11 @@ export default function CarrinhosAbandonadosPage() {
   };
 
   return (
-    <PageWrapper>
+    <PageWrapper title="Carrinhos - Grade Fechada">
       <div className="p-6 max-w-7xl mx-auto">
         <PageHeader
           title="Carrinhos Abandonados"
-          description="Acompanhe carrinhos não finalizados e faça follow-up"
+          subtitle="Acompanhe carrinhos não finalizados e faça follow-up"
         />
 
         {/* Filtros */}

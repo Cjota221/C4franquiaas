@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Package, Search, Loader2 } from 'lucide-react';
@@ -12,11 +12,7 @@ export default function CatalogoEncomendasPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchProdutos();
-  }, []);
-
-  const fetchProdutos = async () => {
+  const fetchProdutos = useCallback(async () => {
     try {
       const response = await fetch('/api/encomendas/produtos');
       const data = await response.json();
@@ -29,13 +25,17 @@ export default function CatalogoEncomendasPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const produtosFiltrados = produtos.filter(
+  useEffect(() => {
+    fetchProdutos();
+  }, [fetchProdutos]);
+
+  const produtosFiltrados = useMemo(() => produtos.filter(
     (produto) =>
       produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       produto.codigo_interno?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [produtos, searchTerm]);
 
   if (loading) {
     return (
@@ -102,6 +102,9 @@ export default function CatalogoEncomendasPage() {
                     alt={produto.nome}
                     fill
                     className="object-cover"
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">

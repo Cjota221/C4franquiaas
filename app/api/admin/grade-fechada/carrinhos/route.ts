@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const status = searchParams.get('status') || 'ativo';
     const page = parseInt(searchParams.get('page') || '1');
-    const per_page = parseInt(searchParams.get('per_page') || '20');
+    const per_page = Math.min(parseInt(searchParams.get('per_page') || '20'), 50); // Max 50 itens
     const offset = (page - 1) * per_page;
 
     const query = supabase

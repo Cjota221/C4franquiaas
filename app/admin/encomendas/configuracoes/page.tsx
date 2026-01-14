@@ -67,7 +67,7 @@ export default function ConfiguracoesEncomendasPage() {
 
   if (loading) {
     return (
-      <PageWrapper>
+      <PageWrapper title="Configurações - Grade Fechada">
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="w-8 h-8 animate-spin text-pink-600" />
         </div>
@@ -76,11 +76,11 @@ export default function ConfiguracoesEncomendasPage() {
   }
 
   return (
-    <PageWrapper>
+    <PageWrapper title="Configurações - Grade Fechada">
       <div className="p-6 max-w-4xl mx-auto">
         <PageHeader
           title="Configurações do Site de Encomendas"
-          description="Configure as regras e parâmetros do sistema"
+          subtitle="Configure as regras e parâmetros do sistema"
         />
 
         <div className="space-y-6 mt-6">

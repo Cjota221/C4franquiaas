@@ -9,7 +9,13 @@ export default function EncomendasLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
+  const [config, setConfig] = useState<{ 
+    mensagem_topo?: string;
+    pedido_minimo_grades?: number;
+    prazo_producao_min?: number;
+    prazo_producao_max?: number;
+    whatsapp_numero?: string;
+  } | null>(null);
   const [itemsCarrinho, setItemsCarrinho] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 

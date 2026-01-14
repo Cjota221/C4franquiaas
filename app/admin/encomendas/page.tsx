@@ -47,11 +47,11 @@ export default function EncomendasPage() {
   ];
 
   return (
-    <PageWrapper>
+    <PageWrapper title="Painel de Encomendas">
       <div className="p-6 max-w-7xl mx-auto">
         <PageHeader
           title="Painel de Encomendas por Grade Fechada"
-          description="Sistema de pedidos B2B com personalização e montagem de grades"
+          subtitle="Sistema de pedidos B2B com personalização e montagem de grades"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">

@@ -311,24 +311,40 @@ export default function AdminRevendedorasPage() {
         return;
       }
 
-      // Processar cada revendedora
+      // Buscar todas as contagens de produtos de uma vez (evita N+1)
+      const resellerIds = data.map((r: any) => r.id);
+      
+      const [produtosResult, produtosMargemResult] = await Promise.all([
+        supabase
+          .from('reseller_products')
+          .select('reseller_id')
+          .in('reseller_id', resellerIds)
+          .eq('is_active', true),
+        supabase
+          .from('reseller_products')
+          .select('reseller_id')
+          .in('reseller_id', resellerIds)
+          .eq('is_active', true)
+          .or('margin_percent.not.is.null,custom_price.not.is.null')
+      ]);
+
+      // Agrupar contagens por reseller_id
+      const produtosCounts = (produtosResult.data || []).reduce((acc: Record<string, number>, item: any) => {
+        acc[item.reseller_id] = (acc[item.reseller_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      const produtosMargemCounts = (produtosMargemResult.data || []).reduce((acc: Record<string, number>, item: any) => {
+        acc[item.reseller_id] = (acc[item.reseller_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Processar revendedoras com dados pré-carregados
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const processadas: RevendedoraCompleta[] = await Promise.all(data.map(async (r: any) => {
+      const processadas: RevendedoraCompleta[] = data.map((r: any) => {
         try {
-          // Buscar contagem de produtos ATIVOS
-          const { count: totalProdutos } = await supabase
-            .from('reseller_products')
-            .select('*', { count: 'exact', head: true })
-            .eq('reseller_id', r.id)
-            .eq('is_active', true);
-          
-          // Buscar produtos ATIVOS COM margem configurada
-          const { count: produtosComMargem } = await supabase
-            .from('reseller_products')
-            .select('*', { count: 'exact', head: true })
-            .eq('reseller_id', r.id)
-            .eq('is_active', true)
-            .or('margin_percent.not.is.null,custom_price.not.is.null');
+          const totalProdutos = produtosCounts[r.id] || 0;
+          const produtosComMargem = produtosMargemCounts[r.id] || 0;
           
           // ============================================================================
           // CALCULAR FLAGS DE PERSONALIZAÇÃO usando os helpers
@@ -339,7 +355,7 @@ export default function AdminRevendedorasPage() {
             r.theme_settings,
             r.banner_url,
             r.banner_mobile_url,
-            produtosComMargem || 0
+            produtosComMargem
           );
           
           // Extrair primary color para exibição
@@ -358,7 +374,7 @@ export default function AdminRevendedorasPage() {
             slug: r.slug || '',
             status: r.status || 'pendente',
             is_active: !!r.is_active,
-            total_products: totalProdutos || 0,
+            total_products: totalProdutos,
             catalog_views: r.catalog_views || 0,
             created_at: r.created_at || '',
             rejection_reason: r.rejection_reason || undefined,
@@ -408,7 +424,7 @@ export default function AdminRevendedorasPage() {
             tiktok: null,
           };
         }
-      }));
+      });
 
       // ============================================================================
       // APLICAR FILTROS CLIENT-SIDE
