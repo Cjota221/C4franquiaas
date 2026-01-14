@@ -63,10 +63,20 @@ export default function ProdutosGradeFechadaPage() {
             Cadastro e gestão de produtos para venda por encomenda
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-5 w-5 mr-2" />
-          Novo Produto
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => window.location.href = '/grade-fechada/produtos/cadastro-massa'}
+            variant="outline"
+            className="border-purple-600 text-purple-600 hover:bg-purple-50"
+          >
+            <Package className="h-5 w-5 mr-2" />
+            Cadastro em Massa
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-5 w-5 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
