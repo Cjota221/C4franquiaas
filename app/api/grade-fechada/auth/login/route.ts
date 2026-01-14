@@ -7,9 +7,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 /**
  * POST - Login do painel Grade Fechada
+ * Atualizado: 2026-01-14 - Hash correto implementado
  */
 export async function POST(req: NextRequest) {
   try {
