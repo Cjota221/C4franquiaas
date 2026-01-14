@@ -967,84 +967,136 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Browser mockup com imagem real */}
-          <div className="relative max-w-4xl mx-auto">
-            <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
-              <div className="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
+          {/* Veja a Loja Demonstração */}
+          <div className="relative max-w-5xl mx-auto">
+            <div className="bg-gradient-to-br from-pink-600 to-pink-500 rounded-3xl p-12 text-white text-center shadow-2xl">
+              <h3 className="text-3xl md:text-4xl font-black mb-6">👀 Veja como fica sua loja por dentro!</h3>
+              <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+                Acesse nossa loja demonstração e veja na prática como é o site que você vai receber.
+              </p>
+              
+              <div className="grid md:grid-cols-3 gap-6 mb-10 text-left">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                  <div className="text-4xl mb-3">🎨</div>
+                  <h4 className="font-bold text-lg mb-2">Design profissional</h4>
+                  <p className="text-sm opacity-90">Interface moderna e responsiva</p>
                 </div>
-                <div className="flex-1 mx-4">
-                  <div className="bg-white rounded-lg px-4 py-1.5 text-sm text-gray-400 flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    <span>sualoja.c4franquias.com.br</span>
-                  </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                  <div className="text-4xl mb-3">📦</div>
+                  <h4 className="font-bold text-lg mb-2">Catálogo completo</h4>
+                  <p className="text-sm opacity-90">Todos os produtos já cadastrados</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                  <div className="text-4xl mb-3">🚀</div>
+                  <h4 className="font-bold text-lg mb-2">Pronto para vender</h4>
+                  <p className="text-sm opacity-90">Só personalizar e divulgar</p>
                 </div>
               </div>
-              {/* Imagem real do site */}
-              <div className="relative">
-                <Image
-                  src="https://i.ibb.co/211c1zhZ/Design-sem-nome-63.png"
-                  alt="Exemplo de loja C4 Franquias"
-                  width={1200}
-                  height={800}
-                  className="w-full h-auto"
-                  priority
-                />
-              </div>
+
+              <a
+                href="https://sualoja.c4franquias.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-3 bg-white text-pink-600 px-10 py-5 rounded-full font-black text-xl shadow-2xl hover:bg-gray-50 hover:-translate-y-1 transition-all"
+              >
+                <Globe className="w-6 h-6" />
+                <span>ACESSAR LOJA DEMONSTRAÇÃO</span>
+                <ArrowRight className="w-6 h-6" />
+              </a>
+
+              <p className="text-sm opacity-75 mt-6">
+                sualoja.c4franquias.com.br • Exemplo real de uma loja C4 Franquias
+              </p>
             </div>
-            <p className="text-center text-sm text-gray-500 mt-4">
-              ✨ Exemplo real de uma loja no C4 Franquias
-            </p>
           </div>
           </AnimatedSection>
         </div>
       </section>
 
-      {/* Como Funciona */}
-      <section id="como-funciona" className="py-24 px-4 bg-gray-900 text-white">
+      {/* Como Funciona - Passo a Passo Detalhado */}
+      <section id="como-funciona" className="py-24 px-4 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-20">
             <span className="inline-block px-4 py-1.5 bg-pink-500/20 text-pink-400 rounded-full text-sm font-semibold mb-4">Passo a passo</span>
-            <h2 className="text-4xl md:text-5xl font-black mb-4">Como funciona?</h2>
-            <p className="text-xl text-gray-400">Simples, rápido e sem investimento inicial</p>
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Como funciona na prática?</h2>
+            <p className="text-xl text-gray-400">Do cadastro até a primeira venda</p>
           </div>
           </AnimatedSection>
 
-          <div className="grid md:grid-cols-4 gap-8 relative">
-            {/* Linha conectora */}
-            <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-pink-600" />
-
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {[
-              { step: '01', title: 'Cadastre-se', description: 'Preencha o formulário gratuito', icon: '✍️' },
-              { step: '02', title: 'Receba seu site', description: 'Já com todos os produtos da C4', icon: '🎁' },
-              { step: '03', title: 'Personalize', description: 'Cores, logo e margem de lucro', icon: '🎨' },
-              { step: '04', title: 'Venda!', description: 'Divulgue e receba pedidos', icon: '💰' }
+              { 
+                step: '01', 
+                title: 'Faça seu cadastro', 
+                description: '100% gratuito, sem taxa de entrada ou mensalidade', 
+                icon: '📝',
+                details: ['Análise em até 24h', 'Sem compromisso', 'Aprovação rápida']
+              },
+              { 
+                step: '02', 
+                title: 'Receba seu site pronto', 
+                description: 'Com todos os produtos da C4 já cadastrados', 
+                icon: '🎁',
+                details: ['Catálogo completo', 'Design profissional', 'Seu próprio domínio']
+              },
+              { 
+                step: '03', 
+                title: 'Personalize sua loja', 
+                description: 'Logo, cores e defina sua margem de lucro', 
+                icon: '🎨',
+                details: ['Sua identidade visual', 'Controle de preços', 'Banners personalizados']
+              },
+              { 
+                step: '04', 
+                title: 'Divulgue e venda!', 
+                description: 'Cliente compra no seu site, você faz pedido conosco', 
+                icon: '🚀',
+                details: ['WhatsApp automático', 'Sem estoque', 'Lucro garantido']
+              }
             ].map((item, index) => (
               <div key={index} className="relative group">
-                <div className="bg-gray-800 p-8 rounded-3xl border border-gray-700 hover:border-pink-500/50 transition-all hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-pink-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform mx-auto md:mx-0">
+                <div className="bg-gray-800 p-8 rounded-3xl border border-gray-700 hover:border-pink-500 transition-all hover:-translate-y-2 h-full">
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-600 to-pink-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
                     <span className="text-2xl font-black">{item.step}</span>
                   </div>
-                  <div className="text-4xl mb-4 text-center md:text-left">{item.icon}</div>
-                  <h3 className="text-xl font-bold mb-2 text-center md:text-left">{item.title}</h3>
-                  <p className="text-gray-400 text-center md:text-left">{item.description}</p>
+                  <div className="text-4xl mb-4">{item.icon}</div>
+                  <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                  <p className="text-gray-400 mb-4">{item.description}</p>
+                  <ul className="space-y-2">
+                    {item.details.map((detail, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-500">
+                        <Check className="w-4 h-4 text-pink-500 flex-shrink-0" />
+                        <span>{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Destaque do modelo */}
-          <div className="mt-16 bg-pink-600/20 rounded-3xl p-8 border border-pink-500/30">
-            <div className="max-w-3xl mx-auto text-center">
-              <h3 className="text-2xl font-bold mb-4">🎯 Entendeu o modelo?</h3>
-              <p className="text-gray-300 text-lg">
-                Você <strong className="text-white">divulga seu link</strong> → Cliente escolhe no seu site →
-                Você <strong className="text-white">faz o pedido conosco</strong> → Nós enviamos para você →
-                Você <strong className="text-white">entrega e lucra</strong>!
+          {/* Fluxo da Venda */}
+          <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 rounded-3xl p-10 border border-pink-500/30">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-2xl md:text-3xl font-black mb-8 text-center">💡 Fluxo de uma venda</h3>
+              <div className="grid md:grid-cols-5 gap-6 items-center">
+                {[
+                  { icon: '👥', text: 'Cliente acessa SEU site' },
+                  { icon: '🛍️', text: 'Escolhe os produtos' },
+                  { icon: '💬', text: 'Vai pro WhatsApp' },
+                  { icon: '💰', text: 'Você recebe pagamento' },
+                  { icon: '📦', text: 'Pede conosco e entrega' }
+                ].map((item, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-4xl mb-3">{item.icon}</div>
+                    <p className="text-sm font-semibold">{item.text}</p>
+                    {i < 4 && <div className="hidden md:block text-pink-400 text-2xl mt-2">→</div>}
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-gray-300 mt-8 text-lg">
+                ✨ Ou seja: <strong className="text-white">zero risco, zero estoque, lucro garantido!</strong>
               </p>
             </div>
           </div>
@@ -1107,75 +1159,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 🎬 Seção de Vídeos FAQ */}
-      <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-gray-900 to-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <AnimatedSection>
-            <div className="text-center mb-10 md:mb-16">
-              <span className="inline-block px-4 py-1.5 bg-pink-500/20 text-pink-400 rounded-full text-sm font-semibold mb-4">Vídeos</span>
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-4">Tire suas dúvidas</h2>
-              <p className="text-lg md:text-xl text-gray-400">Assista e entenda como funciona o C4 Franquias</p>
-            </div>
-          </AnimatedSection>
-
-          {/* Grid de Vídeos - Scroll horizontal no mobile */}
-          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-            {[
-              { title: 'O que é o C4?', url: 'https://files.catbox.moe/rg19bj.MP4' },
-              { title: 'Pedido e Entrega', url: 'https://files.catbox.moe/hzg1c3.MP4' },
-              { title: 'Precisa Pagar?', url: 'https://files.catbox.moe/ukwqyj.MP4' },
-              { title: 'Definir Preços', url: 'https://files.catbox.moe/495y6q.MP4' },
-              { title: 'Personalização', url: 'https://files.catbox.moe/k5n0ja.MP4' }
-            ].map((video, index) => (
-              <div 
-                key={index} 
-                className="flex-shrink-0 w-[160px] md:w-auto snap-center group"
-              >
-                <div className="relative bg-gray-800 rounded-2xl overflow-hidden border-2 border-gray-700 hover:border-pink-500 transition-all duration-300 shadow-lg hover:shadow-pink-500/20">
-                  {/* Container do vídeo com aspect ratio de Stories (9:16) */}
-                  <div className="relative" style={{ paddingBottom: '177.78%' }}>
-                    <video
-                      className="absolute inset-0 w-full h-full object-cover"
-                      src={video.url}
-                      playsInline
-                      muted
-                      loop
-                      preload="metadata"
-                      onMouseEnter={(e) => e.currentTarget.play()}
-                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                      onTouchStart={(e) => e.currentTarget.play()}
-                      onTouchEnd={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                    />
-                    {/* Overlay com gradiente */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                    {/* Ícone de play */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
-                      <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 md:w-6 md:h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Título do vídeo */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                    <h3 className="text-white font-bold text-sm md:text-base leading-tight">{video.title}</h3>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Indicador de scroll no mobile */}
-          <div className="flex md:hidden justify-center gap-1.5 mt-4">
-            {[0,1,2,3,4].map((i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-gray-600" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
