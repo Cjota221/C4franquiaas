@@ -253,10 +253,14 @@ export default function CadastroMassaProdutosPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Cadastro em Massa</h1>
-            <p className="text-sm text-gray-600">Arraste imagens para agrupar e criar produtos</p>
+            <p className="text-sm text-gray-600">Arraste imagens da esquerda para os grupos da direita</p>
           </div>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Carregar Imagens
+          </Button>
           <Button onClick={criarNovoGrupo} variant="outline">
             <Plus className="h-4 w-4 mr-2" />
             Novo Grupo
@@ -268,58 +272,67 @@ export default function CadastroMassaProdutosPage() {
         </div>
       </div>
 
-      {/* Upload Area */}
-      <Card className="p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Imagens Carregadas ({imagensNaoAgrupadas.length})</h2>
-          <Button onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4 mr-2" />
-            Carregar Imagens
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
+      {/* Layout 2 Colunas: Imagens | Grupos */}
+      <div className="grid grid-cols-12 gap-6">
+        
+        {/* COLUNA ESQUERDA: Imagens Disponíveis */}
+        <div className="col-span-4">
+          <Card className="p-6 sticky top-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-pink-600" />
+                Imagens ({imagensNaoAgrupadas.length})
+              </h2>
+            </div>
+
+            {/* Grid de imagens não agrupadas - com scroll */}
+            <div className="max-h-[calc(100vh-240px)] overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 gap-3">
+                {imagensNaoAgrupadas.map(imagem => (
+                  <div
+                    key={imagem.id}
+                    draggable
+                    onDragStart={() => handleDragStart(imagem.id)}
+                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-move transition-all hover:scale-105 shadow-sm"
+                  >
+                    <img
+                      src={imagem.preview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => setImagens(prev => prev.filter(img => img.id !== imagem.id))}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-lg"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              {imagensNaoAgrupadas.length === 0 && (
+                <div className="text-center py-12 text-gray-400">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                  <p className="font-medium">Nenhuma imagem disponível</p>
+                  <p className="text-xs mt-1">Carregue imagens para começar</p>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
 
-        {/* Grid de imagens não agrupadas */}
-        <div className="grid grid-cols-6 gap-4">
-          {imagensNaoAgrupadas.map(imagem => (
-            <div
-              key={imagem.id}
-              draggable
-              onDragStart={() => handleDragStart(imagem.id)}
-              className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-move transition-all hover:scale-105"
-            >
-              <img
-                src={imagem.preview}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => setImagens(prev => prev.filter(img => img.id !== imagem.id))}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          
-          {imagensNaoAgrupadas.length === 0 && (
-            <div className="col-span-6 text-center py-12 text-gray-400">
-              <ImageIcon className="h-12 w-12 mx-auto mb-2" />
-              <p>Nenhuma imagem carregada</p>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Grupos de Produtos */}
-      <div className="space-y-6">
+        {/* COLUNA DIREITA: Grupos de Produtos */}
+        <div className="col-span-8">
+          <div className="space-y-6">
         {grupos.map((grupo, index) => (
           <Card key={grupo.id} className="p-6">
             <div className="flex items-start justify-between mb-4">
@@ -476,17 +489,19 @@ export default function CadastroMassaProdutosPage() {
           </Card>
         ))}
 
-        {grupos.length === 0 && (
-          <Card className="p-12 text-center text-gray-400">
-            <Package className="h-12 w-12 mx-auto mb-4" />
-            <p className="text-lg mb-2">Nenhum grupo criado</p>
-            <p className="text-sm mb-4">Clique em &quot;Novo Grupo&quot; para começar</p>
-            <Button onClick={criarNovoGrupo}>
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Primeiro Grupo
-            </Button>
-          </Card>
-        )}
+            {grupos.length === 0 && (
+              <Card className="p-12 text-center text-gray-400">
+                <Package className="h-12 w-12 mx-auto mb-4" />
+                <p className="text-lg mb-2">Nenhum grupo criado</p>
+                <p className="text-sm mb-4">Clique em &quot;Novo Grupo&quot; para começar</p>
+                <Button onClick={criarNovoGrupo}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeiro Grupo
+                </Button>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
