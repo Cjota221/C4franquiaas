@@ -341,7 +341,8 @@ export default function CadastroMassaProdutosPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Formulário do Produto */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nome do Produto *
@@ -387,54 +388,85 @@ export default function CadastroMassaProdutosPage() {
               </div>
             </div>
 
-            {/* Drop Zone */}
-            <div
-              onDragOver={handleDragOver}
-              onDrop={() => handleDropInGroup(grupo.id)}
-              className={`border-2 border-dashed rounded-lg p-4 min-h-[200px] transition-colors ${
-                draggedImage ? 'border-pink-500 bg-pink-50' : 'border-gray-300'
-              }`}
-            >
-              {grupo.imagens.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <ImageIcon className="h-8 w-8 mx-auto mb-2" />
-                  <p>Arraste imagens aqui para criar variações</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-4">
+            {/* Área de Variações */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                Variações do Produto
+              </h4>
+
+              {/* Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDropInGroup(grupo.id)}
+                className={`border-2 border-dashed rounded-lg p-6 mb-4 transition-colors ${
+                  draggedImage ? 'border-pink-500 bg-pink-50' : 'border-gray-300 bg-gray-50'
+                }`}
+              >
+                {grupo.imagens.length === 0 ? (
+                  <div className="text-center py-6 text-gray-400">
+                    <ImageIcon className="h-10 w-10 mx-auto mb-2" />
+                    <p className="font-medium">Arraste imagens aqui</p>
+                    <p className="text-xs mt-1">Cada imagem será uma variação (cor) do produto</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-3 text-gray-500 text-sm">
+                    <Plus className="h-5 w-5 mx-auto mb-1" />
+                    <p>Arraste mais imagens para adicionar variações</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Grid de Variações */}
+              {grupo.imagens.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[500px] overflow-y-auto p-1">
                   {grupo.imagens.map((imagem, imgIndex) => {
                     const variacao = grupo.variacoes.find(v => v.imagem_id === imagem.id);
                     return (
-                      <div key={imagem.id} className="space-y-2">
-                        <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                      <div key={imagem.id} className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-pink-400 transition-all">
+                        {/* Imagem */}
+                        <div className="relative aspect-square">
                           <img
                             src={imagem.preview}
-                            alt="Variação"
+                            alt={`Variação ${imgIndex + 1}`}
                             className="w-full h-full object-cover"
                           />
                           <button
                             onClick={() => removerImagemDoGrupo(grupo.id, imagem.id)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg transition-all hover:scale-110"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </button>
-                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-xs font-semibold p-2">
                             Variação {imgIndex + 1}
                           </div>
                         </div>
-                        <Input
-                          placeholder="Cor"
-                          value={variacao?.cor || ''}
-                          onChange={(e) => atualizarVariacao(grupo.id, imagem.id, 'cor', e.target.value)}
-                          className="text-sm"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Estoque"
-                          value={variacao?.estoque || '0'}
-                          onChange={(e) => atualizarVariacao(grupo.id, imagem.id, 'estoque', e.target.value)}
-                          className="text-sm"
-                        />
+                        
+                        {/* Inputs da Variação */}
+                        <div className="p-3 space-y-2 bg-gray-50">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Cor *
+                            </label>
+                            <Input
+                              placeholder="Ex: Dourado"
+                              value={variacao?.cor || ''}
+                              onChange={(e) => atualizarVariacao(grupo.id, imagem.id, 'cor', e.target.value)}
+                              className="text-sm h-9"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Estoque
+                            </label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={variacao?.estoque || '0'}
+                              onChange={(e) => atualizarVariacao(grupo.id, imagem.id, 'estoque', e.target.value)}
+                              className="text-sm h-9"
+                            />
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
