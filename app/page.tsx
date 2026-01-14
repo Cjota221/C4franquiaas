@@ -171,15 +171,15 @@ export default function LandingPage() {
       </section>
 
       {/* 🔥 SEÇÃO 1: Vídeo "O que é o C4?" + Texto MENSAGEM 1 */}
-      <section id="como-funciona" className="py-20 px-4 bg-white">
+      <section id="como-funciona" className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda - formato vertical (stories) */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-sm">
-                  <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-200 hover:border-pink-500 transition-all group">
+                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
+                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-pink-500 transition-all group">
                     {/* Container do vídeo - aspect ratio 9:16 (stories) */}
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
@@ -192,53 +192,53 @@ export default function LandingPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-gray-600 mt-4 font-semibold">O que é o C4?</p>
+                  <p className="text-center text-gray-600 mt-3 text-sm md:text-base font-semibold">O que é o C4?</p>
                 </div>
               </div>
 
               {/* Texto à direita */}
-              <div className="lg:pl-8">
-                <div className="inline-block px-4 py-2 bg-gradient-to-r from-pink-600 to-pink-500 text-white rounded-full text-sm font-bold mb-6">
+              <div className="lg:pl-8 px-2 sm:px-0">
+                <div className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-gradient-to-r from-pink-600 to-pink-500 text-white rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6">
                   🚀 O QUE É O PROJETO C4 FRANQUIAS
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 md:mb-6 leading-tight">
                   Mudar a forma como você <span className="text-pink-600">vende pela internet</span>
                 </h2>
 
-                <p className="text-xl text-gray-700 mb-6">
+                <p className="text-base md:text-lg lg:text-xl text-gray-700 mb-4 md:mb-6">
                   Hoje, muita gente desiste de empreender por medo de:
                 </p>
 
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-start gap-3 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl">
-                    <span className="text-2xl">😰</span>
+                <div className="space-y-2 md:space-y-3 mb-6 md:mb-8">
+                  <div className="flex items-start gap-2 md:gap-3 bg-red-50 border-l-3 md:border-l-4 border-red-400 p-3 md:p-4 rounded-r-xl">
+                    <span className="text-xl md:text-2xl">😰</span>
                     <div>
-                      <div className="text-red-600 font-bold">Investir em estoque</div>
-                      <p className="text-sm text-gray-600">Comprar produtos antes de vender</p>
+                      <div className="text-red-600 font-bold text-sm md:text-base">Investir em estoque</div>
+                      <p className="text-xs md:text-sm text-gray-600">Comprar produtos antes de vender</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl">
-                    <span className="text-2xl">📦</span>
+                  <div className="flex items-start gap-2 md:gap-3 bg-red-50 border-l-3 md:border-l-4 border-red-400 p-3 md:p-4 rounded-r-xl">
+                    <span className="text-xl md:text-2xl">📦</span>
                     <div>
-                      <div className="text-red-600 font-bold">Ficar com mercadoria parada</div>
-                      <p className="text-sm text-gray-600">Dinheiro investido sem retorno</p>
+                      <div className="text-red-600 font-bold text-sm md:text-base">Ficar com mercadoria parada</div>
+                      <p className="text-xs md:text-sm text-gray-600">Dinheiro investido sem retorno</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl">
-                    <span className="text-2xl">❌</span>
+                  <div className="flex items-start gap-2 md:gap-3 bg-red-50 border-l-3 md:border-l-4 border-red-400 p-3 md:p-4 rounded-r-xl">
+                    <span className="text-xl md:text-2xl">❌</span>
                     <div>
-                      <div className="text-red-600 font-bold">Não conseguir vender</div>
-                      <p className="text-sm text-gray-600">Medo de não ter clientes</p>
+                      <div className="text-red-600 font-bold text-sm md:text-base">Não conseguir vender</div>
+                      <p className="text-xs md:text-sm text-gray-600">Medo de não ter clientes</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-6 rounded-2xl mb-6">
-                  <h3 className="text-xl font-bold">O C4 Franquias é um modelo onde você vende com estrutura profissional, usando os nossos produtos, com muito mais segurança.</h3>
+                <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-4 md:p-6 rounded-xl md:rounded-2xl mb-4 md:mb-6">
+                  <h3 className="text-base md:text-lg lg:text-xl font-bold leading-snug">O C4 Franquias é um modelo onde você vende com estrutura profissional, usando os nossos produtos, com muito mais segurança.</h3>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-2">
                       <TrendingUp className="w-6 h-6 text-pink-600" />
@@ -266,15 +266,15 @@ export default function LandingPage() {
       </section>
 
       {/* 📦 SEÇÃO 2: Vídeo "Pedido e Entrega" + Texto MENSAGEM 2 */}
-      <section className="py-20 px-4 bg-gradient-to-br from-pink-50 to-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-pink-50 to-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-sm">
-                  <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-200 hover:border-pink-500 transition-all group">
+                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
+                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-pink-500 transition-all group">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
@@ -285,21 +285,21 @@ export default function LandingPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-gray-600 mt-4 font-semibold">Pedido e Entrega</p>
+                  <p className="text-center text-gray-600 mt-3 text-sm md:text-base font-semibold">Pedido e Entrega</p>
                 </div>
               </div>
 
               {/* Texto à direita */}
-              <div className="lg:pl-8">
-                <div className="inline-block px-4 py-2 bg-white border-2 border-pink-600 text-pink-600 rounded-full text-sm font-bold mb-6">
+              <div className="lg:pl-8 px-2 sm:px-0">
+                <div className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-white border-2 border-pink-600 text-pink-600 rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6">
                   📦 COMO FUNCIONA O PEDIDO E A ENTREGA
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 md:mb-6 leading-tight">
                   De forma prática e <span className="text-pink-600">organizada</span>
                 </h2>
 
-                <div className="space-y-4 mb-8">
+                <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
                   {[
                     { num: '1', title: 'Cliente acessa seu site', desc: 'Site personalizado com todos os produtos' },
                     { num: '2', title: 'Monta o pedido', desc: 'Navegação fácil e profissional' },
@@ -308,31 +308,31 @@ export default function LandingPage() {
                     { num: '5', title: 'Faz pedido conosco', desc: 'Compra só depois de vender' },
                     { num: '6', title: 'Entrega ao cliente', desc: 'Realiza a entrega final' },
                   ].map((step, i) => (
-                    <div key={i} className="flex gap-4 items-start bg-white p-4 rounded-xl shadow-sm">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-pink-600 to-pink-500 text-white rounded-full flex items-center justify-center font-black">
+                    <div key={i} className="flex gap-3 md:gap-4 items-start bg-white p-3 md:p-4 rounded-lg md:rounded-xl shadow-sm">
+                      <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-pink-600 to-pink-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-black">
                         {step.num}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900">{step.title}</h3>
-                        <p className="text-sm text-gray-600">{step.desc}</p>
+                        <h3 className="font-bold text-sm md:text-base text-gray-900">{step.title}</h3>
+                        <p className="text-xs md:text-sm text-gray-600">{step.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-pink-600 text-white p-6 rounded-2xl">
-                  <h3 className="text-xl font-bold mb-3">Ou seja:</h3>
-                  <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                <div className="bg-pink-600 text-white p-4 md:p-6 rounded-xl md:rounded-2xl">
+                  <h3 className="text-lg md:text-xl font-bold mb-3">Ou seja:</h3>
+                  <div className="grid grid-cols-3 gap-2 md:gap-4 text-center text-xs md:text-sm">
                     <div>
-                      <Check className="w-8 h-8 mx-auto mb-2" />
+                      <Check className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2" />
                       <p className="font-semibold">Você controla a venda</p>
                     </div>
                     <div>
-                      <Check className="w-8 h-8 mx-auto mb-2" />
+                      <Check className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2" />
                       <p className="font-semibold">Você controla o atendimento</p>
                     </div>
                     <div>
-                      <Check className="w-8 h-8 mx-auto mb-2" />
+                      <Check className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2" />
                       <p className="font-semibold">Estrutura profissional</p>
                     </div>
                   </div>
@@ -345,15 +345,15 @@ export default function LandingPage() {
       </section>
 
       {/* 💰 SEÇÃO 3: Vídeo "Precisa Pagar?" + Texto MENSAGEM 3 */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-sm">
-                  <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-200 hover:border-green-500 transition-all group">
+                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
+                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-green-500 transition-all group">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
@@ -364,37 +364,37 @@ export default function LandingPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-gray-600 mt-4 font-semibold">Precisa Pagar?</p>
+                  <p className="text-center text-gray-600 mt-3 text-sm md:text-base font-semibold">Precisa Pagar?</p>
                 </div>
               </div>
 
               {/* Texto à direita */}
-              <div className="lg:pl-8">
-                <div className="inline-block px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-full text-sm font-bold mb-6">
+              <div className="lg:pl-8 px-2 sm:px-0">
+                <div className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6">
                   💰 PRECISA PAGAR PARA ENTRAR NO PROJETO?
                 </div>
                 
-                <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-6 md:mb-8 leading-tight">
                   <span className="text-green-600">ZERO</span> taxa de entrada
                 </h2>
 
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div className="bg-green-50 border-4 border-green-600 p-6 rounded-2xl text-center">
-                    <div className="text-5xl mb-3">❌</div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Sem taxa de entrada</h3>
-                    <p className="text-sm text-gray-600">Comece agora sem investir nada</p>
+                <div className="grid grid-cols-2 gap-3 md:gap-6 mb-6 md:mb-8">
+                  <div className="bg-green-50 border-2 md:border-4 border-green-600 p-4 md:p-6 rounded-xl md:rounded-2xl text-center">
+                    <div className="text-3xl md:text-5xl mb-2 md:mb-3">❌</div>
+                    <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2">Sem taxa de entrada</h3>
+                    <p className="text-xs md:text-sm text-gray-600">Comece agora sem investir nada</p>
                   </div>
-                  <div className="bg-green-50 border-4 border-green-600 p-6 rounded-2xl text-center">
-                    <div className="text-5xl mb-3">❌</div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Sem mensalidade</h3>
-                    <p className="text-sm text-gray-600">Não paga nada todo mês</p>
+                  <div className="bg-green-50 border-2 md:border-4 border-green-600 p-4 md:p-6 rounded-xl md:rounded-2xl text-center">
+                    <div className="text-3xl md:text-5xl mb-2 md:mb-3">❌</div>
+                    <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2">Sem mensalidade</h3>
+                    <p className="text-xs md:text-sm text-gray-600">Não paga nada todo mês</p>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-8 rounded-3xl mb-6">
-                  <h3 className="text-2xl font-black mb-3">O Projeto C4 Franquias é GRATUITO</h3>
-                  <p className="text-lg opacity-90 mb-2">O único custo acontece quando você vende e faz o pedido dos produtos conosco.</p>
-                  <p className="text-xl font-bold">Nada antes da venda. ✨</p>
+                <div className="bg-gradient-to-r from-pink-600 to-pink-500 text-white p-5 md:p-8 rounded-2xl md:rounded-3xl mb-4 md:mb-6">
+                  <h3 className="text-lg md:text-2xl font-black mb-2 md:mb-3">O Projeto C4 Franquias é GRATUITO</h3>
+                  <p className="text-sm md:text-lg opacity-90 mb-1 md:mb-2">O único custo acontece quando você vende e faz o pedido dos produtos conosco.</p>
+                  <p className="text-base md:text-xl font-bold">Nada antes da venda. ✨</p>
                 </div>
 
                 <p className="text-lg text-gray-600">
@@ -408,15 +408,15 @@ export default function LandingPage() {
       </section>
 
       {/* 🏷️ SEÇÃO 4: Vídeo "Definir Preços" + Texto MENSAGEM 4 */}
-      <section className="py-20 px-4 bg-gradient-to-br from-pink-50 to-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-pink-50 to-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-sm">
-                  <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-200 hover:border-pink-500 transition-all group">
+                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
+                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-pink-500 transition-all group">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
@@ -427,48 +427,48 @@ export default function LandingPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-gray-600 mt-4 font-semibold">Definir Preços</p>
+                  <p className="text-center text-gray-600 mt-3 text-sm md:text-base font-semibold">Definir Preços</p>
                 </div>
               </div>
 
               {/* Texto à direita */}
-              <div className="lg:pl-8">
-                <div className="inline-block px-4 py-2 bg-pink-600 text-white rounded-full text-sm font-bold mb-6">
+              <div className="lg:pl-8 px-2 sm:px-0">
+                <div className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-pink-600 text-white rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6">
                   🏷️ POSSO ESCOLHER MEU PREÇO?
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 md:mb-6 leading-tight">
                   Sim. <span className="text-pink-600">Você define sua margem</span>
                 </h2>
 
-                <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-pink-200 mb-6">
-                  <div className="text-center mb-6">
-                    <div className="text-5xl mb-3">💰</div>
-                    <h3 className="text-2xl font-bold text-gray-900">Cada franqueada define a margem de lucro que deseja aplicar</h3>
+                <div className="bg-white p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl border-2 border-pink-200 mb-4 md:mb-6">
+                  <div className="text-center mb-4 md:mb-6">
+                    <div className="text-3xl md:text-5xl mb-2 md:mb-3">💰</div>
+                    <h3 className="text-base md:text-xl lg:text-2xl font-bold text-gray-900">Cada franqueada define a margem de lucro que deseja aplicar</h3>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                  <div className="grid grid-cols-3 gap-2 md:gap-4 text-center text-xs md:text-sm">
                     <div>
-                      <div className="text-3xl mb-2">📉</div>
-                      <h4 className="font-bold mb-1">Preço de atacado</h4>
-                      <p className="text-gray-600 text-xs">Acesso a preços especiais</p>
+                      <div className="text-2xl md:text-3xl mb-1 md:mb-2">📉</div>
+                      <h4 className="font-bold text-xs md:text-sm mb-0.5 md:mb-1">Preço de atacado</h4>
+                      <p className="text-gray-600 text-[10px] md:text-xs">Acesso a preços especiais</p>
                     </div>
                     <div>
-                      <div className="text-3xl mb-2">➕</div>
-                      <h4 className="font-bold mb-1">+ Sua margem</h4>
-                      <p className="text-gray-600 text-xs">Lucro que fizer sentido</p>
+                      <div className="text-2xl md:text-3xl mb-1 md:mb-2">➕</div>
+                      <h4 className="font-bold text-xs md:text-sm mb-0.5 md:mb-1">+ Sua margem</h4>
+                      <p className="text-gray-600 text-[10px] md:text-xs">Lucro que fizer sentido</p>
                     </div>
                     <div>
-                      <div className="text-3xl mb-2">🎯</div>
-                      <h4 className="font-bold mb-1">= Seu preço final</h4>
-                      <p className="text-gray-600 text-xs">Valor que seu público aceita</p>
+                      <div className="text-2xl md:text-3xl mb-1 md:mb-2">🎯</div>
+                      <h4 className="font-bold text-xs md:text-sm mb-0.5 md:mb-1">= Seu preço final</h4>
+                      <p className="text-gray-600 text-[10px] md:text-xs">Valor que seu público aceita</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-pink-600 text-white p-6 rounded-2xl text-center">
-                  <h3 className="text-xl font-bold mb-2">Liberdade, estratégia e controle. 🚀</h3>
-                  <p className="opacity-90">Você escolhe quanto quer ganhar em cada venda</p>
+                <div className="bg-pink-600 text-white p-4 md:p-6 rounded-xl md:rounded-2xl text-center">
+                  <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Liberdade, estratégia e controle. 🚀</h3>
+                  <p className="text-sm md:text-base opacity-90">Você escolhe quanto quer ganhar em cada venda</p>
                 </div>
               </div>
 
@@ -478,15 +478,15 @@ export default function LandingPage() {
       </section>
 
       {/* 🎨 SEÇÃO 5: Vídeo "Personalização" + Texto MENSAGEM 5 */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-sm">
-                  <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-200 hover:border-purple-500 transition-all group">
+                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
+                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-purple-500 transition-all group">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
@@ -497,47 +497,47 @@ export default function LandingPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-gray-600 mt-4 font-semibold">Personalização</p>
+                  <p className="text-center text-gray-600 mt-3 text-sm md:text-base font-semibold">Personalização</p>
                 </div>
               </div>
 
               {/* Texto à direita */}
-              <div className="lg:pl-8">
-                <div className="inline-block px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-bold mb-6">
+              <div className="lg:pl-8 px-2 sm:px-0">
+                <div className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-purple-600 text-white rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6">
                   🎨 PERSONALIZAÇÃO DO SITE
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 md:mb-6 leading-tight">
                   Um site profissional <span className="text-pink-600">com sua cara</span>
                 </h2>
 
-                <p className="text-lg text-gray-700 mb-8">
+                <p className="text-base md:text-lg text-gray-700 mb-6 md:mb-8">
                   Cada franqueada recebe um site profissional que pode ser personalizado com:
                 </p>
 
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  <div className="bg-gradient-to-br from-pink-50 to-white p-5 rounded-2xl border-2 border-pink-200 text-center">
-                    <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <Palette className="w-6 h-6 text-white" />
+                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6 md:mb-8">
+                  <div className="bg-gradient-to-br from-pink-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-pink-200 md:border-2 text-center">
+                    <div className="w-8 h-8 md:w-12 md:h-12 bg-pink-600 rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-2 md:mb-3">
+                      <Palette className="w-4 h-4 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">Logomarca</h3>
-                    <p className="text-xs text-gray-600">Sua marca no topo</p>
+                    <h3 className="text-xs md:text-base lg:text-lg font-bold text-gray-900 mb-0.5 md:mb-1">Logomarca</h3>
+                    <p className="text-[10px] md:text-xs text-gray-600">Sua marca no topo</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-white p-5 rounded-2xl border-2 border-purple-200 text-center">
-                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <Palette className="w-6 h-6 text-white" />
+                  <div className="bg-gradient-to-br from-purple-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-purple-200 md:border-2 text-center">
+                    <div className="w-8 h-8 md:w-12 md:h-12 bg-purple-600 rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-2 md:mb-3">
+                      <Palette className="w-4 h-4 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">Cores</h3>
-                    <p className="text-xs text-gray-600">Sua identidade</p>
+                    <h3 className="text-xs md:text-base lg:text-lg font-bold text-gray-900 mb-0.5 md:mb-1">Cores</h3>
+                    <p className="text-[10px] md:text-xs text-gray-600">Sua identidade</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border-2 border-blue-200 text-center">
-                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <Heart className="w-6 h-6 text-white" />
+                  <div className="bg-gradient-to-br from-blue-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-blue-200 md:border-2 text-center">
+                    <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-600 rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-2 md:mb-3">
+                      <Heart className="w-4 h-4 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">Visual</h3>
-                    <p className="text-xs text-gray-600">Estilo próprio</p>
+                    <h3 className="text-xs md:text-base lg:text-lg font-bold text-gray-900 mb-0.5 md:mb-1">Visual</h3>
+                    <p className="text-[10px] md:text-xs text-gray-600">Estilo próprio</p>
                   </div>
                 </div>
 
