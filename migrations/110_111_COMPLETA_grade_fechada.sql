@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS grade_fechada_pedidos (
 
 -- Adicionar colunas se a tabela já existia
 ALTER TABLE grade_fechada_pedidos 
-  ADD COLUMN IF NOT EXISTS numero VARCHAR(50) UNIQUE,
+  ADD COLUMN IF NOT EXISTS numero VARCHAR(50),
   ADD COLUMN IF NOT EXISTS cliente_nome VARCHAR(255),
   ADD COLUMN IF NOT EXISTS cliente_email VARCHAR(255),
   ADD COLUMN IF NOT EXISTS cliente_telefone VARCHAR(20),
@@ -127,6 +127,7 @@ ALTER TABLE grade_fechada_pedidos
   ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2) DEFAULT 0,
   ADD COLUMN IF NOT EXISTS desconto DECIMAL(10,2) DEFAULT 0,
   ADD COLUMN IF NOT EXISTS frete DECIMAL(10,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total DECIMAL(10,2) DEFAULT 0,
   ADD COLUMN IF NOT EXISTS forma_pagamento VARCHAR(50),
   ADD COLUMN IF NOT EXISTS status_pagamento VARCHAR(50) DEFAULT 'pendente',
   ADD COLUMN IF NOT EXISTS observacoes TEXT,
@@ -134,6 +135,9 @@ ALTER TABLE grade_fechada_pedidos
   ADD COLUMN IF NOT EXISTS confirmado_em TIMESTAMP,
   ADD COLUMN IF NOT EXISTS enviado_em TIMESTAMP,
   ADD COLUMN IF NOT EXISTS entregue_em TIMESTAMP;
+
+-- Criar índice único para numero (separado do ALTER TABLE)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pedidos_numero_unique ON grade_fechada_pedidos(numero);
 
 CREATE INDEX IF NOT EXISTS idx_pedidos_numero ON grade_fechada_pedidos(numero);
 CREATE INDEX IF NOT EXISTS idx_pedidos_status ON grade_fechada_pedidos(status);

@@ -14,14 +14,23 @@ import {
   Filter,
 } from 'lucide-react';
 
+interface Variacao {
+  id: string;
+  cor: string;
+  imagem_url: string;
+  estoque_disponivel: number;
+}
+
 interface Produto {
-  id: number;
+  id: string;
   codigo?: string;
   nome: string;
   descricao?: string;
   preco_base: number;
+  usa_variacoes: boolean;
   ativo: boolean;
-  created_at: string;
+  criado_em: string;
+  variacoes?: Variacao[];
 }
 
 export default function ProdutosGradeFechadaPage() {
@@ -36,19 +45,59 @@ export default function ProdutosGradeFechadaPage() {
   const fetchProdutos = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/grade-fechada/produtos');
-      const data = await response.json();
+      
+      // Buscar produtos com variações
+      const { createClient } = await import('@/lib/supabase');
+      const supabase = createClient();
+      
+      const { data: produtosData, error } = await supabase
+        .from('grade_fechada_produtos')
+        .select(`
+          *,
+          variacoes:grade_fechada_variacoes(*)
+        `)
+        .order('criado_em', { ascending: false });
 
-      if (response.ok) {
-        setProdutos(data.data || []);
-      } else {
+      if (error) {
+        console.error('Erro ao buscar produtos:', error);
         toast.error('Erro ao carregar produtos');
+        return;
       }
+
+      setProdutos(produtosData || []);
     } catch (error) {
       console.error('Erro:', error);
       toast.error('Erro ao conectar com servidor');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deletarProduto = async (id: string, nome: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
+      return;
+    }
+
+    try {
+      const { createClient } = await import('@/lib/supabase');
+      const supabase = createClient();
+      
+      const { error } = await supabase
+        .from('grade_fechada_produtos')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erro ao deletar produto:', error);
+        toast.error('Erro ao excluir produto');
+        return;
+      }
+
+      toast.success('Produto excluído com sucesso!');
+      fetchProdutos();
+    } catch (error) {
+      console.error('Erro:', error);
+      toast.error('Erro ao excluir produto');
     }
   };
 
@@ -141,30 +190,96 @@ export default function ProdutosGradeFechadaPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {produtos.map((produto) => (
-            <Card key={produto.id} className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <Package className="h-8 w-8 text-gray-400" />
+          {produtos.map((produto) => {
+            const imagemCapa = produto.variacoes?.[0]?.imagem_url;
+            const totalVariacoes = produto.variacoes?.length || 0;
+            const estoqueTotal = produto.variacoes?.reduce((sum, v) => sum + (v.estoque_disponivel || 0), 0) || 0;
+
+            return (
+              <Card key={produto.id} className="p-4 hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-4">
+                  {/* Imagem */}
+                  <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                    {imagemCapa ? (
+                      <img
+                        src={imagemCapa}
+                        alt={produto.nome}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Package className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+
+                  {/* Informações */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg">{produto.nome}</h3>
+                        <p className="text-sm text-gray-600">{produto.codigo || 'Sem código'}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600">
+                          R$ {produto.preco_base?.toFixed(2) || '0.00'}
+                        </div>
+                        {produto.usa_variacoes && (
+                          <div className="text-xs text-gray-500">
+                            {totalVariacoes} variação{totalVariacoes !== 1 ? 'ões' : ''}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4 mt-2">
+                      <div className="text-sm">
+                        <span className="text-gray-500">Estoque:</span>{' '}
+                        <span className={`font-medium ${estoqueTotal > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {estoqueTotal} pares
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-500">Status:</span>{' '}
+                        <span className={`font-medium ${produto.ativo ? 'text-green-600' : 'text-gray-400'}`}>
+                          {produto.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = `/grade-fechada/produtos/${produto.id}`}
+                      className="w-full"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = `/grade-fechada/produtos/${produto.id}/editar`}
+                      className="w-full"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => deletarProduto(produto.id, produto.nome)}
+                      className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{produto.nome}</h3>
-                  <p className="text-sm text-gray-600">{produto.codigo}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
