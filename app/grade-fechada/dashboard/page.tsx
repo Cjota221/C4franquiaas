@@ -10,22 +10,6 @@ export default function GradeFechadaDashboard() {
 
   const menuItems = [
     {
-      id: 'produtos',
-      title: 'Produtos (Grade Fechada)',
-      description: 'Cadastro e gestão de produtos para venda por grade',
-      icon: Package,
-      href: '/grade-fechada/produtos',
-      color: 'from-blue-500 to-blue-600',
-    },
-    {
-      id: 'pedidos',
-      title: 'Pedidos de Encomenda',
-      description: 'Visualizar e gerenciar pedidos por grade fechada',
-      icon: PackageOpen,
-      href: '/grade-fechada/pedidos',
-      color: 'from-purple-500 to-purple-600',
-    },
-    {
       id: 'carrinhos',
       title: 'Carrinhos Abandonados',
       description: 'Acompanhar carrinhos não finalizados',
@@ -33,14 +17,10 @@ export default function GradeFechadaDashboard() {
       href: '/grade-fechada/carrinhos',
       color: 'from-orange-500 to-orange-600',
     },
-    {
-      id: 'configuracoes',
-      title: 'Configurações do Site',
-      description: 'Configurar regras, mensagens e parâmetros',
-      icon: Settings,
-      href: '/grade-fechada/configuracoes',
-      color: 'from-gray-500 to-gray-600',
-    },
+    // Páginas a serem criadas:
+    // - Produtos (Grade Fechada)
+    // - Pedidos de Encomenda  
+    // - Configurações do Site
   ];
 
   return (
