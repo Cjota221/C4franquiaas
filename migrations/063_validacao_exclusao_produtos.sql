@@ -1,25 +1,112 @@
 -- ============================================
--- Migration 063: Validação Antes de Excluir Produtos
+-- Migration 063: Fix RLS e Policies para Exclusão de Produtos
 -- ============================================
--- PROBLEMA: Produtos estão sendo excluídos sem verificar se há referências ativas
--- IMPACTO: Dados órfãos em vendas, carrinhos abandonados, promoções e histórico de estoque
+-- PROBLEMA IDENTIFICADO: Tabela 'produtos' não tem RLS nem policies de DELETE
+-- IMPACTO: Função excluir_produtos_completo() bloqueada por falta de permissões
+-- DATA: 2026-01-13
+-- DIAGNÓSTICO: Query revelou que:
+--   - produtos: RLS = false, 0 policies de DELETE
+--   - reseller_products: RLS = true, 2 policies de DELETE ✅
+--   - produto_categorias: RLS = true, 1 policy de DELETE ✅
+-- SOLUÇÃO: Habilitar RLS e criar policies consistentes
 
 -- ============================================
--- PARTE 1: FUNÇÃO DE VALIDAÇÃO
+-- PARTE 1: HABILITAR RLS NA TABELA PRODUTOS
 -- ============================================
 
-CREATE OR REPLACE FUNCTION validar_exclusao_produto(produto_id UUID)
-RETURNS JSON AS $$
-DECLARE
-  total_vendas INTEGER := 0;
-  total_carrinhos INTEGER := 0;
-  total_promocoes_ativas INTEGER := 0;
-  total_movimentacoes INTEGER := 0;
-  pode_excluir BOOLEAN := true;
-  avisos TEXT[] := ARRAY[]::TEXT[];
-  erros TEXT[] := ARRAY[]::TEXT[];
+-- Se RLS já estiver habilitado, não faz nada (idempotente)
+ALTER TABLE produtos ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- PARTE 2: POLICIES DE DELETE PARA PRODUTOS
+-- ============================================
+
+-- Policy 1: Service Role pode deletar produtos
+DROP POLICY IF EXISTS "Service role pode deletar produtos" ON produtos;
+CREATE POLICY "Service role pode deletar produtos"
+ON produtos
+FOR DELETE
+TO service_role
+USING (true);
+
+-- Policy 2: Funções do banco podem deletar (auth.uid() IS NULL)
+DROP POLICY IF EXISTS "Funções podem deletar produtos" ON produtos;
+CREATE POLICY "Funções podem deletar produtos"
+ON produtos
+FOR DELETE
+TO authenticated
+USING (auth.uid() IS NULL);
+
+-- Policy 3: Admins podem deletar produtos
+DROP POLICY IF EXISTS "Admins podem deletar produtos" ON produtos;
+CREATE POLICY "Admins podem deletar produtos"
+ON produtos
+FOR DELETE
+TO authenticated
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM resellers WHERE reseller_type = 'franchise'
+  )
+);
+
+-- ============================================
+-- PARTE 3: GARANTIR POLICIES NAS TABELAS FILHAS
+-- ============================================
+
+-- Reforçar policy em produtos_franqueadas_precos (estava faltando no diagnóstico)
+DROP POLICY IF EXISTS "Service role pode deletar preços" ON produtos_franqueadas_precos;
+CREATE POLICY "Service role pode deletar preços"
+ON produtos_franqueadas_precos
+FOR DELETE
+TO service_role
+USING (true);
+
+DROP POLICY IF EXISTS "Funções podem deletar preços" ON produtos_franqueadas_precos;
+CREATE POLICY "Funções podem deletar preços"
+ON produtos_franqueadas_precos
+FOR DELETE
+TO authenticated
+USING (auth.uid() IS NULL);
+
+-- ============================================
+-- PARTE 4: VERIFICAÇÃO FINAL
+-- ============================================
+
+-- Verificar se policies foram criadas corretamente
+DO $$
 BEGIN
-  -- 1️⃣ VERIFICAR VENDAS (CRÍTICO - NUNCA EXCLUIR)
+  -- Confirmar que RLS está ativo
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_tables 
+    WHERE tablename = 'produtos' 
+    AND rowsecurity = true
+  ) THEN
+    RAISE WARNING 'RLS não foi habilitado na tabela produtos!';
+  END IF;
+  
+  -- Confirmar que policies existem
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'produtos' 
+    AND cmd = 'DELETE'
+  ) THEN
+    RAISE WARNING 'Nenhuma policy de DELETE foi criada para produtos!';
+  ELSE
+    RAISE NOTICE '✅ Policies de DELETE criadas com sucesso para produtos';
+  END IF;
+END $$;
+
+-- ============================================
+-- TESTE MANUAL (COMENTADO - DESCOMENTE PARA TESTAR)
+-- ============================================
+
+-- Listar todas as policies de DELETE
+-- SELECT tablename, policyname, cmd, qual
+-- FROM pg_policies
+-- WHERE tablename = 'produtos' AND cmd = 'DELETE';
+
+-- Verificar RLS
+-- SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'produtos';
   -- Verificar se produto aparece no JSONB items de vendas
   SELECT COUNT(*)
   INTO total_vendas
