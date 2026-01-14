@@ -46,25 +46,16 @@ export default function ProdutosGradeFechadaPage() {
     try {
       setLoading(true);
       
-      // Buscar produtos com variações
-      const { createClient } = await import('@/lib/supabase');
-      const supabase = createClient();
-      
-      const { data: produtosData, error } = await supabase
-        .from('grade_fechada_produtos')
-        .select(`
-          *,
-          variacoes:grade_fechada_variacoes(*)
-        `)
-        .order('criado_em', { ascending: false });
+      // Buscar produtos com variações via API
+      const response = await fetch('/api/admin/grade-fechada/produtos?include_variacoes=true');
+      const data = await response.json();
 
-      if (error) {
-        console.error('Erro ao buscar produtos:', error);
+      if (response.ok) {
+        setProdutos(data.data || []);
+      } else {
+        console.error('Erro ao buscar produtos:', data);
         toast.error('Erro ao carregar produtos');
-        return;
       }
-
-      setProdutos(produtosData || []);
     } catch (error) {
       console.error('Erro:', error);
       toast.error('Erro ao conectar com servidor');
@@ -79,16 +70,11 @@ export default function ProdutosGradeFechadaPage() {
     }
 
     try {
-      const { createClient } = await import('@/lib/supabase');
-      const supabase = createClient();
-      
-      const { error } = await supabase
-        .from('grade_fechada_produtos')
-        .delete()
-        .eq('id', id);
+      const response = await fetch(`/api/admin/grade-fechada/produtos/${id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        console.error('Erro ao deletar produto:', error);
+      if (!response.ok) {
         toast.error('Erro ao excluir produto');
         return;
       }

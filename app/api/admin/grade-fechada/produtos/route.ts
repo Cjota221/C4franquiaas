@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
  * - ativo: filtrar por status (true/false)
  * - page: número da página (default: 1)
  * - per_page: itens por página (default: 20)
+ * - include_variacoes: incluir variações (true/false)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -21,11 +22,17 @@ export async function GET(req: NextRequest) {
     const ativo = searchParams.get('ativo');
     const page = parseInt(searchParams.get('page') || '1');
     const per_page = Math.min(parseInt(searchParams.get('per_page') || '20'), 50); // Max 50 itens
+    const include_variacoes = searchParams.get('include_variacoes') === 'true';
     const offset = (page - 1) * per_page;
 
     let query = supabase
       .from('grade_fechada_produtos')
-      .select('*', { count: 'exact' })
+      .select(
+        include_variacoes 
+          ? '*, variacoes:grade_fechada_variacoes(*)'
+          : '*',
+        { count: 'exact' }
+      )
       .order('ordem', { ascending: true })
       .order('nome', { ascending: true })
       .range(offset, offset + per_page - 1);
