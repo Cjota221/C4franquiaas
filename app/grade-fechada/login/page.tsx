@@ -47,10 +47,14 @@ export default function GradeFechadaLoginPage() {
           router.push('/grade-fechada/dashboard');
         }
       } else {
-        console.error('❌ Erro de login:', data);
+        console.error('❌ Erro de login:', JSON.stringify(data, null, 2));
+        console.table(data);
         const errorMsg = data.error || 'Email ou senha incorretos';
-        const debugMsg = data.debug ? `\n\nDebug: ${data.debug}` : '';
-        toast.error(errorMsg + debugMsg);
+        const debugMsg = data.debug ? ` | Debug: ${data.debug}` : '';
+        toast.error(errorMsg + debugMsg, { duration: 10000 });
+        
+        // Mostrar no alerta também
+        alert('ERRO:\n' + JSON.stringify(data, null, 2));
       }
     } catch (error) {
       console.error('Erro no login:', error);
