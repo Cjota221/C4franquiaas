@@ -272,7 +272,7 @@ export default function ProdutosPage(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [filtroCategoria, filtroStatus, filtroEstoque, filtroNovos, precoMin, precoMax, sortBy, sortDirection, setStatusMsg]);
+  }, [filtroCategoria, filtroStatus, filtroEstoque, filtroNovos, precoMin, precoMax, sortBy, sortDirection]);
 
   function safeDecodeUrl(v?: unknown) {
     if (!v) return null;
