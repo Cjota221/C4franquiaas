@@ -137,7 +137,11 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('❌ [LOGIN] Erro fatal:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { 
+        error: 'Erro interno do servidor',
+        debug: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
