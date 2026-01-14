@@ -506,6 +506,17 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
 
     console.log(`📊 FácilZap tem ${idsFacilzap.size} produtos`);
 
+    // 🔧 IMPORTANTE: Buscar produtos excluídos para NÃO tentar excluir novamente
+    const { data: jaExcluidos } = await supabase
+      .from('produtos_excluidos')
+      .select('id_externo');
+    
+    const idsJaExcluidos = new Set(
+      (jaExcluidos || []).map((e: { id_externo: string }) => String(e.id_externo))
+    );
+    
+    console.log(`🗑️ Já temos ${idsJaExcluidos.size} produtos marcados como excluídos`);
+
     // 🔧 CORREÇÃO: Buscar TODOS os produtos (ativos E inativos) que vieram do FácilZap
     const { data: produtosNoBanco, error: errBusca } = await supabase
       .from('produtos')
@@ -524,10 +535,11 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
 
     console.log(`📊 Nosso banco tem ${produtosNoBanco.length} produtos do FácilZap (ativos + inativos)`);
 
-    // Encontrar produtos que NÃO existem mais no FácilZap
+    // Encontrar produtos que NÃO existem mais no FácilZap E que ainda NÃO foram excluídos
     const produtosParaExcluir = produtosNoBanco.filter((p: { id_externo: string; facilzap_id: string }) => {
       const idExterno = p.id_externo || p.facilzap_id;
-      return idExterno && !idsFacilzap.has(String(idExterno));
+      // ✅ NÃO excluir se: já está nos excluídos OU ainda existe no FácilZap
+      return idExterno && !idsJaExcluidos.has(String(idExterno)) && !idsFacilzap.has(String(idExterno));
     });
 
     if (produtosParaExcluir.length === 0) {
@@ -543,6 +555,25 @@ async function detectarProdutosExcluidos(supabase: any, produtosFacilzap: any[])
       console.log(`   ... e mais ${produtosParaExcluir.length - 5} produtos`);
     }
 
+    
+    // 🔒 REGISTRAR na tabela de excluídos ANTES de deletar (evita race condition)
+    const idsExternosParaMarcar = produtosParaExcluir
+      .map((p: { id_externo: string }) => p.id_externo)
+      .filter((id: string) => id);
+    
+    if (idsExternosParaMarcar.length > 0) {
+      await supabase
+        .from('produtos_excluidos')
+        .upsert(
+          idsExternosParaMarcar.map((id_externo: string) => ({
+            id_externo,
+            excluido_em: new Date().toISOString(),
+            excluido_por: 'sync_facilzap'
+          })),
+          { onConflict: 'id_externo' }
+        );
+      console.log(`✅ Marcados ${idsExternosParaMarcar.length} produtos como excluídos`);
+    }
     const idsParaExcluir = produtosParaExcluir.map((p: { id: string }) => p.id);
 
     // 🗑️ 1. DELETAR vinculações com franqueadas (produtos_franqueadas_precos primeiro por FK)
