@@ -20,7 +20,9 @@ interface Pedido {
   numero?: string;
   status: string;
   created_at: string;
+  criado_em: string;
   total: number;
+  total_itens?: number;
   observacoes?: string;
   cliente_nome?: string;
 }
