@@ -15,17 +15,6 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
   const items = useCarrinhoStore(state => state.items);
   const getTotal = useCarrinhoStore(state => state.getTotal);
   
-  // Converter formato Zustand para formato esperado pelo formulário
-  const cartItems = items.map(item => ({
-    id: item.id,
-    nome: item.nome,
-    preco_final: item.preco,
-    imagens: [item.imagem],
-    quantidade: item.quantidade,
-    tamanho: item.tamanho,
-    sku: item.sku,
-  }));
-  
   const [paymentMethod, setPaymentMethod] = useState<'credit' | 'pix' | 'boleto'>('credit');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
