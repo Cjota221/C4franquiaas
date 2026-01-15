@@ -29,6 +29,9 @@ interface ProdutoComMargem extends Produto {
 type SortField = 'nome' | 'preco_final' | 'margin_percent';
 type SortDirection = 'asc' | 'desc';
 
+// ✅ CONSTANTE DE PAGINAÇÃO
+const ITEMS_POR_PAGINA = 50;
+
 export default function ProdutosRevendedoraPage() {
   const supabase = createClient();
   
@@ -39,6 +42,9 @@ export default function ProdutosRevendedoraPage() {
   const [revendedoraSlug, setRevendedoraSlug] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
+  
+  // ✅ ESTADO DE PAGINAÇÃO
+  const [paginaAtual, setPaginaAtual] = useState(1);
   
   // Estados de filtros
   const [busca, setBusca] = useState('');
@@ -432,6 +438,20 @@ export default function ProdutosRevendedoraPage() {
     });
   }, [produtosFiltrados, sortBy, sortDirection]);
 
+  // ✅ PAGINAÇÃO: Calcular total de páginas e produtos da página atual
+  const totalPaginas = Math.ceil(produtosOrdenados.length / ITEMS_POR_PAGINA);
+  
+  const produtosPaginados = useMemo(() => {
+    const inicio = (paginaAtual - 1) * ITEMS_POR_PAGINA;
+    const fim = inicio + ITEMS_POR_PAGINA;
+    return produtosOrdenados.slice(inicio, fim);
+  }, [produtosOrdenados, paginaAtual]);
+
+  // ✅ Reset página quando filtros mudam
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [buscaDebounced, categoriaFiltro, statusFiltro, estoqueFiltro, margemFiltro]);
+
   // ⚡ MEMOIZAÇÃO: Estatísticas
   const stats = useMemo(() => ({
     total: produtos.length,
@@ -814,7 +834,7 @@ export default function ProdutosRevendedoraPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {produtosOrdenados.map(produto => (
+              {produtosPaginados.map(produto => (
                 <tr key={produto.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <input
@@ -926,6 +946,34 @@ export default function ProdutosRevendedoraPage() {
             <p className="text-gray-600">Nenhum produto encontrado</p>
           </div>
         )}
+        
+        {/* ✅ PAGINAÇÃO - Desktop */}
+        {totalPaginas > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
+            <p className="text-sm text-gray-600">
+              Mostrando {((paginaAtual - 1) * ITEMS_POR_PAGINA) + 1} - {Math.min(paginaAtual * ITEMS_POR_PAGINA, produtosOrdenados.length)} de {produtosOrdenados.length}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+                disabled={paginaAtual === 1}
+                className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="px-3 py-1 text-sm bg-pink-100 text-pink-700 rounded-lg font-medium">
+                {paginaAtual} / {totalPaginas}
+              </span>
+              <button
+                onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+                disabled={paginaAtual === totalPaginas}
+                className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Lista de Produtos - Mobile (Cards) */}
@@ -945,7 +993,7 @@ export default function ProdutosRevendedoraPage() {
         </div>
 
         {/* Cards de Produtos */}
-        {produtosOrdenados.map(produto => (
+        {produtosPaginados.map(produto => (
           <div 
             key={produto.id} 
             className={`bg-white rounded-lg shadow p-4 border-2 transition-colors ${
@@ -1067,6 +1115,34 @@ export default function ProdutosRevendedoraPage() {
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">Nenhum produto encontrado</p>
+          </div>
+        )}
+        
+        {/* ✅ PAGINAÇÃO - Mobile */}
+        {totalPaginas > 1 && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-600 text-center mb-3">
+              {((paginaAtual - 1) * ITEMS_POR_PAGINA) + 1} - {Math.min(paginaAtual * ITEMS_POR_PAGINA, produtosOrdenados.length)} de {produtosOrdenados.length}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+                disabled={paginaAtual === 1}
+                className="flex-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="px-4 py-2 text-sm bg-pink-100 text-pink-700 rounded-lg font-medium">
+                {paginaAtual}/{totalPaginas}
+              </span>
+              <button
+                onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+                disabled={paginaAtual === totalPaginas}
+                className="flex-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próximo
+              </button>
+            </div>
           </div>
         )}
       </div>

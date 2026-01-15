@@ -222,6 +222,22 @@ export default function PersonalizacaoRevendedoraPage() {
 
   const handleImageUpload = async (file: File, type: "logo" | "banner" | "banner_mobile") => {
     if (!reseller) return;
+    
+    // ✅ VALIDAÇÃO: Tipos de arquivo permitidos
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('❌ Tipo de arquivo inválido! Use apenas: JPG, PNG, WEBP ou GIF');
+      return;
+    }
+    
+    // ✅ VALIDAÇÃO: Tamanho máximo (5MB para banners, 2MB para logo)
+    const maxSize = type === "logo" ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSizeLabel = type === "logo" ? "2MB" : "5MB";
+    if (file.size > maxSize) {
+      alert(`❌ Arquivo muito grande! Tamanho máximo: ${maxSizeLabel}`);
+      return;
+    }
+    
     setUploading(type);
     
     try {
@@ -254,7 +270,7 @@ export default function PersonalizacaoRevendedoraPage() {
         }
       } else {
         // Banners usam bucket reseller-assets
-        const fileExt = file.name.split(".").pop();
+        const fileExt = file.name.split(".").pop()?.toLowerCase();
         const fileName = reseller.id + "/" + type + "_" + Date.now() + "." + fileExt;
         
         const { error: uploadError } = await supabase.storage.from("reseller-assets").upload(fileName, file);
