@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
+import { safeColor } from '@/lib/color-utils';
 import { toast } from 'sonner';
 
 interface Variacao {
@@ -80,7 +81,7 @@ export default function LojaGradeFechadaPage() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" 
-             style={{ borderColor: String(config?.cor_primaria || '#8B5CF6') }}></div>
+             style={{ borderColor: safeColor(config?.cor_primaria) }}></div>
       </div>
     );
   }
@@ -89,7 +90,7 @@ export default function LojaGradeFechadaPage() {
     <div className="space-y-8">
       {/* Banner Hero */}
       <div className="rounded-2xl p-8 text-white text-center"
-           style={{ background: `linear-gradient(135deg, ${config?.cor_primaria || '#8B5CF6'}, ${config?.cor_secundaria || '#EC4899'})` }}>
+           style={{ background: `linear-gradient(135deg, ${safeColor(config?.cor_primaria)}, ${safeColor(config?.cor_secundaria, '#EC4899')})` }}>
         <h1 className="text-4xl font-bold mb-3">
           {String(config?.titulo_site || 'Catálogo Grade Fechada')}
         </h1>
@@ -176,7 +177,7 @@ export default function LojaGradeFechadaPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-500">A partir de</p>
-                        <p className="text-xl font-bold" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
+                        <p className="text-xl font-bold" style={{ color: safeColor(config?.cor_primaria) }}>
                           R$ {produto.preco_base.toFixed(2)}
                         </p>
                         <p className="text-xs text-gray-500">por par</p>
@@ -184,7 +185,7 @@ export default function LojaGradeFechadaPage() {
                       <Button 
                         size="sm"
                         className="rounded-full"
-                        style={{ backgroundColor: String(config?.cor_primaria || '#8B5CF6') }}
+                        style={{ backgroundColor: safeColor(config?.cor_primaria) }}
                       >
                         Ver
                       </Button>

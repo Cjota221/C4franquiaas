@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { safeColor } from '@/lib/color-utils';
 import { ArrowLeft, Trash2, ShoppingCart, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -159,7 +160,7 @@ export default function CarrinhoPage() {
           </p>
           <Button
             onClick={() => router.push(`/loja-grade/${slug}`)}
-            style={{ backgroundColor: String(config?.cor_primaria || '#8B5CF6') }}
+            style={{ backgroundColor: safeColor(config?.cor_primaria) }}
           >
             Ver Produtos
           </Button>
@@ -226,7 +227,7 @@ export default function CarrinhoPage() {
                       .join(', ')}
                   </div>
 
-                  <p className="text-lg font-bold" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
+                  <p className="text-lg font-bold" style={{ color: safeColor(config?.cor_primaria) }}>
                     R$ {item.valor_total.toFixed(2)}
                   </p>
                 </div>
@@ -286,7 +287,7 @@ export default function CarrinhoPage() {
               </div>
               <div className="flex justify-between text-lg pt-3 border-t">
                 <span className="font-bold">Valor Total:</span>
-                <span className="font-bold text-2xl" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
+                <span className="font-bold text-2xl" style={{ color: safeColor(config?.cor_primaria) }}>
                   R$ {valorTotal.toFixed(2)}
                 </span>
               </div>
@@ -303,7 +304,7 @@ export default function CarrinhoPage() {
               disabled={totalGrades < 2 || !clienteNome.trim() || !clienteTelefone.trim()}
               className="w-full gap-2 py-6 text-lg"
               style={{
-                backgroundColor: String(config?.cor_primaria || '#8B5CF6'),
+                backgroundColor: safeColor(config?.cor_primaria),
                 opacity: (totalGrades < 2 || !clienteNome.trim() || !clienteTelefone.trim()) ? 0.5 : 1,
               }}
             >

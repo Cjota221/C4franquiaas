@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getConfigBySlug } from '@/lib/grade-fechada-config';
 import Image from 'next/image';
 import Link from 'next/link';
+import { validateHexColor } from '@/lib/color-utils';
 
 export default async function LojaGradeFechadaLayout({
   children,
@@ -40,8 +41,8 @@ export default async function LojaGradeFechadaLayout({
         <meta name="description" content={config.descricao_site} />
         <style>{`
           :root {
-            --cor-primaria: ${config.cor_primaria};
-            --cor-secundaria: ${config.cor_secundaria};
+            --cor-primaria: ${validateHexColor(config?.cor_primaria)};
+            --cor-secundaria: ${validateHexColor(config?.cor_secundaria, '#EC4899')};
           }
         `}</style>
       </head>
@@ -61,8 +62,8 @@ export default async function LojaGradeFechadaLayout({
                     className="h-10 w-auto"
                   />
                 ) : (
-                  <span className="text-2xl font-bold" style={{ color: config.cor_primaria }}>
-                    {config.titulo_site || 'Grade Fechada'}
+                  <span className="text-2xl font-bold" style={{ color: validateHexColor(config?.cor_primaria) }}>
+                    {String(config?.titulo_site || 'Grade Fechada')}
                   </span>
                 )}
               </Link>
@@ -74,7 +75,7 @@ export default async function LojaGradeFechadaLayout({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: config.cor_primaria }}
+                  style={{ backgroundColor: validateHexColor(config?.cor_primaria) }}
                 >
                   📱 WhatsApp
                 </a>

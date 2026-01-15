@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { safeColor } from '@/lib/color-utils';
 import { ArrowLeft, ShoppingCart, Plus, Minus, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -161,7 +162,7 @@ export default function ProdutoDetalhePage() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" 
-             style={{ borderColor: String(config?.cor_primaria || '#8B5CF6') }}></div>
+             style={{ borderColor: safeColor(config?.cor_primaria) }}></div>
       </div>
     );
   }
@@ -209,7 +210,7 @@ export default function ProdutoDetalhePage() {
                     }`}
                     style={{
                       borderColor: variacaoSelecionada?.id === variacao.id
-                        ? String(config?.cor_primaria || '#8B5CF6')
+                        ? safeColor(config?.cor_primaria)
                         : 'transparent',
 
                     }}
@@ -242,7 +243,7 @@ export default function ProdutoDetalhePage() {
               <p className="text-gray-600 mb-4">{produto.descricao}</p>
             )}
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
+              <span className="text-4xl font-bold" style={{ color: safeColor(config?.cor_primaria) }}>
                 R$ {produto.preco_base.toFixed(2)}
               </span>
               <span className="text-gray-500">por par</span>
@@ -380,7 +381,7 @@ export default function ProdutoDetalhePage() {
               </div>
               <div className="flex justify-between text-lg pt-3 border-t">
                 <span className="font-bold">Valor Total:</span>
-                <span className="font-bold text-2xl" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
+                <span className="font-bold text-2xl" style={{ color: safeColor(config?.cor_primaria) }}>
                   R$ {(produto.preco_base * totalPares).toFixed(2)}
                 </span>
               </div>
@@ -391,7 +392,7 @@ export default function ProdutoDetalhePage() {
               className="w-full gap-2 py-6 text-lg"
               disabled={totalParesSelecionados !== totalPares || !variacaoSelecionada}
               style={{
-                backgroundColor: String(config?.cor_primaria || '#8B5CF6'),
+                backgroundColor: safeColor(config?.cor_primaria),
                 opacity: (totalParesSelecionados !== totalPares || !variacaoSelecionada) ? 0.5 : 1,
               }}
             >
