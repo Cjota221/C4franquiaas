@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, BookOpen, FolderOpen } from 'lucide-react';
+import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
 import { memo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
@@ -15,13 +15,14 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
 
   const menuItems = [
     { label: 'Dashboard', href: '/revendedora/dashboard', icon: Home },
-    { label: 'Produtos', href: '/revendedora/produtos', icon: Package, badge: newProductsCount },
-    { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
-    { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
+    { label: 'Produtos', href: '/revendedora/produtos', icon: Package, badge: newProductsCount },
+    { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
+    { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Material de Divulgação', href: '/revendedora/material-divulgacao', icon: FolderOpen },
+    { label: 'C4 Academy', href: '/revendedora/academy', icon: GraduationCap, highlight: true },
+    { label: 'Tutoriais', href: '/revendedora/tutoriais', icon: BookOpen },
     { label: 'Configurações', href: '/revendedora/configuracoes', icon: Settings },
-    { label: 'Tutoriais', href: '/revendedora/tutoriais', icon: BookOpen, highlight: true },
   ];
 
   const isActive = (href: string) => pathname === href;

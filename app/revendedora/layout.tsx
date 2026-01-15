@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora';
+import MobileNavigation from '@/components/revendedora/MobileNavigation';
 import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnboardingTutorial from '@/components/revendedora/OnboardingTutorial';
@@ -311,11 +312,13 @@ export default function RevendedoraRootLayout({
       <OnboardingTutorial />
       <SidebarRevendedora />
       <main className="flex-1 w-full lg:ml-0">
-        <div className="pt-16 lg:pt-0">
+        <div className="pt-16 lg:pt-0 pb-20 lg:pb-0">
           <AlertaProdutosSemMargem />
           {children}
         </div>
       </main>
+      {/* Mobile Navigation - Bottom Bar + Drawer */}
+      <MobileNavigation />
     </div>
   );
 }
