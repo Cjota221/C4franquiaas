@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Trash2, ArrowLeft, Send, Package, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowLeft, Send, AlertCircle } from 'lucide-react';
 import type { ItemPedido } from '@/types/grade-fechada';
 import { toast } from 'sonner';
 

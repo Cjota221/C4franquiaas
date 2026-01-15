@@ -16,7 +16,6 @@ import {
   ArrowUp,
   ArrowDown,
   Package,
-  Store,
   MousePointer
 } from 'lucide-react'
 

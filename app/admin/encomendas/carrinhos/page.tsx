@@ -11,10 +11,8 @@ import { toast } from 'sonner';
 import {
   ShoppingCart,
   MessageCircle,
-  Calendar,
   DollarSign,
   Eye,
-  CheckCircle,
 } from 'lucide-react';
 import type { GradeFechadaCarrinho } from '@/types/grade-fechada';
 

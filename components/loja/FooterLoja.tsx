@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import { Shield, FileText, Instagram, Phone, Mail, MapPin, BadgeCheck } from 'lucide-react';
+import { Shield, FileText, Instagram, Phone, MapPin, BadgeCheck } from 'lucide-react';
 
 interface FooterLojaProps {
   nomeRevendedora?: string;

@@ -13,7 +13,6 @@ import {
   Upload,
   X,
   Plus,
-  Minus,
 } from 'lucide-react';
 import Image from 'next/image';
 import type { GradeFechadaProduto, GradeFechadaProdutoInput } from '@/types/grade-fechada';

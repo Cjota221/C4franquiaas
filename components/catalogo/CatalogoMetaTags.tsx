@@ -1,6 +1,5 @@
 "use client";
 
-import Head from 'next/head';
 import { useEffect } from 'react';
 
 interface CatalogoMetaTagsProps {

@@ -18,8 +18,6 @@ import {
   Eye,
   EyeOff,
   Image as ImageIcon,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react';
 import Image from 'next/image';
 import type { GradeFechadaProduto } from '@/types/grade-fechada';

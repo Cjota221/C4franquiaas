@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/PageWrapper';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/card';
@@ -9,7 +9,6 @@ import { PackageOpen, ShoppingCart, Settings, Package } from 'lucide-react';
 
 export default function EncomendasPage() {
   const router = useRouter();
-  const pathname = usePathname();
 
   const menuItems = [
     {

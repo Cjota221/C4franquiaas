@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 // Importa os ícones que vamos usar
-import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut, Coins, UserPlus, Truck, ImageIcon, BarChart3, Video, Palette, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Package, Store, BarChart, Settings, LogOut, Coins, UserPlus, Truck, ImageIcon, BarChart3, Video, Palette } from 'lucide-react';
 
 // Define os tipos de dados que o componente Sidebar espera receber
 interface SidebarProps {

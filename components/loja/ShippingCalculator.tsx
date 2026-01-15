@@ -32,14 +32,12 @@ interface MelhorEnvioCotacao {
 }
 
 interface ShippingCalculatorProps {
-  produtoId?: string;
   onFreteCalculado?: (opcoes: FreteOpcao[]) => void;
   className?: string;
   corPrimaria?: string;
 }
 
 export function ShippingCalculator({
-  produtoId,
   onFreteCalculado,
   className = '',
   corPrimaria = '#DB1472',
