@@ -8,22 +8,30 @@ import { supabase } from '@/lib/supabaseClient';
 import { safeColor } from '@/lib/color-utils';
 
 interface GradeConfig {
-  id: string;
-  nome: string;
-  descricao?: string;
+  slug_site?: string;
+  titulo_site?: string;
+  descricao_site?: string;
   cor_primaria?: string;
-  revendedora_id: string;
-  slug: string;
+  cor_secundaria?: string;
+  site_ativo?: boolean;
+  [key: string]: unknown;
+}
+
+interface Variacao {
+  id: string;
+  cor: string;
+  imagem_url: string;
+  estoque_disponivel: number;
 }
 
 interface Produto {
   id: string;
+  codigo?: string;
   nome: string;
   preco_base: number;
-  tem_estoque: boolean;
-  categoria_nome?: string;
-  imagem_principal_url?: string;
-  descricao?: string;
+  ativo: boolean;
+  usa_variacoes: boolean;
+  variacoes?: Variacao[];
 }
 
 interface GradeData {
@@ -38,49 +46,95 @@ interface GradeData {
 
 async function getGradeData(slug: string): Promise<GradeData | null> {
   try {
-    const { data: config, error: configError } = await supabase
-      .from('grade_configs')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+    console.log('🔍 Buscando grade com slug:', slug);
+    
+    // Buscar configurações da grade fechada
+    const { data: configs, error: configError } = await supabase
+      .from('grade_fechada_configuracoes')
+      .select('chave, valor');
 
-    if (configError || !config) {
-      console.error('Erro ao buscar configuração da grade:', configError);
+    if (configError) {
+      console.error('❌ Erro ao buscar configuração:', configError);
       return null;
     }
 
+    // Montar objeto de configuração
+    const config: GradeConfig = {};
+    configs?.forEach((c: { chave: string; valor: unknown }) => {
+      config[c.chave] = c.valor;
+    });
+
+    console.log('📊 Config resultado:', config);
+    console.log('🔍 Verificando slug_site:', config.slug_site, 'vs slug:', slug);
+
+    // Verificar se o slug corresponde
+    if (config.slug_site !== slug) {
+      console.error('❌ Slug não corresponde:', { slug_site: config.slug_site, slug });
+      return null;
+    }
+
+    // Verificar se o site está ativo
+    if (!config.site_ativo) {
+      console.error('❌ Site não está ativo');
+      return null;
+    }
+
+    // Buscar produtos da grade fechada
     const { data: produtos, error: produtosError } = await supabase
-      .from('grade_produtos')
-      .select('produtos!inner(id, nome, preco_base, tem_estoque, descricao, categorias(nome), imagens(url))')
-      .eq('grade_config_id', config.id);
+      .from('grade_fechada_produtos')
+      .select(`
+        id,
+        codigo,
+        nome,
+        descricao,
+        preco_base,
+        usa_variacoes,
+        ativo,
+        variacoes:grade_fechada_variacoes(
+          id,
+          cor,
+          imagem_url,
+          estoque_disponivel,
+          ativo,
+          ordem
+        )
+      `)
+      .eq('ativo', true)
+      .order('nome', { ascending: true });
 
     if (produtosError) {
-      console.error('Erro ao buscar produtos da grade:', produtosError);
+      console.error('❌ Erro ao buscar produtos:', produtosError);
       return null;
     }
 
+    console.log('📦 Produtos encontrados:', produtos?.length);
+
+    // Filtrar variações ativas e ordenar
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const produtosFormatados = produtos?.map((item: any) => ({
-      id: item.produtos.id,
-      nome: item.produtos.nome,
-      preco_base: item.produtos.preco_base,
-      tem_estoque: item.produtos.tem_estoque,
-      categoria_nome: item.produtos.categorias?.nome,
-      imagem_principal_url: item.produtos.imagens?.[0]?.url,
-      descricao: item.produtos.descricao,
-    })) || [];
+    const produtosFormatados = (produtos || []).map((produto: any) => {
+      const variacoesAtivas = produto.variacoes
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ?.filter((v: any) => v.ativo)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
+      
+      return {
+        ...produto,
+        variacoes: variacoesAtivas,
+      };
+    });
 
     return {
       config,
       produtos: produtosFormatados,
       stats: {
-        pedidoMinimo: 50,
-        diasProducao: 15,
+        pedidoMinimo: Number(config.pedido_minimo) || 50,
+        diasProducao: Number(config.dias_producao) || 15,
         totalProdutos: produtosFormatados.length,
       },
     };
   } catch (error) {
-    console.error('Erro ao buscar dados da grade:', error);
+    console.error('❌ Erro ao buscar dados da grade:', error);
     return null;
   }
 }
@@ -101,11 +155,11 @@ export default async function GradePage({ params }: { params: Promise<{ slug: st
         <div className="container mx-auto px-4 py-6">
           <div className="text-center">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-              {config.nome}
+              {String(config.titulo_site || 'Grade Fechada')}
             </h1>
-            {config.descricao && (
+            {config.descricao_site && (
               <p className="text-gray-600 max-w-2xl mx-auto">
-                {config.descricao}
+                {String(config.descricao_site)}
               </p>
             )}
           </div>
@@ -138,12 +192,12 @@ export default async function GradePage({ params }: { params: Promise<{ slug: st
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           {produtos.map((produto) => (
-            <Link key={produto.id} href={`/produto/${produto.id}`}>
+            <Link key={produto.id} href={`/loja-grade/${slug}/produto/${produto.id}`}>
               <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full">
                 <div className="aspect-square relative bg-gray-100">
-                  {produto.imagem_principal_url ? (
+                  {produto.variacoes && produto.variacoes.length > 0 && produto.variacoes[0].imagem_url ? (
                     <Image
-                      src={produto.imagem_principal_url}
+                      src={produto.variacoes[0].imagem_url}
                       alt={produto.nome}
                       fill
                       className="object-cover"
@@ -155,7 +209,7 @@ export default async function GradePage({ params }: { params: Promise<{ slug: st
                     </div>
                   )}
                   
-                  {!produto.tem_estoque && (
+                  {!produto.ativo && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <Badge variant="secondary" className="bg-red-500 text-white">
                         Esgotado
@@ -169,10 +223,27 @@ export default async function GradePage({ params }: { params: Promise<{ slug: st
                     {produto.nome}
                   </h3>
                   
-                  {produto.categoria_nome && (
+                  {produto.codigo && (
                     <Badge variant="outline" className="text-xs mb-2">
-                      {produto.categoria_nome}
+                      {produto.codigo}
                     </Badge>
+                  )}
+                  
+                  {/* Cores disponíveis */}
+                  {produto.variacoes && produto.variacoes.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {produto.variacoes.slice(0, 4).map((v) => (
+                        <div
+                          key={v.id}
+                          className="w-4 h-4 rounded-full border border-gray-300"
+                          style={{ backgroundColor: v.cor }}
+                          title={v.cor}
+                        />
+                      ))}
+                      {produto.variacoes.length > 4 && (
+                        <span className="text-xs text-gray-500">+{produto.variacoes.length - 4}</span>
+                      )}
+                    </div>
                   )}
                   
                   <div className="flex items-center justify-between mt-auto">
