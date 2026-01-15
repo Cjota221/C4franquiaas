@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Store, Save, Upload, AlertCircle, Palette, FileText, Share2, BarChart3, Settings, Copy, ExternalLink } from 'lucide-react';
 import { authenticatedFetch } from '@/lib/authenticatedFetch';
 import Tabs from '@/components/Tabs';
@@ -432,11 +433,11 @@ export default function LojaPage() {
                 <div className="flex items-center gap-4">
                   {logo && (
                     <div className="relative w-20 h-20 flex-shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
+                      <Image 
                         src={logo} 
                         alt="Logo" 
-                        className="w-full h-full object-contain border-2 border-gray-200 rounded-lg p-1" 
+                        fill
+                        className="object-contain border-2 border-gray-200 rounded-lg p-1" 
                       />
                     </div>
                   )}
@@ -1032,8 +1033,9 @@ export default function LojaPage() {
               >
                 <div className="flex items-center gap-3">
                   {logo ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={logo} alt="Logo" className="w-10 h-10 object-contain bg-white rounded p-1" />
+                    <div className="relative w-10 h-10 bg-white rounded p-1">
+                      <Image src={logo} alt="Logo" fill className="object-contain" sizes="40px" />
+                    </div>
                   ) : (
                     <div className="w-10 h-10 bg-white rounded flex items-center justify-center text-xl font-bold" style={{ color: corPrimaria }}>
                       {nome.charAt(0) || '?'}

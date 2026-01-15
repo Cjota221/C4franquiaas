@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useLojaInfo } from '@/contexts/LojaContext';
@@ -146,11 +147,12 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                   height: 'clamp(45px, 14vw, 65px)',
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={loja.logo}
                   alt={loja.nome}
-                  className="w-full h-full object-contain"
+                  fill
+                  className="object-contain"
+                  sizes="160px"
                 />
               </div>
             ) : (
@@ -242,12 +244,13 @@ export default function LojaHeaderMobile({ dominio }: { dominio: string }) {
                     className="flex items-center gap-3 p-3 hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-0"
                   >
                     {produto.imagem ? (
-                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative">
+                        <Image 
                           src={produto.imagem} 
                           alt={produto.nome}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       </div>
                     ) : (

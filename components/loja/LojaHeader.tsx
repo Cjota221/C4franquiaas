@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { useFavoritosStore } from '@/lib/store/favoritosStore';
@@ -277,25 +278,18 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                       // Debug log removed
                       return (
                         <div 
-                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center relative`}
                           style={getLogoContainerStyle()}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={loja.logo}
                             alt={loja.nome}
-                            className="w-full h-full object-contain"
-                            style={{ 
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                              display: 'block'
-                            }}
+                            fill
+                            className="object-contain"
+                            sizes="(max-width: 768px) 160px, 280px"
                             onError={() => {
                               console.error('[LojaHeader] Falha ao carregar logo:', loja.logo);
                               setLogoLoadError(true);
-                            }}
-                            onLoad={() => {
-                              // Debug log removed
                             }}
                           />
                         </div>
@@ -304,14 +298,15 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                       // Debug log removed
                       return (
                         <div 
-                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                          className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center relative`}
                           style={getLogoContainerStyle()}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={loja.logo}
                             alt={loja.nome}
-                            className="w-full h-full object-contain"
+                            fill
+                            className="object-contain"
+                            sizes="(max-width: 768px) 160px, 280px"
                             onError={() => console.error('[LojaHeader] Falha ao carregar logo (img fallback):', loja.logo)}
                           />
                         </div>
@@ -388,14 +383,15 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                   <Link href={`/loja/${dominio}`} className="flex items-center gap-3 hover:opacity-90 transition">
                     {loja.logo ? (
                       <div 
-                        className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center`}
+                        className={`${logoSizeClass} ${logoRoundedClass} overflow-hidden flex items-center justify-center relative`}
                         style={getLogoContainerStyle()}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={loja.logo}
                           alt={loja.nome}
-                          className="w-full h-full object-contain"
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 160px, 280px"
                         />
                       </div>
                     ) : (
@@ -506,13 +502,14 @@ export default function LojaHeader({ dominio }: { dominio: string }) {
                       className="flex items-center gap-4 p-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
                     >
                       {/* Imagem do Produto */}
-                      <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                      <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative">
                         {suggestion.imagem ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={suggestion.imagem}
                             alt={suggestion.nome}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="64px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">

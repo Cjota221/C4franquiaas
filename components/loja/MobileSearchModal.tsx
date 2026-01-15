@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, X, Package } from 'lucide-react';
 
@@ -156,13 +157,14 @@ export default function MobileSearchModal({
                 className="flex items-center gap-4 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
               >
                 {/* Imagem */}
-                <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative">
                   {suggestion.imagem ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={suggestion.imagem}
                       alt={suggestion.nome}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="64px"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">

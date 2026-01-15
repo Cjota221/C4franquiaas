@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
@@ -447,12 +448,15 @@ export default function CarrinhosAbandonadosPage() {
                     {idx + 1}
                   </div>
                   {produto.product_image ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img 
-                      src={produto.product_image} 
-                      alt={produto.product_name}
-                      className="w-16 h-16 object-cover rounded-lg mx-auto mb-2"
-                    />
+                    <div className="relative w-16 h-16 rounded-lg mx-auto mb-2 overflow-hidden">
+                      <Image 
+                        src={produto.product_image} 
+                        alt={produto.product_name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </div>
                   ) : (
                     <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
                       <Package className="w-8 h-8 text-gray-400" />
@@ -676,12 +680,15 @@ export default function CarrinhosAbandonadosPage() {
                         className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
                       >
                         {item.product_image ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={item.product_image}
-                            alt={item.product_name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
+                          <div className="relative w-12 h-12 overflow-hidden rounded">
+                            <Image
+                              src={item.product_image}
+                              alt={item.product_name}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                            />
+                          </div>
                         ) : (
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
                             <ShoppingCart className="w-6 h-6 text-gray-400" />
