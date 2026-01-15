@@ -2,12 +2,12 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, BookOpen } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
 import { useNewProductsCount } from '@/hooks/useNewProductsCount';
 
-const SidebarRevendedora = React.memo(function SidebarRevendedora() {
+const SidebarRevendedora = memo(function SidebarRevendedora() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
