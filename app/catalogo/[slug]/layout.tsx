@@ -5,9 +5,54 @@ import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search, Gift
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Playfair_Display, Lato, Montserrat, Open_Sans, Bebas_Neue, Raleway } from "next/font/google";
 import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
 import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
 import CuponsModal from '@/components/catalogo/CuponsModal';
+
+// ⚡ Fontes carregadas APENAS no catálogo (economia de ~300KB em outras rotas)
+const playfairDisplay = Playfair_Display({ 
+  subsets: ["latin"], 
+  variable: "--font-playfair",
+  weight: ["400", "700"],
+  display: 'swap'
+});
+
+const lato = Lato({ 
+  subsets: ["latin"], 
+  variable: "--font-lato",
+  weight: ["300", "400", "700"],
+  display: 'swap'
+});
+
+const montserrat = Montserrat({ 
+  subsets: ["latin"], 
+  variable: "--font-montserrat",
+  weight: ["400", "600", "700"],
+  display: 'swap'
+});
+
+const openSans = Open_Sans({ 
+  subsets: ["latin"], 
+  variable: "--font-opensans",
+  weight: ["400", "600"],
+  display: 'swap'
+});
+
+const bebasNeue = Bebas_Neue({ 
+  subsets: ["latin"], 
+  variable: "--font-bebas",
+  weight: ["400"],
+  display: 'swap'
+});
+
+const raleway = Raleway({ 
+  subsets: ["latin"], 
+  variable: "--font-raleway",
+  weight: ["300", "400", "600"],
+  display: 'swap'
+});
+
 
 // Tipos
 type Reseller = {
@@ -960,7 +1005,7 @@ export default function CatalogoLayout({
         getProductPromotion,
       }}
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen bg-gray-50 ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${bebasNeue.variable} ${raleway.variable}`}>
         {/* Meta Tags para SEO */}
         {reseller && (
           <CatalogoMetaTags
