@@ -85,14 +85,17 @@ export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Centro: Logo */}
+          {/* Centro: Logo em círculo com efeito 3D */}
           <Link href="/revendedora/dashboard" className="flex items-center gap-2">
-            <div className="relative w-8 h-8">
+            <div className="relative w-10 h-10 rounded-full bg-white 
+                          border-2 border-gray-100
+                          shadow-[0_4px_12px_rgba(0,0,0,0.15),0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]
+                          overflow-hidden">
               <Image
                 src="/logo-c4.png"
                 alt="C4 Franquias"
                 fill
-                className="object-contain"
+                className="object-contain p-1"
                 priority
               />
             </div>
