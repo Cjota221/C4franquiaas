@@ -78,3 +78,64 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
+
+/**
+ * POST - Atualizar configurações (alias para PUT)
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const body = await req.json();
+
+    // Lista de campos a serem salvos
+    const campos = [
+      'slug_site',
+      'logo_url',
+      'cor_primaria',
+      'cor_secundaria',
+      'site_ativo',
+      'titulo_site',
+      'descricao_site',
+      'whatsapp_numero',
+      'pedido_minimo_grades',
+      'prazo_producao_min',
+      'prazo_producao_max',
+      'permite_pagamento_online',
+      'mensagem_whatsapp_template',
+      'email_notificacao',
+    ];
+
+    // Atualizar ou inserir cada configuração usando upsert
+    const promises = campos.map(async (chave) => {
+      if (body[chave] !== undefined) {
+        const { error } = await supabase
+          .from('grade_fechada_configuracoes')
+          .upsert(
+            {
+              chave,
+              valor: body[chave],
+              atualizado_em: new Date().toISOString(),
+            },
+            {
+              onConflict: 'chave',
+            }
+          );
+
+        if (error) {
+          console.error(`Erro ao salvar ${chave}:`, error);
+          throw error;
+        }
+      }
+    });
+
+    await Promise.all(promises);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error);
+    return NextResponse.json(
+      { error: 'Erro ao salvar configurações' },
+      { status: 500 }
+    );
+  }
+}

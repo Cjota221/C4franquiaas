@@ -359,16 +359,22 @@ export default function ConfiguracoesGradeFechadaPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
-                    value={config.cor_primaria}
+                    value={config.cor_primaria || '#8B5CF6'}
                     onChange={(e) => setConfig({ ...config, cor_primaria: e.target.value })}
                     className="h-10 w-20 rounded cursor-pointer border border-gray-300"
                   />
                   <input
                     type="text"
-                    value={config.cor_primaria}
-                    onChange={(e) => setConfig({ ...config, cor_primaria: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    value={config.cor_primaria || '#8B5CF6'}
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      if (valor.match(/^#[0-9A-Fa-f]{0,6}$/) || valor === '') {
+                        setConfig({ ...config, cor_primaria: valor || '#8B5CF6' });
+                      }
+                    }}
                     placeholder="#8B5CF6"
+                    maxLength={7}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm uppercase font-mono"
                   />
                 </div>
               </div>
@@ -379,16 +385,22 @@ export default function ConfiguracoesGradeFechadaPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
-                    value={config.cor_secundaria}
+                    value={config.cor_secundaria || '#EC4899'}
                     onChange={(e) => setConfig({ ...config, cor_secundaria: e.target.value })}
                     className="h-10 w-20 rounded cursor-pointer border border-gray-300"
                   />
                   <input
                     type="text"
-                    value={config.cor_secundaria}
-                    onChange={(e) => setConfig({ ...config, cor_secundaria: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    value={config.cor_secundaria || '#EC4899'}
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      if (valor.match(/^#[0-9A-Fa-f]{0,6}$/) || valor === '') {
+                        setConfig({ ...config, cor_secundaria: valor || '#EC4899' });
+                      }
+                    }}
                     placeholder="#EC4899"
+                    maxLength={7}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm uppercase font-mono"
                   />
                 </div>
               </div>
