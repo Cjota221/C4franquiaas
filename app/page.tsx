@@ -334,7 +334,7 @@ export default function LandingPage() {
             <div className="order-1 lg:order-2 flex justify-center">
               <div className="w-full max-w-[260px] sm:max-w-[280px]">
                 <VideoPlayer 
-                  src="https://files.catbox.moe/rg19bj.MP4" 
+                  src="https://files.catbox.moe/q9c0wx.mp4" 
                   label="Entenda o C4 Franquias"
                 />
               </div>
@@ -507,7 +507,7 @@ export default function LandingPage() {
               <div className="flex justify-center order-1">
                 <div className="w-full max-w-[240px] sm:max-w-[260px]">
                   <VideoPlayer 
-                    src="https://files.catbox.moe/hzg1c3.MP4" 
+                    src="https://files.catbox.moe/upy89f.mp4" 
                     label="Como funciona na prática"
                   />
                 </div>
@@ -591,7 +591,7 @@ export default function LandingPage() {
                 <div className="flex justify-center mb-6">
                   <div className="w-full max-w-[180px]">
                     <VideoPlayer 
-                      src="https://files.catbox.moe/k5n0ja.MP4"
+                      src="https://files.catbox.moe/cib6ib.mp4"
                       label="Personalização"
                     />
                   </div>
@@ -612,7 +612,7 @@ export default function LandingPage() {
                 <div className="flex justify-center mb-6">
                   <div className="w-full max-w-[180px]">
                     <VideoPlayer 
-                      src="https://files.catbox.moe/495y6q.MP4"
+                      src="https://files.catbox.moe/wfs5go.mp4"
                       label="Defina seus preços"
                     />
                   </div>
@@ -697,7 +697,7 @@ export default function LandingPage() {
               <div className="flex justify-center">
                 <div className="w-full max-w-[240px] sm:max-w-[260px]">
                   <VideoPlayer 
-                    src="https://files.catbox.moe/ukwqyj.MP4"
+                    src="https://files.catbox.moe/n3jycq.mp4"
                     label="Precisa investir?"
                   />
                 </div>
