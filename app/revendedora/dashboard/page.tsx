@@ -77,8 +77,8 @@ export default function DashboardRevendedora() {
       console.log('✅ Revendedora encontrada:', data.name, '| Slug:', data.slug || 'NÃO CONFIGURADO');
       setReseller(data);
 
-      // 🆕 Verificar PRODUTOS NOVOS PENDENTES (desativados + margem zero)
-      const { data: newProducts, error: newProdError } = await supabase
+      // ⚡ OTIMIZAÇÃO: Buscar produtos novos em paralelo (não bloqueia renderização)
+      supabase
         .from('reseller_products')
         .select(`
           product_id,
@@ -91,27 +91,28 @@ export default function DashboardRevendedora() {
           )
         `)
         .eq('reseller_id', data.id)
-        .eq('is_active', false)  // 🆕 DESATIVADOS
-        .eq('margin_percent', 0)  // 🆕 SEM MARGEM DEFINIDA
+        .eq('is_active', false)
+        .eq('margin_percent', 0)
         .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (newProdError) {
-        console.error('⚠️ Erro ao buscar produtos novos:', newProdError);
-      } else if (newProducts && newProducts.length > 0) {
-        console.log(`✅ ${newProducts.length} produtos novos pendentes encontrados`);
-        setNewProductsAlert({
-          count: newProducts.length,
-          latestProducts: newProducts.map((np) => {
-            const prod = np.produtos as unknown as { id: string; nome: string } | null;
-            return {
-              id: prod?.id || '',
-              nome: prod?.nome || 'Produto',
-              created_at: np.created_at
-            };
-          })
+        .limit(5)
+        .then(({ data: newProducts, error: newProdError }) => {
+          if (newProdError) {
+            console.error('⚠️ Erro ao buscar produtos novos:', newProdError);
+              } else if (newProducts && newProducts.length > 0) {
+            console.log(`✅ ${newProducts.length} produtos novos pendentes encontrados`);
+            setNewProductsAlert({
+              count: newProducts.length,
+              latestProducts: newProducts.map((np) => {
+                const prod = np.produtos as unknown as { id: string; nome: string } | null;
+                return {
+                  id: prod?.id || '',
+                  nome: prod?.nome || 'Produto',
+                  created_at: np.created_at
+                };
+              })
+            });
+          }
         });
-      }
     } catch (err) {
       console.error('❌ Erro geral:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');

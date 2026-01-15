@@ -1,23 +1,44 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 
 import { useProdutoStore, Produto as ProdutoType } from '@/lib/store/produtoStore';
 import { useCategoriaStore } from '@/lib/store/categoriaStore';
 import { useStatusStore } from '@/lib/store/statusStore';
 import { useModalStore } from '@/lib/store/modalStore';
-import ProductDetailsModal from '@/components/ProductDetailsModal';
-import ModalCategorias from '@/components/ModalCategorias';
-import ModalVincularCategoria from '@/components/ModalVincularCategoria';
-import ModalAtualizarPrecos from '@/components/ModalAtualizarPrecos';
-import ModalDescricaoGuia from '@/components/admin/ModalDescricaoGuia';
-import ModalDescricaoGuiaMassa from '@/components/admin/ModalDescricaoGuiaMassa';
 import TabelaProdutos from '@/components/admin/TabelaProdutos';
 import FiltrosProdutos from '@/components/admin/FiltrosProdutos';
 import { createClient } from '@/lib/supabase/client';
 import PageWrapper from '@/components/PageWrapper';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ProdutoDetailsPanel } from './components';
+
+// ⚡ Otimização: Modais carregados apenas quando necessário
+const ProductDetailsModal = dynamic(() => import('@/components/ProductDetailsModal'), {
+  loading: () => null,
+  ssr: false
+});
+const ModalCategorias = dynamic(() => import('@/components/ModalCategorias'), {
+  loading: () => null,
+  ssr: false
+});
+const ModalVincularCategoria = dynamic(() => import('@/components/ModalVincularCategoria'), {
+  loading: () => null,
+  ssr: false
+});
+const ModalAtualizarPrecos = dynamic(() => import('@/components/ModalAtualizarPrecos'), {
+  loading: () => null,
+  ssr: false
+});
+const ModalDescricaoGuia = dynamic(() => import('@/components/admin/ModalDescricaoGuia'), {
+  loading: () => null,
+  ssr: false
+});
+const ModalDescricaoGuiaMassa = dynamic(() => import('@/components/admin/ModalDescricaoGuiaMassa'), {
+  loading: () => null,
+  ssr: false
+});
 
 const PAGE_SIZE = 30;
 

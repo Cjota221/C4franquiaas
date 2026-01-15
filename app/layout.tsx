@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Lato, Montserrat, Open_Sans, Lobster, Pacifico, Bebas_Neue, Raleway } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Lato, Montserrat, Open_Sans, Bebas_Neue, Raleway } from "next/font/google";
 import "./globals.css";
 import "./responsive.css";
 import ClientErrorLoggerWrapper from '@/components/ClientErrorLoggerWrapper';
@@ -42,18 +42,6 @@ const openSans = Open_Sans({
   subsets: ["latin"], 
   variable: "--font-opensans",
   weight: ["400", "600"]
-});
-
-const lobster = Lobster({ 
-  subsets: ["latin"], 
-  variable: "--font-lobster",
-  weight: ["400"]
-});
-
-const pacifico = Pacifico({ 
-  subsets: ["latin"], 
-  variable: "--font-pacifico",
-  weight: ["400"]
 });
 
 const bebasNeue = Bebas_Neue({ 
@@ -137,7 +125,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${lobster.variable} ${pacifico.variable} ${bebasNeue.variable} ${raleway.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${bebasNeue.variable} ${raleway.variable} antialiased`}
       >
         <ErrorBoundary>
           {children}
