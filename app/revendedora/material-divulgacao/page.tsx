@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 // 🔧 CONFIGURAÇÃO: Link do Google Drive (fácil de trocar)
-const GOOGLE_DRIVE_LINK = "https://drive.google.com/drive/folders/SEU_ID_AQUI";
+const GOOGLE_DRIVE_LINK = "https://drive.google.com/drive/folders/1Um80WtavvBom6eAQDjtZ3bpMAqXpv9gZ?usp=drive_link";
 
 // Dicas de postagem
 const dicasPostagem = [
