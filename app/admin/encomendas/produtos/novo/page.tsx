@@ -15,7 +15,7 @@ import {
   Plus,
 } from 'lucide-react';
 import Image from 'next/image';
-import type { GradeFechadaProduto, GradeFechadaProdutoInput } from '@/types/grade-fechada';
+import type { GradeFechadaProdutoInput } from '@/types/grade-fechada';
 
 export default function ProdutoFormPage() {
   const router = useRouter();

@@ -61,7 +61,7 @@ export default function LojaHomeSection({
     try {
       await onUpload('banner_hero', file);
       toast.success('Banner Hero atualizado!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar banner');
     } finally {
       setUploadingHero(false);
@@ -78,7 +78,7 @@ export default function LojaHomeSection({
     try {
       await onBannerUpload(bannerId, file);
       toast.success('Banner atualizado!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar banner');
     } finally {
       setUploadingBanner(null);

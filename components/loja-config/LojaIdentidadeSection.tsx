@@ -47,7 +47,7 @@ export default function LojaIdentidadeSection({ loja, onChange, onUpload }: Loja
     try {
       await onUpload(field, file);
       toast.success('Imagem enviada com sucesso!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar imagem');
     } finally {
       setUploading(null);

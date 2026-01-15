@@ -310,7 +310,7 @@ export default function PedidosGradeFechadaPage() {
                         <p className="text-sm font-semibold text-gray-900 mb-1">Numerações:</p>
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(item.numeracoes)
-                            .filter(([_, qtd]) => qtd > 0)
+                            .filter(([, qtd]) => qtd > 0)
                             .map(([num, qtd]) => (
                               <span
                                 key={num}

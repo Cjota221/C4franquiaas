@@ -95,7 +95,7 @@ export default function CarrinhoEncomendaPage() {
       
       mensagem += `*Numerações:*\n`;
       Object.entries(item.numeracoes)
-        .filter(([_, qtd]) => qtd > 0)
+        .filter(([, qtd]) => qtd > 0)
         .sort(([a], [b]) => parseInt(a) - parseInt(b))
         .forEach(([num, qtd]) => {
           mensagem += `  • Nº ${num}: ${qtd} ${qtd === 1 ? 'par' : 'pares'}\n`;
@@ -275,7 +275,7 @@ export default function CarrinhoEncomendaPage() {
                 <h4 className="font-semibold text-gray-900 mb-3">Numerações:</h4>
                 <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
                   {Object.entries(item.numeracoes)
-                    .filter(([_, qtd]) => qtd > 0)
+                    .filter(([, qtd]) => qtd > 0)
                     .sort(([a], [b]) => parseInt(a) - parseInt(b))
                     .map(([num, qtd]) => (
                       <div
