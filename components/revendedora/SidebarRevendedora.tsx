@@ -1,16 +1,19 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, Menu, X, ShoppingCart, Tag, Settings, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
-import { memo, useState } from 'react';
+import { Home, Package, Palette, LogOut, ShoppingCart, Tag, Settings, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
+import { memo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
 import { useNewProductsCount } from '@/hooks/useNewProductsCount';
 
+/**
+ * SidebarRevendedora - APENAS DESKTOP
+ * No mobile, a navegação é feita pelo MobileNavigation (Bottom Bar + Drawer)
+ */
 const SidebarRevendedora = memo(function SidebarRevendedora() {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { count: newProductsCount } = useNewProductsCount();
 
   const menuItems = [
@@ -35,28 +38,16 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
 
   return (
     <>
-      {/* Botão Hamburger - Fixo no topo */}
-      <button 
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all"
-        aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-      >
-        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* Sidebar - Mobile: Full Height | Desktop: Sticky */}
-      <aside className={`
-        fixed lg:sticky 
-        top-0 left-0 
+      {/* Sidebar - SOMENTE DESKTOP (hidden no mobile) */}
+      <aside className="
+        hidden lg:flex
+        sticky top-0 left-0 
         h-screen 
         w-64 
         bg-white 
         border-r border-gray-200 
-        flex flex-col 
-        z-40 
-        transition-transform duration-300 
-        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+        flex-col
+      ">
         {/* Header da Sidebar */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -78,7 +69,6 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
               <Link 
                 key={item.href} 
                 href={item.href} 
-                onClick={() => setMobileMenuOpen(false)} 
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative
                   ${isActive(item.href) 
@@ -117,14 +107,6 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
           </button>
         </div>
       </aside>
-
-      {/* Overlay escuro quando menu mobile está aberto */}
-      {mobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-30" 
-          onClick={() => setMobileMenuOpen(false)} 
-        />
-      )}
     </>
   );
 });
