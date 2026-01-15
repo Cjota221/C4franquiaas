@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -111,8 +112,8 @@ export default function LojaIdentidadeSection({ loja, onChange, onUpload }: Loja
             <Label className="text-sm font-medium mb-2 block">Logo da Loja</Label>
             <div className="flex flex-col sm:flex-row items-start gap-4">
               {loja.logo && (
-                <div className="w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                  <img src={loja.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                <div className="w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center relative">
+                  <Image src={loja.logo} alt="Logo" fill className="object-contain" unoptimized />
                 </div>
               )}
               <div className="flex-1 w-full">
@@ -149,8 +150,8 @@ export default function LojaIdentidadeSection({ loja, onChange, onUpload }: Loja
             <Label className="text-sm font-medium mb-2 block">Favicon (Ícone do Navegador)</Label>
             <div className="flex flex-col sm:flex-row items-start gap-4">
               {loja.favicon && (
-                <div className="w-16 h-16 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                  <img src={loja.favicon} alt="Favicon" className="max-w-full max-h-full object-contain" />
+                <div className="w-16 h-16 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center relative">
+                  <Image src={loja.favicon} alt="Favicon" fill className="object-contain" unoptimized />
                 </div>
               )}
               <div className="flex-1 w-full">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -185,12 +186,14 @@ export default function ProdutosGradeFechadaPage() {
               <Card key={produto.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-4">
                   {/* Imagem */}
-                  <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                  <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center relative">
                     {imagemCapa ? (
-                      <img
+                      <Image
                         src={imagemCapa}
                         alt={produto.nome}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                     ) : (
                       <Package className="h-8 w-8 text-gray-400" />

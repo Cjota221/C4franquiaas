@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Truck, Loader2, MapPin, AlertCircle } from 'lucide-react';
 
 
@@ -199,7 +200,7 @@ export default function CheckoutShippingSelector({
               />
               <div className="flex items-center gap-3 flex-1">
                 {opcao.logo && (
-                  <img src={opcao.logo} alt={opcao.nome} className="w-12 h-12 object-contain" />
+                  <Image src={opcao.logo} alt={opcao.nome} width={48} height={48} className="w-12 h-12 object-contain" unoptimized />
                 )}
                 <div>
                   <p className="font-semibold text-gray-900">{opcao.nome}</p>

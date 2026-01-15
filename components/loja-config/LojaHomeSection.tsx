@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -103,11 +104,13 @@ export default function LojaHomeSection({
           <div>
             <Label className="text-sm font-medium mb-2 block">Banner de Fundo</Label>
             {loja.banner_hero && (
-              <div className="mb-3 rounded-lg overflow-hidden border-2 border-gray-200">
-                <img
+              <div className="mb-3 rounded-lg overflow-hidden border-2 border-gray-200 relative h-48">
+                <Image
                   src={loja.banner_hero}
                   alt="Banner Hero"
-                  className="w-full h-48 object-cover"
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
               </div>
             )}
@@ -280,11 +283,13 @@ export default function LojaHomeSection({
 
                     {/* Imagem do Banner */}
                     {banner.imagem && (
-                      <div className="rounded overflow-hidden border border-gray-200">
-                        <img
+                      <div className="rounded overflow-hidden border border-gray-200 relative h-32">
+                        <Image
                           src={banner.imagem}
                           alt={banner.titulo}
-                          className="w-full h-32 object-cover"
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                     )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Sparkles, Upload, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BannerEditorFinal from "./BannerEditorFinal";
@@ -143,7 +144,7 @@ export default function BannerSelector({ onSave, onCancel }: BannerSelectorProps
             {uploadedImages.desktop ? (
               <div className="space-y-3">
                 <div className="relative aspect-[1920/600] rounded-lg overflow-hidden border-2 border-green-300">
-                  <img src={uploadedImages.desktop} alt="Desktop" className="w-full h-full object-cover" />
+                  <Image src={uploadedImages.desktop} alt="Desktop" fill className="object-cover" unoptimized />
                 </div>
                 <button
                   onClick={() => setUploadedImages(prev => ({ ...prev, desktop: null }))}
@@ -181,7 +182,7 @@ export default function BannerSelector({ onSave, onCancel }: BannerSelectorProps
             {uploadedImages.mobile ? (
               <div className="space-y-3">
                 <div className="relative aspect-square max-w-xs mx-auto rounded-lg overflow-hidden border-2 border-green-300">
-                  <img src={uploadedImages.mobile} alt="Mobile" className="w-full h-full object-cover" />
+                  <Image src={uploadedImages.mobile} alt="Mobile" fill className="object-cover" unoptimized />
                 </div>
                 <button
                   onClick={() => setUploadedImages(prev => ({ ...prev, mobile: null }))}

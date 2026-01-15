@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ProdutoRelacionado = {
@@ -131,15 +132,13 @@ export default function ProdutosRelacionados({
                   >
                     {/* Imagem */}
                     <div className="relative aspect-square overflow-hidden bg-gray-100">
-                      <img
+                      <Image
                         src={imagemPrincipal}
                         alt={produto.nome}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sem+Imagem';
-                        }}
+                        fill
+                        sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 220px, 240px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        unoptimized
                       />
                       
                       {/* Badge "Ver Produto" no hover */}
