@@ -92,10 +92,10 @@ export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
                           shadow-[0_4px_12px_rgba(0,0,0,0.15),0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]
                           overflow-hidden">
               <Image
-                src="/logo-original.png"
+                src="/logo-c4.png"
                 alt="C4 Franquias"
                 fill
-                className="object-contain p-1.5"
+                className="object-cover"
                 priority
               />
             </div>
