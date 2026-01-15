@@ -318,13 +318,13 @@ export default function LandingPage() {
               {/* CTA Demonstração */}
               <div className="mt-6">
                 <a
-                  href="https://c4franquias.netlify.app/loja-grade/cjota-rasteirinhas"
+                  href="https://c4franquias.com/catalogo/vivaz"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-pink-600 font-medium hover:text-pink-700 transition-colors"
                 >
                   <Store className="w-5 h-5" />
-                  Ver site de demonstração
+                  Ver como fica o site
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
@@ -402,6 +402,20 @@ export default function LandingPage() {
               </div>
               
             </div>
+            
+            {/* CTA Ver Demonstração */}
+            <div className="text-center mt-10">
+              <a
+                href="https://c4franquias.com/catalogo/vivaz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-pink-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors shadow-lg"
+              >
+                <Store className="w-5 h-5" />
+                Quero ver como fica o site
+              </a>
+              <p className="text-gray-500 text-sm mt-3">Veja um exemplo real funcionando</p>
+            </div>
           </AnimatedSection>
         </div>
       </section>
@@ -462,6 +476,20 @@ export default function LandingPage() {
                   <p className="text-gray-600 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               ))}
+            </div>
+            
+            {/* CTA Ver Demonstração */}
+            <div className="text-center mt-10">
+              <a
+                href="https://c4franquias.com/catalogo/vivaz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-pink-600 font-medium hover:text-pink-700 transition-colors text-lg"
+              >
+                <Store className="w-5 h-5" />
+                Ver exemplo de site funcionando
+                <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
           </AnimatedSection>
         </div>
