@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { 
@@ -376,56 +376,70 @@ export default function ProdutosRevendedoraPage() {
     });
   }
 
-  // Filtrar produtos
-  const categorias = ['todas', ...new Set(produtos.map(p => p.categorias))];
-
-  // Contar produtos sem margem (para exibir no filtro)
-  const produtosSemMargemCount = produtos.filter(p => produtoSemMargem(p)).length;
-
-  // 🆕 Identificar produtos novos (desativados + sem margem ou margem zero)
-  const produtosNovos = produtos.filter(p => 
-    !p.is_active && (p.margin_percent === 0 || p.margin_percent === null || p.margin_percent === undefined)
+  // ⚡ MEMOIZAÇÃO: Calcular categorias disponíveis
+  const categorias = useMemo(() => 
+    ['todas', ...new Set(produtos.map(p => p.categorias))],
+    [produtos]
   );
 
-  const produtosFiltrados = produtos.filter(p => {
-    const matchBusca = p.nome.toLowerCase().includes(buscaDebounced.toLowerCase());
-    const matchCategoria = categoriaFiltro === 'todas' || p.categorias === categoriaFiltro;
-    const matchStatus = statusFiltro === 'todos' || 
-      (statusFiltro === 'ativo' && p.is_active) ||
-      (statusFiltro === 'inativo' && !p.is_active);
-    const matchEstoque = estoqueFiltro === 'todos' ||
-      (estoqueFiltro === 'disponivel' && p.estoque > 0) ||
-      (estoqueFiltro === 'esgotado' && p.estoque === 0);
-    const matchMargem = margemFiltro === 'todos' ||
-      (margemFiltro === 'sem-margem' && produtoSemMargem(p)) ||
-      (margemFiltro === 'com-margem' && !produtoSemMargem(p));
-    
-    return matchBusca && matchCategoria && matchStatus && matchEstoque && matchMargem;
-  });
+  // ⚡ MEMOIZAÇÃO: Contar produtos sem margem
+  const produtosSemMargemCount = useMemo(() =>
+    produtos.filter(p => produtoSemMargem(p)).length,
+    [produtos]
+  );
 
-  // Ordenar produtos
-  const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
-    let comparison = 0;
-    
-    if (sortBy === 'nome') {
-      comparison = a.nome.localeCompare(b.nome);
-    } else if (sortBy === 'preco_final') {
-      comparison = a.preco_final - b.preco_final;
-    } else if (sortBy === 'margin_percent') {
-      comparison = a.margin_percent - b.margin_percent;
-    }
-    
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
+  // ⚡ MEMOIZAÇÃO: Identificar produtos novos
+  const produtosNovos = useMemo(() =>
+    produtos.filter(p => 
+      !p.is_active && (p.margin_percent === 0 || p.margin_percent === null || p.margin_percent === undefined)
+    ),
+    [produtos]
+  );
 
-  // Estatísticas
-  const stats = {
+  // ⚡ MEMOIZAÇÃO: Filtrar produtos
+  const produtosFiltrados = useMemo(() => {
+    return produtos.filter(p => {
+      const matchBusca = p.nome.toLowerCase().includes(buscaDebounced.toLowerCase());
+      const matchCategoria = categoriaFiltro === 'todas' || p.categorias === categoriaFiltro;
+      const matchStatus = statusFiltro === 'todos' || 
+        (statusFiltro === 'ativo' && p.is_active) ||
+        (statusFiltro === 'inativo' && !p.is_active);
+      const matchEstoque = estoqueFiltro === 'todos' ||
+        (estoqueFiltro === 'disponivel' && p.estoque > 0) ||
+        (estoqueFiltro === 'esgotado' && p.estoque === 0);
+      const matchMargem = margemFiltro === 'todos' ||
+        (margemFiltro === 'sem-margem' && produtoSemMargem(p)) ||
+        (margemFiltro === 'com-margem' && !produtoSemMargem(p));
+      
+      return matchBusca && matchCategoria && matchStatus && matchEstoque && matchMargem;
+    });
+  }, [produtos, buscaDebounced, categoriaFiltro, statusFiltro, estoqueFiltro, margemFiltro]);
+
+  // ⚡ MEMOIZAÇÃO: Ordenar produtos
+  const produtosOrdenados = useMemo(() => {
+    return [...produtosFiltrados].sort((a, b) => {
+      let comparison = 0;
+      
+      if (sortBy === 'nome') {
+        comparison = a.nome.localeCompare(b.nome);
+      } else if (sortBy === 'preco_final') {
+        comparison = a.preco_final - b.preco_final;
+      } else if (sortBy === 'margin_percent') {
+        comparison = a.margin_percent - b.margin_percent;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [produtosFiltrados, sortBy, sortDirection]);
+
+  // ⚡ MEMOIZAÇÃO: Estatísticas
+  const stats = useMemo(() => ({
     total: produtos.length,
     ativos: produtos.filter(p => p.is_active).length,
     inativos: produtos.filter(p => !p.is_active).length,
     comEstoque: produtos.filter(p => p.estoque > 0).length,
     novos: produtosNovos.length
-  };
+  }), [produtos, produtosNovos]);
 
   // Selecionar/desselecionar todos
   const toggleSelectAll = () => {
