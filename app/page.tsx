@@ -176,71 +176,64 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section - CTA inicial */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-pink-50/50">
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-16 md:py-20 text-center">
-          <div className="max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-white text-pink-700 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold mb-6 md:mb-8 shadow-sm border border-pink-100">
+      <section className="relative pt-20 pb-8 sm:pb-12 md:pb-16 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-pink-50/50">
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 sm:py-10 md:py-12 text-center">
+          <div className="max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 bg-white text-pink-700 px-3 py-1.5 rounded-full text-xs font-semibold mb-4 shadow-sm border border-pink-100">
               <span>🚀 Rede de Franquias Cjota Rasteirinhas</span>
             </div>
 
-            <h1 className="text-[32px] sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.1] mb-5 md:mb-6">
+            <h1 className="text-[28px] sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 leading-[1.15] mb-4">
               Venda com
-              <span className="block mt-1 md:mt-2 text-pink-600">
-                estrutura profissional
-              </span>
+              <span className="text-pink-600"> estrutura profissional</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed mb-8 md:mb-10 max-w-2xl mx-auto px-2">
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed mb-6 max-w-xl mx-auto">
               O C4 Franquias nasceu para <strong className="text-gray-900">mudar a forma como as revendedoras vendem pela internet.</strong>
             </p>
 
-            {/* CTAs - Botoes maiores para touch (min 48px) */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10 md:mb-12 px-2">
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
               <Link
                 href="/cadastro/revendedora"
-                className="group relative inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-6 sm:px-8 py-4 rounded-full font-bold text-base sm:text-lg shadow-lg hover:bg-pink-700 hover:-translate-y-1 transition-all min-h-[52px]"
+                className="group inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-6 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg hover:bg-pink-700 active:scale-[0.98] transition-all min-h-[48px]"
               >
                 <span>Quero ser franqueada</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-6 sm:px-8 py-4 rounded-full font-bold text-base sm:text-lg border-2 border-gray-200 hover:border-pink-600 hover:text-pink-600 hover:-translate-y-1 transition-all shadow-sm min-h-[52px]"
+                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-6 py-3.5 rounded-full font-bold text-sm sm:text-base border-2 border-gray-200 hover:border-pink-600 hover:text-pink-600 active:scale-[0.98] transition-all min-h-[48px]"
               >
                 Já sou franqueada
               </Link>
             </div>
 
             {/* Badge */}
-            <div className="flex items-center justify-center gap-3 sm:gap-4">
-              <div className="flex -space-x-2 sm:-space-x-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-600 border-2 border-white flex items-center justify-center text-white font-bold text-xs sm:text-sm">C</div>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-500 border-2 border-white flex items-center justify-center text-white font-bold text-xs sm:text-sm">J</div>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-400 border-2 border-white flex items-center justify-center text-white font-bold text-xs sm:text-sm">R</div>
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex -space-x-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-600 border-2 border-white flex items-center justify-center text-white font-bold text-xs">C</div>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-500 border-2 border-white flex items-center justify-center text-white font-bold text-xs">J</div>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-pink-400 border-2 border-white flex items-center justify-center text-white font-bold text-xs">R</div>
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">
+              <div className="text-xs text-gray-600">
                 <strong className="text-gray-900">+50 franqueadas</strong> já vendendo
               </div>
             </div>
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronDown className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
-        </div>
       </section>
 
       {/* 🔥 SEÇÃO 1: Vídeo "O que é o C4?" + Texto MENSAGEM 1 */}
-      <section id="como-funciona" className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="como-funciona" className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda - formato vertical (stories) */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-[260px] sm:max-w-[280px] md:max-w-sm">
-                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-100 hover:border-pink-400 transition-all group">
+                <div className="w-full max-w-[220px] sm:max-w-[240px] md:max-w-[280px]">
+                  <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-200">
                     {/* Container do vídeo - aspect ratio 9:16 (stories) */}
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
@@ -248,8 +241,7 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/rg19bj.MP4"
                         playsInline
                         controls
-                        preload="none"
-                        poster="https://i.ibb.co/placeholder-video1.jpg"
+                        preload="metadata"
                       />
                     </div>
                   </div>
@@ -327,22 +319,22 @@ export default function LandingPage() {
       </section>
 
       {/* 📦 SEÇÃO 2: Vídeo "Pedido e Entrega" + Texto MENSAGEM 2 */}
-      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-[260px] sm:max-w-[280px] md:max-w-sm">
-                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-100 hover:border-pink-400 transition-all group">
+                <div className="w-full max-w-[220px] sm:max-w-[240px] md:max-w-[280px]">
+                  <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-200">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
                         src="https://files.catbox.moe/hzg1c3.MP4"
                         playsInline
                         controls
-                        preload="none"
+                        preload="metadata"
                       />
                     </div>
                   </div>
@@ -406,22 +398,22 @@ export default function LandingPage() {
       </section>
 
       {/* 💰 SEÇÃO 3: Vídeo "Precisa Pagar?" + Texto MENSAGEM 3 */}
-      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-[260px] sm:max-w-[280px] md:max-w-sm">
-                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-100 hover:border-green-400 transition-all group">
+                <div className="w-full max-w-[220px] sm:max-w-[240px] md:max-w-[280px]">
+                  <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-200">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
                         src="https://files.catbox.moe/ukwqyj.MP4"
                         playsInline
                         controls
-                        preload="none"
+                        preload="metadata"
                       />
                     </div>
                   </div>
@@ -469,22 +461,22 @@ export default function LandingPage() {
       </section>
 
       {/* 🏷️ SEÇÃO 4: Vídeo "Definir Preços" + Texto MENSAGEM 4 */}
-      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-[260px] sm:max-w-[280px] md:max-w-sm">
-                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-100 hover:border-pink-400 transition-all group">
+                <div className="w-full max-w-[220px] sm:max-w-[240px] md:max-w-[280px]">
+                  <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-200">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
                         src="https://files.catbox.moe/495y6q.MP4"
                         playsInline
                         controls
-                        preload="none"
+                        preload="metadata"
                       />
                     </div>
                   </div>
@@ -539,22 +531,22 @@ export default function LandingPage() {
       </section>
 
       {/* 🎨 SEÇÃO 5: Vídeo "Personalização" + Texto MENSAGEM 5 */}
-      <section className="py-10 sm:py-14 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
               
               {/* Vídeo à esquerda */}
               <div className="flex justify-center lg:justify-end">
-                <div className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm">
-                  <div className="relative bg-gray-900 rounded-2xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl border-2 md:border-4 border-gray-200 hover:border-purple-500 transition-all group">
+                <div className="w-full max-w-[220px] sm:max-w-[240px] md:max-w-[280px]">
+                  <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-200">
                     <div className="relative" style={{ paddingBottom: '177.78%' }}>
                       <video
                         className="absolute inset-0 w-full h-full object-cover"
                         src="https://files.catbox.moe/k5n0ja.MP4"
                         playsInline
                         controls
-                        preload="none"
+                        preload="metadata"
                       />
                     </div>
                   </div>
@@ -748,7 +740,7 @@ export default function LandingPage() {
       </section>
 
       {/* 💰 MENSAGEM 3 - Precisa pagar para entrar? */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-50">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto text-center">
@@ -788,7 +780,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🏷️ MENSAGEM 4 - Posso escolher meu preço? */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto">
@@ -835,7 +827,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🎨 MENSAGEM 5 - Personalização do Site */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-50">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto">
@@ -904,7 +896,7 @@ export default function LandingPage() {
       </section>
 
       {/* 📝 MENSAGEM 6 - Cadastro no Projeto */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-pink-600 text-white">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-pink-600 text-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto text-center">
@@ -955,7 +947,7 @@ export default function LandingPage() {
       </section>
 
       {/* O que é o C4 Franquias */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10">
@@ -1065,7 +1057,7 @@ export default function LandingPage() {
       </section>
 
       {/* Como Funciona - Passo a Passo Detalhado */}
-      <section id="como-funciona" className="py-10 sm:py-14 md:py-16 px-5 bg-gray-900 text-white">
+      <section id="como-funciona" className="py-8 sm:py-10 md:py-12 px-4 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10 md:mb-16">
@@ -1154,7 +1146,7 @@ export default function LandingPage() {
       </section>
 
       {/* Vantagens */}
-      <section id="vantagens" className="py-10 sm:py-14 md:py-16 px-5 bg-white">
+      <section id="vantagens" className="py-8 sm:py-10 md:py-12 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10">
@@ -1187,7 +1179,7 @@ export default function LandingPage() {
       </section>
 
       {/* Depoimento */}
-      <section className="py-8 sm:py-10 md:py-14 px-5 bg-gray-50">
+      <section className="py-6 sm:py-8 md:py-10 px-4 bg-gray-50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center">
             <div className="flex justify-center gap-0.5 mb-4">
@@ -1209,10 +1201,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold mb-3">Dúvidas</span>
+          <div className="text-center mb-8">
+            <span className="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold mb-2">Dúvidas</span>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900">Perguntas Frequentes</h2>
           </div>
 
@@ -1238,7 +1230,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-900">
+      <section className="py-8 sm:py-10 md:py-12 px-4 bg-gray-900">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-pink-300 px-4 py-2 rounded-full text-xs font-semibold mb-6 border border-pink-500/20">
             <Clock className="w-4 h-4" />
