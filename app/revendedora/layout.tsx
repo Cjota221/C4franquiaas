@@ -306,18 +306,24 @@ export default function RevendedoraRootLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <GoogleAnalyticsTracker />
       <PWAInstallPrompt />
       <OnboardingTutorial />
+      
+      {/* Sidebar Desktop */}
       <SidebarRevendedora />
+      
+      {/* Área Principal */}
       <main className="flex-1 w-full lg:ml-0">
-        <div className="pt-16 lg:pt-0 pb-20 lg:pb-0">
+        {/* Padding para acomodar Header (top) e Bottom Bar (bottom) no mobile */}
+        <div className="pt-14 pb-20 lg:pt-0 lg:pb-0 min-h-screen">
           <AlertaProdutosSemMargem />
           {children}
         </div>
       </main>
-      {/* Mobile Navigation - Bottom Bar + Drawer */}
+      
+      {/* Mobile Navigation - Header (Top) + Bottom Bar + Drawer */}
       <MobileNavigation />
     </div>
   );

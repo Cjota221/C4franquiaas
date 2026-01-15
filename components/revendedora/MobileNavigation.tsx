@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -8,7 +8,6 @@ import {
   Package, 
   GraduationCap, 
   User,
-  Menu,
   X,
   Palette,
   FolderOpen,
@@ -20,6 +19,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import MobileHeader from './MobileHeader';
 
 // Itens da Bottom Navigation (principais)
 const bottomNavItems = [
@@ -50,6 +50,9 @@ export default function MobileNavigation() {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -60,11 +63,13 @@ export default function MobileNavigation() {
 
   return (
     <>
-      {/* Bottom Navigation - Fixo no rodapé (Mobile Only) */}
+      {/* ========== HEADER (App Bar) ========== */}
+      <MobileHeader onMenuClick={openDrawer} />
+
+      {/* ========== BOTTOM BAR ========== */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 safe-area-bottom">
-        {/* Background com sombra e gradiente sutil */}
-        <div className="bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center justify-around h-[72px] px-2">
+        <div className="bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-around h-16 px-1">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -74,74 +79,66 @@ export default function MobileNavigation() {
                   key={item.href}
                   href={item.href}
                   className={`
-                    flex flex-col items-center justify-center gap-1 px-3 py-2 min-w-[60px] rounded-xl
+                    flex flex-col items-center justify-center gap-0.5 flex-1 py-2
                     transition-all duration-200
                     ${active 
                       ? 'text-pink-600' 
-                      : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
+                      : 'text-gray-500 active:text-gray-700'
                     }
                   `}
                 >
                   <div className={`
-                    p-2 rounded-xl transition-all duration-200
-                    ${active ? 'bg-pink-100 shadow-sm' : ''}
+                    p-1.5 rounded-xl transition-all duration-200
+                    ${active ? 'bg-pink-100' : ''}
                   `}>
                     <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
                   </div>
                   <span className={`
-                    text-[11px] leading-tight
-                    ${active ? 'font-semibold text-pink-600' : 'font-medium text-gray-500'}
+                    text-[10px] leading-tight
+                    ${active ? 'font-bold' : 'font-medium'}
                   `}>
                     {item.label}
                   </span>
                 </Link>
               );
             })}
-            
-            {/* Botão Menu */}
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 min-w-[60px] rounded-xl
-                       text-gray-500 hover:text-gray-700 active:bg-gray-100 transition-all duration-200"
-            >
-              <div className="p-2">
-                <Menu className="w-5 h-5" strokeWidth={2} />
-              </div>
-              <span className="text-[11px] font-medium leading-tight">Menu</span>
-            </button>
           </div>
         </div>
       </nav>
 
-      {/* Drawer/Sidebar - Full Screen Overlay */}
+      {/* ========== DRAWER (Slide da Esquerda) ========== */}
       <div className={`
         lg:hidden fixed inset-0 z-50 transition-opacity duration-300
         ${drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
       `}>
-        {/* Overlay escuro */}
+        {/* Backdrop escuro */}
         <div 
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={() => setDrawerOpen(false)}
+          className={`
+            absolute inset-0 bg-black/60 backdrop-blur-sm
+            transition-opacity duration-300
+            ${drawerOpen ? 'opacity-100' : 'opacity-0'}
+          `}
+          onClick={closeDrawer}
         />
         
-        {/* Drawer Panel - Direita, altura total */}
+        {/* Drawer Panel - ESQUERDA */}
         <div className={`
-          absolute top-0 right-0 bottom-0 w-[300px] max-w-[85vw] bg-white
+          absolute top-0 left-0 bottom-0 w-[280px] max-w-[85vw] bg-white
           flex flex-col
           transform transition-transform duration-300 ease-out shadow-2xl
-          ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}
+          ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           {/* Header do Drawer */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 
+                        bg-gradient-to-r from-pink-500 to-purple-500 text-white">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Painel</h2>
-              <p className="text-xs text-gray-500">Navegue pelo menu</p>
+              <h2 className="text-lg font-bold">Painel C4</h2>
+              <p className="text-xs text-white/80">Gerencie sua loja</p>
             </div>
-            {/* Botão X - Clean, sem quadrado */}
+            {/* Botão X */}
             <button
-              onClick={() => setDrawerOpen(false)}
-              className="p-3 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 
-                       rounded-full transition-all active:scale-95"
+              onClick={closeDrawer}
+              className="p-2 -mr-2 hover:bg-white/20 rounded-xl transition-all active:scale-95"
               aria-label="Fechar menu"
             >
               <X className="w-6 h-6" />
@@ -160,9 +157,9 @@ export default function MobileNavigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={closeDrawer}
                     className={`
-                      flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all active:scale-[0.98]
+                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:scale-[0.98]
                       ${active 
                         ? 'bg-pink-50 text-pink-600 shadow-sm' 
                         : highlight
@@ -184,7 +181,7 @@ export default function MobileNavigation() {
                     </div>
                     <span className="flex-1 font-medium text-[15px]">{item.label}</span>
                     {highlight && !active && (
-                      <span className="text-[10px] bg-purple-500 text-white px-2 py-1 rounded-full font-semibold">
+                      <span className="text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-semibold">
                         NOVO
                       </span>
                     )}
@@ -196,7 +193,7 @@ export default function MobileNavigation() {
           </nav>
 
           {/* Footer - Configurações e Logout fixos */}
-          <div className="border-t border-gray-100 bg-gray-50/30 p-3 space-y-1">
+          <div className="border-t border-gray-100 bg-gray-50/50 p-3 space-y-1">
             {/* Configurações */}
             {drawerFooterItems.map((item) => {
               const Icon = item.icon;
@@ -206,7 +203,7 @@ export default function MobileNavigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={closeDrawer}
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all
                     ${active 
