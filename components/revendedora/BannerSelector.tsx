@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Sparkles, Upload, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import BannerEditorFinal from "./BannerEditorFinal";
+import BannerEditorPremium from "./BannerEditorPremium";
 
 interface BannerData {
   templateId: string | null;
@@ -42,7 +42,7 @@ export default function BannerSelector({ onSave, onCancel }: BannerSelectorProps
 
   // Se escolheu template, mostra o editor
   if (mode === "template") {
-    return <BannerEditorFinal onSave={onSave} onCancel={() => setMode("select")} />;
+    return <BannerEditorPremium onSave={onSave} onCancel={() => setMode("select")} />;
   }
 
   // Se escolheu upload próprio
