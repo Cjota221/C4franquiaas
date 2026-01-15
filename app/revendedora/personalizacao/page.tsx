@@ -514,7 +514,8 @@ export default function PersonalizacaoRevendedoraPage() {
           </button>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:left-64">
+        {/* Botão Salvar - Fixo acima da Bottom Bar no mobile */}
+        <div className="fixed bottom-20 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg lg:bottom-0 lg:left-64 z-30">
           <button onClick={handleSave} disabled={saving || !storeName} className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${saved ? "bg-green-500 text-white" : saving ? "bg-pink-300 text-white" : !storeName ? "bg-gray-200 text-gray-400" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white"}`}>
             {saving ? (<><Loader2 className="w-6 h-6 animate-spin" />Salvando...</>) : saved ? (<><Check className="w-6 h-6" />Salvo!</>) : (<><Save className="w-6 h-6" />Salvar Alteracoes</>)}
           </button>
