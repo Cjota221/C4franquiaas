@@ -19,7 +19,8 @@ import {
   Monitor,
   Smartphone,
   Minus,
-  Plus
+  Plus,
+  Move
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -56,7 +57,7 @@ interface BannerEditorProps {
   onCancel: () => void;
 }
 
-// Combinações de fontes (mantida a lógica original)
+// Combinações de fontes
 const FONT_COMBINATIONS = [
   { name: "Elegante Clássica", title: "Playfair Display", body: "Lato", titleWeight: "700", bodyWeight: "400" },
   { name: "Moderna Limpa", title: "Montserrat", body: "Open Sans", titleWeight: "600", bodyWeight: "400" },
@@ -84,8 +85,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("template");
   const [activeView, setActiveView] = useState<"desktop" | "mobile">("mobile");
-  const desktopRef = useRef<HTMLDivElement>(null);
-  const mobileRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   
   const [bannerData, setBannerData] = useState<BannerData>({
     templateId: "",
@@ -136,10 +136,9 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
 
   // Handler de arrastar texto
   const handleDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-    const ref = activeView === "desktop" ? desktopRef : mobileRef;
-    if (!ref.current) return;
+    if (!previewRef.current) return;
 
-    const rect = ref.current.getBoundingClientRect();
+    const rect = previewRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -189,6 +188,96 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
   const canGoNext = currentStep === "template" ? !!bannerData.templateId : 
                     currentStep === "text" ? !!bannerData.titulo : true;
 
+  // Componente de Preview do Banner (reutilizado)
+  const BannerPreview = ({ clickable = false }: { clickable?: boolean }) => {
+    if (!selectedTemplate) return null;
+    
+    const isMobile = activeView === "mobile";
+    
+    return (
+      <div 
+        ref={clickable ? previewRef : undefined}
+        onClick={clickable ? handleDrag : undefined}
+        className={`
+          relative rounded-2xl overflow-hidden shadow-xl 
+          ${clickable ? "cursor-crosshair" : ""}
+          ${isMobile 
+            ? "max-w-sm w-full" 
+            : "w-full"
+          }
+          ${isMobile ? "border-4 border-purple-200" : "border-4 border-pink-200"}
+        `}
+      >
+        <Image
+          src={isMobile ? selectedTemplate.mobile_url : selectedTemplate.desktop_url}
+          alt="Preview"
+          width={isMobile ? 800 : 1920}
+          height={isMobile ? 800 : 600}
+          className="w-full h-auto"
+        />
+        {/* Texto sobreposto */}
+        <div
+          className="absolute"
+          style={{
+            left: `${currentPosition.x}%`,
+            top: `${currentPosition.y}%`,
+            transform: 'translate(-50%, 0)',
+            maxWidth: isMobile ? '85%' : '400px',
+            textAlign: isMobile ? bannerData.mobileAlignment : bannerData.desktopAlignment,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: `${bannerData.lineSpacing}px`,
+          }}
+        >
+          {bannerData.titulo && (
+            <h2 
+              className="font-bold drop-shadow-2xl whitespace-nowrap"
+              style={{
+                fontFamily: currentCombo.title,
+                fontWeight: currentCombo.titleWeight,
+                letterSpacing: `${bannerData.letterSpacing}px`,
+                fontSize: `calc(${isMobile ? '2rem' : '3rem'} * ${(isMobile ? bannerData.mobileFontSize : bannerData.desktopFontSize) / 100})`,
+                color: bannerData.textColor,
+              }}
+            >
+              {bannerData.titulo}
+            </h2>
+          )}
+          {bannerData.subtitulo && (
+            <p 
+              className="drop-shadow-xl whitespace-nowrap"
+              style={{
+                fontFamily: currentCombo.body,
+                fontWeight: currentCombo.bodyWeight,
+                letterSpacing: `${bannerData.letterSpacing}px`,
+                fontSize: `calc(${isMobile ? '1rem' : '1.125rem'} * ${(isMobile ? bannerData.mobileFontSize : bannerData.desktopFontSize) / 100})`,
+                color: bannerData.textColor,
+                opacity: 0.95,
+              }}
+            >
+              {bannerData.subtitulo}
+            </p>
+          )}
+          {bannerData.textoAdicional && (
+            <p 
+              className="drop-shadow-xl whitespace-nowrap"
+              style={{
+                fontFamily: currentCombo.body,
+                fontWeight: currentCombo.bodyWeight,
+                letterSpacing: `${bannerData.letterSpacing}px`,
+                fontSize: `calc(${isMobile ? '0.75rem' : '0.875rem'} * ${(isMobile ? bannerData.mobileFontSize : bannerData.desktopFontSize) / 100})`,
+                color: bannerData.textColor,
+                opacity: 0.9,
+              }}
+            >
+              {bannerData.textoAdicional}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
@@ -214,7 +303,7 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
           
           <h1 className="text-lg font-semibold text-gray-900">Criar Banner</h1>
           
-          <div className="w-10" /> {/* Spacer */}
+          <div className="w-10" />
         </div>
       </header>
 
@@ -327,403 +416,417 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
             </div>
           )}
 
-          {/* STEP 2: Textos */}
-          {currentStep === "text" && (
-            <div className="space-y-6 max-w-lg mx-auto">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Adicione seus textos
-                </h2>
-                <p className="text-gray-500">
-                  Escreva o que vai aparecer no banner
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                {/* Título */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Título principal <span className="text-pink-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={bannerData.titulo}
-                    onChange={(e) => setBannerData({ ...bannerData, titulo: e.target.value })}
-                    placeholder="Ex: Conforto"
-                    className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
-                             focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
-                             transition-all placeholder:text-gray-300"
-                    maxLength={40}
-                  />
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>Obrigatório</span>
-                    <span>{bannerData.titulo.length}/40</span>
-                  </div>
-                </div>
-
-                {/* Subtítulo */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Subtítulo
-                  </label>
-                  <input
-                    type="text"
-                    value={bannerData.subtitulo}
-                    onChange={(e) => setBannerData({ ...bannerData, subtitulo: e.target.value })}
-                    placeholder="Ex: em cada passo"
-                    className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
-                             focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
-                             transition-all placeholder:text-gray-300"
-                    maxLength={50}
-                  />
-                  <div className="flex justify-end text-xs text-gray-400">
-                    <span>{bannerData.subtitulo.length}/50</span>
-                  </div>
-                </div>
-
-                {/* Texto adicional */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Texto adicional
-                  </label>
-                  <input
-                    type="text"
-                    value={bannerData.textoAdicional}
-                    onChange={(e) => setBannerData({ ...bannerData, textoAdicional: e.target.value })}
-                    placeholder="Ex: conheça nossa coleção"
-                    className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
-                             focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
-                             transition-all placeholder:text-gray-300"
-                    maxLength={60}
-                  />
-                  <div className="flex justify-end text-xs text-gray-400">
-                    <span>{bannerData.textoAdicional.length}/60</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mini Preview */}
-              {bannerData.titulo && (
-                <div className="bg-gray-900 rounded-2xl p-6 text-center">
-                  <p className="text-xs text-gray-400 mb-3">Prévia</p>
-                  <p 
-                    className="text-2xl font-bold mb-1"
-                    style={{ fontFamily: currentCombo.title, color: bannerData.textColor }}
-                  >
-                    {bannerData.titulo}
+          {/* STEP 2: Textos - Com preview em tempo real */}
+          {currentStep === "text" && selectedTemplate && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Coluna de controles */}
+              <div className="space-y-6 order-2 lg:order-1">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    Adicione seus textos
+                  </h2>
+                  <p className="text-gray-500">
+                    Digite e veja em tempo real no banner
                   </p>
-                  {bannerData.subtitulo && (
-                    <p 
-                      className="text-base opacity-90"
-                      style={{ fontFamily: currentCombo.body, color: bannerData.textColor }}
-                    >
-                      {bannerData.subtitulo}
-                    </p>
-                  )}
-                  {bannerData.textoAdicional && (
-                    <p 
-                      className="text-sm opacity-80 mt-1"
-                      style={{ fontFamily: currentCombo.body, color: bannerData.textColor }}
-                    >
-                      {bannerData.textoAdicional}
-                    </p>
-                  )}
                 </div>
-              )}
+
+                <div className="space-y-5 bg-white rounded-2xl p-5 border border-gray-200">
+                  {/* Título */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Título principal <span className="text-pink-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={bannerData.titulo}
+                      onChange={(e) => setBannerData({ ...bannerData, titulo: e.target.value })}
+                      placeholder="Ex: Conforto"
+                      className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
+                               focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
+                               transition-all placeholder:text-gray-300"
+                      maxLength={40}
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Obrigatório</span>
+                      <span>{bannerData.titulo.length}/40</span>
+                    </div>
+                  </div>
+
+                  {/* Subtítulo */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Subtítulo
+                    </label>
+                    <input
+                      type="text"
+                      value={bannerData.subtitulo}
+                      onChange={(e) => setBannerData({ ...bannerData, subtitulo: e.target.value })}
+                      placeholder="Ex: em cada passo"
+                      className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
+                               focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
+                               transition-all placeholder:text-gray-300"
+                      maxLength={50}
+                    />
+                    <div className="flex justify-end text-xs text-gray-400">
+                      <span>{bannerData.subtitulo.length}/50</span>
+                    </div>
+                  </div>
+
+                  {/* Texto adicional */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Texto adicional
+                    </label>
+                    <input
+                      type="text"
+                      value={bannerData.textoAdicional}
+                      onChange={(e) => setBannerData({ ...bannerData, textoAdicional: e.target.value })}
+                      placeholder="Ex: conheça nossa coleção"
+                      className="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl 
+                               focus:ring-4 focus:ring-pink-100 focus:border-pink-500 
+                               transition-all placeholder:text-gray-300"
+                      maxLength={60}
+                    />
+                    <div className="flex justify-end text-xs text-gray-400">
+                      <span>{bannerData.textoAdicional.length}/60</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coluna de Preview - Sempre visível */}
+              <div className="order-1 lg:order-2 lg:sticky lg:top-4">
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 lg:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-400 font-medium flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      Prévia em tempo real
+                    </p>
+                    {/* Toggle Mobile/Desktop */}
+                    <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+                      <button
+                        onClick={() => setActiveView("mobile")}
+                        className={`p-2 rounded-md transition-all ${
+                          activeView === "mobile" ? "bg-purple-500 text-white" : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Smartphone className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setActiveView("desktop")}
+                        className={`p-2 rounded-md transition-all ${
+                          activeView === "desktop" ? "bg-pink-500 text-white" : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Monitor className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <BannerPreview />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* STEP 3: Estilo */}
-          {currentStep === "style" && (
-            <div className="space-y-6 max-w-2xl mx-auto">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Personalize o estilo
-                </h2>
-                <p className="text-gray-500">
-                  Ajuste cores, fontes e posição
-                </p>
-              </div>
+          {/* STEP 3: Estilo - Com preview em tempo real */}
+          {currentStep === "style" && selectedTemplate && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Coluna de controles */}
+              <div className="space-y-6 order-2 lg:order-1">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    Personalize o estilo
+                  </h2>
+                  <p className="text-gray-500">
+                    Ajuste cores, fontes e posição
+                  </p>
+                </div>
 
-              {/* Tabs de categorias */}
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                {/* Cor do Texto */}
-                <details className="group" open>
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-                        <Palette className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Cor do texto</p>
-                        <p className="text-sm text-gray-500">Escolha a cor das letras</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-4">
-                    <div className="grid grid-cols-6 gap-2 mb-4">
-                      {PRESET_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => setBannerData({ ...bannerData, textColor: color })}
-                          className={`
-                            w-full aspect-square rounded-xl border-2 transition-all
-                            ${bannerData.textColor.toUpperCase() === color 
-                              ? 'border-pink-500 scale-110 shadow-lg' 
-                              : 'border-gray-200 hover:scale-105'
-                            }
-                          `}
-                          style={{ backgroundColor: color }}
+                {/* Controles de Estilo */}
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  {/* Cor do Texto */}
+                  <details className="group" open>
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-gray-200" 
+                          style={{ backgroundColor: bannerData.textColor }}
                         />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={bannerData.textColor}
-                        onChange={(e) => setBannerData({ ...bannerData, textColor: e.target.value })}
-                        className="w-14 h-14 rounded-xl cursor-pointer border-2 border-gray-200"
-                      />
-                      <input
-                        type="text"
-                        value={bannerData.textColor}
-                        onChange={(e) => setBannerData({ ...bannerData, textColor: e.target.value })}
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-mono uppercase text-center"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-                </details>
-
-                {/* Fonte */}
-                <details className="group border-t border-gray-100">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
-                        <Type className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="font-semibold text-gray-900">Cor do texto</p>
+                          <p className="text-sm text-gray-500">{bannerData.textColor}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Fonte</p>
-                        <p className="text-sm text-gray-500">{bannerData.fontFamily}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-4 space-y-2 max-h-64 overflow-y-auto">
-                    {FONT_COMBINATIONS.map((combo) => (
-                      <button
-                        key={combo.name}
-                        onClick={() => setBannerData({ ...bannerData, fontFamily: combo.name })}
-                        className={`
-                          w-full p-4 rounded-xl border-2 text-left transition-all
-                          ${bannerData.fontFamily === combo.name 
-                            ? 'border-pink-500 bg-pink-50' 
-                            : 'border-gray-200 hover:border-gray-300'
-                          }
-                        `}
-                      >
-                        <p 
-                          className="text-xl font-bold mb-1" 
-                          style={{ fontFamily: combo.title, fontWeight: combo.titleWeight }}
-                        >
-                          {combo.name}
-                        </p>
-                        <p 
-                          className="text-sm text-gray-500"
-                          style={{ fontFamily: combo.body, fontWeight: combo.bodyWeight }}
-                        >
-                          Subtítulo de exemplo
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </details>
-
-                {/* Ajustes Finos */}
-                <details className="group border-t border-gray-100">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                        <SlidersHorizontal className="w-5 h-5 text-amber-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Ajustes finos</p>
-                        <p className="text-sm text-gray-500">Tamanho e espaçamento</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-4 space-y-6">
-                    {/* Tamanho da Fonte */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Tamanho ({activeView})</span>
-                        <span className="text-sm font-bold text-pink-600">
-                          {activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize}%
-                        </span>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                      <div className="grid grid-cols-6 gap-2 mb-4">
+                        {PRESET_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setBannerData({ ...bannerData, textColor: color })}
+                            className={`
+                              w-full aspect-square rounded-xl border-2 transition-all
+                              ${bannerData.textColor.toUpperCase() === color 
+                                ? 'border-pink-500 scale-110 shadow-lg' 
+                                : 'border-gray-200 hover:scale-105'
+                              }
+                            `}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
                       </div>
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setBannerData({
-                            ...bannerData,
-                            [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: 
-                              Math.max(70, (activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize) - 5)
-                          })}
-                          className="w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50"
-                        >
-                          <Minus className="w-5 h-5" />
-                        </button>
                         <input
-                          type="range"
-                          min="70"
-                          max="150"
-                          step="5"
-                          value={activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize}
-                          onChange={(e) => setBannerData({
-                            ...bannerData,
-                            [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: Number(e.target.value)
-                          })}
-                          className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                          type="color"
+                          value={bannerData.textColor}
+                          onChange={(e) => setBannerData({ ...bannerData, textColor: e.target.value })}
+                          className="w-14 h-14 rounded-xl cursor-pointer border-2 border-gray-200"
                         />
+                        <input
+                          type="text"
+                          value={bannerData.textColor}
+                          onChange={(e) => setBannerData({ ...bannerData, textColor: e.target.value })}
+                          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-mono uppercase text-center"
+                          maxLength={7}
+                        />
+                      </div>
+                    </div>
+                  </details>
+
+                  {/* Fonte */}
+                  <details className="group border-t border-gray-100">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
+                          <Type className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Fonte</p>
+                          <p className="text-sm text-gray-500">{bannerData.fontFamily}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-4 space-y-2 max-h-64 overflow-y-auto">
+                      {FONT_COMBINATIONS.map((combo) => (
                         <button
-                          onClick={() => setBannerData({
-                            ...bannerData,
-                            [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: 
-                              Math.min(150, (activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize) + 5)
-                          })}
-                          className="w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50"
-                        >
-                          <Plus className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Espaçamento entre linhas */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Espaço entre linhas</span>
-                        <span className="text-sm text-gray-500">{bannerData.lineSpacing}px</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="20"
-                        value={bannerData.lineSpacing}
-                        onChange={(e) => setBannerData({ ...bannerData, lineSpacing: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
-                      />
-                    </div>
-
-                    {/* Espaçamento entre letras */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Espaço entre letras</span>
-                        <span className="text-sm text-gray-500">{bannerData.letterSpacing}px</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="-2"
-                        max="10"
-                        value={bannerData.letterSpacing}
-                        onChange={(e) => setBannerData({ ...bannerData, letterSpacing: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
-                      />
-                    </div>
-                  </div>
-                </details>
-
-                {/* Alinhamento */}
-                <details className="group border-t border-gray-100">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                        <AlignCenter className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Alinhamento</p>
-                        <p className="text-sm text-gray-500">Posição do texto</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-4">
-                    <p className="text-sm text-gray-500 mb-3">
-                      Alinhamento para {activeView === "desktop" ? "Desktop" : "Mobile"}
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { value: "left", icon: AlignLeft, label: "Esquerda" },
-                        { value: "center", icon: AlignCenter, label: "Centro" },
-                        { value: "right", icon: AlignRight, label: "Direita" },
-                      ].map(({ value, icon: Icon, label }) => (
-                        <button
-                          key={value}
-                          onClick={() => setBannerData({
-                            ...bannerData,
-                            [activeView === "desktop" ? "desktopAlignment" : "mobileAlignment"]: value as "left" | "center" | "right"
-                          })}
+                          key={combo.name}
+                          onClick={() => setBannerData({ ...bannerData, fontFamily: combo.name })}
                           className={`
-                            p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2
-                            ${(activeView === "desktop" ? bannerData.desktopAlignment : bannerData.mobileAlignment) === value
-                              ? 'border-pink-500 bg-pink-50 text-pink-600'
-                              : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                            w-full p-4 rounded-xl border-2 text-left transition-all
+                            ${bannerData.fontFamily === combo.name 
+                              ? 'border-pink-500 bg-pink-50' 
+                              : 'border-gray-200 hover:border-gray-300'
                             }
                           `}
                         >
-                          <Icon className="w-6 h-6" />
-                          <span className="text-xs font-medium">{label}</span>
+                          <p 
+                            className="text-xl font-bold mb-1" 
+                            style={{ fontFamily: combo.title, fontWeight: combo.titleWeight }}
+                          >
+                            {combo.name}
+                          </p>
+                          <p 
+                            className="text-sm text-gray-500"
+                            style={{ fontFamily: combo.body, fontWeight: combo.bodyWeight }}
+                          >
+                            Subtítulo de exemplo
+                          </p>
                         </button>
                       ))}
                     </div>
-                  </div>
-                </details>
+                  </details>
+
+                  {/* Ajustes Finos */}
+                  <details className="group border-t border-gray-100">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                          <SlidersHorizontal className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Ajustes finos</p>
+                          <p className="text-sm text-gray-500">Tamanho e espaçamento</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-4 space-y-6">
+                      {/* Tamanho da Fonte */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Tamanho ({activeView})</span>
+                          <span className="text-sm font-bold text-pink-600">
+                            {activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize}%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setBannerData({
+                              ...bannerData,
+                              [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: 
+                                Math.max(70, (activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize) - 5)
+                            })}
+                            className="w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                          >
+                            <Minus className="w-5 h-5" />
+                          </button>
+                          <input
+                            type="range"
+                            min="70"
+                            max="150"
+                            step="5"
+                            value={activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize}
+                            onChange={(e) => setBannerData({
+                              ...bannerData,
+                              [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: Number(e.target.value)
+                            })}
+                            className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                          />
+                          <button
+                            onClick={() => setBannerData({
+                              ...bannerData,
+                              [activeView === "desktop" ? "desktopFontSize" : "mobileFontSize"]: 
+                                Math.min(150, (activeView === "desktop" ? bannerData.desktopFontSize : bannerData.mobileFontSize) + 5)
+                            })}
+                            className="w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Espaçamento entre linhas */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Espaço entre linhas</span>
+                          <span className="text-sm text-gray-500">{bannerData.lineSpacing}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="20"
+                          value={bannerData.lineSpacing}
+                          onChange={(e) => setBannerData({ ...bannerData, lineSpacing: parseInt(e.target.value) })}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                        />
+                      </div>
+
+                      {/* Espaçamento entre letras */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Espaço entre letras</span>
+                          <span className="text-sm text-gray-500">{bannerData.letterSpacing}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-2"
+                          max="10"
+                          value={bannerData.letterSpacing}
+                          onChange={(e) => setBannerData({ ...bannerData, letterSpacing: parseInt(e.target.value) })}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                        />
+                      </div>
+                    </div>
+                  </details>
+
+                  {/* Alinhamento */}
+                  <details className="group border-t border-gray-100">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                          <AlignCenter className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Alinhamento</p>
+                          <p className="text-sm text-gray-500">Posição do texto</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                      <p className="text-sm text-gray-500 mb-3">
+                        Alinhamento para {activeView === "desktop" ? "Desktop" : "Mobile"}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "left", icon: AlignLeft, label: "Esquerda" },
+                          { value: "center", icon: AlignCenter, label: "Centro" },
+                          { value: "right", icon: AlignRight, label: "Direita" },
+                        ].map(({ value, icon: Icon, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => setBannerData({
+                              ...bannerData,
+                              [activeView === "desktop" ? "desktopAlignment" : "mobileAlignment"]: value as "left" | "center" | "right"
+                            })}
+                            className={`
+                              p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2
+                              ${(activeView === "desktop" ? bannerData.desktopAlignment : bannerData.mobileAlignment) === value
+                                ? 'border-pink-500 bg-pink-50 text-pink-600'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                              }
+                            `}
+                          >
+                            <Icon className="w-6 h-6" />
+                            <span className="text-xs font-medium">{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </details>
+                </div>
               </div>
 
-              {/* Toggle Desktop/Mobile */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                <p className="text-sm text-gray-500 text-center mb-3">Editando para:</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setActiveView("mobile")}
-                    className={`
-                      flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2
-                      ${activeView === "mobile" 
-                        ? 'bg-purple-500 text-white' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }
-                    `}
-                  >
-                    <Smartphone className="w-5 h-5" />
-                    Mobile
-                  </button>
-                  <button
-                    onClick={() => setActiveView("desktop")}
-                    className={`
-                      flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2
-                      ${activeView === "desktop" 
-                        ? 'bg-pink-500 text-white' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }
-                    `}
-                  >
-                    <Monitor className="w-5 h-5" />
-                    Desktop
-                  </button>
+              {/* Coluna de Preview - Sempre visível */}
+              <div className="order-1 lg:order-2 lg:sticky lg:top-4">
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 lg:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-400 font-medium flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      Prévia em tempo real
+                    </p>
+                    {/* Toggle Mobile/Desktop */}
+                    <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+                      <button
+                        onClick={() => setActiveView("mobile")}
+                        className={`p-2 rounded-md transition-all ${
+                          activeView === "mobile" ? "bg-purple-500 text-white" : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Smartphone className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setActiveView("desktop")}
+                        className={`p-2 rounded-md transition-all ${
+                          activeView === "desktop" ? "bg-pink-500 text-white" : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Monitor className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <BannerPreview />
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 4: Preview Final */}
+          {/* STEP 4: Preview Final - Posicionamento */}
           {currentStep === "preview" && selectedTemplate && (
             <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Prévia do banner
+                  Posicione o texto
                 </h2>
-                <p className="text-gray-500">
-                  Clique na imagem para reposicionar o texto
+                <p className="text-gray-500 flex items-center justify-center gap-2">
+                  <Move className="w-4 h-4" />
+                  Clique na imagem para mover o texto
                 </p>
               </div>
 
@@ -757,159 +860,13 @@ export default function BannerEditorFinal({ onSave, onCancel }: BannerEditorProp
                 </button>
               </div>
 
-              {/* Preview */}
+              {/* Preview Clicável */}
               <div className="flex justify-center">
-                {activeView === "mobile" ? (
-                  <div
-                    ref={mobileRef}
-                    onClick={handleDrag}
-                    className="relative rounded-2xl overflow-hidden shadow-2xl cursor-crosshair max-w-sm w-full border-4 border-purple-200"
-                  >
-                    <Image
-                      src={selectedTemplate.mobile_url}
-                      alt="Preview Mobile"
-                      width={800}
-                      height={800}
-                      className="w-full h-auto"
-                    />
-                    {/* Texto */}
-                    <div
-                      className="absolute"
-                      style={{
-                        left: `${currentPosition.x}%`,
-                        top: `${currentPosition.y}%`,
-                        transform: 'translate(-50%, 0)',
-                        maxWidth: '85%',
-                        textAlign: bannerData.mobileAlignment,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: `${bannerData.lineSpacing}px`,
-                      }}
-                    >
-                      {bannerData.titulo && (
-                        <h2 
-                          className="font-bold drop-shadow-2xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.title,
-                            fontWeight: currentCombo.titleWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(2rem * ${bannerData.mobileFontSize / 100})`,
-                            color: bannerData.textColor,
-                          }}
-                        >
-                          {bannerData.titulo}
-                        </h2>
-                      )}
-                      {bannerData.subtitulo && (
-                        <p 
-                          className="drop-shadow-xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.body,
-                            fontWeight: currentCombo.bodyWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(1rem * ${bannerData.mobileFontSize / 100})`,
-                            color: bannerData.textColor,
-                            opacity: 0.95,
-                          }}
-                        >
-                          {bannerData.subtitulo}
-                        </p>
-                      )}
-                      {bannerData.textoAdicional && (
-                        <p 
-                          className="drop-shadow-xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.body,
-                            fontWeight: currentCombo.bodyWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(0.75rem * ${bannerData.mobileFontSize / 100})`,
-                            color: bannerData.textColor,
-                            opacity: 0.9,
-                          }}
-                        >
-                          {bannerData.textoAdicional}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    ref={desktopRef}
-                    onClick={handleDrag}
-                    className="relative rounded-2xl overflow-hidden shadow-2xl cursor-crosshair w-full border-4 border-pink-200"
-                  >
-                    <Image
-                      src={selectedTemplate.desktop_url}
-                      alt="Preview Desktop"
-                      width={1920}
-                      height={600}
-                      className="w-full h-auto"
-                    />
-                    {/* Texto */}
-                    <div
-                      className="absolute"
-                      style={{
-                        left: `${currentPosition.x}%`,
-                        top: `${currentPosition.y}%`,
-                        transform: 'translate(-50%, 0)',
-                        maxWidth: '400px',
-                        textAlign: bannerData.desktopAlignment,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: `${bannerData.lineSpacing}px`,
-                      }}
-                    >
-                      {bannerData.titulo && (
-                        <h2 
-                          className="font-bold drop-shadow-2xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.title,
-                            fontWeight: currentCombo.titleWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(3rem * ${bannerData.desktopFontSize / 100})`,
-                            color: bannerData.textColor,
-                          }}
-                        >
-                          {bannerData.titulo}
-                        </h2>
-                      )}
-                      {bannerData.subtitulo && (
-                        <p 
-                          className="drop-shadow-xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.body,
-                            fontWeight: currentCombo.bodyWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(1.125rem * ${bannerData.desktopFontSize / 100})`,
-                            color: bannerData.textColor,
-                            opacity: 0.95,
-                          }}
-                        >
-                          {bannerData.subtitulo}
-                        </p>
-                      )}
-                      {bannerData.textoAdicional && (
-                        <p 
-                          className="drop-shadow-xl whitespace-nowrap"
-                          style={{
-                            fontFamily: currentCombo.body,
-                            fontWeight: currentCombo.bodyWeight,
-                            letterSpacing: `${bannerData.letterSpacing}px`,
-                            fontSize: `calc(0.875rem * ${bannerData.desktopFontSize / 100})`,
-                            color: bannerData.textColor,
-                            opacity: 0.9,
-                          }}
-                        >
-                          {bannerData.textoAdicional}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <BannerPreview clickable />
               </div>
 
               <p className="text-center text-sm text-gray-500">
-                Toque/clique na imagem para mover o texto
+                Posição atual: X: {Math.round(currentPosition.x)}%, Y: {Math.round(currentPosition.y)}%
               </p>
             </div>
           )}
