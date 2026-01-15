@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const produtoId = params.id;
+    const { id: produtoId } = await params;
 
     if (!produtoId) {
       return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
@@ -43,15 +43,12 @@ export async function GET(
     }
 
     // Filtrar apenas variações ativas e ordenar
-    interface Variacao {
-      ativo: boolean;
-      ordem?: number;
-    }
-    
     if (data.variacoes) {
-      data.variacoes = (data.variacoes as Variacao[])
-        .filter((v) => v.ativo)
-        .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+      data.variacoes = data.variacoes
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((v: any) => v.ativo)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
     }
 
     return NextResponse.json(data);

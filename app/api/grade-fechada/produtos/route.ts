@@ -44,17 +44,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Se incluir variações, filtrar apenas variações ativas e ordenar
-    interface Variacao {
-      ativo: boolean;
-      ordem?: number;
-    }
-    
     if (includeVariacoes && data) {
-      data.forEach((produto: { variacoes?: Variacao[] }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data.forEach((produto: any) => {
         if (produto.variacoes) {
           produto.variacoes = produto.variacoes
-            .filter((v) => v.ativo)
-            .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .filter((v: any) => v.ativo)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
         }
       });
     }

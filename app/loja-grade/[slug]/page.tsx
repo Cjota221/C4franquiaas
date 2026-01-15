@@ -80,7 +80,7 @@ export default function LojaGradeFechadaPage() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" 
-             style={{ borderColor: config?.cor_primaria || '#8B5CF6' }}></div>
+             style={{ borderColor: String(config?.cor_primaria || '#8B5CF6') }}></div>
       </div>
     );
   }
@@ -91,10 +91,10 @@ export default function LojaGradeFechadaPage() {
       <div className="rounded-2xl p-8 text-white text-center"
            style={{ background: `linear-gradient(135deg, ${config?.cor_primaria || '#8B5CF6'}, ${config?.cor_secundaria || '#EC4899'})` }}>
         <h1 className="text-4xl font-bold mb-3">
-          {config?.titulo_site || 'Catálogo Grade Fechada'}
+          {String(config?.titulo_site || 'Catálogo Grade Fechada')}
         </h1>
         <p className="text-lg opacity-90 max-w-2xl mx-auto">
-          {config?.descricao_site || 'Compre por grades de 6 ou 12 pares com condições especiais'}
+          {String(config?.descricao_site || 'Compre por grades de 6 ou 12 pares com condições especiais')}
         </p>
         <div className="mt-6 flex items-center justify-center gap-4">
           <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
@@ -176,7 +176,7 @@ export default function LojaGradeFechadaPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-500">A partir de</p>
-                        <p className="text-xl font-bold" style={{ color: config?.cor_primaria || '#8B5CF6' }}>
+                        <p className="text-xl font-bold" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
                           R$ {produto.preco_base.toFixed(2)}
                         </p>
                         <p className="text-xs text-gray-500">por par</p>
@@ -184,7 +184,7 @@ export default function LojaGradeFechadaPage() {
                       <Button 
                         size="sm"
                         className="rounded-full"
-                        style={{ backgroundColor: config?.cor_primaria || '#8B5CF6' }}
+                        style={{ backgroundColor: String(config?.cor_primaria || '#8B5CF6') }}
                       >
                         Ver
                       </Button>

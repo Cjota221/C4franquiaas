@@ -120,7 +120,7 @@ export default function CarrinhoPage() {
     mensagem += `⏰ Prazo de produção: 15-20 dias úteis\n`;
 
     // Enviar para WhatsApp
-    const whatsappNumero = config?.whatsapp_numero?.replace(/\D/g, '') || '';
+    const whatsappNumero = String(config?.whatsapp_numero || '').replace(/\D/g, '') || '';
     const whatsappUrl = `https://wa.me/55${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
 
     // Abrir WhatsApp
@@ -159,7 +159,7 @@ export default function CarrinhoPage() {
           </p>
           <Button
             onClick={() => router.push(`/loja-grade/${slug}`)}
-            style={{ backgroundColor: config?.cor_primaria || '#8B5CF6' }}
+            style={{ backgroundColor: String(config?.cor_primaria || '#8B5CF6') }}
           >
             Ver Produtos
           </Button>
@@ -226,7 +226,7 @@ export default function CarrinhoPage() {
                       .join(', ')}
                   </div>
 
-                  <p className="text-lg font-bold" style={{ color: config?.cor_primaria || '#8B5CF6' }}>
+                  <p className="text-lg font-bold" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
                     R$ {item.valor_total.toFixed(2)}
                   </p>
                 </div>
@@ -286,7 +286,7 @@ export default function CarrinhoPage() {
               </div>
               <div className="flex justify-between text-lg pt-3 border-t">
                 <span className="font-bold">Valor Total:</span>
-                <span className="font-bold text-2xl" style={{ color: config?.cor_primaria || '#8B5CF6' }}>
+                <span className="font-bold text-2xl" style={{ color: String(config?.cor_primaria || '#8B5CF6') }}>
                   R$ {valorTotal.toFixed(2)}
                 </span>
               </div>
@@ -303,7 +303,7 @@ export default function CarrinhoPage() {
               disabled={totalGrades < 2 || !clienteNome.trim() || !clienteTelefone.trim()}
               className="w-full gap-2 py-6 text-lg"
               style={{
-                backgroundColor: config?.cor_primaria || '#8B5CF6',
+                backgroundColor: String(config?.cor_primaria || '#8B5CF6'),
                 opacity: (totalGrades < 2 || !clienteNome.trim() || !clienteTelefone.trim()) ? 0.5 : 1,
               }}
             >
