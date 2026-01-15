@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
 import { useNewProductsCount } from '@/hooks/useNewProductsCount';
 
-export default function SidebarRevendedora() {
+const SidebarRevendedora = React.memo(function SidebarRevendedora() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -125,4 +125,6 @@ export default function SidebarRevendedora() {
       )}
     </>
   );
-}
+});
+
+export default SidebarRevendedora;

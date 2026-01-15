@@ -16,7 +16,7 @@ interface SidebarProps {
 }
 
 // O componente da barra lateral
-const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, mobile = false }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ view, setView, onLogout = () => {}, mobile = false }) => {
   // Lista de itens de navegação
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
@@ -89,7 +89,9 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView, onLogout = () => {}, m
       </div>
     </div>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;
 

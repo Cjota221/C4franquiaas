@@ -50,7 +50,7 @@ interface TabelaProdutosProps {
   onEditDescricaoGuia?: (produto: Produto) => void;
 }
 
-export default function TabelaProdutos({
+const TabelaProdutos = React.memo(function TabelaProdutos({
   produtos,
   loading,
   selectedIds,
@@ -366,4 +366,6 @@ export default function TabelaProdutos({
       </div>
     </div>
   );
-}
+});
+
+export default TabelaProdutos;
