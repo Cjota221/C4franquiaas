@@ -29,8 +29,8 @@ const bottomNavItems = [
   { href: '/revendedora/configuracoes', icon: User, label: 'Perfil' },
 ];
 
-// Itens do Drawer (secundários)
-const drawerItems = [
+// Itens principais do Drawer
+const drawerMainItems = [
   { href: '/revendedora/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/revendedora/personalizacao', icon: Palette, label: 'Personalização' },
   { href: '/revendedora/produtos', icon: Package, label: 'Produtos' },
@@ -39,6 +39,10 @@ const drawerItems = [
   { href: '/revendedora/material-divulgacao', icon: FolderOpen, label: 'Material de Divulgação' },
   { href: '/revendedora/academy', icon: GraduationCap, label: 'C4 Academy', highlight: true },
   { href: '/revendedora/tutoriais', icon: BookOpen, label: 'Tutoriais' },
+];
+
+// Itens fixos no rodapé do Drawer
+const drawerFooterItems = [
   { href: '/revendedora/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
@@ -57,84 +61,97 @@ export default function MobileNavigation() {
   return (
     <>
       {/* Bottom Navigation - Fixo no rodapé (Mobile Only) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-bottom">
-        <div className="flex items-center justify-around h-16">
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 safe-area-bottom">
+        {/* Background com sombra e gradiente sutil */}
+        <div className="bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-around h-[72px] px-2">
+            {bottomNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`
+                    flex flex-col items-center justify-center gap-1 px-3 py-2 min-w-[60px] rounded-xl
+                    transition-all duration-200
+                    ${active 
+                      ? 'text-pink-600' 
+                      : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
+                    }
+                  `}
+                >
+                  <div className={`
+                    p-2 rounded-xl transition-all duration-200
+                    ${active ? 'bg-pink-100 shadow-sm' : ''}
+                  `}>
+                    <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
+                  </div>
+                  <span className={`
+                    text-[11px] leading-tight
+                    ${active ? 'font-semibold text-pink-600' : 'font-medium text-gray-500'}
+                  `}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
             
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex flex-col items-center justify-center gap-1 px-4 py-2 min-w-[64px]
-                  transition-colors
-                  ${active 
-                    ? 'text-pink-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                  }
-                `}
-              >
-                <div className={`
-                  p-1.5 rounded-xl transition-colors
-                  ${active ? 'bg-pink-100' : ''}
-                `}>
-                  <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
-                </div>
-                <span className={`text-xs ${active ? 'font-semibold' : 'font-medium'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-          
-          {/* Botão Menu */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="flex flex-col items-center justify-center gap-1 px-4 py-2 min-w-[64px]
-                     text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <div className="p-1.5">
-              <Menu className="w-5 h-5" strokeWidth={2} />
-            </div>
-            <span className="text-xs font-medium">Menu</span>
-          </button>
+            {/* Botão Menu */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 min-w-[60px] rounded-xl
+                       text-gray-500 hover:text-gray-700 active:bg-gray-100 transition-all duration-200"
+            >
+              <div className="p-2">
+                <Menu className="w-5 h-5" strokeWidth={2} />
+              </div>
+              <span className="text-[11px] font-medium leading-tight">Menu</span>
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Drawer/Sidebar */}
+      {/* Drawer/Sidebar - Full Screen Overlay */}
       <div className={`
         lg:hidden fixed inset-0 z-50 transition-opacity duration-300
         ${drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
       `}>
-        {/* Overlay */}
+        {/* Overlay escuro */}
         <div 
-          className="absolute inset-0 bg-black/50"
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setDrawerOpen(false)}
         />
         
-        {/* Drawer Panel */}
+        {/* Drawer Panel - Direita, altura total */}
         <div className={`
-          absolute top-0 right-0 bottom-0 w-[280px] bg-white
-          transform transition-transform duration-300 ease-out
+          absolute top-0 right-0 bottom-0 w-[300px] max-w-[85vw] bg-white
+          flex flex-col
+          transform transition-transform duration-300 ease-out shadow-2xl
           ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}
         `}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900">Menu</h2>
+          {/* Header do Drawer */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Painel</h2>
+              <p className="text-xs text-gray-500">Navegue pelo menu</p>
+            </div>
+            {/* Botão X - Clean, sem quadrado */}
             <button
               onClick={() => setDrawerOpen(false)}
-              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-3 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 
+                       rounded-full transition-all active:scale-95"
+              aria-label="Fechar menu"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto p-3">
+          {/* Menu Items - Área scrollável */}
+          <nav className="flex-1 overflow-y-auto py-3 px-3">
             <div className="space-y-1">
-              {drawerItems.map((item) => {
+              {drawerMainItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 const highlight = 'highlight' in item && item.highlight;
@@ -145,37 +162,78 @@ export default function MobileNavigation() {
                     href={item.href}
                     onClick={() => setDrawerOpen(false)}
                     className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                      flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all active:scale-[0.98]
                       ${active 
-                        ? 'bg-pink-50 text-pink-600' 
+                        ? 'bg-pink-50 text-pink-600 shadow-sm' 
                         : highlight
-                          ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 border border-purple-100'
+                          : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                       }
                     `}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="flex-1 font-medium">{item.label}</span>
+                    <div className={`
+                      w-9 h-9 rounded-lg flex items-center justify-center
+                      ${active 
+                        ? 'bg-pink-100' 
+                        : highlight 
+                          ? 'bg-purple-100' 
+                          : 'bg-gray-100'
+                      }
+                    `}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 font-medium text-[15px]">{item.label}</span>
                     {highlight && !active && (
-                      <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full">
-                        Novo
+                      <span className="text-[10px] bg-purple-500 text-white px-2 py-1 rounded-full font-semibold">
+                        NOVO
                       </span>
                     )}
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <ChevronRight className={`w-4 h-4 ${active ? 'text-pink-400' : 'text-gray-300'}`} />
                   </Link>
                 );
               })}
             </div>
           </nav>
 
-          {/* Footer - Logout */}
-          <div className="p-3 border-t border-gray-200">
+          {/* Footer - Configurações e Logout fixos */}
+          <div className="border-t border-gray-100 bg-gray-50/30 p-3 space-y-1">
+            {/* Configurações */}
+            {drawerFooterItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setDrawerOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                    ${active 
+                      ? 'bg-pink-50 text-pink-600' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                    }
+                  `}
+                >
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${active ? 'bg-pink-100' : 'bg-gray-100'}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="flex-1 font-medium text-[15px]">{item.label}</span>
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                </Link>
+              );
+            })}
+            
+            {/* Botão Sair */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+              className="flex items-center gap-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 
+                       rounded-xl transition-all active:scale-[0.98]"
             >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Sair da Conta</span>
+              <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <span className="font-medium text-[15px]">Sair da Conta</span>
             </button>
           </div>
         </div>

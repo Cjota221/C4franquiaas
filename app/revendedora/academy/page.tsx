@@ -583,8 +583,8 @@ export default function AcademyPage() {
         </div>
       </div>
 
-      {/* Banner Fixo no Rodapé */}
-      <div className="sticky bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-lg border-t border-gray-200 lg:hidden">
+      {/* Banner Fixo no Rodapé - acima da bottom nav */}
+      <div className="sticky bottom-20 left-0 right-0 px-4 pb-2 lg:hidden">
         <PromoLucroCerto variant="banner" />
       </div>
 
