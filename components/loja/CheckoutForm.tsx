@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CreditCard, Smartphone, Barcode, Lock, Loader2 } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
-import { useCart } from '@/contexts/CartContext';
+import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 
 interface CheckoutFormProps {
   loja: LojaInfo;
@@ -10,7 +10,21 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ loja }: CheckoutFormProps) {
   const corPrimaria = loja?.cor_primaria || '#DB1472';
-  const { items, getTotal } = useCart();
+  
+  // ✅ Usando Zustand (removido CartContext duplicado)
+  const items = useCarrinhoStore(state => state.items);
+  const getTotal = useCarrinhoStore(state => state.getTotal);
+  
+  // Converter formato Zustand para formato esperado pelo formulário
+  const cartItems = items.map(item => ({
+    id: item.id,
+    nome: item.nome,
+    preco_final: item.preco,
+    imagens: [item.imagem],
+    quantidade: item.quantidade,
+    tamanho: item.tamanho,
+    sku: item.sku,
+  }));
   
   const [paymentMethod, setPaymentMethod] = useState<'credit' | 'pix' | 'boleto'>('credit');
   const [loading, setLoading] = useState(false);
@@ -75,14 +89,14 @@ export default function CheckoutForm({ loja }: CheckoutFormProps) {
         throw new Error('Preencha todos os campos obrigatórios');
       }
 
-      // 1. Preparar itens para o Mercado Pago
+      // 1. Preparar itens para o Mercado Pago (usando formato Zustand)
       const mpItems = items.map(item => ({
         id: item.sku || item.id,
         title: item.nome,
         quantity: item.quantidade,
-        unit_price: item.preco_final,
+        unit_price: item.preco,  // Zustand usa 'preco' não 'preco_final'
         currency_id: 'BRL',
-        picture_url: item.imagens[0],
+        picture_url: item.imagem,  // Zustand usa 'imagem' (string) não 'imagens' (array)
       }));
 
       // 2. Calcular totais

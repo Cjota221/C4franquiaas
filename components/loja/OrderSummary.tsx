@@ -3,11 +3,21 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Tag, Truck } from 'lucide-react';
 import { LojaInfo } from '@/contexts/LojaContext';
-import { CartItem } from '@/contexts/CartContext';
+
+// ✅ Tipo unificado para items do carrinho (compatível com Zustand)
+interface CartItemDisplay {
+  id: string;
+  nome: string;
+  preco_final: number;
+  imagens: string[];
+  quantidade: number;
+  tamanho?: string;
+  sku?: string;
+}
 
 interface OrderSummaryProps {
   loja: LojaInfo;
-  items: CartItem[];
+  items: CartItemDisplay[];
   shippingValue?: number | null;
   shippingName?: string | null;
 }

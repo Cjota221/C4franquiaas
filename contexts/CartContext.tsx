@@ -1,3 +1,21 @@
+/**
+ * @deprecated Este arquivo está DEPRECATED!
+ * 
+ * ⚠️ NÃO USE ESTE ARQUIVO EM NOVOS COMPONENTES!
+ * 
+ * Use o Zustand store em vez disso:
+ * import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
+ * 
+ * Exemplo:
+ * const items = useCarrinhoStore(state => state.items);
+ * const addItem = useCarrinhoStore(state => state.addItem);
+ * const getTotal = useCarrinhoStore(state => state.getTotal);
+ * 
+ * Este arquivo é mantido apenas para referência histórica e será
+ * removido em uma versão futura.
+ * 
+ * Data: 15/01/2026
+ */
 "use client";
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 

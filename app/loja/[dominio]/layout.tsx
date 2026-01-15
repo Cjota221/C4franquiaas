@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import ConditionalLayout from '@/components/loja/ConditionalLayout';
 import { LojaProvider, type LojaInfo } from '@/contexts/LojaContext';
-import { CartProvider } from '@/contexts/CartContext';
+// ✅ CartProvider removido - usando Zustand (useCarrinhoStore) diretamente
 import { AnalyticsWrapper } from '@/components/loja/AnalyticsWrapper';
 import { createClient } from '@supabase/supabase-js';
 
@@ -212,13 +212,12 @@ export default async function LojaLayout({
       )}
 
       <LojaProvider loja={loja}>
-        <CartProvider>
-          <AnalyticsWrapper>
-            <ConditionalLayout dominio={dominio}>
-              {children}
-            </ConditionalLayout>
-          </AnalyticsWrapper>
-        </CartProvider>
+        {/* ✅ CartProvider removido - Zustand não precisa de Provider */}
+        <AnalyticsWrapper>
+          <ConditionalLayout dominio={dominio}>
+            {children}
+          </ConditionalLayout>
+        </AnalyticsWrapper>
       </LojaProvider>
     </>
   );
