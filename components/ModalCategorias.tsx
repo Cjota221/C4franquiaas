@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useCategoriaStore } from '@/lib/store/categoriaStore';
 import { useStatusStore } from '@/lib/store/statusStore';
 
@@ -374,14 +375,12 @@ export default function ModalCategorias(): React.JSX.Element | null {
           </label>
           {(editandoImagemPreview || editandoImagemAtual) && (
             <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
-              <img 
+              <Image 
                 src={editandoImagemPreview || editandoImagemAtual} 
                 alt="Preview" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
-                }}
+                fill
+                className="object-cover"
+                unoptimized
               />
               {editandoImagemFile && (
                 <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
@@ -419,14 +418,12 @@ export default function ModalCategorias(): React.JSX.Element | null {
             {/* Imagem da categoria */}
             {cat.imagem && (
               <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-200">
-                <img 
+                <Image 
                   src={cat.imagem} 
                   alt={cat.nome}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
               </div>
             )}
@@ -518,14 +515,12 @@ export default function ModalCategorias(): React.JSX.Element | null {
 
               {novaImagemPreview && (
                 <div className="relative w-full h-32 rounded overflow-hidden bg-gray-100">
-                  <img 
+                  <Image 
                     src={novaImagemPreview} 
                     alt="Preview" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://placehold.co/400x200/e5e7eb/9ca3af?text=Imagem+Inválida';
-                    }}
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
                     ✓ Imagem selecionada

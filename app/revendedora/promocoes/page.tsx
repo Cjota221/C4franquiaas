@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { 
@@ -925,10 +926,13 @@ export default function PromocoesPage() {
                                   className="w-4 h-4 text-pink-500"
                                 />
                                 {product.imagem_url && (
-                                  <img 
+                                  <Image 
                                     src={product.imagem_url} 
                                     alt={product.nome}
+                                    width={32}
+                                    height={32}
                                     className="w-8 h-8 object-cover rounded"
+                                    unoptimized
                                   />
                                 )}
                                 <div className="flex-1 min-w-0">

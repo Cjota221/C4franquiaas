@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -304,10 +305,12 @@ export default function CadastroMassaProdutosPage() {
                     onDragStart={() => handleDragStart(imagem.id)}
                     className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-move transition-all hover:scale-105 shadow-sm"
                   >
-                    <img
+                    <Image
                       src={imagem.preview}
                       alt="Preview"
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                     <button
                       onClick={() => setImagens(prev => prev.filter(img => img.id !== imagem.id))}
@@ -438,10 +441,12 @@ export default function CadastroMassaProdutosPage() {
                       <div key={imagem.id} className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-pink-400 transition-all">
                         {/* Imagem */}
                         <div className="relative aspect-square">
-                          <img
+                          <Image
                             src={imagem.preview}
                             alt={`Variação ${imgIndex + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                           <button
                             onClick={() => removerImagemDoGrupo(grupo.id, imagem.id)}
