@@ -59,7 +59,8 @@ async function getGradeData(slug: string): Promise<GradeData | null> {
       return null;
     }
 
-    const produtosFormatados = produtos?.map((item: { produtos: { id: string; nome: string; preco_base: number; tem_estoque: boolean; descricao?: string; categorias?: { nome: string }; imagens?: { url: string }[] } }) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const produtosFormatados = produtos?.map((item: any) => ({
       id: item.produtos.id,
       nome: item.produtos.nome,
       preco_base: item.produtos.preco_base,
