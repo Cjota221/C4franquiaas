@@ -177,7 +177,7 @@ export default function LandingPage() {
 
       {/* Hero Section - CTA inicial */}
       <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-pink-50/50">
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-16 md:py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white text-pink-700 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold mb-6 md:mb-8 shadow-sm border border-pink-100">
               <span>🚀 Rede de Franquias Cjota Rasteirinhas</span>
@@ -232,7 +232,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🔥 SEÇÃO 1: Vídeo "O que é o C4?" + Texto MENSAGEM 1 */}
-      <section id="como-funciona" className="py-16 md:py-24 px-5 sm:px-6 md:px-8 bg-white">
+      <section id="como-funciona" className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -248,8 +248,8 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/rg19bj.MP4"
                         playsInline
                         controls
-                        preload="metadata"
-                        poster=""
+                        preload="none"
+                        poster="https://i.ibb.co/placeholder-video1.jpg"
                       />
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function LandingPage() {
       </section>
 
       {/* 📦 SEÇÃO 2: Vídeo "Pedido e Entrega" + Texto MENSAGEM 2 */}
-      <section className="py-16 md:py-24 px-5 sm:px-6 md:px-8 bg-gray-50">
+      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -342,7 +342,7 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/hzg1c3.MP4"
                         playsInline
                         controls
-                        preload="metadata"
+                        preload="none"
                       />
                     </div>
                   </div>
@@ -406,7 +406,7 @@ export default function LandingPage() {
       </section>
 
       {/* 💰 SEÇÃO 3: Vídeo "Precisa Pagar?" + Texto MENSAGEM 3 */}
-      <section className="py-16 md:py-24 px-5 sm:px-6 md:px-8 bg-white">
+      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -421,7 +421,7 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/ukwqyj.MP4"
                         playsInline
                         controls
-                        preload="metadata"
+                        preload="none"
                       />
                     </div>
                   </div>
@@ -469,7 +469,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🏷️ SEÇÃO 4: Vídeo "Definir Preços" + Texto MENSAGEM 4 */}
-      <section className="py-16 md:py-24 px-5 sm:px-6 md:px-8 bg-gray-50">
+      <section className="py-10 sm:py-16 md:py-20 px-5 sm:px-6 md:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -484,7 +484,7 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/495y6q.MP4"
                         playsInline
                         controls
-                        preload="metadata"
+                        preload="none"
                       />
                     </div>
                   </div>
@@ -539,7 +539,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🎨 SEÇÃO 5: Vídeo "Personalização" + Texto MENSAGEM 5 */}
-      <section className="py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
+      <section className="py-10 sm:py-14 md:py-20 px-4 sm:px-6 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -554,7 +554,7 @@ export default function LandingPage() {
                         src="https://files.catbox.moe/k5n0ja.MP4"
                         playsInline
                         controls
-                        preload="metadata"
+                        preload="none"
                       />
                     </div>
                   </div>
@@ -748,7 +748,7 @@ export default function LandingPage() {
       </section>
 
       {/* 💰 MENSAGEM 3 - Precisa pagar para entrar? */}
-      <section className="py-16 md:py-20 px-5 bg-gray-50">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto text-center">
@@ -788,7 +788,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🏷️ MENSAGEM 4 - Posso escolher meu preço? */}
-      <section className="py-16 md:py-20 px-5 bg-white">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto">
@@ -835,7 +835,7 @@ export default function LandingPage() {
       </section>
 
       {/* 🎨 MENSAGEM 5 - Personalização do Site */}
-      <section className="py-16 md:py-20 px-5 bg-gray-50">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto">
@@ -904,7 +904,7 @@ export default function LandingPage() {
       </section>
 
       {/* 📝 MENSAGEM 6 - Cadastro no Projeto */}
-      <section className="py-16 md:py-20 px-5 bg-pink-600 text-white">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-pink-600 text-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="max-w-4xl mx-auto text-center">
@@ -955,7 +955,7 @@ export default function LandingPage() {
       </section>
 
       {/* O que é o C4 Franquias */}
-      <section className="py-16 md:py-20 px-5 bg-white">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10">
@@ -1065,7 +1065,7 @@ export default function LandingPage() {
       </section>
 
       {/* Como Funciona - Passo a Passo Detalhado */}
-      <section id="como-funciona" className="py-16 md:py-20 px-5 bg-gray-900 text-white">
+      <section id="como-funciona" className="py-10 sm:py-14 md:py-16 px-5 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10 md:mb-16">
@@ -1154,7 +1154,7 @@ export default function LandingPage() {
       </section>
 
       {/* Vantagens */}
-      <section id="vantagens" className="py-16 md:py-20 px-5 bg-white">
+      <section id="vantagens" className="py-10 sm:py-14 md:py-16 px-5 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
           <div className="text-center mb-10">
@@ -1187,7 +1187,7 @@ export default function LandingPage() {
       </section>
 
       {/* Depoimento */}
-      <section className="py-12 md:py-16 px-5 bg-gray-50">
+      <section className="py-8 sm:py-10 md:py-14 px-5 bg-gray-50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center">
             <div className="flex justify-center gap-0.5 mb-4">
@@ -1209,7 +1209,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-20 px-5 bg-white">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <span className="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold mb-3">Dúvidas</span>
@@ -1238,7 +1238,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-16 md:py-20 px-5 bg-gray-900">
+      <section className="py-10 sm:py-14 md:py-16 px-5 bg-gray-900">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-pink-300 px-4 py-2 rounded-full text-xs font-semibold mb-6 border border-pink-500/20">
             <Clock className="w-4 h-4" />
