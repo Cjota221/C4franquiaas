@@ -16,7 +16,6 @@ import {
   ShoppingBag,
   Heart,
   Star,
-  ChevronDown,
   DollarSign,
   Users,
   Boxes,
