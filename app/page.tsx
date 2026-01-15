@@ -60,15 +60,22 @@ function AnimatedSection({ children, className = '' }: { children: React.ReactNo
   )
 }
 
-// Componente de Vídeo com player customizado
+// Componente de Vídeo com player customizado - otimizado para mobile
 function VideoPlayer({ src, label }: { src: string; label?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
+
+  // Forçar carregamento no mobile
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load()
+    }
+  }, [src])
 
   const handlePlay = () => {
     if (videoRef.current) {
+      videoRef.current.muted = false
       videoRef.current.play()
       setIsPlaying(true)
     }
@@ -82,8 +89,9 @@ function VideoPlayer({ src, label }: { src: string; label?: string }) {
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
             playsInline
-            preload="auto"
-            onLoadedData={() => setIsLoaded(true)}
+            webkit-playsinline="true"
+            muted
+            preload="metadata"
             onEnded={() => setIsPlaying(false)}
             onError={() => setHasError(true)}
             controls={isPlaying}
@@ -100,19 +108,12 @@ function VideoPlayer({ src, label }: { src: string; label?: string }) {
         {!isPlaying && !hasError && (
           <button
             onClick={handlePlay}
-            className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/30 transition-colors group cursor-pointer"
+            className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-colors group cursor-pointer"
           >
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
               <Play className="w-7 h-7 text-pink-600 ml-1" fill="currentColor" />
             </div>
           </button>
-        )}
-        
-        {/* Loading State */}
-        {!isLoaded && !hasError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-            <div className="w-8 h-8 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
-          </div>
         )}
       </div>
       
@@ -185,7 +186,7 @@ export default function LandingPage() {
     },
     { 
       question: 'Como funciona a entrega?', 
-      answer: 'Você faz o pedido conosco, nós enviamos para você, e você entrega ao cliente final ficando com o lucro.' 
+      answer: 'Após vender, você faz o pedido conosco. Enviamos os produtos para você e você entrega ao seu cliente, ficando com todo o lucro.' 
     },
     { 
       question: 'Qual a margem de lucro?', 
@@ -321,13 +322,13 @@ export default function LandingPage() {
               </p>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-[1.1] mb-6">
-                Venda calçados com
-                <span className="text-pink-600"> estrutura profissional</span>
+                Seu site de vendas
+                <span className="text-pink-600"> com sua marca</span>
               </h1>
               
               <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
-                Tenha seu próprio site de vendas, sem precisar de estoque. 
-                Você vende, nós entregamos. Simples assim.
+                Tenha um catálogo completo de calçados, personalizado com suas cores, logo e preços. 
+                Venda pelo seu WhatsApp, compre da gente e entregue ao seu cliente.
               </p>
               
               {/* Trust Signals */}
@@ -409,10 +410,10 @@ export default function LandingPage() {
                 
                 <div className="space-y-6">
                   {[
-                    { icon: Store, title: 'Cliente acessa seu site', desc: 'Personalizado com sua marca e seus preços' },
-                    { icon: MessageCircle, title: 'Pedido vai pro seu WhatsApp', desc: 'Você recebe e fecha a venda diretamente' },
-                    { icon: Package, title: 'Faça o pedido conosco', desc: 'Comprando apenas o que já vendeu' },
-                    { icon: Check, title: 'Entregue e lucre', desc: 'A diferença entre atacado e varejo é seu lucro' },
+                    { icon: Store, title: 'Seu cliente acessa seu site', desc: 'Com sua marca, suas cores, sua logo e seus preços' },
+                    { icon: MessageCircle, title: 'Pedido chega no seu WhatsApp', desc: 'Você fecha a venda diretamente com o cliente' },
+                    { icon: Package, title: 'Compre da gente o que vendeu', desc: 'Nós enviamos os produtos pra você' },
+                    { icon: Check, title: 'Entregue e fique com o lucro', desc: 'A diferença entre seu preço de compra e venda é seu' },
                   ].map((step, i) => (
                     <div key={i} className="flex gap-4 items-start">
                       <div className="flex-shrink-0 w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
