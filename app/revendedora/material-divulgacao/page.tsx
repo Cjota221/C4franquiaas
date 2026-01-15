@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { 
   FolderOpen, 
   ExternalLink, 
-  Camera, 
   Clock, 
   Music2, 
   AtSign, 
@@ -203,28 +202,6 @@ export default function MaterialDivulgacaoPage() {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Card Extra: Precisa de Ajuda? */}
-        <div className={`
-          mt-8 bg-white rounded-2xl p-6 border border-gray-200
-          transition-all duration-700 delay-500
-          ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-        `}>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Camera className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900 mb-1">
-                Quer criar conteúdo personalizado?
-              </h4>
-              <p className="text-sm text-gray-600">
-                Entre em contato com a franqueadora para solicitar artes personalizadas 
-                com a sua logo e cores da sua loja. Destaque-se da concorrência!
-              </p>
-            </div>
           </div>
         </div>
       </div>
