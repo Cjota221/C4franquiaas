@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import SidebarRevendedora from '@/components/revendedora/SidebarRevendedora';
@@ -8,6 +8,43 @@ import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnboardingTutorial from '@/components/revendedora/OnboardingTutorial';
 import AlertaProdutosSemMargem from '@/components/revendedora/AlertaProdutosSemMargem';
+
+// Cache de sessão para evitar verificações repetidas
+const SESSION_CACHE_KEY = 'revendedora_session_cache';
+const SESSION_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+type SessionCache = {
+  timestamp: number;
+  status: 'aprovada' | 'pendente' | 'rejeitada';
+  isActive: boolean;
+  userId: string;
+};
+
+function getSessionCache(): SessionCache | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(SESSION_CACHE_KEY);
+    if (!cached) return null;
+    const data = JSON.parse(cached) as SessionCache;
+    if (Date.now() - data.timestamp > SESSION_CACHE_TTL) {
+      localStorage.removeItem(SESSION_CACHE_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function setSessionCache(data: Omit<SessionCache, 'timestamp'>) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ ...data, timestamp: Date.now() }));
+}
+
+export function clearSessionCache() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(SESSION_CACHE_KEY);
+}
 
 export default function RevendedoraRootLayout({
   children,
@@ -19,69 +56,89 @@ export default function RevendedoraRootLayout({
   const [desativada, setDesativada] = useState(false);
   const [statusConta, setStatusConta] = useState<'pendente' | 'rejeitada' | 'desativada' | null>(null);
 
-  useEffect(() => {
-    async function verificarAcesso() {
-      const supabase = createClient();
-      
-      // Verificar se está logado
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/login/revendedora');
-        return;
-      }
-
-      // Verificar se é revendedora E seu status
-      const { data: revendedora } = await supabase
-        .from('resellers')
-        .select('id, status, is_active, name')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!revendedora) {
-        await supabase.auth.signOut();
-        router.push('/login/revendedora');
-        return;
-      }
-
-      // ✅ VERIFICAR STATUS DA CONTA
-      
-      // 1️⃣ PENDENTE (Cadastro aguardando aprovação)
-      if (revendedora.status === 'pendente') {
-        setStatusConta('pendente');
-        setDesativada(true);
-        setLoading(false);
-        return;
-      }
-      
-      // 2️⃣ REJEITADA (Cadastro foi recusado)
-      if (revendedora.status === 'rejeitada') {
-        setStatusConta('rejeitada');
-        setDesativada(true);
-        setLoading(false);
-        return;
-      }
-      
-      // 3️⃣ DESATIVADA (Conta aprovada mas temporariamente inativa)
-      if (!revendedora.is_active) {
-        setStatusConta('desativada');
-        setDesativada(true);
-        setLoading(false);
-        return;
-      }
-      
-      // 4️⃣ Status não aprovado
-      if (revendedora.status !== 'aprovada') {
-        await supabase.auth.signOut();
-        router.push('/login/revendedora');
-        return;
-      }
-
-      setLoading(false);
+  const verificarAcesso = useCallback(async () => {
+    const supabase = createClient();
+    
+    // Verificar se está logado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      clearSessionCache();
+      router.push('/login/revendedora');
+      return;
     }
 
-    verificarAcesso();
+    // ⚡ OTIMIZAÇÃO: Verificar cache primeiro
+    const cached = getSessionCache();
+    if (cached && cached.userId === user.id) {
+      if (cached.status === 'aprovada' && cached.isActive) {
+        setLoading(false);
+        return;
+      }
+      // Cache indica problema, verificar no banco
+    }
+
+    // Verificar se é revendedora E seu status
+    const { data: revendedora } = await supabase
+      .from('resellers')
+      .select('id, status, is_active, name')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!revendedora) {
+      clearSessionCache();
+      await supabase.auth.signOut();
+      router.push('/login/revendedora');
+      return;
+    }
+
+    // Salvar no cache para navegações futuras
+    setSessionCache({
+      status: revendedora.status as 'aprovada' | 'pendente' | 'rejeitada',
+      isActive: revendedora.is_active,
+      userId: user.id,
+    });
+
+    // ✅ VERIFICAR STATUS DA CONTA
+    
+    // 1️⃣ PENDENTE (Cadastro aguardando aprovação)
+    if (revendedora.status === 'pendente') {
+      setStatusConta('pendente');
+      setDesativada(true);
+      setLoading(false);
+      return;
+    }
+    
+    // 2️⃣ REJEITADA (Cadastro foi recusado)
+    if (revendedora.status === 'rejeitada') {
+      setStatusConta('rejeitada');
+      setDesativada(true);
+      setLoading(false);
+      return;
+    }
+    
+    // 3️⃣ DESATIVADA (Conta aprovada mas temporariamente inativa)
+    if (!revendedora.is_active) {
+      setStatusConta('desativada');
+      setDesativada(true);
+      setLoading(false);
+      return;
+    }
+    
+    // 4️⃣ Status não aprovado
+    if (revendedora.status !== 'aprovada') {
+      clearSessionCache();
+      await supabase.auth.signOut();
+      router.push('/login/revendedora');
+      return;
+    }
+
+    setLoading(false);
   }, [router]);
+
+  useEffect(() => {
+    verificarAcesso();
+  }, [verificarAcesso]);
 
   // Tela de Loading
   if (loading) {
@@ -98,6 +155,7 @@ export default function RevendedoraRootLayout({
   // 🆕 TELAS DE BLOQUEIO BASEADAS NO STATUS
   if (desativada) {
     const handleLogout = async () => {
+      clearSessionCache();
       const supabase = createClient();
       await supabase.auth.signOut();
       router.push('/login/revendedora');
