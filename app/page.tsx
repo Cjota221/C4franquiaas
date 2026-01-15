@@ -11,12 +11,19 @@ import {
   Play,
   ChevronDown,
   Store,
-  Wallet,
   Palette,
   Package,
   MessageCircle,
   Menu,
-  X
+  X,
+  ShoppingCart,
+  Sparkles,
+  TrendingUp,
+  Clock,
+  Users,
+  Zap,
+  Gift,
+  Tag
 } from 'lucide-react'
 
 // Hook para animação de scroll reveal
@@ -60,13 +67,12 @@ function AnimatedSection({ children, className = '' }: { children: React.ReactNo
   )
 }
 
-// Componente de Vídeo com player customizado - otimizado para mobile
+// Componente de Vídeo otimizado para mobile
 function VideoPlayer({ src, label }: { src: string; label?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [hasError, setHasError] = useState(false)
 
-  // Forçar carregamento no mobile
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load()
@@ -104,7 +110,6 @@ function VideoPlayer({ src, label }: { src: string; label?: string }) {
           </div>
         )}
         
-        {/* Play Button Overlay */}
         {!isPlaying && !hasError && (
           <button
             onClick={handlePlay}
@@ -117,7 +122,6 @@ function VideoPlayer({ src, label }: { src: string; label?: string }) {
         )}
       </div>
       
-      {/* Label */}
       {label && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
           <p className="text-white text-sm font-medium text-center">{label}</p>
@@ -151,7 +155,7 @@ function FAQItem({ question, answer, isOpen, onClick }: {
       </button>
       <div 
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-40 pb-5' : 'max-h-0'
+          isOpen ? 'max-h-48 pb-5' : 'max-h-0'
         }`}
       >
         <p className="text-gray-600 leading-relaxed">{answer}</p>
@@ -174,23 +178,27 @@ export default function LandingPage() {
   const faqs = [
     { 
       question: 'Preciso investir em estoque?', 
-      answer: 'Não. Você vende primeiro e só depois faz o pedido conosco. Zero risco de ficar com mercadoria parada.' 
+      answer: 'Não! Você vende primeiro para sua cliente e só depois faz o pedido com a gente. Zero risco de ficar com mercadoria parada. Você só compra o que já vendeu.' 
     },
     { 
-      question: 'Quanto custa para participar?', 
-      answer: 'O cadastro é 100% gratuito. Não há taxa de entrada nem mensalidade. Você só paga quando fizer pedidos.' 
+      question: 'Quanto custa para ter minha franquia?', 
+      answer: 'O cadastro é 100% gratuito. Não tem taxa de entrada nem mensalidade. Você só paga quando fizer pedidos dos produtos que já vendeu.' 
     },
     { 
-      question: 'Posso personalizar meu site?', 
-      answer: 'Sim. Você escolhe suas cores, adiciona sua logo e define seus preços. O cliente vê sua marca, não a nossa.' 
+      question: 'Como funciona o pagamento das minhas clientes?', 
+      answer: 'Sua cliente escolhe os produtos no seu site, adiciona ao carrinho e finaliza pelo seu WhatsApp. Você combina a forma de pagamento diretamente com ela e fica com todo o lucro.' 
     },
     { 
-      question: 'Como funciona a entrega?', 
-      answer: 'Após vender, você faz o pedido conosco. Enviamos os produtos para você e você entrega ao seu cliente, ficando com todo o lucro.' 
+      question: 'Posso personalizar o site com minha marca?', 
+      answer: 'Sim! Você coloca sua logo, escolhe suas cores, adiciona banners, configura suas redes sociais e define seus próprios preços. O cliente vê sua marca, não a nossa.' 
     },
     { 
       question: 'Qual a margem de lucro?', 
-      answer: 'Você define sua própria margem no painel. Compra com preço de atacado e vende pelo preço que preferir.' 
+      answer: 'Você define! No painel você configura sua margem sobre cada produto. Compra com preço de atacado e vende pelo preço que quiser. A diferença é seu lucro.' 
+    },
+    { 
+      question: 'Os produtos são de vocês mesmo?', 
+      answer: 'Sim! Todos os produtos são da Cjota Rasteirinhas. Fotos profissionais, descrições completas e estoque atualizado em tempo real no seu site.' 
     },
   ]
 
@@ -198,7 +206,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white antialiased">
       
       {/* ═══════════════════════════════════════════════════════════════════
-          HEADER - Fixo, minimalista, profissional
+          HEADER
       ═══════════════════════════════════════════════════════════════════ */}
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -208,7 +216,6 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             
-            {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
               <Image 
                 src="https://i.ibb.co/20Gxkv48/Design-sem-nome-62.png" 
@@ -224,20 +231,21 @@ export default function LandingPage() {
               </div>
             </Link>
             
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-10">
+              <a href="#o-que-e" className="text-sm text-gray-600 hover:text-gray-900 transition font-medium">
+                O que é
+              </a>
               <a href="#como-funciona" className="text-sm text-gray-600 hover:text-gray-900 transition font-medium">
                 Como Funciona
               </a>
-              <a href="#vantagens" className="text-sm text-gray-600 hover:text-gray-900 transition font-medium">
-                Vantagens
+              <a href="#ferramentas" className="text-sm text-gray-600 hover:text-gray-900 transition font-medium">
+                Ferramentas
               </a>
               <a href="#faq" className="text-sm text-gray-600 hover:text-gray-900 transition font-medium">
                 Dúvidas
               </a>
             </nav>
             
-            {/* Desktop CTAs */}
             <div className="hidden lg:flex items-center gap-4">
               <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-pink-600 transition">
                 Entrar
@@ -246,11 +254,10 @@ export default function LandingPage() {
                 href="/cadastro/revendedora"
                 className="bg-pink-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-700 transition-colors"
               >
-                Começar Grátis
+                Quero minha Franquia
               </Link>
             </div>
             
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition"
@@ -261,46 +268,16 @@ export default function LandingPage() {
           </div>
         </div>
         
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-t border-gray-100">
             <div className="px-5 py-6 space-y-1">
-              <a 
-                href="#como-funciona" 
-                onClick={() => setMobileMenuOpen(false)} 
-                className="block text-gray-700 font-medium py-3 hover:text-pink-600 transition"
-              >
-                Como Funciona
-              </a>
-              <a 
-                href="#vantagens" 
-                onClick={() => setMobileMenuOpen(false)} 
-                className="block text-gray-700 font-medium py-3 hover:text-pink-600 transition"
-              >
-                Vantagens
-              </a>
-              <a 
-                href="#faq" 
-                onClick={() => setMobileMenuOpen(false)} 
-                className="block text-gray-700 font-medium py-3 hover:text-pink-600 transition"
-              >
-                Dúvidas
-              </a>
+              <a href="#o-que-e" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 font-medium py-3">O que é</a>
+              <a href="#como-funciona" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 font-medium py-3">Como Funciona</a>
+              <a href="#ferramentas" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 font-medium py-3">Ferramentas</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 font-medium py-3">Dúvidas</a>
               <div className="pt-4 mt-4 border-t border-gray-100 space-y-3">
-                <Link 
-                  href="/login" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className="block text-center py-3 text-gray-700 font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition"
-                >
-                  Entrar
-                </Link>
-                <Link 
-                  href="/cadastro/revendedora" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className="block text-center py-3 bg-pink-600 text-white font-semibold rounded-xl hover:bg-pink-700 transition"
-                >
-                  Começar Grátis
-                </Link>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center py-3 text-gray-700 font-medium border border-gray-200 rounded-xl">Entrar</Link>
+                <Link href="/cadastro/revendedora" onClick={() => setMobileMenuOpen(false)} className="block text-center py-3 bg-pink-600 text-white font-semibold rounded-xl">Quero minha Franquia</Link>
               </div>
             </div>
           </div>
@@ -308,69 +285,73 @@ export default function LandingPage() {
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DOBRA 1: HERO SECTION - A Promessa Principal
-          Vídeo 1 em destaque total
+          HERO - A Grande Promessa
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="pt-24 lg:pt-32 pb-16 lg:pb-24">
+      <section className="pt-24 lg:pt-32 pb-16 lg:pb-20">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             
-            {/* Texto */}
             <div className="order-2 lg:order-1">
-              <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
-                Rede de Franquias Cjota Rasteirinhas
-              </p>
+              {/* Badge de pioneirismo */}
+              <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                Modelo pioneiro no Brasil
+              </div>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-[1.1] mb-6">
-                Seu site de vendas
-                <span className="text-pink-600"> com sua marca</span>
+                Sua própria loja virtual de calçados
+                <span className="text-pink-600"> pronta para vender</span>
               </h1>
               
-              <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
-                Tenha um catálogo completo de calçados, personalizado com suas cores, logo e preços. 
-                Venda pelo seu WhatsApp, compre da gente e entregue ao seu cliente.
+              <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                Chega de mandar foto por foto no WhatsApp. Tenha um <strong>site profissional completo</strong> com todos os nossos produtos, fotos, descrições e estoque atualizado em tempo real.
               </p>
               
-              {/* Trust Signals */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-10">
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                  <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                    <Check className="w-3 h-3 text-green-600" />
-                  </div>
-                  <span>Cadastro 100% gratuito</span>
+              <p className="text-base text-gray-500 mb-8">
+                Você personaliza com sua marca, define seus preços e divulga. Sua cliente escolhe, você vende e lucra. <strong>Sem precisar de estoque.</strong>
+              </p>
+              
+              {/* Social Proof */}
+              <div className="flex items-center gap-6 mb-8 pb-8 border-b border-gray-100">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">+100</div>
+                  <div className="text-xs text-gray-500">Franqueadas ativas</div>
                 </div>
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                  <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                    <Check className="w-3 h-3 text-green-600" />
-                  </div>
-                  <span>Sem estoque necessário</span>
+                <div className="w-px h-10 bg-gray-200" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">100%</div>
+                  <div className="text-xs text-gray-500">Gratuito</div>
+                </div>
+                <div className="w-px h-10 bg-gray-200" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">0</div>
+                  <div className="text-xs text-gray-500">Estoque necessário</div>
                 </div>
               </div>
               
-              {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/cadastro/revendedora"
                   className="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-pink-700 transition-colors shadow-lg shadow-pink-600/20"
                 >
-                  Quero ser franqueada
+                  Quero minha franquia grátis
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold text-gray-700 border-2 border-gray-200 hover:border-gray-300 transition-colors"
                 >
-                  Já tenho cadastro
+                  Já sou franqueada
                 </Link>
               </div>
             </div>
             
-            {/* Vídeo 1 - Principal */}
+            {/* Vídeo Principal */}
             <div className="order-1 lg:order-2 flex justify-center">
-              <div className="w-full max-w-[260px] sm:max-w-[280px] lg:max-w-[300px]">
+              <div className="w-full max-w-[260px] sm:max-w-[280px]">
                 <VideoPlayer 
                   src="https://files.catbox.moe/rg19bj.MP4" 
-                  label="O que é o C4 Franquias"
+                  label="Entenda o C4 Franquias"
                 />
               </div>
             </div>
@@ -380,44 +361,182 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DOBRA 2: O PROBLEMA E A SOLUÇÃO
-          Vídeo 2 - Layout Z-Pattern (invertido)
+          O PROBLEMA - Por que isso existe
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="como-funciona" className="py-16 lg:py-24 bg-gray-50">
+      <section id="o-que-e" className="py-16 lg:py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
           <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
+                Cansada de perder vendas por falta de estrutura?
+              </h2>
+              <p className="text-lg text-gray-600">
+                A maioria das revendedoras perde clientes porque não tem um lugar organizado para mostrar os produtos. 
+                O cliente chega, não encontra um catálogo, fica esperando fotos... e desiste.
+              </p>
+            </div>
+            
+            {/* Comparativo Antes/Depois */}
+            <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto">
               
-              {/* Vídeo 2 */}
+              {/* Antes */}
+              <div className="bg-white rounded-2xl p-6 lg:p-8 border-2 border-gray-200">
+                <div className="text-red-500 font-semibold text-sm mb-4">SEM O C4 FRANQUIAS</div>
+                <ul className="space-y-4">
+                  {[
+                    'Manda foto por foto no WhatsApp',
+                    'Cliente pergunta se tem no estoque',
+                    'Não sabe qual numeração tem',
+                    'Perde venda por demora',
+                    'Parece amador e desorganizado',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-600">
+                      <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Depois */}
+              <div className="bg-white rounded-2xl p-6 lg:p-8 border-2 border-pink-500 shadow-lg">
+                <div className="text-pink-600 font-semibold text-sm mb-4">COM O C4 FRANQUIAS</div>
+                <ul className="space-y-4">
+                  {[
+                    'Seu link profissional para divulgar',
+                    'Estoque atualizado em tempo real',
+                    'Todas as numerações visíveis',
+                    'Cliente escolhe sozinha no site',
+                    'Imagem profissional e confiável',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-700">
+                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          O QUE VOCÊ RECEBE
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 lg:py-20">
+        <div className="max-w-6xl mx-auto px-5 lg:px-8">
+          <AnimatedSection>
+            <div className="text-center mb-12">
+              <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
+                O que você recebe
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                Um site completo, pronto para vender
+              </h2>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { 
+                  icon: Store, 
+                  title: 'Site profissional pronto', 
+                  desc: 'Todos os nossos produtos já cadastrados com fotos profissionais, descrições e numerações.' 
+                },
+                { 
+                  icon: Clock, 
+                  title: 'Estoque em tempo real', 
+                  desc: 'Quando uma peça acaba no nosso estoque, automaticamente sai do seu site. Zero risco de vender o que não tem.' 
+                },
+                { 
+                  icon: Palette, 
+                  title: 'Personalização completa', 
+                  desc: 'Coloque sua logo, escolha suas cores, adicione banners, barra de anúncios e suas redes sociais.' 
+                },
+                { 
+                  icon: Tag, 
+                  title: 'Seus preços, seu lucro', 
+                  desc: 'Defina sua margem de lucro no painel. A diferença entre atacado e seu preço de venda é seu.' 
+                },
+                { 
+                  icon: MessageCircle, 
+                  title: 'Vendas pelo WhatsApp', 
+                  desc: 'Cliente escolhe no site e finaliza pelo seu WhatsApp. Você fecha a venda e combina o pagamento.' 
+                },
+                { 
+                  icon: Package, 
+                  title: 'Sem estoque', 
+                  desc: 'Venda primeiro, compre depois. A gente envia pra você e você entrega pra sua cliente.' 
+                },
+              ].map((item, i) => (
+                <div key={i} className="bg-gray-50 rounded-2xl p-6">
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                    <item.icon className="w-6 h-6 text-pink-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          COMO FUNCIONA - Passo a passo
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="como-funciona" className="py-16 lg:py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-5 lg:px-8">
+          <AnimatedSection>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              
+              {/* Vídeo */}
               <div className="flex justify-center order-1">
                 <div className="w-full max-w-[240px] sm:max-w-[260px]">
                   <VideoPlayer 
                     src="https://files.catbox.moe/hzg1c3.MP4" 
-                    label="Pedido e Entrega"
+                    label="Como funciona na prática"
                   />
                 </div>
               </div>
               
-              {/* Texto */}
+              {/* Passos */}
               <div className="order-2">
                 <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
-                  Entenda o modelo
+                  Simples assim
                 </p>
                 
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-8">
-                  O fluxo de vendas mais simples que existe
+                  Como funciona o fluxo de vendas
                 </h2>
                 
                 <div className="space-y-6">
                   {[
-                    { icon: Store, title: 'Seu cliente acessa seu site', desc: 'Com sua marca, suas cores, sua logo e seus preços' },
-                    { icon: MessageCircle, title: 'Pedido chega no seu WhatsApp', desc: 'Você fecha a venda diretamente com o cliente' },
-                    { icon: Package, title: 'Compre da gente o que vendeu', desc: 'Nós enviamos os produtos pra você' },
-                    { icon: Check, title: 'Entregue e fique com o lucro', desc: 'A diferença entre seu preço de compra e venda é seu' },
+                    { 
+                      num: '1', 
+                      title: 'Divulgue seu link', 
+                      desc: 'Você recebe um link exclusivo do seu site para divulgar nas redes sociais' 
+                    },
+                    { 
+                      num: '2', 
+                      title: 'Cliente escolhe no seu site', 
+                      desc: 'Ela vê todas as peças com fotos, preços e numerações. Adiciona ao carrinho e finaliza pelo seu WhatsApp' 
+                    },
+                    { 
+                      num: '3', 
+                      title: 'Você fecha a venda', 
+                      desc: 'Combina o pagamento direto com sua cliente e recebe' 
+                    },
+                    { 
+                      num: '4', 
+                      title: 'Compre da gente o que vendeu', 
+                      desc: 'Faça o pedido no painel. A gente envia pra você, você entrega pra sua cliente' 
+                    },
                   ].map((step, i) => (
                     <div key={i} className="flex gap-4 items-start">
-                      <div className="flex-shrink-0 w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
-                        <step.icon className="w-5 h-5 text-pink-600" />
+                      <div className="flex-shrink-0 w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center font-bold">
+                        {step.num}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-1">{step.title}</h3>
@@ -434,54 +553,34 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DOBRA 3: DEEP DIVE - Funcionalidades e Diferenciais
-          Vídeos 3 e 4 lado a lado em cards
+          FERRAMENTAS PODEROSAS
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="vantagens" className="py-16 lg:py-24">
+      <section id="ferramentas" className="py-16 lg:py-20">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
           <AnimatedSection>
             
-            {/* Header da seção */}
-            <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="text-center max-w-2xl mx-auto mb-12">
               <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
-                Entenda os detalhes
+                Ferramentas poderosas
               </p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-                Tudo que você precisa saber antes de começar
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                Muito mais que um catálogo online
               </h2>
+              <p className="text-gray-600">
+                Seu painel tem ferramentas profissionais para você vender mais
+              </p>
             </div>
             
-            {/* Grid de Vídeos 3 e 4 */}
-            <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            {/* Grid com vídeos e ferramentas */}
+            <div className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-10">
               
-              {/* Card Vídeo 3 - Investimento */}
+              {/* Card Personalização */}
               <div className="bg-gray-50 rounded-2xl p-6 lg:p-8">
                 <div className="flex justify-center mb-6">
-                  <div className="w-full max-w-[180px] sm:max-w-[200px]">
+                  <div className="w-full max-w-[180px]">
                     <VideoPlayer 
-                      src="https://files.catbox.moe/ukwqyj.MP4"
-                      label="Investimento Zero"
-                    />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl mb-4">
-                    <Wallet className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Investimento Zero</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Sem taxa de entrada, sem mensalidade. Você só paga quando faz pedidos após vender.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Card Vídeo 4 - Preços */}
-              <div className="bg-gray-50 rounded-2xl p-6 lg:p-8">
-                <div className="flex justify-center mb-6">
-                  <div className="w-full max-w-[180px] sm:max-w-[200px]">
-                    <VideoPlayer 
-                      src="https://files.catbox.moe/495y6q.MP4"
-                      label="Defina seus Preços"
+                      src="https://files.catbox.moe/k5n0ja.MP4"
+                      label="Personalização"
                     />
                   </div>
                 </div>
@@ -489,13 +588,50 @@ export default function LandingPage() {
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4">
                     <Palette className="w-6 h-6 text-purple-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Você Define os Preços</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Configure sua margem de lucro no painel. Sua estratégia de preços, seu controle total.
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Personalização completa</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Logo, cores, banners, barra de anúncios, redes sociais. Seu site com a cara da sua marca.
                   </p>
                 </div>
               </div>
               
+              {/* Card Preços */}
+              <div className="bg-gray-50 rounded-2xl p-6 lg:p-8">
+                <div className="flex justify-center mb-6">
+                  <div className="w-full max-w-[180px]">
+                    <VideoPlayer 
+                      src="https://files.catbox.moe/495y6q.MP4"
+                      label="Defina seus preços"
+                    />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl mb-4">
+                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Você define os preços</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Configure sua margem de lucro. Quanto maior sua margem, maior seu ganho em cada venda.
+                  </p>
+                </div>
+              </div>
+              
+            </div>
+            
+            {/* Lista de ferramentas extras */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { icon: ShoppingCart, title: 'Carrinho abandonado', desc: 'Veja quem entrou e não comprou' },
+                { icon: Gift, title: 'Cupons de desconto', desc: 'Crie promoções para suas clientes' },
+                { icon: Zap, title: 'Frete grátis', desc: 'Configure promoções de frete' },
+                { icon: Tag, title: 'Leve + Pague -', desc: 'Promoções para vender mais' },
+              ].map((tool, i) => (
+                <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                  <tool.icon className="w-6 h-6 text-pink-600 mx-auto mb-2" />
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{tool.title}</h4>
+                  <p className="text-gray-500 text-xs">{tool.desc}</p>
+                </div>
+              ))}
             </div>
             
           </AnimatedSection>
@@ -503,36 +639,87 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SEÇÃO: VANTAGENS RÁPIDAS (Lista visual minimalista)
+          INVESTIMENTO ZERO
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
           <AnimatedSection>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-              {[
-                { 
-                  icon: Package, 
-                  title: 'Sem Estoque', 
-                  desc: 'Venda primeiro, compre depois. Zero risco de mercadoria parada.' 
-                },
-                { 
-                  icon: Store, 
-                  title: 'Site Profissional', 
-                  desc: 'Catálogo completo já cadastrado e pronto para você divulgar.' 
-                },
-                { 
-                  icon: Palette, 
-                  title: 'Sua Marca', 
-                  desc: 'Personalize cores, logo e preços. O cliente vê sua identidade.' 
-                },
-              ].map((item, i) => (
-                <div key={i} className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-2xl mb-5 shadow-sm border border-gray-100">
-                    <item.icon className="w-7 h-7 text-pink-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{item.desc}</p>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              
+              {/* Texto */}
+              <div>
+                <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
+                  Risco zero
+                </p>
+                
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
+                  Você não paga nada para começar
+                </h2>
+                
+                <div className="space-y-4 mb-8">
+                  {[
+                    'Cadastro 100% gratuito',
+                    'Sem taxa de entrada',
+                    'Sem mensalidade',
+                    'Sem precisar de estoque',
+                    'Você só paga quando fizer pedidos',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700">{item}</span>
+                    </div>
+                  ))}
                 </div>
+                
+                <div className="bg-pink-50 rounded-xl p-4 border border-pink-100">
+                  <p className="text-pink-800 text-sm">
+                    <strong>Modelo único:</strong> Nenhuma fábrica ou fornecedor oferece isso. 
+                    Somos pioneiros em franquias digitais de calçados no Brasil.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Vídeo */}
+              <div className="flex justify-center">
+                <div className="w-full max-w-[240px] sm:max-w-[260px]">
+                  <VideoPlayer 
+                    src="https://files.catbox.moe/ukwqyj.MP4"
+                    label="Precisa investir?"
+                  />
+                </div>
+              </div>
+              
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          FAQ
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="faq" className="py-16 lg:py-20">
+        <div className="max-w-3xl mx-auto px-5 lg:px-8">
+          <AnimatedSection>
+            <div className="text-center mb-10">
+              <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
+                Dúvidas frequentes
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                Tire suas dúvidas
+              </h2>
+            </div>
+            
+            <div className="bg-gray-50 rounded-2xl p-6 lg:p-8">
+              {faqs.map((faq, i) => (
+                <FAQItem
+                  key={i}
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openFAQ === i}
+                  onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+                />
               ))}
             </div>
           </AnimatedSection>
@@ -540,74 +727,30 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DOBRA 4: FAQ VISUAL - Matando Objeções
-          Vídeo 5 + Accordion FAQ lado a lado
+          CTA FINAL
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="faq" className="py-16 lg:py-24">
-        <div className="max-w-6xl mx-auto px-5 lg:px-8">
-          <AnimatedSection>
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-              
-              {/* Coluna do Vídeo 5 */}
-              <div>
-                <p className="text-pink-600 font-semibold text-sm tracking-wide uppercase mb-4">
-                  Tire suas dúvidas
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-8">
-                  Ainda tem dúvidas? Este vídeo responde tudo.
-                </h2>
-                
-                <div className="flex justify-center lg:justify-start">
-                  <div className="w-full max-w-[240px] sm:max-w-[260px]">
-                    <VideoPlayer 
-                      src="https://files.catbox.moe/k5n0ja.MP4"
-                      label="Personalização do Site"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Coluna do FAQ Accordion */}
-              <div className="bg-gray-50 rounded-2xl p-6 lg:p-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Perguntas Frequentes</h3>
-                <p className="text-gray-600 text-sm mb-6">Clique para expandir</p>
-                <div>
-                  {faqs.map((faq, i) => (
-                    <FAQItem
-                      key={i}
-                      question={faq.question}
-                      answer={faq.answer}
-                      isOpen={openFAQ === i}
-                      onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          CTA FINAL - Última chamada para ação
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 lg:py-24 bg-gray-900">
+      <section className="py-16 lg:py-20 bg-gray-900">
         <div className="max-w-3xl mx-auto px-5 lg:px-8 text-center">
           <AnimatedSection>
+            <div className="inline-flex items-center gap-2 bg-pink-500/20 text-pink-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Users className="w-4 h-4" />
+              +100 franqueadas já estão vendendo
+            </div>
+            
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-6">
-              Pronta para começar a vender de forma profissional?
+              Pronta para vender de forma profissional?
             </h2>
+            
             <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
-              Cadastro gratuito, sem estoque, sem mensalidade. 
-              Comece hoje mesmo.
+              Tenha sua franquia digital hoje mesmo. 
+              Cadastro gratuito, sem estoque, sem mensalidade.
             </p>
             
             <Link
               href="/cadastro/revendedora"
               className="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-10 py-4 rounded-full font-semibold text-lg hover:bg-pink-500 transition-colors"
             >
-              Criar minha franquia grátis
+              Quero minha franquia grátis
               <ArrowRight className="w-5 h-5" />
             </Link>
             
@@ -618,11 +761,11 @@ export default function LandingPage() {
               </span>
               <span className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500" />
-                Sem compromisso
+                Aprovação em 24h
               </span>
               <span className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500" />
-                Análise em 24h
+                Suporte no WhatsApp
               </span>
             </div>
           </AnimatedSection>
@@ -630,13 +773,12 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FOOTER - Minimalista e profissional
+          FOOTER
       ═══════════════════════════════════════════════════════════════════ */}
-      <footer className="bg-gray-900 border-t border-gray-800 py-12 lg:py-16">
+      <footer className="bg-gray-900 border-t border-gray-800 py-12">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-10 lg:gap-16">
+          <div className="grid md:grid-cols-3 gap-10">
             
-            {/* Logo e descrição */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2.5 mb-4">
                 <Image 
@@ -652,7 +794,8 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-gray-400 text-sm max-w-md mb-6 leading-relaxed">
-                Rede de franquias de calçados femininos. Tenha seu próprio site, personalize com sua marca e venda sem precisar de estoque.
+                A primeira rede de franquias digitais de calçados femininos do Brasil. 
+                Tenha seu site profissional e venda os nossos produtos com a sua marca.
               </p>
               <div className="flex gap-3">
                 <a 
@@ -660,7 +803,6 @@ export default function LandingPage() {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
-                  aria-label="Instagram"
                 >
                   <Instagram className="w-5 h-5 text-gray-400" />
                 </a>
@@ -669,43 +811,24 @@ export default function LandingPage() {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
-                  aria-label="WhatsApp"
                 >
                   <Phone className="w-5 h-5 text-gray-400" />
                 </a>
               </div>
             </div>
             
-            {/* Links */}
             <div>
               <h4 className="text-white font-semibold mb-4">Links</h4>
               <ul className="space-y-3 text-sm">
-                <li>
-                  <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
-                    Área da Franqueada
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cadastro/revendedora" className="text-gray-400 hover:text-white transition-colors">
-                    Quero ser Franqueada
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/termos" className="text-gray-400 hover:text-white transition-colors">
-                    Termos de Uso
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacidade" className="text-gray-400 hover:text-white transition-colors">
-                    Privacidade
-                  </Link>
-                </li>
+                <li><Link href="/login" className="text-gray-400 hover:text-white transition-colors">Área da Franqueada</Link></li>
+                <li><Link href="/cadastro/revendedora" className="text-gray-400 hover:text-white transition-colors">Quero ser Franqueada</Link></li>
+                <li><Link href="/termos" className="text-gray-400 hover:text-white transition-colors">Termos de Uso</Link></li>
+                <li><Link href="/privacidade" className="text-gray-400 hover:text-white transition-colors">Privacidade</Link></li>
               </ul>
             </div>
             
           </div>
           
-          {/* Copyright */}
           <div className="border-t border-gray-800 mt-10 pt-8 text-center text-sm text-gray-500">
             © {new Date().getFullYear()} C4 Franquias by Cjota Rasteirinhas. Todos os direitos reservados.
           </div>
