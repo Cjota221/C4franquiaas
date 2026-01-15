@@ -90,7 +90,7 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
     return (
       <button
         onClick={() => router.push('/revendedora/tutoriais')}
-        className="fixed bottom-6 right-6 z-40 group"
+        className="fixed bottom-24 right-4 z-50 group lg:bottom-6 lg:right-6"
         title="Ver Tutoriais"
       >
         <div className="relative">
@@ -118,7 +118,7 @@ export default function VideoTutorialButton({ pagina, autoDetectSection = false 
       {/* Botão Flutuante com Preview */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-6 right-6 z-40 group"
+        className="fixed bottom-24 right-4 z-50 group lg:bottom-6 lg:right-6"
         title={video.titulo}
       >
         <div className="relative">

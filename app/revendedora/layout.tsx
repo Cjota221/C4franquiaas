@@ -317,7 +317,8 @@ export default function RevendedoraRootLayout({
       {/* Área Principal */}
       <main className="flex-1 w-full lg:ml-0">
         {/* Padding para acomodar Header (top) e Bottom Bar (bottom) no mobile */}
-        <div className="pt-14 pb-20 lg:pt-0 lg:pb-0 min-h-screen">
+        {/* pb-32 garante que botões "Salvar" não fiquem escondidos pela Bottom Bar */}
+        <div className="pt-14 pb-32 lg:pt-0 lg:pb-0 min-h-screen">
           <AlertaProdutosSemMargem />
           {children}
         </div>
