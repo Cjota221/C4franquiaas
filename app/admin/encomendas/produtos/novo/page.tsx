@@ -52,6 +52,7 @@ export default function ProdutoFormPage() {
     if (isEdit) {
       fetchProduto();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit]);
 
   const fetchProduto = async () => {

@@ -30,6 +30,7 @@ export default function AdminBannersPage() {
 
   useEffect(() => {
     loadBanners()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadBanners = async () => {

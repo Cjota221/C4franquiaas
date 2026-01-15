@@ -151,7 +151,7 @@ async function handleProdutoEstoque(data: any, eventType: string) {
 /**
  * Desativa produto em todas franqueadas e revendedoras
  */
-async function desativarProdutoNasFranquias(produtoId: string, facilzapId: string) {
+async function _desativarProdutoNasFranquias(produtoId: string, facilzapId: string) {
   try {
     // Buscar vinculações com franqueadas
     const { data: franqueadas } = await supabaseAdmin
@@ -207,7 +207,7 @@ async function desativarProdutoNasFranquias(produtoId: string, facilzapId: strin
 /**
  * Reativa produto em todas franqueadas e revendedoras
  */
-async function reativarProdutoNasFranquias(produtoId: string) {
+async function _reativarProdutoNasFranquias(produtoId: string) {
   try {
     // Buscar vinculações com franqueadas
     const { data: franqueadas } = await supabaseAdmin

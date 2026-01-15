@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [LOGIN] Login realizado com sucesso!');
     // Retornar dados do usuário (sem senha)
-    const { senha_hash, ...userSemSenha } = usuario;
+    const { senha_hash: _senha_hash, ...userSemSenha } = usuario;
 
     return NextResponse.json({
       token,

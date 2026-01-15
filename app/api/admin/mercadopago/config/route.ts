@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Configurações salvas com sucesso',
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Erro interno' },
       { status: 500 }

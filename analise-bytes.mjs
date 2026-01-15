@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync } from 'fs';
 
 const filePath = 'app/revendedora/personalizacao/page.tsx';
 

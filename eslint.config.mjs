@@ -21,6 +21,21 @@ const eslintConfig = [
       "scripts/**",
     ],
   },
+  {
+    rules: {
+      // Permite variáveis não utilizadas com prefixo _
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      // Ignora warning de fonte customizada (usamos no layout.tsx)
+      "@next/next/no-page-custom-font": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -22,6 +22,7 @@ export default function CarrinhosAbandonadosPage() {
 
   useEffect(() => {
     fetchCarrinhos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroStatus]);
 
   const fetchCarrinhos = async () => {

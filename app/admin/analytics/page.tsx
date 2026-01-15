@@ -42,6 +42,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo])
 
   async function fetchAnalytics() {

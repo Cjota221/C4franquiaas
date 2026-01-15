@@ -39,6 +39,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     loadResellerId()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function NotificationBell() {
         supabase.removeChannel(channel)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resellerId])
 
   async function loadResellerId() {

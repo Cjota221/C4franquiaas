@@ -28,6 +28,7 @@ export default function PedidosGradeFechadaPage() {
 
   useEffect(() => {
     fetchPedidos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroStatus]);
 
   const fetchPedidos = async () => {

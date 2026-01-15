@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       query = query.in('id', produto_ids);
     }
 
-    const { data: produtos, error: produtosError } = await query;
+    const { data: produtos, error: _produtosError } = await query;
 
     console.log(' Produtos encontrados:', produtos?.length);
 
@@ -138,7 +138,7 @@ export async function GET() {
       },
     });
 
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Erro' }, { status: 500 });
   }
 }

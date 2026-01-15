@@ -103,7 +103,7 @@ try {
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   
-  const { data, error } = await supabase
+  const { data: _data, error } = await supabase
     .from('produtos')
     .select('count')
     .limit(1)

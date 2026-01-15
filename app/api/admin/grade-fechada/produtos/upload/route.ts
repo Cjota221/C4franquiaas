@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload para Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from('grade-fechada-produtos')
       .upload(fileName, buffer, {
         contentType: file.type,

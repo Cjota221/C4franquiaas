@@ -5,7 +5,7 @@ const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || ''
 
 export async function POST(request: NextRequest) {
   try {
-    const { resellerId, instanceName } = await request.json()
+    const { resellerId: _resellerId, instanceName } = await request.json()
 
     if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const createData = await createResponse.json()
+    const _createData = await createResponse.json()
 
     // Aguardar um pouco para a instância inicializar
     await new Promise(resolve => setTimeout(resolve, 2000))

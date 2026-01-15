@@ -36,6 +36,7 @@ export default function CarrinhoPage() {
   useEffect(() => {
     fetchConfig();
     carregarCarrinho();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConfig = async () => {

@@ -44,6 +44,7 @@ export default function LojaGradeFechadaPage() {
   useEffect(() => {
     fetchConfig();
     fetchProdutos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const fetchConfig = async () => {

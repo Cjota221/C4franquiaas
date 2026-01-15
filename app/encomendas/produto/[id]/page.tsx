@@ -24,6 +24,7 @@ export default function ProdutoDetalheEncomedaPage() {
   useEffect(() => {
     fetchProduto();
     fetchConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchProduto = async () => {

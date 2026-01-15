@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Retornar dados (sem senha)
-    const { senha_hash, ...userSemSenha } = usuario;
+    const { senha_hash: _senha_hash, ...userSemSenha } = usuario;
 
     return NextResponse.json({
       token,

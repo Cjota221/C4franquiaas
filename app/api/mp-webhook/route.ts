@@ -23,7 +23,7 @@ const supabase = createClient(
  * Valida a assinatura do webhook (x-signature)
  * Documentação: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks#validar-origem
  */
-function validateSignature(
+function _validateSignature(
   xSignature: string,
   xRequestId: string,
   dataId: string,
@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
     console.log('🔔 [MP Webhook] Notificação recebida:', JSON.stringify(body, null, 2));
 
     // Headers de validação
-    const xSignature = request.headers.get('x-signature');
-    const xRequestId = request.headers.get('x-request-id');
+    const _xSignature = request.headers.get('x-signature');
+    const _xRequestId = request.headers.get('x-request-id');
 
     // 1. Extrair dados da notificação
     const { action, data, type } = body;
