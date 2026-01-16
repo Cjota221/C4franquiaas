@@ -116,6 +116,7 @@ export default function ReelsPage() {
       preco: product.preco,
       quantidade: 1,
       imagem: product.posterUrl || '',
+      estoque: 999, // Estoque não disponível no feed de reels
     });
     
     toast.success('Produto adicionado ao carrinho!', {
