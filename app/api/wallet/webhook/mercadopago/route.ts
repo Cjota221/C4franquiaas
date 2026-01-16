@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Webhook do Mercado Pago para processar pagamentos PIX
 // Este endpoint é chamado pelo Mercado Pago quando o PIX é pago
@@ -149,7 +149,7 @@ async function buscarPagamento(paymentId: string) {
 // Processar pagamento aprovado - creditar na carteira
  
 async function processarPagamentoAprovado(
-  supabase: ReturnType<typeof import('@supabase/supabase-js').createClient>,
+  supabase: SupabaseClient,
   recarga: Record<string, unknown>,
   paymentDetails: Record<string, unknown>,
   webhookPayload: Record<string, unknown>
