@@ -122,7 +122,7 @@ export default function PersonalizacaoRevendedoraPage() {
 
   const supabase = createClient();
   const router = useRouter();
-  const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/catalogo/" + currentSlug : "";
+  const catalogUrl = typeof window !== "undefined" && currentSlug ? window.location.origin + "/site/" + currentSlug : "";
 
   // Função para mudar seção e atualizar URL
   const handleSectionChange = (section: "main" | "colors" | "logo" | "banner" | "social" | "styles") => {

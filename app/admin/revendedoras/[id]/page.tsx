@@ -208,7 +208,7 @@ Qualquer duvida, estamos a disposicao!
       alert('Esta revendedora ainda não configurou o catálogo');
       return;
     }
-    const catalogUrl = `${window.location.origin}/catalogo/${revendedora.slug}`;
+    const catalogUrl = `${window.location.origin}/site/${revendedora.slug}`;
     window.open(catalogUrl, '_blank');
   }
 
@@ -234,7 +234,7 @@ Qualquer duvida, estamos a disposicao!
     );
   }
 
-  const catalogUrl = revendedora.slug ? `${window.location.origin}/catalogo/${revendedora.slug}` : null;
+  const catalogUrl = revendedora.slug ? `${window.location.origin}/site/${revendedora.slug}` : null;
 
   return (
     <div className="min-h-screen w-full bg-gray-50 p-6">

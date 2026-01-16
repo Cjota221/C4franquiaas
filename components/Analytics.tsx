@@ -27,7 +27,7 @@ function getDeviceType(): string {
 // Detectar tipo de página
 function getPageType(pathname: string): string {
   if (pathname === '/') return 'landing'
-  if (pathname.startsWith('/catalogo/')) return 'catalogo'
+  if (pathname.startsWith('/site/')) return 'catalogo'
   if (pathname.startsWith('/admin')) return 'admin'
   if (pathname.startsWith('/franqueada')) return 'franqueada'
   if (pathname.startsWith('/revendedora')) return 'revendedora'

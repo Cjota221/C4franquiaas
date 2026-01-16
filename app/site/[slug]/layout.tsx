@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Playfair_Display, Lato, Montserrat, Open_Sans, Bebas_Neue, Raleway } from "next/font/google";
-import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
-import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
-import CuponsModal from '@/components/catalogo/CuponsModal';
+import LeadCaptureModal from '@/components/site/LeadCaptureModal';
+import CatalogoMetaTags from '@/components/site/CatalogoMetaTags';
+import CuponsModal from '@/components/site/CuponsModal';
 
 // ⚡ Fontes carregadas APENAS no catálogo (economia de ~300KB em outras rotas)
 const playfairDisplay = Playfair_Display({ 
@@ -890,7 +890,7 @@ export default function CatalogoLayout({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/catalogo/${slug}?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/site/${slug}?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -1116,7 +1116,7 @@ export default function CatalogoLayout({
               )}
 
               {/* Centro: Logo */}
-              <Link href={`/catalogo/${slug}`} className="flex items-center justify-center transition-all duration-300">
+              <Link href={`/site/${slug}`} className="flex items-center justify-center transition-all duration-300">
                 {reseller.logo_url ? (
                   <div className={`relative transition-all duration-300 ${
                     isScrolled ? '' : 'scale-110'
@@ -1181,7 +1181,7 @@ export default function CatalogoLayout({
 
                 {/* Carrinho */}
                 <Link
-                  href={`/catalogo/${slug}/carrinho`}
+                  href={`/site/${slug}/carrinho`}
                   className="relative p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
                 >
                   <ShoppingCart size={22} />

@@ -22,7 +22,7 @@ export default function CatalogoMetaTags({
   const description = bio 
     ? bio.substring(0, 160) 
     : `Confira o catálogo completo de produtos da ${storeName}. Moda feminina, acessórios e muito mais!`;
-  const url = `${typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com'}/catalogo/${slug}`;
+  const url = `${typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com'}/site/${slug}`;
   const image = bannerUrl || logoUrl || `${typeof window !== 'undefined' ? window.location.origin : 'https://c4franquias.com'}/og-image.png`;
 
   // Atualizar meta tags dinamicamente

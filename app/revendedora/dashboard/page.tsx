@@ -149,7 +149,7 @@ export default function DashboardRevendedora() {
   const hasConfiguredStore = Boolean(reseller.slug && reseller.slug.trim() !== '');
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const catalogUrl = hasConfiguredStore ? `${siteUrl}/catalogo/${reseller.slug}` : '';
+  const catalogUrl = hasConfiguredStore ? `${siteUrl}/site/${reseller.slug}` : '';
   const whatsappShareText = `Confira meu catálogo de produtos: ${catalogUrl}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappShareText)}`;
 

@@ -127,7 +127,7 @@ export default function ProdutosRelacionados({
                 return (
                   <Link
                     key={produto.id}
-                    href={`/catalogo/${dominio}/produto/${produto.id}`}
+                    href={`/site/${dominio}/produto/${produto.id}`}
                     className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex-none snap-start w-[160px] sm:w-[180px] md:w-[220px] lg:w-[240px]"
                   >
                     {/* Imagem */}

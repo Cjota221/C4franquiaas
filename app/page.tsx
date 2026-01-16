@@ -318,7 +318,7 @@ export default function LandingPage() {
               {/* CTA Demonstração */}
               <div className="mt-6">
                 <a
-                  href="https://c4franquias.com/catalogo/vivaz"
+                  href="https://c4franquias.com/site/vivaz"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-pink-600 font-medium hover:text-pink-700 transition-colors"
@@ -406,7 +406,7 @@ export default function LandingPage() {
             {/* CTA Ver Demonstração */}
             <div className="text-center mt-10">
               <a
-                href="https://c4franquias.com/catalogo/vivaz"
+                href="https://c4franquias.com/site/vivaz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-pink-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors shadow-lg"
@@ -481,7 +481,7 @@ export default function LandingPage() {
             {/* CTA Ver Demonstração */}
             <div className="text-center mt-10">
               <a
-                href="https://c4franquias.com/catalogo/vivaz"
+                href="https://c4franquias.com/site/vivaz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-pink-600 font-medium hover:text-pink-700 transition-colors text-lg"

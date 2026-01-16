@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ArrowLeft, Plus, Minus, ShoppingBag, Check, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
-import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
+import SizeGuideModal from '@/components/site/SizeGuideModal';
 import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
 // import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados'; // REMOVIDO TEMPORARIAMENTE
 
@@ -165,7 +165,7 @@ export default function ProdutoPage() {
       : `55${phoneNumber}`;
     
     // Construir URL do produto
-    const productUrl = `${window.location.origin}/catalogo/${reseller.slug}/produto/${produto.id}`;
+    const productUrl = `${window.location.origin}/site/${reseller.slug}/produto/${produto.id}`;
     
     // Mensagem formatada SEM EMOJIS
     let mensagem = `Olá!\n\n`;
@@ -252,7 +252,7 @@ export default function ProdutoPage() {
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <p className="text-gray-600">Produto não encontrado</p>
         <Link 
-          href={`/catalogo/${reseller?.slug}`}
+          href={`/site/${reseller?.slug}`}
           className="mt-4 inline-block text-pink-500 hover:underline"
         >
           Voltar ao catálogo
@@ -265,7 +265,7 @@ export default function ProdutoPage() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Botão Voltar */}
       <Link 
-        href={`/catalogo/${reseller?.slug}`}
+        href={`/site/${reseller?.slug}`}
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
       >
         <ArrowLeft size={20} />
@@ -485,7 +485,7 @@ export default function ProdutoPage() {
 
           {/* Link para o Carrinho */}
           <Link
-            href={`/catalogo/${reseller?.slug}/carrinho`}
+            href={`/site/${reseller?.slug}/carrinho`}
             className="block mt-4 text-center text-gray-600 hover:text-gray-900"
           >
             Ver meu carrinho

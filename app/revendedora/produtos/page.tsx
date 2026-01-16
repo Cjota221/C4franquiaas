@@ -373,7 +373,7 @@ export default function ProdutosRevendedoraPage() {
       return;
     }
 
-    const url = `${window.location.origin}/catalogo/${revendedoraSlug}/produto/${produtoId}`;
+    const url = `${window.location.origin}/site/${revendedoraSlug}/produto/${produtoId}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedProductId(produtoId);
       setTimeout(() => setCopiedProductId(null), 2000);

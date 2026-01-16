@@ -89,7 +89,7 @@ export default function RevendedoraDetailsPanel({
 
   const verCatalogo = () => {
     if (revendedora.slug) {
-      window.open(`${baseUrl}/catalogo/${revendedora.slug}`, '_blank');
+      window.open(`${baseUrl}/site/${revendedora.slug}`, '_blank');
     } else {
       toast.error('Catálogo ainda não configurado');
     }
@@ -349,10 +349,10 @@ export default function RevendedoraDetailsPanel({
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <Store className="w-5 h-5 text-gray-400" />
-                    <span className="text-sm text-gray-700">/catalogo/{revendedora.slug}</span>
+                    <span className="text-sm text-gray-700">/site/{revendedora.slug}</span>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(`${baseUrl}/catalogo/${revendedora.slug}`, 'slug')}
+                    onClick={() => copyToClipboard(`${baseUrl}/site/${revendedora.slug}`, 'slug')}
                     className={`p-2 rounded-lg transition-colors ${
                       copiedField === 'slug' 
                         ? 'bg-green-100 text-green-600' 

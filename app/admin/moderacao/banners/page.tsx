@@ -833,7 +833,7 @@ export default function ModeracaoBannersPage() {
 
                 {submission.status !== 'pending' && (
                   <a
-                    href={`/catalogo/${submission.reseller.slug}`}
+                    href={`/site/${submission.reseller.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-4"

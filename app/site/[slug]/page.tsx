@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronDown, Truck, Tag } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useCatalogo } from './layout';
-import BannerComTexto from '@/components/catalogo/BannerComTexto';
+import BannerComTexto from '@/components/site/BannerComTexto';
 
 type Variacao = {
   id?: string;
@@ -435,7 +435,7 @@ export default function CatalogoPrincipal() {
           return (
             <Link
               key={product.id}
-              href={`/catalogo/${reseller?.slug}/produto/${product.id}`}
+              href={`/site/${reseller?.slug}/produto/${product.id}`}
               className={`bg-white overflow-hidden transition-all duration-300 group ${cardClass}`}
               style={{ borderRadius: cardRadius }}
             >

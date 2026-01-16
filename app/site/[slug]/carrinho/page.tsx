@@ -138,7 +138,7 @@ export default function CarrinhoPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12">
         <Link 
-          href={`/catalogo/${reseller?.slug}`}
+          href={`/site/${reseller?.slug}`}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8"
         >
           <ArrowLeft size={20} />
@@ -154,7 +154,7 @@ export default function CarrinhoPage() {
             Adicione produtos para continuar
           </p>
           <Link
-            href={`/catalogo/${reseller?.slug}`}
+            href={`/site/${reseller?.slug}`}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium"
             style={{ backgroundColor: primaryColor }}
           >
@@ -170,7 +170,7 @@ export default function CarrinhoPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Link 
-          href={`/catalogo/${reseller?.slug}`}
+          href={`/site/${reseller?.slug}`}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft size={20} />
