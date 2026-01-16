@@ -16,7 +16,12 @@ import {
   Percent,
   ChevronDown,
   ChevronUp,
+  MessageCircle,
+  Loader2,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { exportToWhatsappCSV } from '@/lib/whatsapp-export';
+import { toast } from 'sonner';
 import type {
   PersonalizacaoDetalhes,
   PersonalizacaoResumo,
@@ -38,6 +43,7 @@ export default function AdminPersonalizacaoPage() {
   const [busca, setBusca] = useState('');
   const [filtroNivel, setFiltroNivel] = useState<FiltroNivel>('TODOS');
   const [expandido, setExpandido] = useState<string | null>(null);
+  const [exportingWhatsapp, setExportingWhatsapp] = useState(false);
 
   // ============================================================================
   // CARREGAR DADOS
@@ -136,6 +142,61 @@ export default function AdminPersonalizacaoPage() {
   };
 
   // ============================================================================
+  // EXPORT WHATSAPP
+  // ============================================================================
+  const exportarWhatsapp = async () => {
+    if (filteredAnalises.length === 0) {
+      toast.error('Nenhuma revendedora para exportar');
+      return;
+    }
+
+    setExportingWhatsapp(true);
+    
+    try {
+      // Buscar telefones das revendedoras filtradas
+      const resellerIds = filteredAnalises.map(a => a.reseller_id);
+      
+      const supabase = createClient();
+      const { data: resellers, error } = await supabase
+        .from('resellers')
+        .select('id, name, phone, store_name')
+        .in('id', resellerIds);
+
+      if (error) {
+        throw error;
+      }
+
+      if (!resellers || resellers.length === 0) {
+        toast.error('Nenhum telefone encontrado');
+        return;
+      }
+
+      // Preparar dados para exportação
+      const dataToExport = resellers.map(r => ({
+        name: r.store_name || r.name,
+        phone: r.phone,
+      }));
+
+      // Determinar nome do arquivo baseado no filtro
+      let filename = 'revendedoras_whatsapp';
+      if (filtroNivel !== 'TODOS') {
+        filename = `revendedoras_${filtroNivel.toLowerCase()}_whatsapp`;
+      }
+
+      const result = exportToWhatsappCSV(dataToExport, filename, false);
+      
+      toast.success(
+        `Exportado! ${result.validos} telefones válidos${result.invalidos > 0 ? `, ${result.invalidos} inválidos ignorados` : ''}`
+      );
+    } catch (error) {
+      console.error('Erro ao exportar WhatsApp:', error);
+      toast.error('Erro ao exportar contatos');
+    } finally {
+      setExportingWhatsapp(false);
+    }
+  };
+
+  // ============================================================================
   // LOADING STATE
   // ============================================================================
   if (loading) {
@@ -166,7 +227,7 @@ export default function AdminPersonalizacaoPage() {
                 Veja quem realmente personalizou a loja e quem está usando o padrão
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={carregarDados}
                 className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
@@ -180,6 +241,18 @@ export default function AdminPersonalizacaoPage() {
               >
                 <Download className="w-4 h-4" />
                 Exportar CSV
+              </button>
+              <button
+                onClick={exportarWhatsapp}
+                disabled={exportingWhatsapp || filteredAnalises.length === 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {exportingWhatsapp ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <MessageCircle className="w-4 h-4" />
+                )}
+                Exportar WhatsApp ({filteredAnalises.length})
               </button>
             </div>
           </div>
