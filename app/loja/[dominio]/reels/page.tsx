@@ -65,8 +65,8 @@ export default function ReelsPage() {
             videoUrl: p.video_url,
             posterUrl: p.video_thumbnail || p.imagem || p.imagens?.[0],
             loja: loja ? {
-              nome: loja.nome || loja.store_name,
-              logo: loja.logo_url,
+              nome: loja.nome,
+              logo: loja.logo,
               slug: dominio,
             } : undefined,
           }));
