@@ -9,6 +9,7 @@ import ModalProdutoAdicionado from '@/components/loja/ModalProdutoAdicionado';
 import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
 import CustomerCaptureModal from '@/components/loja/CustomerCaptureModal';
 import { useAbandonedCart } from '@/hooks/useAbandonedCart';
+import { trackViewContent, trackAddToCart } from '@/lib/meta-pixel';
 
 // Novos componentes modernos
 import { ModernProductPage } from '@/components/loja/ModernProductPage';
@@ -211,6 +212,15 @@ function ProdutoDetalheContent() {
         
         // 📊 Trackear visualização do produto
         trackProductView(produtoData);
+        
+        // 🎯 Meta Pixel: ViewContent
+        trackViewContent({
+          content_ids: [produtoData.id],
+          content_name: produtoData.nome,
+          content_type: 'product',
+          value: produtoData.preco_final,
+          currency: 'BRL',
+        });
       } catch (error) {
         console.error('[Produto Detalhe] Erro ao buscar produto:', error);
         // Redirecionar para página de produtos se não encontrar
@@ -324,6 +334,16 @@ function ProdutoDetalheContent() {
       // ✅ Adicionar ao carrinho
       addItem(itemCarrinho);
       setProdutoAdicionado(modalData);
+
+      // 🎯 Meta Pixel: AddToCart
+      trackAddToCart({
+        content_ids: [produto.id],
+        content_name: produto.nome,
+        content_type: 'product',
+        value: produto.preco_final * quantidade,
+        currency: 'BRL',
+        num_items: quantidade,
+      });
 
       // 🛒 Rastrear no carrinho abandonado
       await trackCartItem(trackData);

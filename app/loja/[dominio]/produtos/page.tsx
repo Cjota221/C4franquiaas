@@ -14,6 +14,7 @@ import ProductCard from '@/components/loja/ProductCard';
 import FilterBar, { FilterState, SortOption } from '@/components/loja/FilterBar';
 import { Loader2 } from 'lucide-react';
 import { useParams, useSearchParams } from 'next/navigation';
+import { trackSearch } from '@/lib/meta-pixel';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -109,6 +110,12 @@ export default function ProdutosPage() {
         if (searchFromUrl) {
           queryParams.append('q', searchFromUrl);
           console.log('[DEBUG Produtos] Aplicando filtro de busca:', searchFromUrl);
+          
+          // 🎯 Meta Pixel: Search
+          trackSearch({
+            search_string: searchFromUrl,
+            content_category: categoriaFromUrl || undefined,
+          });
         }
         
         const url = `/api/loja/${dominio}/produtos?${queryParams.toString()}`;

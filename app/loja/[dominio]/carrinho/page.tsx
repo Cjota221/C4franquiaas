@@ -6,6 +6,7 @@ import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Package, MessageCircle } from 'lucide-react';
 import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados';
 import { trackWhatsAppClick, trackBeginCheckout } from '@/lib/analytics';
+import { trackInitiateCheckout, trackContact } from '@/lib/meta-pixel';
 
 type LojaInfo = {
   id?: string;
@@ -104,6 +105,18 @@ export default function CarrinhoPage({ params }: { params: Promise<{ dominio: st
       origem: 'carrinho',
       produto_preco: total
     });
+
+    // 🎯 Meta Pixel: InitiateCheckout
+    trackInitiateCheckout({
+      content_ids: itens.map(item => item.id),
+      content_type: 'product',
+      value: total,
+      currency: 'BRL',
+      num_items: itens.reduce((acc, item) => acc + item.quantidade, 0),
+    });
+
+    // 🎯 Meta Pixel: Contact (WhatsApp)
+    trackContact('whatsapp');
 
     // 📊 Trackear begin_checkout via WhatsApp
     trackBeginCheckout({
