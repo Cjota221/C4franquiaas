@@ -85,7 +85,7 @@ export function prepareWhatsappExportData(
 /**
  * Converte array de objetos para CSV string
  */
-export function arrayToCSV<T extends Record<string, unknown>>(
+export function arrayToCSV<T extends object>(
   data: T[],
   columns: { key: keyof T; header: string }[]
 ): string {
