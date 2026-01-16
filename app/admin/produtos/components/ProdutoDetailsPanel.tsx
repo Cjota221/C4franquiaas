@@ -20,9 +20,11 @@ import {
   FileText,
   Image as ImageIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Film
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { VideoUploader } from '@/components/video';
 
 interface ProdutoCompleto {
   id: number | string;
@@ -48,6 +50,10 @@ interface ProdutoCompleto {
     estoque?: number;
     preco?: number;
   }[] | null;
+  // Campos de vídeo
+  video_url?: string | null;
+  video_thumbnail?: string | null;
+  video_duration?: number | null;
 }
 
 // Função para extrair o valor numérico do estoque
@@ -70,6 +76,7 @@ interface ProdutoDetailsPanelProps {
   produto: ProdutoCompleto | null;
   onToggleStatus: (id: number | string, novoStatus: boolean) => Promise<void>;
   onEditDescricaoGuia?: (produto: ProdutoCompleto) => void;
+  onVideoUpdated?: (id: number | string, videoUrl: string | null, thumbnail?: string | null) => Promise<void>;
   loadingToggle?: boolean;
 }
 
@@ -79,6 +86,7 @@ export default function ProdutoDetailsPanel({
   produto,
   onToggleStatus,
   onEditDescricaoGuia,
+  onVideoUpdated,
   loadingToggle = false,
 }: ProdutoDetailsPanelProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -88,6 +96,7 @@ export default function ProdutoDetailsPanel({
     categorias?: { id: number; nome: string }[];
   } | null>(null);
   const [loadingDetalhes, setLoadingDetalhes] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
 
   // Buscar detalhes extras do produto
   useEffect(() => {
@@ -348,6 +357,57 @@ export default function ProdutoDetailsPanel({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Seção de Vídeo do Produto */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+              <Film className="w-5 h-5 text-gray-500" />
+              <h3 className="font-semibold text-gray-800">Vídeo do Produto</h3>
+              {produto.video_url && (
+                <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  Com vídeo
+                </span>
+              )}
+            </div>
+            <div className="p-4">
+              <VideoUploader
+                currentVideoUrl={produto.video_url}
+                folder={`produtos/${produto.id}`}
+                onVideoUploaded={async (url, thumbnail) => {
+                  if (onVideoUpdated) {
+                    setVideoUploading(true);
+                    try {
+                      await onVideoUpdated(produto.id, url, thumbnail);
+                      toast.success('Vídeo adicionado com sucesso!');
+                    } catch {
+                      toast.error('Erro ao salvar vídeo');
+                    } finally {
+                      setVideoUploading(false);
+                    }
+                  }
+                }}
+                onVideoRemoved={async () => {
+                  if (onVideoUpdated) {
+                    setVideoUploading(true);
+                    try {
+                      await onVideoUpdated(produto.id, null, null);
+                      toast.success('Vídeo removido!');
+                    } catch {
+                      toast.error('Erro ao remover vídeo');
+                    } finally {
+                      setVideoUploading(false);
+                    }
+                  }
+                }}
+              />
+              {videoUploading && (
+                <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#DB1472] border-t-transparent" />
+                  Salvando...
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Informações Principais */}

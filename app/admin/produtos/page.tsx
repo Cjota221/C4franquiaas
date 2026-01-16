@@ -1053,6 +1053,32 @@ export default function ProdutosPage(): React.JSX.Element {
           setProdutoParaEditar(produto as ProdutoType);
           setModalDescricaoGuiaOpen(true);
         }}
+        onVideoUpdated={async (id, videoUrl, thumbnail) => {
+          const supabase = createClient();
+          const { error } = await supabase
+            .from('produtos')
+            .update({ 
+              video_url: videoUrl, 
+              video_thumbnail: thumbnail 
+            })
+            .eq('id', id);
+          
+          if (error) throw error;
+          
+          // Atualizar estado local
+          if (produtoSelecionado && produtoSelecionado.id === id) {
+            setProdutoSelecionado({ 
+              ...produtoSelecionado, 
+              video_url: videoUrl,
+              video_thumbnail: thumbnail 
+            });
+          }
+          
+          // Atualizar lista de produtos
+          setProdutos(produtos.map(p => 
+            p.id === id ? { ...p, video_url: videoUrl, video_thumbnail: thumbnail } : p
+          ));
+        }}
         loadingToggle={produtoSelecionado ? toggling[produtoSelecionado.id] : false}
       />
     </PageWrapper>

@@ -18,6 +18,10 @@ export type Produto = {
   temMargem?: boolean; // ⭐ NOVO: Identifica se o produto tem preço personalizado (margem configurada)
   description?: string | null; // ⭐ NOVO: Descrição do produto (migration 043)
   size_guide?: Record<string, unknown> | null; // ⭐ NOVO: Guia de tamanhos (migration 043)
+  // Campos de vídeo (C4 Reels)
+  video_url?: string | null;
+  video_thumbnail?: string | null;
+  video_duration?: number | null;
 };
 
 type ProdutoStore = {
