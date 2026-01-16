@@ -64,7 +64,7 @@ export default function MinhaCarteiraPage() {
     
     try {
       // Buscar dados da carteira
-      const response = await fetch('/api/wallet')
+      const response = await fetch('/api/wallet', { credentials: 'include' })
       const data = await response.json()
       
       if (data.wallet) {
@@ -80,7 +80,7 @@ export default function MinhaCarteiraPage() {
       }
       
       // Buscar reservas detalhadas
-      const reservasResponse = await fetch('/api/wallet/reserva?status=RESERVADO,EM_SEPARACAO,SEPARADO')
+      const reservasResponse = await fetch('/api/wallet/reserva?status=RESERVADO,EM_SEPARACAO,SEPARADO', { credentials: 'include' })
       const reservasData = await reservasResponse.json()
       
       if (reservasData.reservas) {
@@ -88,7 +88,7 @@ export default function MinhaCarteiraPage() {
       }
       
       // Verificar recarga pendente
-      const recargaResponse = await fetch('/api/wallet/recarga')
+      const recargaResponse = await fetch('/api/wallet/recarga', { credentials: 'include' })
       const recargaData = await recargaResponse.json()
       
       const pendente = recargaData.recargas?.find((r: { status: string; pix_expiracao: string }) => 
@@ -125,6 +125,7 @@ export default function MinhaCarteiraPage() {
       const response = await fetch('/api/wallet/recarga', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           wallet_id: wallet?.id,
           valor
@@ -163,6 +164,7 @@ export default function MinhaCarteiraPage() {
       const response = await fetch('/api/wallet/reserva/cancelar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ reserva_id: reservaId })
       })
       
