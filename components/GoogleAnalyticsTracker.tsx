@@ -1,17 +1,63 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { 
+  setGaUserId, 
+  trackPageViewWithUser, 
+  trackPainelEvent, 
+  getViewEventFromPath 
+} from '@/lib/analytics'
 
 const GA_TRACKING_ID = 'G-Q1TM0EYRBN'
 
-// Componente para rastrear navegação no GA4
+// Componente para rastrear navegação no GA4 com User ID
 export function GoogleAnalyticsTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [userId, setUserId] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
+  // Carregar dados do usuário logado
   useEffect(() => {
-    if (!pathname || typeof window === 'undefined') return
+    async function loadUser() {
+      // Verificar se estamos na área de revendedora
+      if (!pathname?.startsWith('/revendedora')) {
+        setInitialized(true)
+        return
+      }
+
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Buscar dados da revendedora
+        const { data: reseller } = await supabase
+          .from('resellers')
+          .select('id, name, store_name')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (reseller) {
+          setUserId(reseller.id)
+          setUserName(reseller.name || reseller.store_name || 'Revendedora')
+          
+          // Configurar User ID no GA4
+          setGaUserId(reseller.id, reseller.name || reseller.store_name)
+        }
+      }
+      
+      setInitialized(true)
+    }
+
+    loadUser()
+  }, [pathname])
+
+  // Rastrear mudanças de página
+  useEffect(() => {
+    if (!pathname || typeof window === 'undefined' || !initialized) return
 
     // Aguardar o gtag estar disponível
     const waitForGtag = () => {
@@ -31,15 +77,7 @@ export function GoogleAnalyticsTracker() {
       // Determinar tipo de página para dimensão customizada
       let pageType = 'outro'
       let lojaDominio = ''
-      let revendedoraNome = ''
-
-      // Extrair nome da revendedora do título (formato: "Seção - Nome da Loja | C4 Franquias")
-      if (pageTitle.includes(' - ') && pageTitle.includes(' | C4 Franquias')) {
-        const match = pageTitle.match(/- (.+?) \| C4 Franquias/)
-        if (match) {
-          revendedoraNome = match[1]
-        }
-      }
+      let revendedoraNome = userName || ''
 
       // Extrair informações da URL
       const pathParts = pathname.split('/')
@@ -68,49 +106,79 @@ export function GoogleAnalyticsTracker() {
         pageType = 'landing'
       }
 
-      // MÉTODO 1: Atualizar config para registrar pageview corretamente
-      window.gtag('config', GA_TRACKING_ID, {
-        page_path: fullUrl,
-        page_title: pageTitle,
-        page_location: window.location.origin + fullUrl,
-        send_page_view: true,
-        // Dimensões customizadas
-        revendedora_nome: revendedoraNome,
-        page_type: pageType,
-      })
+      // Se for área de revendedora, usar tracking com User ID
+      if (pathname.startsWith('/revendedora') && userId) {
+        // Enviar page view com User ID
+        trackPageViewWithUser(fullUrl, pageTitle, {
+          page_type: pageType,
+          revendedora_nome: revendedoraNome,
+        })
+        
+        // Enviar evento específico da página
+        const viewEvent = getViewEventFromPath(pathname)
+        if (viewEvent) {
+          trackPainelEvent(viewEvent, {
+            page_path: fullUrl,
+          })
+        }
+      } else {
+        // Tracking padrão para visitantes anônimos
+        window.gtag('config', GA_TRACKING_ID, {
+          page_path: fullUrl,
+          page_title: pageTitle,
+          page_location: window.location.origin + fullUrl,
+          send_page_view: true,
+          revendedora_nome: revendedoraNome,
+          page_type: pageType,
+        })
 
-      // MÉTODO 2: Enviar evento personalizado para ter mais detalhes
-      window.gtag('event', 'virtual_pageview', {
-        page_path: fullUrl,
-        page_location: window.location.origin + fullUrl,
-        page_title: pageTitle,
-        page_type: pageType,
-        loja_dominio: lojaDominio,
-        loja_nome: lojaDominio ? lojaDominio.charAt(0).toUpperCase() + lojaDominio.slice(1) : '',
-        revendedora_nome: revendedoraNome,
-      })
+        // Evento personalizado
+        window.gtag('event', 'virtual_pageview', {
+          page_path: fullUrl,
+          page_location: window.location.origin + fullUrl,
+          page_title: pageTitle,
+          page_type: pageType,
+          loja_dominio: lojaDominio,
+          loja_nome: lojaDominio ? lojaDominio.charAt(0).toUpperCase() + lojaDominio.slice(1) : '',
+          revendedora_nome: revendedoraNome,
+        })
+      }
 
       console.log(`📊 GA4 Pageview: ${fullUrl}`)
-      console.log(`📋 Título da Página: "${pageTitle}"`)
-      console.log(`🏪 Tipo: ${pageType}, Domínio: ${lojaDominio}`)
-      if (revendedoraNome) {
-        console.log(`👤 Revendedora: ${revendedoraNome}`)
+      console.log(`📋 Título: "${pageTitle}" | Tipo: ${pageType}`)
+      if (userId) {
+        console.log(`👤 Franqueada: ${userName} (${userId})`)
       }
     }
 
     // Pequeno delay para garantir que a página carregou
     setTimeout(waitForGtag, 100)
 
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, userId, userName, initialized])
 
   return null
 }
 
-// Função helper para enviar eventos customizados
+// Re-exportar funções do analytics para facilitar uso
+export { 
+  trackPainelEvent, 
+  setGaUserId,
+  trackPageViewWithUser 
+} from '@/lib/analytics'
+
+// Função helper para enviar eventos customizados (compatibilidade)
 export function sendGA4Event(eventName: string, params: Record<string, unknown> = {}) {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', eventName, params)
     console.log(`📊 GA4 Event: ${eventName}`, params)
+  }
+}
+
+// Declarar gtag no window
+declare global {
+  interface Window {
+    gtag: (...args: unknown[]) => void
+    dataLayer: unknown[]
   }
 }
 

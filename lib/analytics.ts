@@ -198,3 +198,193 @@ declare global {
     dataLayer: unknown[]
   }
 }
+
+// ============================================================
+// USER ID TRACKING - Para identificar franqueadas no GA4
+// ============================================================
+
+const GA_MEASUREMENT_ID = 'G-Q1TM0EYRBN';
+
+// Armazena o User ID atual em memória
+let currentUserId: string | null = null;
+let currentUserName: string | null = null;
+
+// Tipos de eventos do painel
+export type PainelEventName = 
+  | 'painel_dashboard_view'
+  | 'painel_produtos_view'
+  | 'painel_personalizacao_view'
+  | 'painel_promocoes_view'
+  | 'painel_carrinhos_view'
+  | 'painel_academy_view'
+  | 'painel_tutoriais_view'
+  | 'painel_configuracoes_view'
+  | 'painel_material_view'
+  | 'personalizacao_salva'
+  | 'produto_margem_editada'
+  | 'produto_ativado'
+  | 'produto_desativado'
+  | 'promocao_criada'
+  | 'banner_atualizado'
+  | 'logo_atualizada'
+  | 'cores_atualizadas'
+  | 'loja_compartilhada'
+  | 'login_sucesso'
+  | 'logout';
+
+/**
+ * Verifica se gtag está disponível
+ */
+function isGtagAvailable(): boolean {
+  return typeof window !== 'undefined' && typeof window.gtag === 'function';
+}
+
+/**
+ * Aguarda gtag estar disponível
+ */
+function waitForGtag(callback: () => void, maxAttempts = 20): void {
+  let attempts = 0;
+  
+  const check = () => {
+    if (isGtagAvailable()) {
+      callback();
+    } else if (attempts < maxAttempts) {
+      attempts++;
+      setTimeout(check, 100);
+    }
+  };
+  
+  check();
+}
+
+/**
+ * Define o User ID no GA4
+ * Deve ser chamado após o login ou quando o usuário é identificado
+ * 
+ * @example
+ * // Após login bem-sucedido
+ * setGaUserId(reseller.id, reseller.name);
+ * 
+ * // Após logout
+ * setGaUserId(null);
+ */
+export function setGaUserId(userId: string | null, userName?: string | null): void {
+  currentUserId = userId;
+  currentUserName = userName || null;
+  
+  waitForGtag(() => {
+    if (userId) {
+      // Configurar User ID no GA4
+      window.gtag('config', GA_MEASUREMENT_ID, {
+        user_id: userId,
+        user_properties: {
+          franqueada_id: userId,
+          franqueada_nome: userName || 'Não identificada',
+        }
+      });
+      
+      // Enviar evento de identificação
+      window.gtag('event', 'user_identified', {
+        user_id: userId,
+        franqueada_id: userId,
+        franqueada_nome: userName || '',
+      });
+      
+      console.log(`✅ GA4: User ID configurado: ${userId}`, userName ? `(${userName})` : '');
+    } else {
+      // Limpar User ID (logout)
+      window.gtag('config', GA_MEASUREMENT_ID, {
+        user_id: null,
+        user_properties: {
+          franqueada_id: null,
+          franqueada_nome: null,
+        }
+      });
+      
+      console.log('🚪 GA4: User ID removido (logout)');
+    }
+  });
+}
+
+/**
+ * Obtém o User ID atual
+ */
+export function getCurrentUserId(): string | null {
+  return currentUserId;
+}
+
+/**
+ * Envia evento de page_view com User ID
+ */
+export function trackPageViewWithUser(
+  pagePath: string, 
+  pageTitle?: string,
+  additionalParams?: Record<string, unknown>
+): void {
+  waitForGtag(() => {
+    const params: Record<string, unknown> = {
+      page_path: pagePath,
+      page_title: pageTitle || document.title,
+      page_location: window.location.origin + pagePath,
+      ...additionalParams,
+    };
+    
+    if (currentUserId) {
+      params.user_id = currentUserId;
+      params.franqueada_id = currentUserId;
+      params.franqueada_nome = currentUserName || '';
+    }
+    
+    window.gtag('event', 'page_view', params);
+    
+    console.log(`📊 GA4 Page View: ${pagePath}`, currentUserId ? `[User: ${currentUserId}]` : '[Anônimo]');
+  });
+}
+
+/**
+ * Envia evento customizado do painel com User ID
+ * 
+ * @example
+ * trackPainelEvent('personalizacao_salva', { secao: 'cores' });
+ */
+export function trackPainelEvent(
+  eventName: PainelEventName,
+  additionalParams?: Record<string, unknown>
+): void {
+  waitForGtag(() => {
+    const params: Record<string, unknown> = {
+      timestamp: new Date().toISOString(),
+      ...additionalParams,
+    };
+    
+    if (currentUserId) {
+      params.user_id = currentUserId;
+      params.franqueada_id = currentUserId;
+      params.franqueada_nome = currentUserName || '';
+    }
+    
+    window.gtag('event', eventName, params);
+    
+    console.log(`📊 GA4 Painel Event: ${eventName}`, params);
+  });
+}
+
+/**
+ * Mapeia pathname para evento de view do painel
+ */
+export function getViewEventFromPath(pathname: string): PainelEventName | null {
+  const pathMap: Record<string, PainelEventName> = {
+    '/revendedora/dashboard': 'painel_dashboard_view',
+    '/revendedora/produtos': 'painel_produtos_view',
+    '/revendedora/personalizacao': 'painel_personalizacao_view',
+    '/revendedora/promocoes': 'painel_promocoes_view',
+    '/revendedora/carrinhos-abandonados': 'painel_carrinhos_view',
+    '/revendedora/academy': 'painel_academy_view',
+    '/revendedora/tutoriais': 'painel_tutoriais_view',
+    '/revendedora/configuracoes': 'painel_configuracoes_view',
+    '/revendedora/material-divulgacao': 'painel_material_view',
+  };
+  
+  return pathMap[pathname] || null;
+}
+
