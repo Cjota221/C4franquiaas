@@ -109,6 +109,7 @@ export async function GET(
         imagem?: string;
         imagens?: string[];
         codigo_barras?: string;
+        video_url?: string | null;
         variacoes_meta?: Array<{
           sku?: string;
           nome?: string;
@@ -142,6 +143,7 @@ export async function GET(
             imagem,
             imagens,
             codigo_barras,
+            video_url,
             variacoes_meta,
             ativo
           )
@@ -188,6 +190,7 @@ export async function GET(
             imagem,
             imagens,
             codigo_barras,
+            video_url,
             variacoes_meta,
             ativo
           )
@@ -472,6 +475,7 @@ export async function GET(
           ajuste_valor: ajusteValor,
           estoque: estoqueTotal, // ⭐ ESTOQUE TOTAL CALCULADO
           imagem: processarImagem(produto.imagem),
+          video_url: produto.video_url || null, // 🎬 VÍDEO DO PRODUTO
           imagens: (() => {
             // Processar array de imagens de forma robusta
             if (!produto.imagens || !Array.isArray(produto.imagens)) {

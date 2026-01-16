@@ -20,6 +20,7 @@ interface Produto {
   descricao?: string;
   imagens: string[];
   preco_final: number;
+  video_url?: string | null;
   parcelamento?: {
     parcelas: number;
     valor: number;
@@ -87,6 +88,7 @@ export function ModernProductPage({
               productName={produto.nome}
               onFavorite={onToggleFavorito}
               isFavorite={favorito}
+              videoUrl={produto.video_url}
             />
           </div>
 

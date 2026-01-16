@@ -38,6 +38,7 @@ type Produto = {
   variacoes?: Variacao[];
   destaque: boolean;
   tag?: string;
+  video_url?: string | null;
   parcelamento: {
     parcelas: number;
     valor: number;
