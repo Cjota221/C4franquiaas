@@ -73,22 +73,13 @@ export function FloatingProductVideo({
       */}
       {!isExpanded && (
         <div 
-          className="fixed bottom-6 right-6 z-50 cursor-pointer group"
+          className="fixed top-36 left-4 z-50 cursor-pointer group"
           onClick={() => setIsExpanded(true)}
           style={{ 
             // Garantir que fica acima de tudo
             zIndex: 9999 
           }}
         >
-          {/* Anel pulsante de destaque (estilo stories) */}
-          <div 
-            className="absolute -inset-1 rounded-full opacity-75 animate-ping"
-            style={{ 
-              backgroundColor: corPrimaria,
-              animationDuration: '2s'
-            }}
-          />
-          
           {/* Anel gradiente estático */}
           <div 
             className="relative p-[3px] rounded-full"
