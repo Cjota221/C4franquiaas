@@ -147,9 +147,9 @@ async function buscarPagamento(paymentId: string) {
 }
 
 // Processar pagamento aprovado - creditar na carteira
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 async function processarPagamentoAprovado(
-  supabase: any,
+  supabase: ReturnType<typeof import('@supabase/supabase-js').createClient>,
   recarga: Record<string, unknown>,
   paymentDetails: Record<string, unknown>,
   webhookPayload: Record<string, unknown>

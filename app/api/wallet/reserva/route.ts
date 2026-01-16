@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
-// API para fazer reserva de produto (debitar da carteira)
+// API para fazer reserva de produto (Modo Caixinha)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     
     // Verificar autenticação
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
 // GET - Buscar reservas do usuário
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {

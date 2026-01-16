@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 // API para criar recarga PIX na carteira
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     
     // Verificar autenticação
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -171,7 +170,7 @@ async function criarPixMercadoPago(valor: number, walletId: string) {
 // GET - Buscar recargas do usuário
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
