@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
 import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
+import { ProductStoryCircle } from '@/components/video';
 // import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados'; // REMOVIDO TEMPORARIAMENTE
 
 type Variacao = {
@@ -35,6 +36,10 @@ type Produto = {
   estoque: number;
   variacoes: Variacao[];
   size_guide?: SizeGuide | null;
+  // Campos de vídeo (C4 Reels)
+  video_url?: string | null;
+  video_thumbnail?: string | null;
+  video_duration?: number | null;
 };
 
 export default function ProdutoPage() {
@@ -275,6 +280,20 @@ export default function ProdutoPage() {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Galeria de Imagens - Formato 3:4 (960x1280) com Swipe */}
         <div>
+          {/* Story Circle - Vídeo do Produto */}
+          {produto.video_url && (
+            <div className="flex justify-center mb-4">
+              <ProductStoryCircle
+                videoUrl={produto.video_url}
+                thumbnailUrl={produto.video_thumbnail || undefined}
+                productName={produto.nome}
+                storeName={reseller?.store_name || 'Loja'}
+                primaryColor={primaryColor}
+                size="lg"
+              />
+            </div>
+          )}
+          
           <div 
             className="relative overflow-hidden bg-gray-50 mb-4 shadow-lg cursor-grab active:cursor-grabbing" 
             style={{ 

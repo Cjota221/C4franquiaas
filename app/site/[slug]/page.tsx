@@ -7,6 +7,7 @@ import { ChevronDown, Truck, Tag } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useCatalogo } from './layout';
 import BannerComTexto from '@/components/catalogo/BannerComTexto';
+import ReelsSection from '@/components/catalogo/ReelsSection';
 
 type Variacao = {
   id?: string;
@@ -27,6 +28,9 @@ type ProductWithPrice = {
   estoque: number;
   variacoes?: Variacao[];
   created_at?: string; // Data de criação do vínculo
+  // Campos de vídeo (C4 Reels)
+  video_url?: string | null;
+  video_thumbnail?: string | null;
 };
 
 export default function CatalogoPrincipal() {
@@ -57,7 +61,9 @@ export default function CatalogoPrincipal() {
           imagem,
           estoque,
           ativo,
-          variacoes_meta
+          variacoes_meta,
+          video_url,
+          video_thumbnail
         )
       `)
       .eq('reseller_id', reseller.id)
@@ -102,6 +108,9 @@ export default function CatalogoPrincipal() {
           finalPrice: p.produtos.preco_base * (1 + (p.margin_percent || 0) / 100),
           variacoes,
           created_at: p.created_at, // 🆕 Data de criação do vínculo
+          // Campos de vídeo (C4 Reels)
+          video_url: p.produtos.video_url,
+          video_thumbnail: p.produtos.video_thumbnail,
         };
       }) || [];
 
@@ -349,6 +358,22 @@ export default function CatalogoPrincipal() {
             <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
         </div>
+
+      {/* C4 Reels - Seção de Vídeos */}
+      <ReelsSection
+        produtos={products
+          .filter(p => p.video_url)
+          .map(p => ({
+            id: p.id,
+            nome: p.nome,
+            preco_final: p.finalPrice,
+            imagem: p.imagem,
+            video_url: p.video_url as string,
+            video_thumbnail: p.video_thumbnail || undefined,
+          }))
+        }
+        primaryColor={primaryColor}
+      />
 
       {/* Grid de Produtos - 2 cols mobile, 3 tablet, 5 desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
