@@ -1,19 +1,20 @@
 /**
  * FLOATING VIDEO BUBBLE - Estilo Widde
- * Widget flutuante que fica fixo na tela durante toda a navegação
+ * Widget flutuante ARRASTÁVEL que fica fixo na tela
  * 
  * COMPORTAMENTO:
- * - Position: fixed no canto inferior direito
+ * - Position: fixed, pode ser arrastado para qualquer lugar
  * - Fica "pregado" na tela, não se move com o scroll
  * - Círculo pequeno (70px) como preview
- * - Clique abre modal fullscreen com som
+ * - ARRASTAR: Segure e arraste para mover
+ * - CLIQUE: Abre modal fullscreen com som
  * - Carrega o vídeo específico de cada produto
  */
 
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Volume2, VolumeX, Play } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Volume2, VolumeX, Play, Move } from 'lucide-react';
 
 interface FloatingProductVideoProps {
   videoUrl: string;
@@ -31,6 +32,14 @@ export function FloatingProductVideo({
   const [isPlaying, setIsPlaying] = useState(true);
   const miniVideoRef = useRef<HTMLVideoElement>(null);
   const fullVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // ============================================
+  // 🖱️ DRAG & DROP - Estado e Refs
+  // ============================================
+  const [position, setPosition] = useState({ x: 16, y: 144 }); // left-4, top-36
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   // Auto-play do vídeo mini quando montado
   useEffect(() => {
@@ -60,25 +69,99 @@ export function FloatingProductVideo({
     }
   };
 
+  // ============================================
+  // 🖱️ DRAG HANDLERS - Mouse
+  // ============================================
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  }, [position]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - dragStart.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - 80, e.clientY - dragStart.y));
+    
+    setPosition({ x: newX, y: newY });
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // ============================================
+  // 🖱️ DRAG HANDLERS - Touch (Mobile)
+  // ============================================
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y
+    });
+  }, [position]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const newX = Math.max(0, Math.min(window.innerWidth - 80, touch.clientX - dragStart.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - 80, touch.clientY - dragStart.y));
+    
+    setPosition({ x: newX, y: newY });
+  }, [isDragging, dragStart]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Adicionar/remover event listeners globais
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchend', handleTouchEnd);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+
+  // Abrir vídeo só se não estiver arrastando
+  const handleClick = useCallback(() => {
+    if (!isDragging) {
+      setIsExpanded(true);
+    }
+  }, [isDragging]);
+
   return (
     <>
       {/* ============================================ */}
-      {/* 🎬 FLOATING VIDEO BUBBLE - Preview Circular */}
+      {/* 🎬 FLOATING VIDEO BUBBLE - Arrastável */}
       {/* ============================================ */}
-      {/* 
-        - position: fixed = fica "pregado" na viewport
-        - bottom-6 right-6 = canto inferior direito
-        - z-50 = fica POR CIMA de todo o conteúdo
-        - Não se move quando o usuário faz scroll
-      */}
       {!isExpanded && (
         <div 
-          className="fixed top-36 left-4 z-50 cursor-pointer group"
-          onClick={() => setIsExpanded(true)}
+          ref={bubbleRef}
+          className={`fixed z-50 cursor-grab group select-none ${isDragging ? 'cursor-grabbing' : ''}`}
           style={{ 
-            // Garantir que fica acima de tudo
-            zIndex: 9999 
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            zIndex: 9999,
+            touchAction: 'none' // Importante para drag em mobile
           }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onClick={handleClick}
         >
           {/* Anel gradiente estático */}
           <div 
@@ -108,13 +191,17 @@ export function FloatingProductVideo({
               />
               
               {/* Overlay de hover com ícone play */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Play className="w-6 h-6 text-white drop-shadow-lg" fill="white" />
+              <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center ${isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                {isDragging ? (
+                  <Move className="w-6 h-6 text-white drop-shadow-lg" />
+                ) : (
+                  <Play className="w-6 h-6 text-white drop-shadow-lg" fill="white" />
+                )}
               </div>
             </div>
           </div>
           
-          {/* Label "Vídeo" */}
+          {/* Label "Vídeo" - Mostra "Arraste" durante drag */}
           <div 
             className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap"
           >
@@ -122,7 +209,7 @@ export function FloatingProductVideo({
               className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shadow-lg"
               style={{ backgroundColor: corPrimaria }}
             >
-              ▶ Vídeo
+              {isDragging ? '✋ Arraste' : '▶ Vídeo'}
             </span>
           </div>
         </div>
