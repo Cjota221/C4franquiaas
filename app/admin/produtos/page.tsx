@@ -1075,7 +1075,7 @@ export default function ProdutosPage(): React.JSX.Element {
           }
           
           // Atualizar lista de produtos
-          setProdutos(produtos.map(p => 
+          setProdutosFiltrados(prev => prev.map(p => 
             p.id === id ? { ...p, video_url: videoUrl, video_thumbnail: thumbnail } : p
           ));
         }}
