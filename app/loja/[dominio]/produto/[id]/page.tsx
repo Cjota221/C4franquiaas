@@ -12,6 +12,7 @@ import { useAbandonedCart } from '@/hooks/useAbandonedCart';
 
 // Novos componentes modernos
 import { ModernProductPage } from '@/components/loja/ModernProductPage';
+import { FloatingProductVideo } from '@/components/loja/FloatingProductVideo';
 
 // Forçar renderização client-side
 export const dynamic = 'force-dynamic';
@@ -404,6 +405,15 @@ function ProdutoDetalheContent() {
 
   return (
     <>
+      {/* 🎬 Vídeo Flutuante - Fica fixo na tela durante toda a navegação */}
+      {produto.video_url && (
+        <FloatingProductVideo 
+          videoUrl={produto.video_url}
+          productName={produto.nome}
+          corPrimaria={loja?.cor_primaria}
+        />
+      )}
+
       {/* Página Moderna do Produto */}
       <ModernProductPage
         produto={produto}
