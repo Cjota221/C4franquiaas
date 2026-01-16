@@ -25,16 +25,7 @@ export default function ReelsSection({ produtos, primaryColor }: ReelsSectionPro
   if (produtos.length === 0) return null;
   
   return (
-    <section className="py-6">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-4 px-4">
-        <span className="text-2xl">🎬</span>
-        <h2 className="text-xl font-bold text-gray-900">C4 Reels</h2>
-        <span className="text-sm text-gray-500 ml-auto">
-          {produtos.length} {produtos.length === 1 ? 'vídeo' : 'vídeos'}
-        </span>
-      </div>
-      
+    <section className="py-4">
       {/* Feed de Reels */}
       <ProductReelsFeed
         reels={produtos.map(p => ({

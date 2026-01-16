@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
-import { Play, Volume2, VolumeX, Heart, ShoppingBag, MessageCircle, Eye } from 'lucide-react';
+import { Play, Volume2, VolumeX, Heart, ShoppingBag, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
@@ -92,49 +92,40 @@ const ProductCard = memo(function ProductCard({
   if (!produto) return null;
   
   return (
-    <div className="absolute bottom-20 left-4 right-4 z-20">
+    <div className="absolute bottom-16 left-3 right-3 z-20">
       <div 
-        className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 shadow-2xl"
-        style={{ 
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)'
-        }}
+        className="backdrop-blur-md bg-black/40 rounded-xl p-3 border border-white/10"
       >
-        <div className="flex items-center gap-3">
-          {/* Thumbnail do produto */}
+        <div className="flex items-center gap-2">
+          {/* Thumbnail do produto - menor */}
           {produto.imagem && (
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white/30">
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/20">
               <Image
                 src={produto.imagem}
                 alt={produto.nome}
-                width={64}
-                height={64}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover"
               />
             </div>
           )}
           
-          {/* Info */}
+          {/* Info - mais compacto */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold text-sm truncate drop-shadow-lg">
+            <h3 className="text-white font-medium text-xs truncate">
               {produto.nome}
             </h3>
-            <p className="text-white/90 font-bold text-lg drop-shadow-lg">
+            <p className="text-white font-bold text-sm">
               {formatPrice(produto.preco_base)}
             </p>
-            {reseller?.store_name && (
-              <p className="text-white/70 text-xs truncate">
-                @{reseller.store_name}
-              </p>
-            )}
           </div>
           
-          {/* Botão CTA */}
+          {/* Botão CTA - menor */}
           <button
             onClick={handleClick}
-            className="flex-shrink-0 px-4 py-2.5 rounded-xl font-semibold text-sm text-white flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+            className="flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-transform hover:scale-105 active:scale-95"
             style={{ backgroundColor: primaryColor }}
           >
-            <MessageCircle className="w-4 h-4" />
             Eu Quero!
           </button>
         </div>
@@ -219,8 +210,8 @@ const ReelCard = memo(function ReelCard({
   
   return (
     <div 
-      className="relative w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden snap-center flex-shrink-0"
-      style={{ maxWidth: '360px' }}
+      className="relative bg-black rounded-2xl overflow-hidden snap-center flex-shrink-0"
+      style={{ width: '280px', height: '500px' }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
