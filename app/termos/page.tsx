@@ -23,7 +23,7 @@ export default function TermosDeUsoPage() {
           
           {/* Título e Última atualização */}
           <div className="text-center border-b pb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Termos de Uso – Plataforma de Revenda</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Termos de Uso – C4 Franquias Digitais</h1>
             <p className="text-sm text-gray-500">Última atualização: 29 de dezembro de 2025</p>
           </div>
 
@@ -35,7 +35,7 @@ export default function TermosDeUsoPage() {
             </h2>
             <div className="text-gray-600 space-y-3">
               <p>
-                Bem-vindo(a) à nossa plataforma de revenda (&quot;Plataforma&quot;).
+                Bem-vindo(a) à C4 Franquias Digitais (&quot;Plataforma&quot;).
               </p>
               <p>
                 Estes Termos de Uso regulam o acesso e a utilização da Plataforma por franqueadas/revendedoras e por clientes finais.
@@ -54,7 +54,7 @@ export default function TermosDeUsoPage() {
             </h2>
             <div className="text-gray-600 space-y-3">
               <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Plataforma:</strong> sistema online de gestão de revendas e catálogos.</li>
+                <li><strong>C4 Franquias Digitais (Plataforma):</strong> sistema online de gestão de revendas e catálogos.</li>
                 <li><strong>Franqueadora:</strong> empresa detentora da marca, do sistema e dos materiais oficiais.</li>
                 <li><strong>Franqueada / Revendedora:</strong> pessoa física ou jurídica autorizada a revender produtos utilizando a Plataforma.</li>
                 <li><strong>Cliente Final:</strong> consumidor que realiza pedidos por meio da loja da franqueada/revendedora.</li>
