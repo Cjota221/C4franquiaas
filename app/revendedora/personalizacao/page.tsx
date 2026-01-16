@@ -60,6 +60,26 @@ const COLOR_PRESETS = [
   { name: "Turquesa", primary: "#14b8a6", secondary: "#2dd4bf" },
 ];
 
+// 🎨 FONTES DISPONÍVEIS (Google Fonts)
+const FONT_OPTIONS = [
+  { id: "Inter", name: "Inter", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Poppins", name: "Poppins", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Montserrat", name: "Montserrat", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Roboto", name: "Roboto", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Open Sans", name: "Open Sans", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Lato", name: "Lato", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Nunito", name: "Nunito", category: "Arredondada", preview: "Aa Bb Cc 123" },
+  { id: "Quicksand", name: "Quicksand", category: "Arredondada", preview: "Aa Bb Cc 123" },
+  { id: "Comfortaa", name: "Comfortaa", category: "Arredondada", preview: "Aa Bb Cc 123" },
+  { id: "Playfair Display", name: "Playfair Display", category: "Elegante", preview: "Aa Bb Cc 123" },
+  { id: "Cormorant Garamond", name: "Cormorant Garamond", category: "Elegante", preview: "Aa Bb Cc 123" },
+  { id: "Libre Baskerville", name: "Libre Baskerville", category: "Elegante", preview: "Aa Bb Cc 123" },
+  { id: "Raleway", name: "Raleway", category: "Sofisticada", preview: "Aa Bb Cc 123" },
+  { id: "Josefin Sans", name: "Josefin Sans", category: "Sofisticada", preview: "Aa Bb Cc 123" },
+  { id: "DM Sans", name: "DM Sans", category: "Moderna", preview: "Aa Bb Cc 123" },
+  { id: "Space Grotesk", name: "Space Grotesk", category: "Tech", preview: "Aa Bb Cc 123" },
+];
+
 const DEFAULT_THEME: ThemeSettings = {
   button_style: "rounded",
   card_style: "shadow",
@@ -107,6 +127,8 @@ export default function PersonalizacaoRevendedoraPage() {
   const [bannerMobileUrl, setBannerMobileUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#ec4899");
   const [secondaryColor, setSecondaryColor] = useState("#8b5cf6");
+  const [fontePrincipal, setFontePrincipal] = useState("Inter");
+  const [fonteSecundaria, setFonteSecundaria] = useState("Inter");
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(DEFAULT_THEME);
   const [currentSlug, setCurrentSlug] = useState("");
   const [activeSection, setActiveSection] = useState<"main" | "colors" | "logo" | "banner" | "social" | "styles">("main");
@@ -183,6 +205,8 @@ export default function PersonalizacaoRevendedoraPage() {
         setBannerMobileUrl(data.banner_mobile_url || "");
         setPrimaryColor(data.colors?.primary || "#ec4899");
         setSecondaryColor(data.colors?.secondary || "#8b5cf6");
+        setFontePrincipal(data.fonte_principal || "Inter");
+        setFonteSecundaria(data.fonte_secundaria || "Inter");
         setThemeSettings(data.theme_settings || DEFAULT_THEME);
         
         // Carregar submissoes de banner
@@ -206,7 +230,9 @@ export default function PersonalizacaoRevendedoraPage() {
         store_name: storeName, slug: newSlug, bio, phone, instagram, facebook, 
         logo_url: logoUrl, banner_url: bannerUrl, banner_mobile_url: bannerMobileUrl, 
         colors: { primary: primaryColor, secondary: secondaryColor }, 
-        theme_settings: themeSettings 
+        theme_settings: themeSettings,
+        fonte_principal: fontePrincipal,
+        fonte_secundaria: fonteSecundaria
       }).eq("id", reseller.id);
       if (error) throw error;
       setCurrentSlug(newSlug);
@@ -901,6 +927,60 @@ export default function PersonalizacaoRevendedoraPage() {
                 <p className="text-base font-medium text-gray-800 mb-2">Rasteirinha</p>
                 <p className="text-xs text-gray-500">Grande</p>
               </button>
+            </div>
+          </div>
+          
+          {/* 🎨 SELETOR DE FONTE PRINCIPAL */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🔤</span>
+              <h3 className="font-semibold text-gray-800">Fonte Principal</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">Define a fonte dos textos e títulos da sua loja</p>
+            
+            {/* Preview da fonte selecionada */}
+            <div 
+              className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl mb-4 border border-gray-200"
+              style={{ fontFamily: `"${fontePrincipal}", sans-serif` }}
+            >
+              <p className="text-2xl font-bold text-gray-800 mb-1">{storeName || "Minha Loja"}</p>
+              <p className="text-sm text-gray-600">Exemplo de texto com a fonte {fontePrincipal}</p>
+            </div>
+            
+            {/* Grid de fontes */}
+            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              {FONT_OPTIONS.map((font) => (
+                <button
+                  key={font.id}
+                  onClick={() => setFontePrincipal(font.id)}
+                  className={`p-3 rounded-xl border-2 transition-all text-left ${
+                    fontePrincipal === font.id 
+                      ? "border-pink-500 bg-pink-50" 
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  style={{ fontFamily: `"${font.id}", sans-serif` }}
+                >
+                  <p className="font-semibold text-gray-800 text-lg">{font.preview}</p>
+                  <p className="text-xs text-gray-500 mt-1">{font.name}</p>
+                  <span 
+                    className="inline-block mt-1 px-2 py-0.5 text-[10px] rounded-full"
+                    style={{ 
+                      backgroundColor: fontePrincipal === font.id ? '#ec489920' : '#f3f4f6',
+                      color: fontePrincipal === font.id ? '#ec4899' : '#6b7280'
+                    }}
+                  >
+                    {font.category}
+                  </span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Dica */}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                💡 <strong>Dica:</strong> Fontes modernas como Inter e Poppins são mais legíveis em telas. 
+                Fontes elegantes como Playfair são ótimas para lojas de luxo.
+              </p>
             </div>
           </div>
           

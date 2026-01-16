@@ -9,6 +9,7 @@ import { Playfair_Display, Lato, Montserrat, Open_Sans, Bebas_Neue, Raleway } fr
 import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
 import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
 import CuponsModal from '@/components/catalogo/CuponsModal';
+import GoogleFontsLoader from '@/components/GoogleFontsLoader';
 
 // ⚡ Fontes carregadas APENAS no catálogo (economia de ~300KB em outras rotas)
 const playfairDisplay = Playfair_Display({ 
@@ -67,6 +68,8 @@ type Reseller = {
   bio?: string;
   instagram?: string;
   facebook?: string;
+  fonte_principal?: string;
+  fonte_secundaria?: string;
   colors?: {
     primary: string;
     secondary: string;
@@ -272,7 +275,7 @@ export default function CatalogoLayout({
       // ⚠️ SEGURANÇA: Selecionar APENAS campos públicos necessários
       const { data } = await supabase
         .from('resellers')
-        .select('id, user_id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status')
+        .select('id, user_id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status, fonte_principal, fonte_secundaria')
         .eq('slug', slug)
         .single();
 
@@ -1005,7 +1008,16 @@ export default function CatalogoLayout({
         getProductPromotion,
       }}
     >
-      <div className={`min-h-screen bg-gray-50 ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${bebasNeue.variable} ${raleway.variable}`}>
+      <div 
+        className={`min-h-screen bg-gray-50 ${playfairDisplay.variable} ${lato.variable} ${montserrat.variable} ${openSans.variable} ${bebasNeue.variable} ${raleway.variable}`}
+        style={{ fontFamily: reseller.fonte_principal ? `"${reseller.fonte_principal}", sans-serif` : undefined }}
+      >
+        {/* 🎨 Carregador dinâmico de fontes do Google */}
+        <GoogleFontsLoader 
+          fontePrincipal={reseller.fonte_principal} 
+          fonteSecundaria={reseller.fonte_secundaria} 
+        />
+        
         {/* Meta Tags para SEO */}
         {reseller && (
           <CatalogoMetaTags
