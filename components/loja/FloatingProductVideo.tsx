@@ -1,13 +1,19 @@
 /**
- * VÍDEO FLUTUANTE DO PRODUTO - Estilo Story Circle
- * Fica fixo na tela (position: fixed) enquanto o usuário navega
- * Formato circular como stories do Instagram
+ * FLOATING VIDEO BUBBLE - Estilo Widde
+ * Widget flutuante que fica fixo na tela durante toda a navegação
+ * 
+ * COMPORTAMENTO:
+ * - Position: fixed no canto inferior direito
+ * - Fica "pregado" na tela, não se move com o scroll
+ * - Círculo pequeno (70px) como preview
+ * - Clique abre modal fullscreen com som
+ * - Carrega o vídeo específico de cada produto
  */
 
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { X, Volume2, VolumeX, Play } from 'lucide-react';
 
 interface FloatingProductVideoProps {
   videoUrl: string;
@@ -30,15 +36,16 @@ export function FloatingProductVideo({
   useEffect(() => {
     if (miniVideoRef.current) {
       miniVideoRef.current.play().catch(() => {
-        // Autoplay bloqueado, ok
+        // Autoplay bloqueado pelo browser, ok
       });
     }
   }, []);
 
-  // Controlar play/pause do vídeo expandido
+  // Controlar vídeo expandido
   useEffect(() => {
     if (isExpanded && fullVideoRef.current) {
       fullVideoRef.current.play().catch(() => {});
+      setIsPlaying(true);
     }
   }, [isExpanded]);
 
@@ -55,58 +62,95 @@ export function FloatingProductVideo({
 
   return (
     <>
-      {/* 🎬 VÍDEO MINI FLUTUANTE - Circular, fixo na tela no canto superior esquerdo */}
+      {/* ============================================ */}
+      {/* 🎬 FLOATING VIDEO BUBBLE - Preview Circular */}
+      {/* ============================================ */}
+      {/* 
+        - position: fixed = fica "pregado" na viewport
+        - bottom-6 right-6 = canto inferior direito
+        - z-50 = fica POR CIMA de todo o conteúdo
+        - Não se move quando o usuário faz scroll
+      */}
       {!isExpanded && (
         <div 
-          className="fixed top-28 left-4 z-50 cursor-pointer group"
+          className="fixed bottom-6 right-6 z-50 cursor-pointer group"
           onClick={() => setIsExpanded(true)}
+          style={{ 
+            // Garantir que fica acima de tudo
+            zIndex: 9999 
+          }}
         >
-          {/* Anel de gradiente animado (estilo story) */}
+          {/* Anel pulsante de destaque (estilo stories) */}
           <div 
-            className="relative p-1 rounded-full animate-pulse"
+            className="absolute -inset-1 rounded-full opacity-75 animate-ping"
             style={{ 
-              background: `linear-gradient(45deg, ${corPrimaria}, #ff6b9d, ${corPrimaria})`,
+              backgroundColor: corPrimaria,
+              animationDuration: '2s'
+            }}
+          />
+          
+          {/* Anel gradiente estático */}
+          <div 
+            className="relative p-[3px] rounded-full"
+            style={{ 
+              background: `linear-gradient(135deg, ${corPrimaria}, #ff6b9d, ${corPrimaria})`,
             }}
           >
-            {/* Container circular do vídeo */}
-            <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-black border-2 border-white">
+            {/* Container circular do vídeo - 70x70px */}
+            <div 
+              className="relative rounded-full overflow-hidden bg-black"
+              style={{
+                width: '70px',
+                height: '70px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3), 0 0 0 2px white'
+              }}
+            >
+              {/* Vídeo preview - mudo e autoplay */}
               <video
                 ref={miniVideoRef}
                 src={videoUrl}
-                className="w-full h-full object-cover scale-150"
+                className="w-full h-full object-cover scale-[1.5]"
                 loop
                 muted
                 playsInline
                 autoPlay
               />
               
-              {/* Overlay escuro sutil */}
-              <div className="absolute inset-0 bg-black/10" />
-              
-              {/* Ícone de play no hover */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Play className="w-8 h-8 text-white drop-shadow-lg" />
+              {/* Overlay de hover com ícone play */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Play className="w-6 h-6 text-white drop-shadow-lg" fill="white" />
               </div>
             </div>
           </div>
           
-          {/* Label "Vídeo" abaixo do círculo */}
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+          {/* Label "Vídeo" */}
+          <div 
+            className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap"
+          >
             <span 
-              className="text-xs font-bold px-2 py-0.5 rounded-full text-white shadow-lg"
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shadow-lg"
               style={{ backgroundColor: corPrimaria }}
             >
-              📹 Vídeo
+              ▶ Vídeo
             </span>
           </div>
         </div>
       )}
 
-      {/* 🎬 VÍDEO EXPANDIDO - Modal fullscreen */}
+      {/* ============================================ */}
+      {/* 🎬 MODAL FULLSCREEN - Vídeo expandido */}
+      {/* ============================================ */}
       {isExpanded && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center">
-          {/* Vídeo centralizado */}
-          <div className="relative w-full max-w-md mx-4 aspect-[9/16] bg-black rounded-2xl overflow-hidden">
+        <div 
+          className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center"
+          onClick={() => setIsExpanded(false)}
+        >
+          {/* Container do vídeo - aspect ratio 9:16 */}
+          <div 
+            className="relative w-full max-w-sm mx-4 aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Vídeo principal */}
             <video
               ref={fullVideoRef}
               src={videoUrl}
@@ -118,40 +162,35 @@ export function FloatingProductVideo({
               onClick={togglePlay}
             />
             
-            {/* Overlay de controles */}
+            {/* Gradientes de overlay */}
             <div className="absolute inset-0 pointer-events-none">
-              {/* Gradiente superior */}
-              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
-              
-              {/* Gradiente inferior */}
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/70 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black/70 to-transparent" />
             </div>
             
-            {/* Indicador de pause no centro */}
+            {/* Indicador de pause */}
             {!isPlaying && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                  <Play className="w-8 h-8 text-white ml-1" />
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Play className="w-8 h-8 text-white ml-1" fill="white" />
                 </div>
               </div>
             )}
             
-            {/* Header com botões */}
-            <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
-              {/* Nome do produto */}
+            {/* Header - Nome e botões */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
               <h3 className="text-white font-semibold text-sm truncate max-w-[60%] drop-shadow-lg">
                 {productName}
               </h3>
               
-              {/* Botões */}
               <div className="flex gap-2">
-                {/* Botão mudo/som */}
+                {/* Botão som */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMuted(!isMuted);
                   }}
-                  className="p-2.5 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-all"
+                  className="p-2.5 bg-black/40 backdrop-blur-sm rounded-full hover:bg-black/60 transition-all"
                 >
                   {isMuted ? (
                     <VolumeX className="w-5 h-5 text-white" />
@@ -166,58 +205,50 @@ export function FloatingProductVideo({
                     e.stopPropagation();
                     setIsExpanded(false);
                   }}
-                  className="p-2.5 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-all"
+                  className="p-2.5 bg-black/40 backdrop-blur-sm rounded-full hover:bg-black/60 transition-all"
                 >
                   <X className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
             
-            {/* Footer com label */}
-            <div className="absolute bottom-4 left-4 right-4 pointer-events-auto">
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
               <div className="flex items-center gap-2">
                 <span 
                   className="text-xs font-bold px-3 py-1.5 rounded-full text-white"
                   style={{ backgroundColor: corPrimaria }}
                 >
-                  📹 Vídeo do Produto
+                  ▶ Vídeo do Produto
                 </span>
-                <span className="text-white/70 text-xs">
+                <span className="text-white/60 text-xs">
                   Toque para pausar
                 </span>
               </div>
             </div>
             
-            {/* Barra de progresso animada no topo (estilo story) */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-white/30">
+            {/* Barra de progresso estilo story */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 rounded-t-2xl overflow-hidden">
               <div 
-                className="h-full animate-progress"
+                className="h-full rounded-full"
                 style={{ 
                   backgroundColor: corPrimaria,
-                  animation: 'progress 15s linear infinite'
+                  animation: 'progressBar 10s linear infinite'
                 }}
               />
             </div>
           </div>
-          
-          {/* Área clicável para fechar (fora do vídeo) */}
-          <div 
-            className="absolute inset-0 -z-10"
-            onClick={() => setIsExpanded(false)}
-          />
         </div>
       )}
 
-      {/* CSS para animação da barra de progresso */}
+      {/* Animação CSS */}
       <style jsx>{`
-        @keyframes progress {
+        @keyframes progressBar {
           from { width: 0%; }
           to { width: 100%; }
-        }
-        .animate-progress {
-          animation: progress 15s linear infinite;
         }
       `}</style>
     </>
   );
 }
+
