@@ -5,6 +5,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/loja/ProductCard';
 import CategoriesStories from '@/components/loja/CategoriesStories';
 import TrustIcons from '@/components/loja/TrustIcons';
+import { ReelsPreview } from '@/components/video';
 import { ArrowRight } from 'lucide-react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 
@@ -16,6 +17,8 @@ type Produto = {
   preco_final: number;
   imagens: string[];
   tag?: string;
+  video_url?: string;
+  video_thumbnail?: string;
   parcelamento: {
     parcelas: number;
     valor: number;
@@ -25,6 +28,7 @@ type Produto = {
 export default function LojaHomePage({ params }: { params: Promise<{ dominio: string }> }) {
   const loja = useLojaInfo();
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtosComVideo, setProdutosComVideo] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [dominio, setDominio] = useState<string>('');
 
@@ -41,6 +45,10 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
         if (prodRes.ok) {
           const prodJson = await prodRes.json();
           setProdutos(prodJson.produtos.slice(0, 6));
+          
+          // Filtrar produtos com vídeo para o ReelsPreview
+          const comVideo = prodJson.produtos.filter((p: Produto) => p.video_url);
+          setProdutosComVideo(comVideo.slice(0, 8));
         }
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
@@ -134,6 +142,27 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
           )}
         </div>
       </section>
+
+      {/* 🎬 Seção de Reels - Preview na Home */}
+      {produtosComVideo.length > 0 && (
+        <section className="bg-white" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+          <div className="container-fluid">
+            <ReelsPreview
+              products={produtosComVideo.map(p => ({
+                id: p.id,
+                nome: p.nome,
+                videoUrl: p.video_url!,
+                posterUrl: p.video_thumbnail || p.imagens?.[0],
+                preco: p.preco_final || p.preco_venda || p.preco_base,
+              }))}
+              dominio={dominio}
+              corPrimaria={corPrimaria}
+              title="🔥 Reels"
+              maxItems={4}
+            />
+          </div>
+        </section>
+      )}
 
       {/* Banner Secundário */}
       <section className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
