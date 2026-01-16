@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Play, Pause, Volume2, VolumeX, AlertCircle, CheckCircle, Film } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -137,6 +137,17 @@ export default function VideoUploader({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [videoMetadata, setVideoMetadata] = useState<VideoMetadata | null>(null);
+  const [isSaved, setIsSaved] = useState(!!currentVideoUrl);
+  
+  // Atualizar quando currentVideoUrl mudar (vídeo foi salvo no banco)
+  useEffect(() => {
+    if (currentVideoUrl) {
+      setPreviewUrl(currentVideoUrl);
+      setIsSaved(true);
+    } else {
+      setIsSaved(false);
+    }
+  }, [currentVideoUrl]);
   
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
@@ -193,6 +204,7 @@ export default function VideoUploader({
   const uploadVideo = useCallback(async (file: File) => {
     setError(null);
     setUploadProgress(0);
+    setIsSaved(false); // Reset - novo upload ainda não foi salvo no banco
     
     // Validar
     const validation = await validateFile(file);
@@ -422,12 +434,19 @@ export default function VideoUploader({
             </button>
           </div>
           
-          {/* Badge de sucesso */}
+          {/* Badge de status */}
           <div className="absolute top-2 left-2">
-            <span className="flex items-center gap-1 text-xs bg-green-500 text-white px-2 py-1 rounded-full">
-              <CheckCircle className="w-3 h-3" />
-              Vídeo OK
-            </span>
+            {isSaved ? (
+              <span className="flex items-center gap-1 text-xs bg-green-500 text-white px-2 py-1 rounded-full shadow-lg">
+                <CheckCircle className="w-3 h-3" />
+                Salvo
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-xs bg-blue-500 text-white px-2 py-1 rounded-full shadow-lg animate-pulse">
+                <Film className="w-3 h-3" />
+                Novo
+              </span>
+            )}
           </div>
         </div>
         
