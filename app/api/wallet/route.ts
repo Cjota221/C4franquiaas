@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 // API principal da carteira - GET dados, POST criar carteira
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    console.log('[Wallet API] Iniciando requisição GET')
+    console.log('[Wallet API] Cookies:', request.cookies.getAll().map(c => c.name))
+    
     const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    console.log('[Wallet API] Auth result:', { user: user?.id, error: authError?.message })
+    
     if (authError || !user) {
+      console.log('[Wallet API] Não autorizado - authError:', authError, 'user:', user)
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
