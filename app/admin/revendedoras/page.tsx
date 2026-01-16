@@ -141,6 +141,7 @@ function calcularPersonalizacaoFlags(
 export default function AdminRevendedorasPage() {
   // Estados principais
   const [revendedoras, setRevendedoras] = useState<RevendedoraCompleta[]>([]);
+  const [allFilteredRevendedoras, setAllFilteredRevendedoras] = useState<RevendedoraCompleta[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   
@@ -481,6 +482,119 @@ export default function AdminRevendedorasPage() {
     }
   }, [currentPage, filtroStatus, filtroAtivacao, buscaDebounced]);
 
+  // ============================================================================
+  // CARREGAR TODAS AS REVENDEDORAS FILTRADAS (para exportação)
+  // ============================================================================
+  const carregarTodasParaExportacao = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      
+      // Query sem paginação para obter todas
+      let query = supabase
+        .from('resellers')
+        .select('id, name, email, phone, store_name, slug, status, is_active, logo_url, banner_url, banner_mobile_url, colors, theme_settings, created_at');
+
+      // Aplicar filtro de status
+      if (filtroStatus !== 'todas') {
+        query = query.eq('status', filtroStatus);
+      }
+
+      // Aplicar busca
+      if (buscaDebounced) {
+        query = query.or(`name.ilike.%${buscaDebounced}%,email.ilike.%${buscaDebounced}%,store_name.ilike.%${buscaDebounced}%`);
+      }
+
+      // Ordenação
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error || !data) {
+        console.error('Erro ao carregar todas para exportação:', error);
+        setAllFilteredRevendedoras([]);
+        return;
+      }
+
+      // Processar e aplicar filtros client-side
+      const processadas: RevendedoraCompleta[] = data.map((r) => {
+        const hasLogo = checkHasLogo(r.logo_url);
+        const hasBanner = checkHasBanner(r.banner_url, r.banner_mobile_url);
+        const hasColors = checkHasColors(r.colors);
+        const hasStyles = checkHasStyles(r.theme_settings);
+        const isPersonalizada = hasLogo || hasColors || hasStyles || hasBanner;
+
+        return {
+          id: r.id || '',
+          name: r.name || 'Sem nome',
+          email: r.email || '',
+          phone: r.phone || '',
+          store_name: r.store_name || '',
+          slug: r.slug || '',
+          status: r.status || 'pendente',
+          is_active: !!r.is_active,
+          total_products: 0,
+          catalog_views: 0,
+          created_at: r.created_at || '',
+          has_logo: hasLogo,
+          has_banner: hasBanner,
+          has_colors: hasColors,
+          has_styles: hasStyles,
+          has_margin: false,
+          is_personalizada: isPersonalizada,
+          primary_color: null,
+          logo_url: r.logo_url || null,
+          banner_url: r.banner_url || null,
+          banner_mobile_url: r.banner_mobile_url || null,
+          instagram: null,
+          facebook: null,
+          tiktok: null,
+        };
+      });
+
+      // Aplicar filtros client-side
+      let filtered = processadas;
+      switch (filtroAtivacao) {
+        case 'ativas':
+          filtered = processadas.filter(r => r.status === 'aprovada' && r.is_active);
+          break;
+        case 'inativas':
+          filtered = processadas.filter(r => !r.is_active);
+          break;
+        case 'personalizadas':
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && r.is_personalizada
+          );
+          break;
+        case 'sem_personalizacao':
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && !r.is_personalizada
+          );
+          break;
+        case 'sem_margem':
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && r.is_active && !r.has_margin
+          );
+          break;
+        case 'completas':
+          filtered = processadas.filter(r => 
+            r.status === 'aprovada' && 
+            r.is_active && 
+            r.has_logo && 
+            r.has_banner && 
+            r.has_colors && 
+            r.has_margin && 
+            r.total_products > 0
+          );
+          break;
+      }
+
+      setAllFilteredRevendedoras(filtered);
+    } catch (err) {
+      console.error('Erro ao carregar todas para exportação:', err);
+      setAllFilteredRevendedoras([]);
+    }
+  }, [filtroStatus, filtroAtivacao, buscaDebounced]);
+
   // Efeitos de carregamento
   useEffect(() => {
     carregarEstatisticas();
@@ -488,7 +602,8 @@ export default function AdminRevendedorasPage() {
 
   useEffect(() => {
     carregarRevendedoras();
-  }, [carregarRevendedoras]);
+    carregarTodasParaExportacao();
+  }, [carregarRevendedoras, carregarTodasParaExportacao]);
 
   // Ações
   const handleAprovar = async (id: string) => {
@@ -803,6 +918,8 @@ export default function AdminRevendedorasPage() {
             totalItems={totalCount}
             itemsPerPage={ITEMS_PER_PAGE}
             onPageChange={setCurrentPage}
+            enableSelection={true}
+            allRevendedorasForExport={allFilteredRevendedoras}
           />
         </div>
       </div>

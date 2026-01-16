@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Eye,
   ChevronLeft,
@@ -14,9 +14,15 @@ import {
   User,
   ToggleLeft,
   ToggleRight,
-  Loader2
+  Loader2,
+  Download,
+  CheckSquare,
+  Square,
+  MessageCircle
 } from 'lucide-react';
 import { RevendedoraCompleta } from './types';
+import { exportToWhatsappCSV, formatPhoneForWhatsapp } from '@/lib/whatsapp-export';
+import { toast } from 'sonner';
 
 interface RevendedorasTableProps {
   revendedoras: RevendedoraCompleta[];
@@ -28,6 +34,9 @@ interface RevendedorasTableProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  // Exportação
+  enableSelection?: boolean;
+  allRevendedorasForExport?: RevendedoraCompleta[];
 }
 
 export default function RevendedorasTable({
@@ -39,7 +48,82 @@ export default function RevendedorasTable({
   totalItems,
   itemsPerPage,
   onPageChange,
+  enableSelection = true,
+  allRevendedorasForExport,
 }: RevendedorasTableProps) {
+  // Estados para seleção
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
+  // Handlers de seleção
+  const handleSelectOne = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+    setSelectAll(false);
+  };
+
+  const handleSelectAllPage = () => {
+    if (selectedIds.size === revendedoras.length) {
+      // Desselecionar todos da página
+      setSelectedIds(new Set());
+    } else {
+      // Selecionar todos da página
+      const newSet = new Set(revendedoras.map(r => r.id));
+      setSelectedIds(newSet);
+    }
+  };
+
+  const handleSelectAllFiltered = () => {
+    if (allRevendedorasForExport) {
+      const newSet = new Set(allRevendedorasForExport.map(r => r.id));
+      setSelectedIds(newSet);
+      setSelectAll(true);
+      toast.success(`${allRevendedorasForExport.length} revendedoras selecionadas`);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectAll(false);
+  };
+
+  // Handler de exportação
+  const handleExportWhatsapp = () => {
+    let dataToExport: Array<{ name: string; phone: string | null }> = [];
+    
+    if (selectAll && allRevendedorasForExport) {
+      dataToExport = allRevendedorasForExport.map(r => ({
+        name: r.name,
+        phone: r.phone
+      }));
+    } else if (selectedIds.size > 0) {
+      dataToExport = revendedoras
+        .filter(r => selectedIds.has(r.id))
+        .map(r => ({
+          name: r.name,
+          phone: r.phone
+        }));
+    } else {
+      toast.error('Selecione pelo menos uma revendedora');
+      return;
+    }
+
+    const result = exportToWhatsappCSV(dataToExport, 'revendedoras_whatsapp', false);
+    
+    toast.success(
+      `Exportado! ${result.validos} telefones válidos${result.invalidos > 0 ? `, ${result.invalidos} inválidos ignorados` : ''}`
+    );
+    
+    // Limpar seleção após exportar
+    handleClearSelection();
+  };
+
+  const isSelected = (id: string) => selectedIds.has(id);
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -107,11 +191,74 @@ export default function RevendedorasTable({
 
   return (
     <div>
+      {/* Barra de seleção e exportação */}
+      {enableSelection && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600">
+              {selectedIds.size > 0 ? (
+                <>
+                  <strong>{selectAll && allRevendedorasForExport ? allRevendedorasForExport.length : selectedIds.size}</strong> selecionada(s)
+                </>
+              ) : (
+                'Selecione para exportar'
+              )}
+            </span>
+            
+            {allRevendedorasForExport && allRevendedorasForExport.length > 0 && (
+              <button
+                onClick={handleSelectAllFiltered}
+                className="text-sm text-[#DB1472] hover:text-[#b81160] font-medium"
+              >
+                Selecionar todas ({allRevendedorasForExport.length})
+              </button>
+            )}
+            
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleClearSelection}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Limpar seleção
+              </button>
+            )}
+          </div>
+          
+          <button
+            onClick={handleExportWhatsapp}
+            disabled={selectedIds.size === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Exportar para WhatsApp</span>
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Desktop Table */}
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
+              {enableSelection && (
+                <th className="px-3 py-3 text-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectAllPage();
+                    }}
+                    className="text-gray-500 hover:text-[#DB1472]"
+                    title={selectedIds.size === revendedoras.length ? 'Desselecionar página' : 'Selecionar página'}
+                  >
+                    {selectedIds.size === revendedoras.length && revendedoras.length > 0 ? (
+                      <CheckSquare className="w-5 h-5 text-[#DB1472]" />
+                    ) : (
+                      <Square className="w-5 h-5" />
+                    )}
+                  </button>
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Loja / Revendedora
               </th>
@@ -142,9 +289,26 @@ export default function RevendedorasTable({
             {revendedoras.map((revendedora) => (
               <tr
                 key={revendedora.id}
-                className="hover:bg-gray-50 transition-colors cursor-pointer"
+                className={`hover:bg-gray-50 transition-colors cursor-pointer ${isSelected(revendedora.id) ? 'bg-pink-50' : ''}`}
                 onClick={() => onSelectRevendedora(revendedora)}
               >
+                {enableSelection && (
+                  <td className="px-3 py-4 text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectOne(revendedora.id);
+                      }}
+                      className="text-gray-500 hover:text-[#DB1472]"
+                    >
+                      {isSelected(revendedora.id) ? (
+                        <CheckSquare className="w-5 h-5 text-[#DB1472]" />
+                      ) : (
+                        <Square className="w-5 h-5" />
+                      )}
+                    </button>
+                  </td>
+                )}
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DB1472] to-purple-600 flex items-center justify-center text-white font-bold text-sm">
@@ -210,11 +374,26 @@ export default function RevendedorasTable({
           <div
             key={revendedora.id}
             onClick={() => onSelectRevendedora(revendedora)}
-            className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${isSelected(revendedora.id) ? 'border-[#DB1472] bg-pink-50' : 'border-gray-200'}`}
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
+                {enableSelection && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectOne(revendedora.id);
+                    }}
+                    className="text-gray-500"
+                  >
+                    {isSelected(revendedora.id) ? (
+                      <CheckSquare className="w-6 h-6 text-[#DB1472]" />
+                    ) : (
+                      <Square className="w-6 h-6" />
+                    )}
+                  </button>
+                )}
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#DB1472] to-purple-600 flex items-center justify-center text-white font-bold">
                   {revendedora.name.charAt(0).toUpperCase()}
                 </div>
