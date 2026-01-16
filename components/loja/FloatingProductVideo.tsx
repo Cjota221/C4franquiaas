@@ -55,10 +55,10 @@ export function FloatingProductVideo({
 
   return (
     <>
-      {/* 🎬 VÍDEO MINI FLUTUANTE - Circular, fixo na tela */}
+      {/* 🎬 VÍDEO MINI FLUTUANTE - Circular, fixo na tela no canto superior esquerdo */}
       {!isExpanded && (
         <div 
-          className="fixed bottom-20 left-4 z-50 cursor-pointer group"
+          className="fixed top-28 left-4 z-50 cursor-pointer group"
           onClick={() => setIsExpanded(true)}
         >
           {/* Anel de gradiente animado (estilo story) */}
