@@ -90,8 +90,7 @@ export async function GET(request: NextRequest) {
       .from('reservas')
       .select(`
         *,
-        produto:produtos(id, nome, imagem, preco),
-        variacao:produto_variacoes(id, tamanho, cor, sku)
+        produto:produtos(id, nome, imagem, preco)
       `)
       .eq('revendedora_id', user.id)
       .order('created_at', { ascending: false })
