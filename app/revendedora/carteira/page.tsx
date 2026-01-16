@@ -51,6 +51,10 @@ export default function MinhaCarteiraPage() {
   const [recargaPendente, setRecargaPendente] = useState<WalletRecarga | null>(null)
   const [copiado, setCopiado] = useState(false)
   
+  // Configurações do banco
+  const [recargaMinima, setRecargaMinima] = useState(25)
+  const [recargaMaxima, setRecargaMaxima] = useState(5000)
+  
   useEffect(() => {
     carregarDados()
   }, [])
@@ -67,6 +71,12 @@ export default function MinhaCarteiraPage() {
         setWallet(data.wallet)
         setExtrato(data.extrato || [])
         setReservasTotais(data.reservas || { total: 0, valor: 0 })
+      }
+      
+      // Configurações
+      if (data.config) {
+        setRecargaMinima(data.config.recarga_minima || 25)
+        setRecargaMaxima(data.config.recarga_maxima || 5000)
       }
       
       // Buscar reservas detalhadas
@@ -99,13 +109,13 @@ export default function MinhaCarteiraPage() {
   async function criarRecarga() {
     const valor = parseFloat(valorRecarga.replace(',', '.'))
     
-    if (isNaN(valor) || valor < 150) {
-      alert('Valor mínimo de recarga é R$ 150,00')
+    if (isNaN(valor) || valor < recargaMinima) {
+      alert(`Valor mínimo de recarga é ${formatarMoeda(recargaMinima)}`)
       return
     }
     
-    if (valor > 5000) {
-      alert('Valor máximo de recarga é R$ 5.000,00')
+    if (valor > recargaMaxima) {
+      alert(`Valor máximo de recarga é ${formatarMoeda(recargaMaxima)}`)
       return
     }
     
@@ -453,18 +463,18 @@ export default function MinhaCarteiraPage() {
                   type="text"
                   value={valorRecarga}
                   onChange={(e) => setValorRecarga(e.target.value.replace(/[^\d,]/g, ''))}
-                  placeholder="150,00"
+                  placeholder={recargaMinima.toString()}
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-2xl font-bold text-center focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Mínimo: R$ 150,00 | Máximo: R$ 5.000,00
+                Mínimo: {formatarMoeda(recargaMinima)} | Máximo: {formatarMoeda(recargaMaxima)}
               </p>
             </div>
             
             {/* Valores sugeridos */}
             <div className="grid grid-cols-3 gap-2 mb-6">
-              {[150, 300, 500, 1000, 2000, 3000].map((valor) => (
+              {[recargaMinima, 50, 100, 200, 500, 1000].filter(v => v >= recargaMinima && v <= recargaMaxima).slice(0, 6).map((valor) => (
                 <button
                   key={valor}
                   onClick={() => setValorRecarga(valor.toString())}

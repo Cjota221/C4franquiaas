@@ -64,10 +64,22 @@ export async function GET(_request: NextRequest) {
       valor: reservasAtivas?.reduce((acc, r) => acc + r.preco_total, 0) || 0
     }
     
+    // Buscar configurações
+    const { data: configData } = await supabase
+      .from('wallet_config')
+      .select('chave, valor')
+      .in('chave', ['recarga_minima', 'recarga_maxima'])
+    
+    const config = {
+      recarga_minima: parseFloat(configData?.find(c => c.chave === 'recarga_minima')?.valor || '25'),
+      recarga_maxima: parseFloat(configData?.find(c => c.chave === 'recarga_maxima')?.valor || '5000')
+    }
+    
     return NextResponse.json({
       wallet,
       extrato: extrato || [],
-      reservas
+      reservas,
+      config
     })
     
   } catch (error) {
