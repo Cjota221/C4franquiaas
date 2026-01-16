@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ArrowLeft, Plus, Minus, ShoppingBag, Check, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
-import SizeGuideModal from '@/components/site/SizeGuideModal';
+import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
 import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
 // import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados'; // REMOVIDO TEMPORARIAMENTE
 

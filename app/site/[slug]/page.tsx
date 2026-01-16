@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronDown, Truck, Tag } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useCatalogo } from './layout';
-import BannerComTexto from '@/components/site/BannerComTexto';
+import BannerComTexto from '@/components/catalogo/BannerComTexto';
 
 type Variacao = {
   id?: string;

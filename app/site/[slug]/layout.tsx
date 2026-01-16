@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Playfair_Display, Lato, Montserrat, Open_Sans, Bebas_Neue, Raleway } from "next/font/google";
-import LeadCaptureModal from '@/components/site/LeadCaptureModal';
-import CatalogoMetaTags from '@/components/site/CatalogoMetaTags';
-import CuponsModal from '@/components/site/CuponsModal';
+import LeadCaptureModal from '@/components/catalogo/LeadCaptureModal';
+import CatalogoMetaTags from '@/components/catalogo/CatalogoMetaTags';
+import CuponsModal from '@/components/catalogo/CuponsModal';
 
 // ⚡ Fontes carregadas APENAS no catálogo (economia de ~300KB em outras rotas)
 const playfairDisplay = Playfair_Display({ 
