@@ -170,12 +170,12 @@ export function FloatingProductVideo({
               background: `linear-gradient(135deg, ${corPrimaria}, #ff6b9d, ${corPrimaria})`,
             }}
           >
-            {/* Container circular do vídeo - 70x70px */}
+            {/* Container circular do vídeo - 80x80px */}
             <div 
               className="relative rounded-full overflow-hidden bg-black"
               style={{
-                width: '70px',
-                height: '70px',
+                width: '80px',
+                height: '80px',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.3), 0 0 0 2px white'
               }}
             >
