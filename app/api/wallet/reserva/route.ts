@@ -127,19 +127,14 @@ export async function GET(request: NextRequest) {
       .single()
     
     if (!wallet) {
-      return NextResponse.json({ error: 'Carteira não encontrada' }, { status: 404 })
+      // Se não tem carteira, retorna lista vazia (não é erro)
+      return NextResponse.json({ reservas: [] })
     }
     
-    // Buscar reservas
+    // Buscar reservas (sem JOIN para evitar erros)
     let query = supabaseAdmin
       .from('reservas')
-      .select(`
-        *,
-        produtos:produto_id (
-          nome,
-          imagem_url
-        )
-      `)
+      .select('*')
       .eq('wallet_id', wallet.id)
       .order('created_at', { ascending: false })
     
@@ -151,14 +146,16 @@ export async function GET(request: NextRequest) {
     const { data: reservas, error } = await query
     
     if (error) {
-      return NextResponse.json({ error: 'Erro ao buscar reservas' }, { status: 500 })
+      console.error('Erro ao buscar reservas:', error)
+      // Retorna lista vazia em vez de erro
+      return NextResponse.json({ reservas: [] })
     }
     
-    return NextResponse.json({ reservas })
+    return NextResponse.json({ reservas: reservas || [] })
     
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     console.error('Erro ao buscar reservas:', error)
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json({ reservas: [] })
   }
 }

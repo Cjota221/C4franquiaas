@@ -25,7 +25,6 @@ SELECT
   wr.status as status_recarga,
   wr.pix_id,
   wr.created_at as recarga_criada,
-  wr.aprovado_em,
   w.revendedora_id,
   r.store_name as nome_loja,
   r.email
