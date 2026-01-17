@@ -43,6 +43,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/api/wallet/webhook') &&  // Webhook não precisa de auth
     !request.nextUrl.pathname.startsWith('/site') &&
     !request.nextUrl.pathname.startsWith('/loja') &&
+    !request.nextUrl.pathname.startsWith('/sistema-c4') &&  // Login admin central
     !request.nextUrl.pathname.startsWith('/_next') &&
     !request.nextUrl.pathname.startsWith('/favicon') &&
     request.nextUrl.pathname !== '/'
