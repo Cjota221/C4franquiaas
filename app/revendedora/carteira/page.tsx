@@ -27,6 +27,7 @@ import {
   type Reserva,
   type WalletRecarga
 } from '@/lib/wallet'
+import { authenticatedFetch } from '@/lib/authenticatedFetch'
 
 interface WalletData {
   id: string
@@ -64,7 +65,7 @@ export default function MinhaCarteiraPage() {
     
     try {
       // Buscar dados da carteira
-      const response = await fetch('/api/wallet', { credentials: 'include' })
+      const response = await authenticatedFetch('/api/wallet')
       const data = await response.json()
       
       if (data.wallet) {
@@ -80,7 +81,7 @@ export default function MinhaCarteiraPage() {
       }
       
       // Buscar reservas detalhadas
-      const reservasResponse = await fetch('/api/wallet/reserva?status=RESERVADO,EM_SEPARACAO,SEPARADO', { credentials: 'include' })
+      const reservasResponse = await authenticatedFetch('/api/wallet/reserva?status=RESERVADO,EM_SEPARACAO,SEPARADO')
       const reservasData = await reservasResponse.json()
       
       if (reservasData.reservas) {
@@ -88,7 +89,7 @@ export default function MinhaCarteiraPage() {
       }
       
       // Verificar recarga pendente
-      const recargaResponse = await fetch('/api/wallet/recarga', { credentials: 'include' })
+      const recargaResponse = await authenticatedFetch('/api/wallet/recarga')
       const recargaData = await recargaResponse.json()
       
       const pendente = recargaData.recargas?.find((r: { status: string; pix_expiracao: string }) => 
@@ -122,10 +123,9 @@ export default function MinhaCarteiraPage() {
     setLoadingRecarga(true)
     
     try {
-      const response = await fetch('/api/wallet/recarga', {
+      const response = await authenticatedFetch('/api/wallet/recarga', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           wallet_id: wallet?.id,
           valor
@@ -161,10 +161,9 @@ export default function MinhaCarteiraPage() {
     }
     
     try {
-      const response = await fetch('/api/wallet/reserva/cancelar', {
+      const response = await authenticatedFetch('/api/wallet/reserva/cancelar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ reserva_id: reservaId })
       })
       

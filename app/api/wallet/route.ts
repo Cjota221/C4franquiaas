@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 // API principal da carteira - GET dados, POST criar carteira
 export async function GET(request: NextRequest) {
   try {
-    console.log('[Wallet API] Iniciando requisição GET')
-    console.log('[Wallet API] Cookies:', request.cookies.getAll().map(c => c.name))
-    
-    const supabase = await createClient()
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    console.log('[Wallet API] Auth result:', { user: user?.id, error: authError?.message })
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
     if (authError || !user) {
-      console.log('[Wallet API] Não autorizado - authError:', authError, 'user:', user)
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
     // Buscar carteira do usuário
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await supabaseAdmin
       .from('wallets')
       .select('*')
       .eq('revendedora_id', user.id)
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     
     // Se não existe, criar automaticamente
     if (!wallet) {
-      const { data: novaCarteira, error: criarError } = await supabase
+      const { data: novaCarteira, error: criarError } = await supabaseAdmin
         .from('wallets')
         .insert({ revendedora_id: user.id })
         .select()
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Buscar extrato recente
-    const { data: extrato } = await supabase
+    const { data: extrato } = await supabaseAdmin
       .from('wallet_transactions')
       .select('*')
       .eq('wallet_id', wallet.id)
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       .limit(10)
     
     // Buscar resumo de reservas ativas
-    const { data: reservasAtivas } = await supabase
+    const { data: reservasAtivas } = await supabaseAdmin
       .from('reservas')
       .select('id, preco_total')
       .eq('wallet_id', wallet.id)
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Buscar configurações
-    const { data: configData } = await supabase
+    const { data: configData } = await supabaseAdmin
       .from('wallet_config')
       .select('chave, valor')
       .in('chave', ['recarga_minima', 'recarga_maxima'])
@@ -96,9 +96,9 @@ export async function GET(request: NextRequest) {
 // Buscar extrato completo
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const { action, ...params } = body
     
     // Buscar carteira
-    const { data: wallet } = await supabase
+    const { data: wallet } = await supabaseAdmin
       .from('wallets')
       .select('id')
       .eq('revendedora_id', user.id)
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     
     if (action === 'extrato') {
       // Buscar extrato com filtros
-      let query = supabase
+      let query = supabaseAdmin
         .from('wallet_transactions')
         .select('*')
         .eq('wallet_id', wallet.id)

@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 // API para criar recarga PIX na carteira
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
-    // Verificar autenticação
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -20,19 +25,19 @@ export async function POST(request: NextRequest) {
     }
     
     // Buscar configurações
-    const { data: configMinima } = await supabase
+    const { data: configMinima } = await supabaseAdmin
       .from('wallet_config')
       .select('valor')
       .eq('chave', 'recarga_minima')
       .single()
     
-    const { data: configMaxima } = await supabase
+    const { data: configMaxima } = await supabaseAdmin
       .from('wallet_config')
       .select('valor')
       .eq('chave', 'recarga_maxima')
       .single()
     
-    const minimo = parseFloat(configMinima?.valor || '150')
+    const minimo = parseFloat(configMinima?.valor || '25')
     const maximo = parseFloat(configMaxima?.valor || '5000')
     
     if (valor < minimo) {
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Verificar se carteira pertence ao usuário
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await supabaseAdmin
       .from('wallets')
       .select('*')
       .eq('id', wallet_id)
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Verificar se já existe recarga pendente não expirada
-    const { data: recargaPendente } = await supabase
+    const { data: recargaPendente } = await supabaseAdmin
       .from('wallet_recargas')
       .select('*')
       .eq('wallet_id', wallet_id)
@@ -99,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Criar registro de recarga
-    const { data: recarga, error: recargaError } = await supabase
+    const { data: recarga, error: recargaError } = await supabaseAdmin
       .from('wallet_recargas')
       .insert({
         wallet_id,
@@ -168,17 +173,17 @@ async function criarPixMercadoPago(valor: number, walletId: string) {
 }
 
 // GET - Buscar recargas do usuário
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
     // Buscar carteira do usuário
-    const { data: wallet } = await supabase
+    const { data: wallet } = await supabaseAdmin
       .from('wallets')
       .select('id')
       .eq('revendedora_id', user.id)
@@ -189,7 +194,7 @@ export async function GET(_request: NextRequest) {
     }
     
     // Buscar recargas
-    const { data: recargas, error } = await supabase
+    const { data: recargas, error } = await supabaseAdmin
       .from('wallet_recargas')
       .select('*')
       .eq('wallet_id', wallet.id)

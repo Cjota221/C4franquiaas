@@ -1,67 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 // API para fazer reserva de produto (Modo Caixinha)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
-    // Verificar autenticação
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
     const body = await request.json()
-    const { produto_id, variacao_id, quantidade, preco_unitario, metadata } = body
+    const { produto_id, quantidade = 1, preco_unitario } = body
     
-    if (!produto_id || !quantidade || !preco_unitario) {
+    if (!produto_id || !preco_unitario) {
+      return NextResponse.json({ error: 'produto_id e preco_unitario são obrigatórios' }, { status: 400 })
+    }
+    
+    // Buscar carteira do usuário
+    const { data: wallet, error: walletError } = await supabaseAdmin
+      .from('wallets')
+      .select('*')
+      .eq('revendedora_id', user.id)
+      .single()
+    
+    if (walletError || !wallet) {
+      return NextResponse.json({ error: 'Carteira não encontrada' }, { status: 404 })
+    }
+    
+    if (wallet.status !== 'ativo') {
+      return NextResponse.json({ error: 'Carteira bloqueada' }, { status: 400 })
+    }
+    
+    const precoTotal = preco_unitario * quantidade
+    const saldoDisponivel = wallet.saldo - wallet.saldo_bloqueado
+    
+    if (saldoDisponivel < precoTotal) {
       return NextResponse.json({ 
-        error: 'produto_id, quantidade e preco_unitario são obrigatórios' 
+        error: 'Saldo insuficiente',
+        saldo_disponivel: saldoDisponivel,
+        valor_necessario: precoTotal
       }, { status: 400 })
     }
     
-    if (quantidade < 1) {
-      return NextResponse.json({ error: 'Quantidade deve ser pelo menos 1' }, { status: 400 })
+    // Criar reserva
+    const { data: reserva, error: reservaError } = await supabaseAdmin
+      .from('reservas')
+      .insert({
+        wallet_id: wallet.id,
+        produto_id,
+        quantidade,
+        preco_unitario,
+        preco_total: precoTotal,
+        status: 'RESERVADO'
+      })
+      .select()
+      .single()
+    
+    if (reservaError) {
+      console.error('Erro ao criar reserva:', reservaError)
+      return NextResponse.json({ error: 'Erro ao criar reserva' }, { status: 500 })
     }
     
-    if (preco_unitario <= 0) {
-      return NextResponse.json({ error: 'Preço inválido' }, { status: 400 })
+    // Bloquear saldo
+    const { error: bloqueioError } = await supabaseAdmin
+      .from('wallets')
+      .update({ saldo_bloqueado: wallet.saldo_bloqueado + precoTotal })
+      .eq('id', wallet.id)
+    
+    if (bloqueioError) {
+      // Reverter reserva
+      await supabaseAdmin.from('reservas').delete().eq('id', reserva.id)
+      return NextResponse.json({ error: 'Erro ao bloquear saldo' }, { status: 500 })
     }
     
-    // Chamar função atômica do banco
-    const { data, error } = await supabase.rpc('fazer_reserva', {
-      p_revendedora_id: user.id,
-      p_produto_id: produto_id,
-      p_variacao_id: variacao_id || null,
-      p_quantidade: quantidade,
-      p_preco_unitario: preco_unitario,
-      p_metadata: metadata || {}
-    })
-    
-    if (error) {
-      console.error('Erro na função fazer_reserva:', error)
-      return NextResponse.json({ error: 'Erro ao processar reserva' }, { status: 500 })
-    }
-    
-    // O retorno da função é um JSONB
-    const resultado = data
-    
-    if (!resultado.success) {
-      return NextResponse.json({ 
-        error: resultado.error,
-        saldo_atual: resultado.saldo_atual,
-        valor_necessario: resultado.valor_necessario,
-        estoque_disponivel: resultado.estoque_disponivel
-      }, { status: 400 })
-    }
+    // Registrar transação
+    await supabaseAdmin
+      .from('wallet_transactions')
+      .insert({
+        wallet_id: wallet.id,
+        tipo: 'BLOQUEIO_RESERVA',
+        valor: precoTotal,
+        descricao: `Reserva do produto ${produto_id}`,
+        referencia_tipo: 'reserva',
+        referencia_id: reserva.id
+      })
     
     return NextResponse.json({
       success: true,
-      reserva_id: resultado.reserva_id,
-      transaction_id: resultado.transaction_id,
-      valor_debitado: resultado.valor_debitado,
-      novo_saldo: resultado.novo_saldo
+      reserva,
+      saldo_atualizado: wallet.saldo - wallet.saldo_bloqueado - precoTotal
     })
     
   } catch (error: unknown) {
@@ -74,49 +109,52 @@ export async function POST(request: NextRequest) {
 // GET - Buscar reservas do usuário
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authHeader = request.headers.get('authorization')
+    const { user, error: authError } = await getAuthUser(authHeader)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50')
     
-    let query = supabase
+    // Buscar carteira do usuário
+    const { data: wallet } = await supabaseAdmin
+      .from('wallets')
+      .select('id')
+      .eq('revendedora_id', user.id)
+      .single()
+    
+    if (!wallet) {
+      return NextResponse.json({ error: 'Carteira não encontrada' }, { status: 404 })
+    }
+    
+    // Buscar reservas
+    let query = supabaseAdmin
       .from('reservas')
       .select(`
         *,
-        produto:produtos(id, nome, imagem, preco)
+        produtos:produto_id (
+          nome,
+          imagem_url
+        )
       `)
-      .eq('revendedora_id', user.id)
+      .eq('wallet_id', wallet.id)
       .order('created_at', { ascending: false })
-      .limit(limit)
     
     if (status) {
-      const statusList = status.split(',')
-      query = query.in('status', statusList)
+      const statusArray = status.split(',')
+      query = query.in('status', statusArray)
     }
     
     const { data: reservas, error } = await query
     
     if (error) {
-      console.error('Erro ao buscar reservas:', error)
       return NextResponse.json({ error: 'Erro ao buscar reservas' }, { status: 500 })
     }
     
-    // Calcular totais
-    const totais = {
-      quantidade: reservas?.reduce((acc, r) => acc + r.quantidade, 0) || 0,
-      valor: reservas?.reduce((acc, r) => acc + r.preco_total, 0) || 0
-    }
-    
-    return NextResponse.json({ 
-      reservas,
-      totais
-    })
+    return NextResponse.json({ reservas })
     
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
