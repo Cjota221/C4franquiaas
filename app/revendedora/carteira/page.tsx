@@ -51,10 +51,65 @@ export default function MinhaCarteiraPage() {
   const [loadingRecarga, setLoadingRecarga] = useState(false)
   const [recargaPendente, setRecargaPendente] = useState<WalletRecarga | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const [tempoRestante, setTempoRestante] = useState<string>('')
   
   // Configurações do banco
   const [recargaMinima, setRecargaMinima] = useState(25)
   const [recargaMaxima, setRecargaMaxima] = useState(5000)
+  
+  // Timer para contador regressivo e verificar expiração
+  useEffect(() => {
+    if (!recargaPendente) return
+    
+    const atualizarTempo = () => {
+      const agora = new Date()
+      const expiracao = new Date(recargaPendente.pix_expiracao)
+      const diff = expiracao.getTime() - agora.getTime()
+      
+      if (diff <= 0) {
+        // Expirou - limpar recarga pendente
+        setRecargaPendente(null)
+        setTempoRestante('')
+        carregarDados() // Recarregar para verificar se foi pago
+        return
+      }
+      
+      const minutos = Math.floor(diff / 60000)
+      const segundos = Math.floor((diff % 60000) / 1000)
+      setTempoRestante(`${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`)
+    }
+    
+    atualizarTempo()
+    const interval = setInterval(atualizarTempo, 1000)
+    
+    return () => clearInterval(interval)
+  }, [recargaPendente])
+  
+  // Verificar status da recarga a cada 10 segundos
+  useEffect(() => {
+    if (!recargaPendente) return
+    
+    const verificarPagamento = async () => {
+      try {
+        const response = await authenticatedFetch('/api/wallet/recarga')
+        const data = await response.json()
+        
+        // Verificar se a recarga pendente foi paga
+        const mesmRecarga = data.recargas?.find((r: WalletRecarga) => r.id === recargaPendente.id)
+        
+        if (!mesmRecarga || mesmRecarga.status !== 'PENDENTE') {
+          // Recarga foi paga ou cancelada
+          setRecargaPendente(null)
+          carregarDados() // Recarregar tudo
+        }
+      } catch (error) {
+        console.error('Erro ao verificar pagamento:', error)
+      }
+    }
+    
+    const interval = setInterval(verificarPagamento, 10000)
+    return () => clearInterval(interval)
+  }, [recargaPendente])
   
   useEffect(() => {
     carregarDados()
@@ -282,9 +337,16 @@ export default function MinhaCarteiraPage() {
                 <Clock className="w-5 h-5 text-yellow-600" />
                 <span className="font-medium text-yellow-800">Recarga Pendente</span>
               </div>
-              <span className="text-lg font-bold text-yellow-800">
-                {formatarMoeda(recargaPendente.valor)}
-              </span>
+              <div className="text-right">
+                <span className="text-lg font-bold text-yellow-800">
+                  {formatarMoeda(recargaPendente.valor)}
+                </span>
+                {tempoRestante && (
+                  <p className="text-sm text-yellow-600 font-mono font-bold">
+                    ⏱️ {tempoRestante}
+                  </p>
+                )}
+              </div>
             </div>
             
             <p className="text-sm text-yellow-700 mb-3">
@@ -302,6 +364,18 @@ export default function MinhaCarteiraPage() {
               </div>
             )}
             
+            {!recargaPendente.pix_qrcode_base64 && recargaPendente.pix_copia_cola && (
+              <div className="bg-white rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <QrCode className="w-4 h-4" />
+                  <span className="text-xs">Código PIX Copia e Cola:</span>
+                </div>
+                <p className="text-xs font-mono break-all text-gray-800">
+                  {recargaPendente.pix_copia_cola.substring(0, 80)}...
+                </p>
+              </div>
+            )}
+            
             <div className="flex gap-2">
               <button
                 onClick={copiarPixCopiaCola}
@@ -310,10 +384,16 @@ export default function MinhaCarteiraPage() {
                 {copiado ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiado ? 'Copiado!' : 'Copiar código'}
               </button>
+              <button
+                onClick={() => setRecargaPendente(null)}
+                className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 px-4 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             
             <p className="text-xs text-yellow-600 text-center mt-2">
-              Expira em: {new Date(recargaPendente.pix_expiracao).toLocaleTimeString()}
+              O saldo será creditado automaticamente após o pagamento
             </p>
           </div>
         )}
