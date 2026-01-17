@@ -53,11 +53,22 @@ export async function POST(request: NextRequest) {
     }
     
     // Verificar se carteira pertence ao usuário
+    // Primeiro buscar o reseller pelo email
+    const { data: reseller } = await supabaseAdmin
+      .from('resellers')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (!reseller) {
+      return NextResponse.json({ error: 'Revendedora não encontrada' }, { status: 404 })
+    }
+    
     const { data: wallet, error: walletError } = await supabaseAdmin
       .from('wallets')
       .select('*')
       .eq('id', wallet_id)
-      .eq('revendedora_id', user.id)
+      .eq('revendedora_id', reseller.id)
       .single()
     
     if (walletError || !wallet) {
@@ -182,11 +193,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
+    // Buscar reseller pelo email
+    const { data: reseller } = await supabaseAdmin
+      .from('resellers')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (!reseller) {
+      return NextResponse.json({ error: 'Revendedora não encontrada' }, { status: 404 })
+    }
+    
     // Buscar carteira do usuário
     const { data: wallet } = await supabaseAdmin
       .from('wallets')
       .select('id')
-      .eq('revendedora_id', user.id)
+      .eq('revendedora_id', reseller.id)
       .single()
     
     if (!wallet) {

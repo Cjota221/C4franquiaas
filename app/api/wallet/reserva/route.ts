@@ -24,11 +24,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'produto_id e preco_unitario são obrigatórios' }, { status: 400 })
     }
     
+    // Buscar reseller pelo email
+    const { data: reseller } = await supabaseAdmin
+      .from('resellers')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (!reseller) {
+      return NextResponse.json({ error: 'Revendedora não encontrada' }, { status: 404 })
+    }
+    
     // Buscar carteira do usuário
     const { data: wallet, error: walletError } = await supabaseAdmin
       .from('wallets')
       .select('*')
-      .eq('revendedora_id', user.id)
+      .eq('revendedora_id', reseller.id)
       .single()
     
     if (walletError || !wallet) {
@@ -119,11 +130,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     
+    // Buscar reseller pelo email
+    const { data: reseller } = await supabaseAdmin
+      .from('resellers')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (!reseller) {
+      return NextResponse.json({ reservas: [] })
+    }
+    
     // Buscar carteira do usuário
     const { data: wallet } = await supabaseAdmin
       .from('wallets')
       .select('id')
-      .eq('revendedora_id', user.id)
+      .eq('revendedora_id', reseller.id)
       .single()
     
     if (!wallet) {

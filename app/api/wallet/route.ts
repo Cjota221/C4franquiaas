@@ -17,11 +17,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
     
+    // Buscar reseller pelo email do usuário autenticado
+    const { data: reseller, error: resellerError } = await supabaseAdmin
+      .from('resellers')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (resellerError || !reseller) {
+      console.error('Reseller não encontrado:', user.email)
+      return NextResponse.json({ error: 'Revendedora não encontrada' }, { status: 404 })
+    }
+    
+    const revendedoraId = reseller.id
+    
     // Buscar carteira do usuário
     const { data: wallet, error: walletError } = await supabaseAdmin
       .from('wallets')
       .select('*')
-      .eq('revendedora_id', user.id)
+      .eq('revendedora_id', revendedoraId)
       .single()
     
     if (walletError && walletError.code !== 'PGRST116') {
@@ -33,7 +47,7 @@ export async function GET(request: NextRequest) {
     if (!wallet) {
       const { data: novaCarteira, error: criarError } = await supabaseAdmin
         .from('wallets')
-        .insert({ revendedora_id: user.id })
+        .insert({ revendedora_id: revendedoraId })
         .select()
         .single()
       
