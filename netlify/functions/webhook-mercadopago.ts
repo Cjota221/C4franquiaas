@@ -88,8 +88,15 @@ export const handler: Handler = async (event) => {
     const paymentDetails = await fetchPaymentDetails(paymentId);
     console.log('📋 [Webhook MP] Detalhes do pagamento:', JSON.stringify(paymentDetails, null, 2));
 
-    // Atualizar venda no banco de dados
-    await updateVendaStatus(paymentId, paymentDetails);
+    // Verificar se é uma recarga de wallet (pelo metadata)
+    const metadata = paymentDetails.metadata || {};
+    if (metadata.tipo === 'recarga_wallet' && metadata.wallet_id) {
+      console.log('💰 [Webhook MP] Processando RECARGA DE WALLET');
+      await processarRecargaWallet(paymentId, paymentDetails);
+    } else {
+      // Atualizar venda no banco de dados
+      await updateVendaStatus(paymentId, paymentDetails);
+    }
 
     return {
       statusCode: 200,
@@ -255,4 +262,134 @@ async function darBaixaNoEstoque(venda: Record<string, unknown>) {
   }
 
   console.log('🎉 [Webhook MP] Baixa no estoque concluída!');
+}
+
+/**
+ * Processar recarga de wallet
+ */
+async function processarRecargaWallet(paymentId: string, paymentDetails: Record<string, unknown>) {
+  const { status, transaction_amount, metadata } = paymentDetails;
+  const walletId = (metadata as Record<string, unknown>)?.wallet_id as string;
+
+  console.log('💰 [Webhook MP] Processando recarga de wallet...');
+  console.log('  Wallet ID:', walletId);
+  console.log('  Valor:', transaction_amount);
+  console.log('  Status:', status);
+
+  // Buscar recarga pelo pix_id
+  const { data: recarga, error: recargaError } = await supabaseAdmin
+    .from('wallet_recargas')
+    .select('*')
+    .eq('pix_id', paymentId.toString())
+    .single();
+
+  if (recargaError || !recarga) {
+    // Se não encontrou pelo pix_id, buscar pela wallet e valor pendente
+    console.log('⚠️ [Webhook MP] Recarga não encontrada pelo pix_id, buscando por wallet_id e valor...');
+    
+    const { data: recargaPendente, error: pendError } = await supabaseAdmin
+      .from('wallet_recargas')
+      .select('*')
+      .eq('wallet_id', walletId)
+      .eq('status', 'PENDENTE')
+      .eq('valor', transaction_amount)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (pendError || !recargaPendente) {
+      console.error('❌ [Webhook MP] Recarga não encontrada:', pendError);
+      throw new Error('Recarga não encontrada');
+    }
+
+    // Atualizar recarga com pix_id
+    await supabaseAdmin
+      .from('wallet_recargas')
+      .update({ pix_id: paymentId.toString() })
+      .eq('id', recargaPendente.id);
+  }
+
+  // Buscar recarga atualizada
+  const { data: recargaAtualizada } = await supabaseAdmin
+    .from('wallet_recargas')
+    .select('*')
+    .or(`pix_id.eq.${paymentId},wallet_id.eq.${walletId}`)
+    .eq('status', 'PENDENTE')
+    .single();
+
+  if (!recargaAtualizada) {
+    console.error('❌ [Webhook MP] Recarga não encontrada após atualização');
+    throw new Error('Recarga não encontrada');
+  }
+
+  // Mapear status do MP para nosso status
+  let novoStatus: string;
+  if (status === 'approved') {
+    novoStatus = 'APROVADO';
+  } else if (status === 'rejected' || status === 'cancelled') {
+    novoStatus = 'REJEITADO';
+  } else {
+    console.log('⏳ [Webhook MP] Recarga em processamento:', status);
+    return; // Não fazer nada se ainda está processando
+  }
+
+  // Atualizar status da recarga
+  const { error: updateRecargaError } = await supabaseAdmin
+    .from('wallet_recargas')
+    .update({
+      status: novoStatus,
+      aprovado_em: novoStatus === 'APROVADO' ? new Date().toISOString() : null
+    })
+    .eq('id', recargaAtualizada.id);
+
+  if (updateRecargaError) {
+    console.error('❌ [Webhook MP] Erro ao atualizar recarga:', updateRecargaError);
+    throw updateRecargaError;
+  }
+
+  console.log('✅ [Webhook MP] Recarga atualizada para:', novoStatus);
+
+  // Se aprovado, creditar na carteira
+  if (status === 'approved') {
+    console.log('💵 [Webhook MP] Creditando valor na carteira...');
+
+    // Buscar carteira
+    const { data: wallet, error: walletError } = await supabaseAdmin
+      .from('wallets')
+      .select('*')
+      .eq('id', recargaAtualizada.wallet_id)
+      .single();
+
+    if (walletError || !wallet) {
+      console.error('❌ [Webhook MP] Carteira não encontrada:', walletError);
+      throw new Error('Carteira não encontrada');
+    }
+
+    // Atualizar saldo
+    const novoSaldo = (wallet.saldo || 0) + (transaction_amount as number);
+    
+    const { error: updateWalletError } = await supabaseAdmin
+      .from('wallets')
+      .update({ saldo: novoSaldo })
+      .eq('id', wallet.id);
+
+    if (updateWalletError) {
+      console.error('❌ [Webhook MP] Erro ao atualizar saldo:', updateWalletError);
+      throw updateWalletError;
+    }
+
+    // Registrar transação
+    await supabaseAdmin
+      .from('wallet_transactions')
+      .insert({
+        wallet_id: wallet.id,
+        tipo: 'CREDITO_RECARGA',
+        valor: transaction_amount,
+        descricao: `Recarga via PIX`,
+        referencia_tipo: 'recarga',
+        referencia_id: recargaAtualizada.id
+      });
+
+    console.log(`🎉 [Webhook MP] Saldo atualizado: R$ ${wallet.saldo} → R$ ${novoSaldo}`);
+  }
 }

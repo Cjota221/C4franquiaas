@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, Palette, LogOut, ShoppingCart, Tag, Settings, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
+import { Home, Package, Palette, LogOut, ShoppingCart, Tag, Settings, BookOpen, FolderOpen, GraduationCap, Wallet } from 'lucide-react';
 import { memo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import NotificationBell from './NotificationBell';
@@ -21,6 +21,7 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
     { label: 'Produtos', href: '/revendedora/produtos', icon: Package, badge: newProductsCount },
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
+    { label: 'Carteira', href: '/revendedora/carteira', icon: Wallet, highlight: true },
     { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Material de Divulgação', href: '/revendedora/material-divulgacao', icon: FolderOpen },
     { label: 'C4 Academy', href: '/revendedora/academy', icon: GraduationCap, highlight: true },

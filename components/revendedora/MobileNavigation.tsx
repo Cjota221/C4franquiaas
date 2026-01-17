@@ -16,7 +16,8 @@ import {
   ShoppingCart,
   BookOpen,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Wallet
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import MobileHeader from './MobileHeader';
@@ -35,6 +36,7 @@ const drawerMainItems = [
   { href: '/revendedora/personalizacao', icon: Palette, label: 'Personalização' },
   { href: '/revendedora/produtos', icon: Package, label: 'Produtos' },
   { href: '/revendedora/promocoes', icon: Tag, label: 'Promoções' },
+  { href: '/revendedora/carteira', icon: Wallet, label: 'Carteira', highlight: true },
   { href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos Abandonados' },
   { href: '/revendedora/material-divulgacao', icon: FolderOpen, label: 'Material de Divulgação' },
   { href: '/revendedora/academy', icon: GraduationCap, label: 'C4 Academy', highlight: true },
