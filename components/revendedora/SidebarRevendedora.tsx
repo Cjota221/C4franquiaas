@@ -21,7 +21,8 @@ const SidebarRevendedora = memo(function SidebarRevendedora() {
     { label: 'Personalização', href: '/revendedora/personalizacao', icon: Palette },
     { label: 'Produtos', href: '/revendedora/produtos', icon: Package, badge: newProductsCount },
     { label: 'Promoções', href: '/revendedora/promocoes', icon: Tag },
-    { label: 'Carteira', href: '/revendedora/carteira', icon: Wallet, highlight: true },
+    // TODO: Carteira - Próxima implementação (desabilitado temporariamente)
+    // { label: 'Carteira', href: '/revendedora/carteira', icon: Wallet, highlight: true },
     { label: 'Carrinhos Abandonados', href: '/revendedora/carrinhos-abandonados', icon: ShoppingCart },
     { label: 'Material de Divulgação', href: '/revendedora/material-divulgacao', icon: FolderOpen },
     { label: 'C4 Academy', href: '/revendedora/academy', icon: GraduationCap, highlight: true },
