@@ -2,13 +2,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import Image from 'next/image';
-import { ArrowLeft, Plus, Minus, ShoppingBag, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, ShoppingBag, Check, MessageCircle, Ruler } from 'lucide-react';
 import Link from 'next/link';
 import { useCatalogo } from '../../layout';
 import SizeGuideModal from '@/components/catalogo/SizeGuideModal';
 import DeliveryNoticeBadge from '@/components/loja/DeliveryNoticeBadge';
+import ProductGallery from '@/components/catalogo/ProductGallery';
 import { FloatingProductVideo } from '@/components/loja/FloatingProductVideo';
+import FootMeasurer from '@/components/catalogo/FootMeasurer';
 // import ProdutosRelacionados from '@/components/loja/ProdutosRelacionados'; // REMOVIDO TEMPORARIAMENTE
 
 type Variacao = {
@@ -52,9 +53,7 @@ export default function ProdutoPage() {
   const [quantidade, setQuantidade] = useState(1);
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const [showFootMeasurer, setShowFootMeasurer] = useState(false);
 
   const supabase = createClientComponentClient();
 
@@ -126,40 +125,6 @@ export default function ProdutoPage() {
 
     loadProduct();
   }, [reseller?.id, params.id, supabase]);
-
-  // Funções de swipe para galeria
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-    
-    const imagens = produto?.imagens && produto.imagens.length > 0 
-      ? produto.imagens 
-      : produto?.imagem 
-        ? [produto.imagem] 
-        : [];
-
-    if (isLeftSwipe && selectedImage < imagens.length - 1) {
-      setSelectedImage(selectedImage + 1);
-    }
-    
-    if (isRightSwipe && selectedImage > 0) {
-      setSelectedImage(selectedImage - 1);
-    }
-    
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
 
   const handleWhatsAppDuvida = () => {
     if (!produto || !reseller?.phone) return;
@@ -277,7 +242,7 @@ export default function ProdutoPage() {
         Voltar ao catálogo
       </Link>
 
-      {/* 🎬 Vídeo Flutuante - Fica fixo no canto inferior direito */}
+      {/* 🎬 Vídeo Flutuante - Fica fixo no canto inferior esquerdo */}
       {produto.video_url && (
         <FloatingProductVideo 
           videoUrl={produto.video_url}
@@ -287,77 +252,18 @@ export default function ProdutoPage() {
       )}
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Galeria de Imagens - Formato 3:4 (960x1280) com Swipe */}
+        {/* 🖼️ Galeria de Imagens - Embla Carousel com Swipe Fluido */}
         <div>
-          <div 
-            className="relative overflow-hidden bg-gray-50 mb-4 shadow-lg cursor-grab active:cursor-grabbing" 
-            style={{ 
-              aspectRatio: '3/4',
-              borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
-                : themeSettings?.border_radius === 'small' ? '4px'
-                : themeSettings?.border_radius === 'large' ? '24px' : '12px'
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <Image
-              src={imagens[selectedImage]}
-              alt={produto.nome}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              quality={95}
-              priority
-              className="object-cover"
-            />
-            {/* Indicador de foto atual */}
-            {imagens.length > 1 && (
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                {imagens.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1.5 rounded-full transition-all ${
-                      selectedImage === index 
-                        ? 'w-8 bg-white' 
-                        : 'w-1.5 bg-white/50'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Miniaturas - Maiores e com espaçamento */}
-          {imagens.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 px-2">
-              {imagens.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative w-24 h-24 overflow-hidden flex-shrink-0 transition-all ${
-                    selectedImage === index 
-                      ? 'ring-1 ring-offset-1 scale-105 shadow-lg' 
-                      : 'border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
-                  }`}
-                  style={{ 
-                    borderRadius: themeSettings?.border_radius === 'none' ? '0px' 
-                      : themeSettings?.border_radius === 'small' ? '6px'
-                      : themeSettings?.border_radius === 'large' ? '16px' : '10px',
-                    '--tw-ring-color': selectedImage === index ? primaryColor : 'transparent',
-                  } as React.CSSProperties}
-                >
-                  <Image
-                    src={img}
-                    alt={`${produto.nome} - ${index + 1}`}
-                    fill
-                    sizes="96px"
-                    quality={85}
-                    className="object-contain p-1"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          <ProductGallery 
+            images={imagens}
+            productName={produto.nome}
+            borderRadius={
+              themeSettings?.border_radius === 'none' ? 'none' 
+              : themeSettings?.border_radius === 'small' ? 'small'
+              : themeSettings?.border_radius === 'large' ? 'large' 
+              : 'medium'
+            }
+          />
         </div>
 
         {/* Informações do Produto */}
@@ -507,11 +413,43 @@ export default function ProdutoPage() {
         </div>
       </div>
 
-      {/* Descrição do Produto - Seção separada embaixo */}
+      {/* 🦶 Medidor de Pé Virtual - Card de Destaque */}
+      {produto.variacoes && produto.variacoes.length > 0 && (
+        <div className="mt-10">
+          <button
+            onClick={() => setShowFootMeasurer(true)}
+            className="w-full p-5 rounded-xl border-2 border-dashed transition-all hover:shadow-md flex items-center gap-4 text-left"
+            style={{ borderColor: `${primaryColor}40`, backgroundColor: `${primaryColor}05` }}
+          >
+            <div 
+              className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `${primaryColor}15` }}
+            >
+              <Ruler className="w-7 h-7" style={{ color: primaryColor }} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900 mb-0.5">
+                Não sabe seu tamanho?
+              </h3>
+              <p className="text-sm text-gray-600">
+                Descubra o tamanho ideal medindo seu pé em casa
+              </p>
+            </div>
+            <div 
+              className="px-4 py-2 rounded-lg font-semibold text-sm flex-shrink-0"
+              style={{ backgroundColor: primaryColor, color: 'white' }}
+            >
+              Medir Agora
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Descrição do Produto */}
       {produto.descricao && (
-        <div className="mt-12 border-t pt-8">
+        <div className="mt-10 border-t pt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            📝 Descrição do Produto
+            Descrição do Produto
           </h2>
           <div className="bg-gray-50 rounded-xl p-6">
             <p className="text-gray-700 whitespace-pre-line leading-relaxed">
@@ -541,6 +479,22 @@ export default function ProdutoPage() {
           />
         </div>
       )} */}
+
+      {/* 🦶 Modal Medidor de Pé Virtual */}
+      <FootMeasurer
+        isOpen={showFootMeasurer}
+        onClose={() => setShowFootMeasurer(false)}
+        onSelectSize={(size) => {
+          // Encontrar a variação correspondente ao tamanho
+          const variacao = produto?.variacoes?.find(v => v.tamanho === size);
+          if (variacao) {
+            setSelectedVariacao(variacao);
+          }
+        }}
+        availableSizes={produto?.variacoes?.map(v => v.tamanho) || []}
+        primaryColor={primaryColor}
+        productName={produto?.nome}
+      />
     </div>
   );
 }

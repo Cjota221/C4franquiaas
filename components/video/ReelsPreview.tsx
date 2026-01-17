@@ -1,14 +1,15 @@
 /**
- * 🎬 REELS PREVIEW - Carrossel de 4 vídeos para Home
+ * 🎬 REELS PREVIEW - Grid de 4 vídeos para Home
  * 
- * Exibe um preview dos vídeos disponíveis
- * Clique em "Ver Todos" abre o modo imersivo (/reels)
+ * Exibe um preview dos vídeos disponíveis em formato grid 2x2
+ * Com área "Ver Reels" que cobre parcialmente os vídeos
+ * Clique abre o modo imersivo estilo TikTok/Instagram (/reels)
  */
 
 "use client";
 
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Play, ChevronRight } from 'lucide-react';
+import { Play, ChevronRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 // ============================================================================
@@ -37,18 +38,18 @@ interface MiniVideoCardProps {
   product: ReelPreviewProduct;
   index: number;
   corPrimaria: string;
-  dominio: string;
   onHover: (index: number | null) => void;
   isHovered: boolean;
+  showOverlay?: boolean;
 }
 
 const MiniVideoCard = memo(function MiniVideoCard({
   product,
   index,
   corPrimaria,
-  dominio,
   onHover,
   isHovered,
+  showOverlay = false,
 }: MiniVideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -57,13 +58,13 @@ const MiniVideoCard = memo(function MiniVideoCard({
     const video = videoRef.current;
     if (!video) return;
 
-    if (isHovered) {
+    if (isHovered && !showOverlay) {
       video.play().catch(() => {});
     } else {
       video.pause();
       video.currentTime = 0;
     }
-  }, [isHovered]);
+  }, [isHovered, showOverlay]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -73,9 +74,8 @@ const MiniVideoCard = memo(function MiniVideoCard({
   };
 
   return (
-    <Link
-      href={`/loja/${dominio}/reels?produto=${product.id}`}
-      className="relative flex-shrink-0 w-36 h-64 rounded-xl overflow-hidden group cursor-pointer"
+    <div
+      className="relative aspect-[9/16] rounded-xl overflow-hidden group cursor-pointer"
       onMouseEnter={() => onHover(index)}
       onMouseLeave={() => onHover(null)}
       onTouchStart={() => onHover(index)}
@@ -96,44 +96,38 @@ const MiniVideoCard = memo(function MiniVideoCard({
       {/* Gradiente */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play Icon */}
-      <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
-        <div 
-          className="w-12 h-12 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${corPrimaria}dd` }}
-        >
-          <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+      {/* Play Icon (só aparece quando não tem overlay) */}
+      {!showOverlay && (
+        <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: `${corPrimaria}dd` }}
+          >
+            <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Ring animado no hover */}
       <div 
-        className={`absolute inset-0 rounded-xl border-2 transition-all ${isHovered ? 'border-opacity-100' : 'border-opacity-0'}`}
+        className={`absolute inset-0 rounded-xl border-2 transition-all ${isHovered && !showOverlay ? 'border-opacity-100' : 'border-opacity-0'}`}
         style={{ borderColor: corPrimaria }}
       />
 
-      {/* Info do Produto */}
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <p className="text-white text-xs font-medium line-clamp-2 mb-1 drop-shadow-lg">
-          {product.nome}
-        </p>
-        {product.preco && (
-          <p className="text-white font-bold text-sm drop-shadow-lg">
-            {formatPrice(product.preco)}
+      {/* Info do Produto - apenas nos 2 primeiros */}
+      {!showOverlay && (
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <p className="text-white text-[10px] font-medium line-clamp-1 drop-shadow-lg">
+            {product.nome}
           </p>
-        )}
-      </div>
-
-      {/* Número do Reel */}
-      <div className="absolute top-2 left-2">
-        <span 
-          className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
-          style={{ backgroundColor: corPrimaria }}
-        >
-          #{index + 1}
-        </span>
-      </div>
-    </Link>
+          {product.preco && (
+            <p className="text-white font-bold text-xs drop-shadow-lg">
+              {formatPrice(product.preco)}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 });
 
@@ -156,6 +150,9 @@ export function ReelsPreview({
     return null;
   }
 
+  // Calcular quantos vídeos extras existem
+  const extraCount = products.length > maxItems ? products.length - maxItems : 0;
+
   return (
     <section className="py-6">
       {/* Header */}
@@ -172,80 +169,61 @@ export function ReelsPreview({
             />
           </div>
           <h2 className="font-bold text-lg text-gray-900">{title}</h2>
-          {products.length > maxItems && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              +{products.length - maxItems}
-            </span>
-          )}
         </div>
-
-        {/* Ver Todos */}
-        {products.length > maxItems && (
-          <Link
-            href={`/loja/${dominio}/reels`}
-            className="flex items-center gap-1 text-sm font-semibold transition-colors hover:opacity-80"
-            style={{ color: corPrimaria }}
-          >
-            Ver Todos
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        )}
       </div>
 
-      {/* Carrossel de Vídeos */}
-      <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-        {displayProducts.map((product, index) => (
-          <MiniVideoCard
-            key={product.id}
-            product={product}
-            index={index}
-            corPrimaria={corPrimaria}
-            dominio={dominio}
-            onHover={setHoveredIndex}
-            isHovered={hoveredIndex === index}
-          />
-        ))}
+      {/* Grid de Vídeos com área "Ver Reels" */}
+      <div className="px-4">
+        <Link 
+          href={`/loja/${dominio}/reels`}
+          className="block relative"
+        >
+          {/* Grid 2x2 de vídeos */}
+          <div className="grid grid-cols-2 gap-2">
+            {displayProducts.map((product, index) => (
+              <MiniVideoCard
+                key={product.id}
+                product={product}
+                index={index}
+                corPrimaria={corPrimaria}
+                onHover={setHoveredIndex}
+                isHovered={hoveredIndex === index}
+                showOverlay={index >= 2} // Os 2 últimos ficam com overlay
+              />
+            ))}
+          </div>
 
-        {/* Card "Ver Mais" se houver mais produtos */}
-        {products.length > maxItems && (
-          <Link
-            href={`/loja/${dominio}/reels`}
-            className="relative flex-shrink-0 w-36 h-64 rounded-xl overflow-hidden flex items-center justify-center"
-            style={{ backgroundColor: `${corPrimaria}15` }}
+          {/* Overlay "Ver Reels" cobrindo os 2 últimos vídeos */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 flex items-center justify-center rounded-b-xl transition-all hover:opacity-95"
+            style={{ 
+              background: `linear-gradient(to top, ${corPrimaria}f0 0%, ${corPrimaria}dd 50%, ${corPrimaria}00 100%)`,
+              height: '55%',
+            }}
           >
-            <div className="text-center">
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
-                style={{ backgroundColor: corPrimaria }}
-              >
-                <Play className="w-8 h-8 text-white ml-1" fill="white" />
+            <div className="text-center text-white pb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 animate-pulse" />
+                <span className="text-xl font-bold tracking-tight">Ver Reels</span>
+                <ChevronRight className="w-5 h-5" />
               </div>
-              <p 
-                className="font-bold text-sm"
-                style={{ color: corPrimaria }}
-              >
-                Ver Todos
+              <p className="text-white/90 text-sm font-medium">
+                {products.length} vídeos disponíveis
+                {extraCount > 0 && ` (+${extraCount})`}
               </p>
-              <p className="text-gray-500 text-xs">
-                +{products.length - maxItems} vídeos
+              <p className="text-white/70 text-xs mt-1">
+                Arraste para cima e descubra mais
               </p>
             </div>
-          </Link>
-        )}
+          </div>
+        </Link>
       </div>
 
       {/* CSS */}
       <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .line-clamp-2 {
+        .line-clamp-1 {
           display: -webkit-box;
-          -webkit-line-clamp: 2;
+          -webkit-line-clamp: 1;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }

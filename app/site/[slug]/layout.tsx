@@ -1,7 +1,7 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search, Gift } from 'lucide-react';
+import { ShoppingCart, Instagram, Facebook, MessageCircle, Menu, X, Search, Gift, Heart } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -70,6 +70,11 @@ type Reseller = {
   facebook?: string;
   fonte_principal?: string;
   fonte_secundaria?: string;
+  // Pedido Mínimo
+  min_order_enabled?: boolean;
+  min_order_type?: 'value' | 'quantity' | 'both';
+  min_order_value?: number;
+  min_order_quantity?: number;
   colors?: {
     primary: string;
     secondary: string;
@@ -208,6 +213,19 @@ type CatalogoContextType = {
   getTotalDiscount: () => number;
   getFinalTotal: () => number;
   getProductPromotion: (productId: string) => Promotion | null;
+  // Pedido Mínimo
+  minOrderConfig: {
+    enabled: boolean;
+    type: 'value' | 'quantity' | 'both';
+    minValue: number;
+    minQuantity: number;
+  };
+  checkMinOrder: () => { 
+    isValid: boolean; 
+    message: string; 
+    missingValue?: number; 
+    missingQuantity?: number;
+  };
 };
 
 const CatalogoContext = createContext<CatalogoContextType | null>(null);
@@ -236,6 +254,7 @@ export default function CatalogoLayout({
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [pendingCartItem, setPendingCartItem] = useState<CartItem | null>(null);
   const [isCuponsModalOpen, setIsCuponsModalOpen] = useState(false);
+  const [favoritesCount, setFavoritesCount] = useState(0);
   
   // Estados para promoções
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -275,7 +294,7 @@ export default function CatalogoLayout({
       // ⚠️ SEGURANÇA: Selecionar APENAS campos públicos necessários
       const { data } = await supabase
         .from('resellers')
-        .select('id, user_id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status, fonte_principal, fonte_secundaria')
+        .select('id, user_id, store_name, slug, phone, logo_url, banner_url, banner_mobile_url, bio, instagram, facebook, colors, theme_settings, is_active, status, fonte_principal, fonte_secundaria, min_order_enabled, min_order_type, min_order_value, min_order_quantity')
         .eq('slug', slug)
         .single();
 
@@ -332,6 +351,32 @@ export default function CatalogoLayout({
         setLeadData(null);
       }
     }
+    
+    // Carregar contagem de favoritos
+    const savedFavorites = localStorage.getItem(`favorites_${slug}`);
+    if (savedFavorites) {
+      try {
+        const items = JSON.parse(savedFavorites);
+        setFavoritesCount(items.length);
+      } catch {
+        setFavoritesCount(0);
+      }
+    }
+    
+    // Escutar mudanças no localStorage (favoritos podem mudar em outras páginas)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `favorites_${slug}` && e.newValue) {
+        try {
+          const items = JSON.parse(e.newValue);
+          setFavoritesCount(items.length);
+        } catch {
+          setFavoritesCount(0);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [slug]);
 
   // Salvar carrinho no localStorage
@@ -889,6 +934,67 @@ export default function CatalogoLayout({
     return promo || null;
   }, [promotions]);
 
+  // ==================== PEDIDO MÍNIMO ====================
+  
+  // Configuração de pedido mínimo
+  const minOrderConfig = useMemo(() => ({
+    enabled: reseller?.min_order_enabled || false,
+    type: reseller?.min_order_type || 'value',
+    minValue: reseller?.min_order_value || 0,
+    minQuantity: reseller?.min_order_quantity || 0,
+  }), [reseller]);
+
+  // Verificar se o pedido atende ao mínimo
+  const checkMinOrder = useCallback(() => {
+    if (!minOrderConfig.enabled) {
+      return { isValid: true, message: '' };
+    }
+
+    const totalValue = getFinalTotal();
+    const totalQuantity = getTotalItems();
+    
+    const result = {
+      isValid: true,
+      message: '',
+      missingValue: 0,
+      missingQuantity: 0,
+    };
+
+    if (minOrderConfig.type === 'value' || minOrderConfig.type === 'both') {
+      if (totalValue < minOrderConfig.minValue) {
+        result.isValid = false;
+        result.missingValue = minOrderConfig.minValue - totalValue;
+      }
+    }
+
+    if (minOrderConfig.type === 'quantity' || minOrderConfig.type === 'both') {
+      if (totalQuantity < minOrderConfig.minQuantity) {
+        result.isValid = false;
+        result.missingQuantity = minOrderConfig.minQuantity - totalQuantity;
+      }
+    }
+
+    // Gerar mensagem apropriada
+    if (!result.isValid) {
+      if (minOrderConfig.type === 'value') {
+        result.message = `Pedido mínimo de R$ ${minOrderConfig.minValue.toFixed(2).replace('.', ',')}. Faltam R$ ${result.missingValue.toFixed(2).replace('.', ',')}`;
+      } else if (minOrderConfig.type === 'quantity') {
+        result.message = `Pedido mínimo de ${minOrderConfig.minQuantity} ${minOrderConfig.minQuantity === 1 ? 'peça' : 'peças'}. ${result.missingQuantity === 1 ? 'Falta 1 peça' : `Faltam ${result.missingQuantity} peças`}`;
+      } else if (minOrderConfig.type === 'both') {
+        const msgs: string[] = [];
+        if (result.missingValue > 0) {
+          msgs.push(`R$ ${result.missingValue.toFixed(2).replace('.', ',')} em valor`);
+        }
+        if (result.missingQuantity > 0) {
+          msgs.push(`${result.missingQuantity} ${result.missingQuantity === 1 ? 'peça' : 'peças'}`);
+        }
+        result.message = `Pedido mínimo não atingido. Faltam: ${msgs.join(' e ')}`;
+      }
+    }
+
+    return result;
+  }, [minOrderConfig, getFinalTotal, getTotalItems]);
+
   // Função de busca
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1006,6 +1112,9 @@ export default function CatalogoLayout({
         getTotalDiscount,
         getFinalTotal,
         getProductPromotion,
+        // Pedido Mínimo
+        minOrderConfig,
+        checkMinOrder,
       }}
     >
       <div 
@@ -1243,17 +1352,37 @@ export default function CatalogoLayout({
           </div>
         </footer>
 
-        {/* Botão WhatsApp Flutuante */}
-        {themeSettings.show_whatsapp_float && reseller.phone && (
-          <a
-            href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors z-50"
+        {/* Botões Flutuantes - Favoritos e WhatsApp */}
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+          {/* Botão Favoritos */}
+          <Link
+            href={`/site/${slug}/favoritos`}
+            className="relative w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors border border-gray-200"
+            title="Meus Favoritos"
           >
-            <MessageCircle size={28} className="text-white" />
-          </a>
-        )}
+            <Heart size={26} style={{ color: primaryColor, fill: primaryColor }} />
+            {favoritesCount > 0 && (
+              <span 
+                className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {favoritesCount > 99 ? '99+' : favoritesCount}
+              </span>
+            )}
+          </Link>
+          
+          {/* Botão WhatsApp */}
+          {themeSettings.show_whatsapp_float && reseller.phone && (
+            <a
+              href={`https://wa.me/55${reseller.phone.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors"
+            >
+              <MessageCircle size={28} className="text-white" />
+            </a>
+          )}
+        </div>
 
         {/* Modal de Cupons */}
         <CuponsModal

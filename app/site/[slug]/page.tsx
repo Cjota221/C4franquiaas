@@ -301,31 +301,35 @@ export default function CatalogoPrincipal() {
           </div>
         )}
 
-        {/* Encontre seu Tamanho - Scroll Horizontal */}
+        {/* Filtro de Tamanhos - Design Moderno */}
         {availableSizes.length > 0 && (
-          <div className="mb-5">
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="mb-6">
+            <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {/* Botão "Todos" */}
               <button
                 onClick={() => setSelectedSize('')}
-                className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 border-2 ${
+                className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   selectedSize === ''
-                    ? 'text-white shadow-md scale-105 border-transparent'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                    ? 'text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
                 style={selectedSize === '' ? { backgroundColor: primaryColor } : {}}
               >
                 Todos
               </button>
-              {/* Círculos de tamanhos */}
+              
+              {/* Divisor */}
+              <div className="w-px h-6 bg-gray-200 flex-shrink-0 mx-1" />
+              
+              {/* Pills de tamanhos */}
               {availableSizes.map(size => (
                 <button
                   key={size}
                   onClick={() => setSelectedSize(selectedSize === size ? '' : size)}
-                  className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-base font-bold transition-all duration-200 border-2 ${
+                  className={`flex-shrink-0 min-w-[44px] px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                     selectedSize === size
-                      ? 'text-white shadow-md scale-105 border-transparent'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                      ? 'text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                   style={selectedSize === size ? { backgroundColor: primaryColor } : {}}
                 >
@@ -373,6 +377,7 @@ export default function CatalogoPrincipal() {
           }))
         }
         primaryColor={primaryColor}
+        resellerId={reseller?.id || ''}
       />
 
       {/* Grid de Produtos - 2 cols mobile, 3 tablet, 5 desktop */}

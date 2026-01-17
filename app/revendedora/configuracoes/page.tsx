@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import { QRCodeSVG } from 'qrcode.react'
 import VideoTutorialButton from '@/components/VideoTutorialButton'
 import { toast } from 'sonner'
@@ -19,13 +19,25 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  ShieldCheck
+  ShieldCheck,
+  ShoppingCart,
+  Package,
+  DollarSign,
+  ToggleLeft,
+  ToggleRight,
+  Save
 } from 'lucide-react'
 
 interface ResellerData {
   id: string
+  store_name?: string
   whatsapp_instance_id?: string
   notification_settings?: NotificationSettings
+  // Pedido Mínimo
+  min_order_enabled?: boolean
+  min_order_type?: 'value' | 'quantity' | 'both'
+  min_order_value?: number
+  min_order_quantity?: number
 }
 
 interface NotificationSettings {
@@ -36,7 +48,7 @@ interface NotificationSettings {
 }
 
 export default function ConfiguracoesRevendedora() {
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const [reseller, setReseller] = useState<ResellerData | null>(null)
   const [loading, setLoading] = useState(true)
   
@@ -51,6 +63,13 @@ export default function ConfiguracoesRevendedora() {
   const [mostrarSenhaAtual, setMostrarSenhaAtual] = useState(false)
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
   const [alterandoSenha, setAlterandoSenha] = useState(false)
+  
+  // Estados para pedido mínimo
+  const [minOrderEnabled, setMinOrderEnabled] = useState(false)
+  const [minOrderType, setMinOrderType] = useState<'value' | 'quantity' | 'both'>('value')
+  const [minOrderValue, setMinOrderValue] = useState('')
+  const [minOrderQuantity, setMinOrderQuantity] = useState('')
+  const [savingMinOrder, setSavingMinOrder] = useState(false)
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     novoPedido: true,
@@ -92,6 +111,12 @@ export default function ConfiguracoesRevendedora() {
           if (resellerData.notification_settings) {
             setNotifications(resellerData.notification_settings)
           }
+          
+          // Carregar configurações de pedido mínimo
+          setMinOrderEnabled(resellerData.min_order_enabled || false)
+          setMinOrderType(resellerData.min_order_type || 'value')
+          setMinOrderValue(resellerData.min_order_value?.toString() || '')
+          setMinOrderQuantity(resellerData.min_order_quantity?.toString() || '')
         }
       }
     } catch (error) {
@@ -200,6 +225,44 @@ export default function ConfiguracoesRevendedora() {
       alert('Configurações salvas!')
     } catch (error) {
       console.error('Erro ao salvar:', error)
+    }
+  }
+
+  // Função para salvar configurações de pedido mínimo
+  async function saveMinOrderSettings() {
+    if (!reseller?.id) {
+      toast.error('Erro: Dados não carregados. Atualize a página.')
+      return
+    }
+    
+    setSavingMinOrder(true)
+    
+    try {
+      const updateData: {
+        min_order_enabled: boolean;
+        min_order_type: 'value' | 'quantity' | 'both';
+        min_order_value: number;
+        min_order_quantity: number;
+      } = {
+        min_order_enabled: minOrderEnabled,
+        min_order_type: minOrderType,
+        min_order_value: parseFloat(minOrderValue) || 0,
+        min_order_quantity: parseInt(minOrderQuantity) || 0,
+      }
+      
+      const { error } = await supabase
+        .from('resellers')
+        .update(updateData)
+        .eq('id', reseller.id)
+      
+      if (error) throw error
+      
+      toast.success('Configurações de pedido mínimo salvas!')
+    } catch (error) {
+      console.error('Erro ao salvar pedido mínimo:', error)
+      toast.error('Erro ao salvar. Tente novamente.')
+    } finally {
+      setSavingMinOrder(false)
     }
   }
 
@@ -405,6 +468,179 @@ export default function ConfiguracoesRevendedora() {
             )}
           </button>
         </form>
+      </div>
+
+      {/* Card de Pedido Mínimo */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-emerald-500">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <ShoppingCart className="w-5 h-5 text-emerald-600" />
+          Pedido Mínimo
+        </h2>
+        
+        <p className="text-gray-600 mb-4">
+          Configure um valor ou quantidade mínima de peças para que suas clientes possam finalizar um pedido.
+        </p>
+
+        <div className="space-y-5">
+          {/* Toggle Ativar/Desativar */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-900">Exigir pedido mínimo</p>
+              <p className="text-sm text-gray-500">
+                {minOrderEnabled 
+                  ? 'Clientes precisam atingir o mínimo para comprar' 
+                  : 'Clientes podem comprar qualquer quantidade'}
+              </p>
+            </div>
+            <button
+              onClick={() => setMinOrderEnabled(!minOrderEnabled)}
+              className={`relative w-14 h-8 rounded-full transition-colors ${
+                minOrderEnabled ? 'bg-emerald-500' : 'bg-gray-300'
+              }`}
+            >
+              <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                minOrderEnabled ? 'translate-x-7' : 'translate-x-1'
+              }`} />
+            </button>
+          </div>
+
+          {/* Configurações (visíveis apenas quando ativado) */}
+          {minOrderEnabled && (
+            <div className="space-y-4 animate-in slide-in-from-top-2">
+              {/* Tipo de Pedido Mínimo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Pedido Mínimo
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMinOrderType('value')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      minOrderType === 'value' 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <DollarSign className="w-5 h-5 mx-auto mb-1" />
+                    <span className="text-sm font-medium">Por Valor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMinOrderType('quantity')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      minOrderType === 'quantity' 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Package className="w-5 h-5 mx-auto mb-1" />
+                    <span className="text-sm font-medium">Por Peças</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMinOrderType('both')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      minOrderType === 'both' 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <ShoppingCart className="w-5 h-5 mx-auto mb-1" />
+                    <span className="text-sm font-medium">Ambos</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Valor Mínimo */}
+              {(minOrderType === 'value' || minOrderType === 'both') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Valor Mínimo do Pedido
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
+                    <input
+                      type="number"
+                      value={minOrderValue}
+                      onChange={(e) => setMinOrderValue(e.target.value)}
+                      placeholder="150,00"
+                      min="0"
+                      step="0.01"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ex: R$ 150,00 - A cliente precisa ter pelo menos esse valor no carrinho
+                  </p>
+                </div>
+              )}
+
+              {/* Quantidade Mínima */}
+              {(minOrderType === 'quantity' || minOrderType === 'both') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantidade Mínima de Peças
+                  </label>
+                  <div className="relative">
+                    <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="number"
+                      value={minOrderQuantity}
+                      onChange={(e) => setMinOrderQuantity(e.target.value)}
+                      placeholder="2"
+                      min="1"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ex: 2 peças - A cliente precisa adicionar pelo menos 2 itens ao carrinho
+                  </p>
+                </div>
+              )}
+
+              {/* Preview do que aparece para a cliente */}
+              <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                <p className="text-sm font-medium text-emerald-800 mb-1">
+                  📋 Mensagem que aparecerá para suas clientes:
+                </p>
+                <p className="text-emerald-700 text-sm">
+                  {minOrderType === 'value' && minOrderValue && (
+                    <>Pedido mínimo de <strong>R$ {parseFloat(minOrderValue).toFixed(2).replace('.', ',')}</strong></>
+                  )}
+                  {minOrderType === 'quantity' && minOrderQuantity && (
+                    <>Pedido mínimo de <strong>{minOrderQuantity} {parseInt(minOrderQuantity) === 1 ? 'peça' : 'peças'}</strong></>
+                  )}
+                  {minOrderType === 'both' && minOrderValue && minOrderQuantity && (
+                    <>Pedido mínimo de <strong>R$ {parseFloat(minOrderValue).toFixed(2).replace('.', ',')}</strong> ou <strong>{minOrderQuantity} {parseInt(minOrderQuantity) === 1 ? 'peça' : 'peças'}</strong></>
+                  )}
+                  {!minOrderValue && !minOrderQuantity && (
+                    <span className="text-gray-500 italic">Configure os valores acima para ver a prévia</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Botão Salvar */}
+          <button
+            onClick={saveMinOrderSettings}
+            disabled={savingMinOrder}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {savingMinOrder ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Salvar Configurações
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Card de Em Construção */}

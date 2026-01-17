@@ -212,19 +212,32 @@ export default function DashboardRevendedora() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {metrics.map((metric) => {
+      {/* Cards de Métricas - Design Moderno */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {metrics.map((metric, index) => {
           const Icon = metric.icon;
+          const gradients = [
+            'from-blue-500 to-blue-600',
+            'from-emerald-500 to-teal-600', 
+            'from-violet-500 to-purple-600'
+          ];
           return (
-            <div key={metric.label} className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">{metric.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{metric.value}</p>
+            <div 
+              key={metric.label} 
+              className={`relative overflow-hidden bg-gradient-to-br ${gradients[index]} p-6 rounded-2xl shadow-lg`}
+            >
+              {/* Decoração de fundo */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
+                    <Icon size={22} className="text-white" />
+                  </div>
                 </div>
-                <div className={`p-3 rounded-lg bg-gray-50`}>
-                  <Icon size={24} className={metric.color} />
-                </div>
+                <p className="text-white/80 text-sm font-medium mb-1">{metric.label}</p>
+                <p className="text-4xl font-bold text-white tracking-tight">{metric.value}</p>
               </div>
             </div>
           );

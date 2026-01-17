@@ -1,9 +1,14 @@
 /**
- * 🎬 PÁGINA DE REELS - Modo Imersivo TikTok/Instagram
+ * 🎬 PÁGINA DE REELS - Feed Imersivo estilo TikTok
  * 
  * Rota: /loja/[dominio]/reels
  * 
- * Carrega todos os produtos com vídeo e exibe no feed vertical
+ * FEATURES:
+ * - Scroll Snap CSS (snap-y snap-mandatory)
+ * - 100vh da viewport
+ * - IntersectionObserver para play/pause
+ * - Overlay de produtos
+ * - Botões de interação (Like, Compartilhar)
  */
 
 "use client";
@@ -11,8 +16,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useLojaInfo } from '@/contexts/LojaContext';
-import { Loader2 } from 'lucide-react';
-import { ImmersiveReelsFeed, ReelProduct } from '@/components/video/ImmersiveReelsFeed';
+import { Loader2, Film } from 'lucide-react';
+import { ReelsFeed, ReelItem } from '@/components/video/ReelsFeed';
 import { useCarrinhoStore } from '@/lib/store/carrinhoStore';
 import { toast } from 'sonner';
 
@@ -24,29 +29,30 @@ export default function ReelsPage() {
   
   const dominio = params.dominio as string;
   
-  const [products, setProducts] = useState<ReelProduct[]>([]);
+  const [reels, setReels] = useState<ReelItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialIndex, setInitialIndex] = useState(0);
 
   // Carregar produtos com vídeo
   useEffect(() => {
-    async function loadProducts() {
+    async function loadReels() {
       try {
         setLoading(true);
         
         const response = await fetch(`/api/loja/${dominio}/produtos?has_video=true&limit=100`);
         
         if (!response.ok) {
-          throw new Error('Erro ao carregar produtos');
+          throw new Error('Erro ao carregar reels');
         }
         
         const data = await response.json();
         
-        // Filtrar apenas produtos com vídeo e mapear para formato ReelProduct
+        // Filtrar apenas produtos com vídeo e mapear para formato ReelItem
         interface ProdutoAPI {
           id: string;
           nome: string;
+          descricao?: string;
           preco_final?: number;
           preco_venda?: number;
           preco_base?: number;
@@ -55,11 +61,12 @@ export default function ReelsPage() {
           imagem?: string;
           imagens?: string[];
         }
-        const reelProducts: ReelProduct[] = (data.produtos || data)
+        const reelItems: ReelItem[] = (data.produtos || data)
           .filter((p: ProdutoAPI) => p.video_url)
           .map((p: ProdutoAPI) => ({
             id: p.id,
             nome: p.nome,
+            descricao: p.descricao,
             preco: p.preco_final || p.preco_venda || p.preco_base,
             precoOriginal: p.preco_base,
             videoUrl: p.video_url,
@@ -71,13 +78,13 @@ export default function ReelsPage() {
             } : undefined,
           }));
         
-        setProducts(reelProducts);
+        setReels(reelItems);
         
         // Verificar se há um produto específico na URL
         const urlParams = new URLSearchParams(window.location.search);
         const startProduct = urlParams.get('produto');
         if (startProduct) {
-          const index = reelProducts.findIndex(p => p.id === startProduct);
+          const index = reelItems.findIndex(p => p.id === startProduct);
           if (index >= 0) {
             setInitialIndex(index);
           }
@@ -92,7 +99,7 @@ export default function ReelsPage() {
     }
     
     if (dominio) {
-      loadProducts();
+      loadReels();
     }
   }, [dominio, loja]);
 
@@ -101,22 +108,21 @@ export default function ReelsPage() {
     router.back();
   };
 
-  const handleFavorite = (_productId: string) => {
-    // TODO: Implementar favoritos
+  const handleFavorite = (_id: string) => {
     toast.success('Produto salvo nos favoritos!');
   };
 
-  const handleAddToCart = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+  const handleAddToCart = (id: string) => {
+    const reel = reels.find(r => r.id === id);
+    if (!reel) return;
 
     addItem({
-      id: product.id,
-      nome: product.nome,
-      preco: product.preco,
+      id: reel.id,
+      nome: reel.nome,
+      preco: reel.preco,
       quantidade: 1,
-      imagem: product.posterUrl || '',
-      estoque: 999, // Estoque não disponível no feed de reels
+      imagem: reel.posterUrl || '',
+      estoque: 999,
     });
     
     toast.success('Produto adicionado ao carrinho!', {
@@ -132,7 +138,7 @@ export default function ReelsPage() {
     }
   };
 
-  const handleShare = (_product: ReelProduct) => {
+  const handleShare = (_reel: ReelItem) => {
     toast.success('Link copiado!');
   };
 
@@ -148,17 +154,18 @@ export default function ReelsPage() {
     );
   }
 
-  // Error state
-  if (error || products.length === 0) {
+  // Error/Empty state
+  if (error || reels.length === 0) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-[10000]">
         <div className="text-center p-8">
+          <Film className="w-16 h-16 text-white/30 mx-auto mb-4" />
           <p className="text-white/70 mb-4">
-            {error || 'Nenhum vídeo disponível'}
+            {error || 'Nenhum vídeo disponível ainda'}
           </p>
           <button
             onClick={handleClose}
-            className="px-6 py-3 bg-white text-black rounded-full font-semibold"
+            className="px-6 py-3 bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-colors"
           >
             Voltar
           </button>
@@ -168,8 +175,8 @@ export default function ReelsPage() {
   }
 
   return (
-    <ImmersiveReelsFeed
-      products={products}
+    <ReelsFeed
+      reels={reels}
       initialIndex={initialIndex}
       onClose={handleClose}
       onFavorite={handleFavorite}

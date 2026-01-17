@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle, Tag, X, Check, Truck, Gift, Percent } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, MessageCircle, Tag, X, Check, Truck, Gift, Percent, AlertTriangle } from 'lucide-react';
 import { useCatalogo } from '../layout';
 
 export default function CarrinhoPage() {
@@ -25,12 +25,18 @@ export default function CarrinhoPage() {
     getPromotionDiscount,
     getTotalDiscount,
     getFinalTotal,
+    // Pedido Mínimo
+    minOrderConfig,
+    checkMinOrder,
   } = useCatalogo();
   
   const [enviando, setEnviando] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Verificar pedido mínimo
+  const minOrderStatus = checkMinOrder();
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -111,6 +117,12 @@ export default function CarrinhoPage() {
     if (cart.length === 0) return;
     if (!reseller?.phone) {
       alert('Número de WhatsApp não configurado para esta loja.');
+      return;
+    }
+    
+    // Verificar pedido mínimo
+    if (!minOrderStatus.isValid) {
+      alert(minOrderStatus.message);
       return;
     }
 
@@ -425,11 +437,67 @@ export default function CarrinhoPage() {
               </div>
             </div>
 
+            {/* Alerta de Pedido Mínimo */}
+            {minOrderConfig.enabled && !minOrderStatus.isValid && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-800">Pedido mínimo não atingido</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      {minOrderStatus.message}
+                    </p>
+                    {/* Barra de progresso */}
+                    <div className="mt-3">
+                      {(minOrderConfig.type === 'value' || minOrderConfig.type === 'both') && minOrderConfig.minValue > 0 && (
+                        <div className="mb-2">
+                          <div className="flex justify-between text-xs text-amber-700 mb-1">
+                            <span>Valor: R$ {getFinalTotal().toFixed(2).replace('.', ',')}</span>
+                            <span>Mínimo: R$ {minOrderConfig.minValue.toFixed(2).replace('.', ',')}</span>
+                          </div>
+                          <div className="h-2 bg-amber-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-amber-500 transition-all"
+                              style={{ width: `${Math.min(100, (getFinalTotal() / minOrderConfig.minValue) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {(minOrderConfig.type === 'quantity' || minOrderConfig.type === 'both') && minOrderConfig.minQuantity > 0 && (
+                        <div>
+                          <div className="flex justify-between text-xs text-amber-700 mb-1">
+                            <span>Peças: {cart.reduce((sum, item) => sum + item.quantidade, 0)}</span>
+                            <span>Mínimo: {minOrderConfig.minQuantity}</span>
+                          </div>
+                          <div className="h-2 bg-amber-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-amber-500 transition-all"
+                              style={{ width: `${Math.min(100, (cart.reduce((sum, item) => sum + item.quantidade, 0) / minOrderConfig.minQuantity) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <Link 
+                      href={`/site/${reseller?.slug}`}
+                      className="inline-block mt-3 text-sm font-medium text-amber-700 hover:text-amber-800 underline"
+                    >
+                      Continuar comprando →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleFinalizarPedido}
-              disabled={enviando}
-              className="w-full py-4 rounded-lg text-white font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#25D366' }}
+              disabled={enviando || !minOrderStatus.isValid}
+              className={`w-full py-4 rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all ${
+                !minOrderStatus.isValid 
+                  ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+                  : 'hover:opacity-90'
+              }`}
+              style={{ backgroundColor: minOrderStatus.isValid ? '#25D366' : undefined }}
             >
               <MessageCircle size={20} />
               {enviando ? 'Abrindo WhatsApp...' : 'Finalizar via WhatsApp'}

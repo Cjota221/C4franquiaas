@@ -9,6 +9,8 @@ import { GoogleAnalyticsTracker } from '@/components/GoogleAnalyticsTracker';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import OnboardingTutorial from '@/components/revendedora/OnboardingTutorial';
 import AlertaProdutosSemMargem from '@/components/revendedora/AlertaProdutosSemMargem';
+import WhatsNewModal from '@/components/WhatsNewModal';
+import { Toaster } from 'sonner';
 
 // Cache de sessão para evitar verificações repetidas
 const SESSION_CACHE_KEY = 'revendedora_session_cache';
@@ -310,6 +312,8 @@ export default function RevendedoraRootLayout({
       <GoogleAnalyticsTracker />
       <PWAInstallPrompt />
       <OnboardingTutorial />
+      <WhatsNewModal audience="resellers" />
+      <Toaster position="top-center" richColors closeButton />
       
       {/* Sidebar Desktop */}
       <SidebarRevendedora />

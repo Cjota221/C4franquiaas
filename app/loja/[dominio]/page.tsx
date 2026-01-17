@@ -5,7 +5,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/loja/ProductCard';
 import CategoriesStories from '@/components/loja/CategoriesStories';
 import TrustIcons from '@/components/loja/TrustIcons';
-import { ReelsPreview } from '@/components/video';
+import { VideoFeedPreview } from '@/components/video';
 import { ArrowRight } from 'lucide-react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 
@@ -145,9 +145,9 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
 
       {/* 🎬 Seção de Reels - Preview na Home */}
       {produtosComVideo.length > 0 && (
-        <section className="bg-white" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+        <section className="bg-white" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
           <div className="container-fluid">
-            <ReelsPreview
+            <VideoFeedPreview
               products={produtosComVideo.map(p => ({
                 id: p.id,
                 nome: p.nome,
@@ -157,7 +157,7 @@ export default function LojaHomePage({ params }: { params: Promise<{ dominio: st
               }))}
               dominio={dominio}
               corPrimaria={corPrimaria}
-              title="🔥 Reels"
+              title="Reels"
               maxItems={4}
             />
           </div>

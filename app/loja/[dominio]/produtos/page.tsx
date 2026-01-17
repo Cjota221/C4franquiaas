@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLojaInfo } from '@/contexts/LojaContext';
 import ProductCard from '@/components/loja/ProductCard';
 import FilterBar, { FilterState, SortOption } from '@/components/loja/FilterBar';
+import { VideoFeedPreview } from '@/components/video';
 import { Loader2 } from 'lucide-react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { trackSearch } from '@/lib/meta-pixel';
@@ -42,6 +43,8 @@ type Produto = {
   variacoes_meta?: Record<string, unknown>;
   destaque: boolean;
   tag?: string;
+  video_url?: string;
+  video_thumbnail?: string;
   parcelamento: {
     parcelas: number;
     valor: number;
@@ -215,6 +218,28 @@ export default function ProdutosPage() {
             </p>
           )}
         </div>
+
+        {/* 🎬 Preview de Reels - Mostra se tiver produtos com vídeo */}
+        {!loading && !searchFromUrl && produtos.filter(p => p.video_url).length > 0 && (
+          <div className="mb-8">
+            <VideoFeedPreview
+              products={produtos
+                .filter(p => p.video_url)
+                .slice(0, 8)
+                .map(p => ({
+                  id: p.id,
+                  nome: p.nome,
+                  videoUrl: p.video_url!,
+                  posterUrl: p.video_thumbnail || p.imagens?.[0],
+                  preco: p.preco_final || p.preco_venda || p.preco_base,
+                }))}
+              dominio={dominio}
+              corPrimaria={loja.cor_primaria}
+              title="Reels"
+              maxItems={4}
+            />
+          </div>
+        )}
 
         {/* Barra de Filtros e Ordenação */}
         {!loading && produtos.length > 0 && (

@@ -1,55 +1,109 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Menu, Bell, X, Sparkles, ChevronRight, ExternalLink } from 'lucide-react';
+import { Menu, Bell, X, Sparkles, ChevronRight, CheckCheck, Bug, AlertTriangle, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useNotifications, SystemNotification } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface MobileHeaderProps {
   onMenuClick: () => void;
 }
 
-// Novidades do sistema (pode vir de uma API futuramente)
-const systemNews = [
-  {
-    id: 1,
-    title: '🎓 C4 Academy Lançado!',
-    description: 'Aprenda a vender mais com nossos treinamentos exclusivos.',
-    href: '/revendedora/academy',
-    isNew: true,
-    date: '15 Jan',
+const typeConfig = {
+  feature: {
+    icon: Sparkles,
+    color: 'text-purple-500',
+    bg: 'bg-purple-100',
+    label: 'Nova Funcionalidade'
   },
-  {
-    id: 2,
-    title: '📊 Sistema Lucro Certo',
-    description: 'Calcule suas margens e controle seu financeiro.',
-    href: 'https://sistemalucrocerto.com',
-    external: true,
-    isNew: true,
-    date: '10 Jan',
+  fix: {
+    icon: Bug,
+    color: 'text-green-500',
+    bg: 'bg-green-100',
+    label: 'Correção'
   },
-  {
-    id: 3,
-    title: '🎨 Editor de Banner Premium',
-    description: 'Novo editor com preview em tempo real e templates.',
-    href: '/revendedora/personalizacao',
-    isNew: false,
-    date: '05 Jan',
+  alert: {
+    icon: AlertTriangle,
+    color: 'text-amber-500',
+    bg: 'bg-amber-100',
+    label: 'Alerta'
   },
-  {
-    id: 4,
-    title: '📦 Produtos Novos Toda Semana',
-    description: 'Fique de olho nos lançamentos da C4.',
-    href: '/revendedora/produtos',
-    isNew: false,
-    date: '01 Jan',
-  },
-];
+  improvement: {
+    icon: Zap,
+    color: 'text-blue-500',
+    bg: 'bg-blue-100',
+    label: 'Melhoria'
+  }
+};
+
+function NotificationItem({ 
+  notification, 
+  onMarkAsRead,
+  onClose
+}: { 
+  notification: SystemNotification
+  onMarkAsRead: (id: string) => void
+  onClose: () => void 
+}) {
+  const config = typeConfig[notification.type] || typeConfig.feature;
+  const Icon = config.icon;
+
+  return (
+    <div 
+      className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+      onClick={() => {
+        onMarkAsRead(notification.id);
+        onClose();
+      }}
+    >
+      <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center flex-shrink-0`}>
+        <Icon className={`w-4 h-4 ${config.color}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="font-semibold text-gray-900 text-sm truncate">
+            {notification.title}
+          </p>
+          {notification.high_priority && (
+            <span className="flex-shrink-0 text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full font-bold">
+              NOVO
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 line-clamp-2">
+          {notification.description}
+        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={`text-[10px] font-medium ${config.color}`}>
+            {config.label}
+          </span>
+          <span className="text-[10px] text-gray-400">
+            {formatDistanceToNow(new Date(notification.created_at), { 
+              addSuffix: true, 
+              locale: ptBR 
+            })}
+          </span>
+        </div>
+      </div>
+      <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
+    </div>
+  );
+}
 
 export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead
+  } = useNotifications({ audience: 'resellers' });
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -67,7 +121,6 @@ export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   const handleBellClick = () => {
     setShowNotifications(!showNotifications);
-    if (hasUnread) setHasUnread(false);
   };
 
   return (
@@ -112,9 +165,10 @@ export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
               aria-label="Novidades"
             >
               <Bell className="w-6 h-6" />
-              {hasUnread && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-pink-500 rounded-full 
-                               ring-2 ring-white animate-pulse" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-pink-500 rounded-full px-1 ring-2 ring-white animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               )}
             </button>
 
@@ -127,56 +181,60 @@ export default function MobileHeader({ onMenuClick }: MobileHeaderProps) {
                 <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5" />
-                    <span className="font-semibold">Novidades do Sistema</span>
+                    <span className="font-semibold">Novidades</span>
+                    {unreadCount > 0 && (
+                      <span className="text-xs text-white/80">
+                        ({unreadCount} {unreadCount === 1 ? 'nova' : 'novas'})
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => setShowNotifications(false)}
-                    className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                        title="Marcar todas como lidas"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Lista de Novidades */}
                 <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
-                  {systemNews.map((news) => (
-                    <Link
-                      key={news.id}
-                      href={news.href}
-                      target={news.external ? '_blank' : undefined}
-                      rel={news.external ? 'noopener noreferrer' : undefined}
-                      onClick={() => setShowNotifications(false)}
-                      className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-gray-900 text-sm truncate">
-                            {news.title}
-                          </p>
-                          {news.isNew && (
-                            <span className="flex-shrink-0 text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                              NOVO
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 line-clamp-2">
-                          {news.description}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-1">{news.date}</p>
-                      </div>
-                      {news.external ? (
-                        <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
-                      )}
-                    </Link>
-                  ))}
+                  {loading ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <div className="animate-spin w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
+                      <p className="text-sm">Carregando...</p>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhuma novidade no momento</p>
+                    </div>
+                  ) : (
+                    notifications.map(notification => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        onMarkAsRead={markAsRead}
+                        onClose={() => setShowNotifications(false)}
+                      />
+                    ))
+                  )}
                 </div>
 
                 {/* Footer */}
                 <div className="p-3 bg-gray-50 border-t border-gray-100">
                   <p className="text-center text-xs text-gray-500">
-                    Fique ligada nas novidades! 💖
+                    Clique em uma novidade para marcar como lida 💖
                   </p>
                 </div>
               </div>

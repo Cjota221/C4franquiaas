@@ -40,6 +40,8 @@ interface ProductReelsFeedProps {
   hasMore?: boolean;
   primaryColor?: string;
   onProductClick?: (produto: Reel['produto']) => void;
+  onFavorite?: (produto: Reel['produto']) => void;
+  isFavorite?: (productId: string) => boolean;
 }
 
 // ============================================================================
@@ -144,6 +146,8 @@ const ReelCard = memo(function ReelCard({
   onToggleMute,
   primaryColor: propPrimaryColor,
   onProductClick,
+  onFavorite,
+  isProductFavorite,
 }: {
   reel: Reel;
   isVisible: boolean;
@@ -151,13 +155,20 @@ const ReelCard = memo(function ReelCard({
   onToggleMute: () => void;
   primaryColor?: string;
   onProductClick?: (produto: Reel['produto']) => void;
+  onFavorite?: (produto: Reel['produto']) => void;
+  isProductFavorite?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [liked, setLiked] = useState(false);
+  const [localLiked, setLocalLiked] = useState(isProductFavorite || false);
   const [viewCounted, setViewCounted] = useState(false);
+  
+  // Sincronizar estado local com prop
+  useEffect(() => {
+    setLocalLiked(isProductFavorite || false);
+  }, [isProductFavorite]);
   
   // 🔥 REGRA DE OURO #1: IntersectionObserver - Play/Pause baseado em visibilidade
   useEffect(() => {
@@ -202,16 +213,19 @@ const ReelCard = memo(function ReelCard({
   }, [isPlaying]);
   
   const handleLike = useCallback(() => {
-    setLiked(!liked);
-    // TODO: Persistir like no backend
-  }, [liked]);
+    const newState = !localLiked;
+    setLocalLiked(newState);
+    // Chamar callback se fornecido
+    if (onFavorite && reel.produto) {
+      onFavorite(reel.produto);
+    }
+  }, [localLiked, onFavorite, reel.produto]);
   
   const primaryColor = propPrimaryColor || reel.reseller?.primary_color || '#DB1472';
   
   return (
     <div 
-      className="relative bg-black rounded-2xl overflow-hidden snap-center flex-shrink-0"
-      style={{ width: '280px', height: '500px' }}
+      className="relative bg-black rounded-2xl overflow-hidden snap-center flex-shrink-0 w-[280px] h-[500px] md:w-[320px] md:h-[570px] lg:w-[360px] lg:h-[640px]"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -242,7 +256,7 @@ const ReelCard = memo(function ReelCard({
         loop
         muted={isMuted}
         playsInline
-        preload={isVisible ? 'auto' : 'none'}
+        preload={isVisible ? 'metadata' : 'none'}
         onLoadedData={() => setIsLoaded(true)}
         onClick={handleTogglePlay}
       />
@@ -259,11 +273,14 @@ const ReelCard = memo(function ReelCard({
           onClick={handleLike}
           className="flex flex-col items-center"
         >
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${liked ? 'bg-red-500' : 'bg-black/30 backdrop-blur-sm'}`}>
-            <Heart className={`w-6 h-6 ${liked ? 'text-white fill-white' : 'text-white'}`} />
+          <div 
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${localLiked ? '' : 'bg-black/30 backdrop-blur-sm'}`}
+            style={{ backgroundColor: localLiked ? primaryColor : undefined }}
+          >
+            <Heart className={`w-6 h-6 ${localLiked ? 'text-white fill-white' : 'text-white'}`} />
           </div>
           <span className="text-white text-xs mt-1 drop-shadow-lg">
-            {formatViews(reel.likes + (liked ? 1 : 0))}
+            {localLiked ? 'Salvo' : 'Curtir'}
           </span>
         </button>
         
@@ -334,6 +351,8 @@ export default function ProductReelsFeed({
   hasMore = false,
   primaryColor = '#DB1472',
   onProductClick,
+  onFavorite,
+  isFavorite,
 }: ProductReelsFeedProps) {
   const [reels, setReels] = useState<Reel[]>(initialReels || []);
   const [loading, setLoading] = useState(!initialReels);
@@ -470,6 +489,8 @@ export default function ProductReelsFeed({
                 onToggleMute={toggleMute}
                 primaryColor={primaryColor}
                 onProductClick={onProductClick}
+                onFavorite={onFavorite}
+                isProductFavorite={reel.produto?.id ? isFavorite?.(reel.produto.id) : false}
               />
             </div>
           ))}
@@ -508,6 +529,8 @@ export default function ProductReelsFeed({
             onToggleMute={toggleMute}
             primaryColor={primaryColor}
             onProductClick={onProductClick}
+            onFavorite={onFavorite}
+            isProductFavorite={reel.produto?.id ? isFavorite?.(reel.produto.id) : false}
           />
         </div>
       ))}
