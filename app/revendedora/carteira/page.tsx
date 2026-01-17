@@ -65,8 +65,22 @@ export default function MinhaCarteiraPage() {
     
     try {
       // Buscar dados da carteira
+      console.log('[Carteira] Iniciando carregamento...')
       const response = await authenticatedFetch('/api/wallet')
+      console.log('[Carteira] Response status:', response.status)
       const data = await response.json()
+      console.log('[Carteira] Data:', data)
+      
+      if (response.status === 401) {
+        console.error('[Carteira] Não autorizado - sessão pode ter expirado')
+        // Tentar recarregar a página para renovar sessão
+        return
+      }
+      
+      if (data.error) {
+        console.error('[Carteira] Erro da API:', data.error)
+        return
+      }
       
       if (data.wallet) {
         setWallet(data.wallet)
@@ -101,7 +115,11 @@ export default function MinhaCarteiraPage() {
       }
       
     } catch (error) {
-      console.error('Erro ao carregar dados:', error)
+      console.error('[Carteira] Erro ao carregar dados:', error)
+      // Se o erro for de autenticação, não mostrar nada
+      if (error instanceof Error && error.message === 'Não autenticado') {
+        console.error('[Carteira] Usuário não autenticado')
+      }
     } finally {
       setLoading(false)
     }
