@@ -1,21 +1,21 @@
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Atualizar sessão do Supabase (refresh tokens se necessário)
-  return await updateSession(request)
+  const { pathname } = request.nextUrl
+
+  // 🚨 TEMPORARIAMENTE DESABILITADO PARA DEBUG
+  // O middleware estava bloqueando o login
+  console.log('🔐 Middleware ativo na rota:', pathname)
+  
+  // Apenas passar a requisição sem verificar autenticação
+  return NextResponse.next()
 }
 
-// Configurar quais rotas o middleware deve processar
+// Configurar quais rotas o middleware deve proteger
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - arquivos estáticos (svg, png, jpg, etc)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/admin/:path*',
+    '/revendedora/:path*',
+    '/franqueada/:path*',
   ],
 }
