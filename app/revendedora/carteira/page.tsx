@@ -83,9 +83,13 @@ export default function MinhaCarteiraPage() {
       }
       
       if (data.wallet) {
+        console.log('[Carteira] Setando wallet:', data.wallet)
+        console.log('[Carteira] Saldo:', data.wallet.saldo)
         setWallet(data.wallet)
         setExtrato(data.extrato || [])
         setReservasTotais(data.reservas || { total: 0, valor: 0 })
+      } else {
+        console.log('[Carteira] Wallet não encontrado nos dados:', data)
       }
       
       // Configurações
